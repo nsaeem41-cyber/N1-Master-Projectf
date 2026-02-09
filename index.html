@@ -52,7 +52,7 @@
             width: 100%;
             max-width: 420px;
             padding: 50px 40px;
-            border-radius: 4px; /* زوايا حادة خفيفة تعطي طابع رسمي أكثر */
+            border-radius: 4px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             position: relative;
         }
@@ -63,6 +63,7 @@
             color: var(--primary-dark);
             margin-bottom: 5px;
             letter-spacing: 1px;
+            text-align: center;
         }
 
         .system-tagline {
@@ -71,6 +72,7 @@
             margin-bottom: 40px;
             text-transform: uppercase;
             letter-spacing: 2px;
+            text-align: center;
         }
 
         .tab-container {
@@ -96,20 +98,6 @@
             border-bottom: 3px solid var(--primary-dark);
         }
 
-        .form-content {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .form-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         .input-wrapper {
             margin-bottom: 20px;
             text-align: right;
@@ -132,6 +120,7 @@
             box-sizing: border-box;
             background: #fcfcfc;
             transition: 0.3s;
+            text-align: right;
         }
 
         input:focus {
@@ -168,6 +157,7 @@
             padding: 10px;
             background: #ffebee;
             border-radius: 3px;
+            text-align: center;
         }
     </style>
 </head>
@@ -186,59 +176,70 @@
         <button id="client-tab" class="tab-btn" onclick="setTab('client')">الشركاء</button>
     </div>
 
-    <div id="admin-form" class="form-content active">
-        <div class="input-wrapper">
-            <label id="l-admin-u">اسم المستخدم</label>
-            <input type="text" id="au" placeholder="Username">
-        </div>
-        <div class="input-wrapper">
-            <label id="l-admin-p">كلمة المرور</label>
-            <input type="password" id="ap" placeholder="Password">
-        </div>
-        <button class="action-btn" id="b-admin" onclick="runAuth('admin')">تسجيل دخول الإدارة</button>
+    <div class="input-wrapper">
+        <label id="lbl-u">اسم المستخدم</label>
+        <input type="text" id="username-field" placeholder="Username">
     </div>
-
-    <div id="client-form" class="form-content">
-        <div class="input-wrapper">
-            <label id="l-client-u">هوية الشركة</label>
-            <input type="text" id="cu" placeholder="Company ID">
-        </div>
-        <div class="input-wrapper">
-            <label id="l-client-p">كلمة المرور</label>
-            <input type="password" id="cp" placeholder="Password">
-        </div>
-        <button class="action-btn" id="b-client" onclick="runAuth('client')">دخول بوابة الشركاء</button>
+    <div class="input-wrapper">
+        <label id="lbl-p">كلمة المرور</label>
+        <input type="password" id="password-field" placeholder="Password">
     </div>
+    
+    <button class="action-btn" id="login-action-btn" onclick="executeAuth()">تسجيل الدخول الآمن</button>
 
-    <div id="err" class="error-container">بيانات الاعتماد غير صالحة. يرجى المحاولة مرة أخرى.</div>
+    <div id="err-box" class="error-container">بيانات الاعتماد غير صالحة. يرجى المحاولة مرة أخرى.</div>
 </div>
 
 <script>
-    let lang = 'ar';
-    
+    let currentMode = 'admin';
+    let currentLang = 'ar';
+
+    // حماية وفحص الدخول التلقائي عند فتح الصفحة 😊
+    window.onload = () => {
+        const activeSession = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (activeSession) {
+            window.location.href = activeSession.role === 'admin' ? 'admin.html' : 'client_dashboard.html';
+        }
+    };
+
     function setTab(type) {
+        currentMode = type;
         document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.form-content').forEach(f => f.classList.remove('active'));
         document.getElementById(`${type}-tab`).classList.add('active');
-        document.getElementById(`${type}-form`).classList.add('active');
-        document.getElementById('err').style.display = 'none';
+        document.getElementById('err-box').style.display = 'none';
+        
+        // تحديث النصوص بناءً على التبويب المختار 😊
+        if(currentLang === 'ar') {
+            document.getElementById('lbl-u').innerText = type === 'admin' ? 'اسم المستخدم' : 'هوية الشركة';
+            document.getElementById('login-action-btn').innerText = type === 'admin' ? 'تسجيل دخول الإدارة' : 'دخول بوابة الشركاء';
+        } else {
+            document.getElementById('lbl-u').innerText = type === 'admin' ? 'USERNAME' : 'COMPANY ID';
+            document.getElementById('login-action-btn').innerText = type === 'admin' ? 'ADMIN LOGIN' : 'PARTNER PORTAL ENTRY';
+        }
     }
 
-    function runAuth(type) {
-        const u = document.getElementById(type === 'admin' ? 'au' : 'cu').value;
-        const p = document.getElementById(type === 'admin' ? 'ap' : 'cp').value;
+    function executeAuth() {
+        const u = document.getElementById('username-field').value;
+        const p = document.getElementById('password-field').value;
 
+        // ميزة التجاوز السريع للتطوير دون الحاجة للإكسل حالياً 😊
         if(u === 'admin' && p === 'n12026') {
-            sessionStorage.setItem('loggedInUser', JSON.stringify({username: u, role: 'admin', company_name: 'N1 Global Headquaters'}));
-            window.location.href = 'admin.html';
+            const userData = {
+                username: u,
+                role: currentMode,
+                company_name: currentMode === 'admin' ? 'N1 Global HQ' : 'N1 Authorized Partner'
+            };
+            // الحفظ الدائم في المتصفح 😊
+            localStorage.setItem('loggedInUser', JSON.stringify(userData));
+            window.location.href = currentMode === 'admin' ? 'admin.html' : 'client_dashboard.html';
         } else {
-            document.getElementById('err').style.display = 'block';
+            document.getElementById('err-box').style.display = 'block';
         }
     }
 
     function changeLang() {
-        lang = lang === 'ar' ? 'en' : 'ar';
-        const isAr = lang === 'ar';
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        const isAr = currentLang === 'ar';
         document.documentElement.lang = isAr ? 'ar' : 'en';
         document.documentElement.dir = isAr ? 'rtl' : 'ltr';
 
@@ -247,15 +248,11 @@
         document.getElementById('admin-tab').innerText = isAr ? 'الإدارة' : 'ADMINISTRATION';
         document.getElementById('client-tab').innerText = isAr ? 'الشركاء' : 'PARTNERS';
         
-        document.getElementById('l-admin-u').innerText = isAr ? 'اسم المستخدم' : 'USERNAME';
-        document.getElementById('l-admin-p').innerText = isAr ? 'كلمة المرور' : 'PASSWORD';
-        document.getElementById('b-admin').innerText = isAr ? 'تسجيل دخول الإدارة' : 'ADMIN LOGIN';
+        document.getElementById('lbl-p').innerText = isAr ? 'كلمة المرور' : 'PASSWORD';
+        document.getElementById('err-box').innerText = isAr ? 'بيانات الاعتماد غير صالحة. يرجى المحاولة مرة أخرى.' : 'Invalid credentials. Please try again.';
         
-        document.getElementById('l-client-u').innerText = isAr ? 'هوية الشركة' : 'COMPANY ID';
-        document.getElementById('l-client-p').innerText = isAr ? 'كلمة المرور' : 'PASSWORD';
-        document.getElementById('b-client').innerText = isAr ? 'دخول بوابة الشركاء' : 'PARTNER PORTAL ENTRY';
-        
-        document.getElementById('err').innerText = isAr ? 'بيانات الاعتماد غير صالحة' : 'Invalid credentials. Please try again.';
+        // تحديث حقل اليوزر والزر بناءً على الوضع الحالي 😊
+        setTab(currentMode);
     }
 </script>
 </body>
