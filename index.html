@@ -3,126 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N1 Global - بوابة الوصول الآمن</title>
+    <title>N1 Global - Enterprise Access Portal</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        
-        /* Language Switcher */
-        .lang-switch { position: absolute; top: 20px; left: 20px; }
-        .lang-btn { background: #fff; border: 1px solid var(--primary); padding: 5px 15px; cursor: pointer; border-radius: 20px; font-weight: bold; }
+        :root {
+            --primary-dark: #1a237e;
+            --accent-blue: #0288d1;
+            --text-main: #2c3e50;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --white: #ffffff;
+        }
 
-        .container { background: #fff; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
-        p { color: #7f8c8d; margin-bottom: 30px; }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
 
-        .gate-selector { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .gate-btn { flex: 1; padding: 12px; border: none; background: #eee; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .gate-btn.active { background: var(--primary); color: #fff; }
+        .lang-container {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+        }
 
-        .login-form { display: none; text-align: right; }
-        .login-form.active { display: block; }
+        .lang-toggle {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--primary-dark);
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
 
-        .field { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--primary); }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; text-align: right; }
-        
-        .submit-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .submit-btn:hover { background: #2980b9; }
-        
-        #error-msg { color: #e74c3c; margin-top: 15px; display: none; font-weight: bold; }
+        .lang-toggle:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .login-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 420px;
+            padding: 50px 40px;
+            border-radius: 4px; /* زوايا حادة خفيفة تعطي طابع رسمي أكثر */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .brand-logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .system-tagline {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #95a5a6;
+            transition: 0.4s;
+            font-size: 15px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-dark);
+            border-bottom: 3px solid var(--primary-dark);
+        }
+
+        .form-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .form-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-wrapper {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            box-sizing: border-box;
+            background: #fcfcfc;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(2, 136, 209, 0.1);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 3px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-blue);
+            box-shadow: 0 5px 15px rgba(2, 136, 209, 0.3);
+        }
+
+        .error-container {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 20px;
+            display: none;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
 
-<div class="lang-switch">
-    <button class="lang-btn" onclick="toggleLanguage()">English</button>
+<div class="lang-container">
+    <button class="lang-toggle" onclick="changeLang()">English</button>
 </div>
 
-<div class="container">
-    <h1 id="main-title">نظام N1 اللوجستي 😊</h1>
-    <p id="sub-title">يرجى اختيار بوابة الدخول المناسبة</p>
+<div class="login-card">
+    <div class="brand-logo">N1 GLOBAL</div>
+    <div id="tagline" class="system-tagline">نظام الإدارة اللوجستية</div>
 
-    <div class="gate-selector">
-        <button id="admin-gate-btn" class="gate-btn active" onclick="switchGate('admin')">بوابة الإدارة</button>
-        <button id="client-gate-btn" class="gate-btn" onclick="switchGate('client')">بوابة الشركات</button>
+    <div class="tab-container">
+        <button id="admin-tab" class="tab-btn active" onclick="setTab('admin')">الإدارة</button>
+        <button id="client-tab" class="tab-btn" onclick="setTab('client')">الشركاء</button>
     </div>
 
-    <div id="admin-form" class="login-form active">
-        <div class="field">
-            <label id="lbl-admin-user">اسم مدير النظام</label>
-            <input type="text" id="admin-u" placeholder="Username">
+    <div id="admin-form" class="form-content active">
+        <div class="input-wrapper">
+            <label id="l-admin-u">اسم المستخدم</label>
+            <input type="text" id="au" placeholder="Username">
         </div>
-        <div class="field">
-            <label id="lbl-admin-pass">كلمة المرور</label>
-            <input type="password" id="admin-p" placeholder="Password">
+        <div class="input-wrapper">
+            <label id="l-admin-p">كلمة المرور</label>
+            <input type="password" id="ap" placeholder="Password">
         </div>
-        <button class="submit-btn" onclick="handleLogin('admin')">دخول الإدارة الآمن 😊</button>
+        <button class="action-btn" id="b-admin" onclick="runAuth('admin')">تسجيل دخول الإدارة</button>
     </div>
 
-    <div id="client-form" class="login-form">
-        <div class="field">
-            <label id="lbl-client-user">اسم المستخدم للشركة</label>
-            <input type="text" id="client-u" placeholder="Company ID">
+    <div id="client-form" class="form-content">
+        <div class="input-wrapper">
+            <label id="l-client-u">هوية الشركة</label>
+            <input type="text" id="cu" placeholder="Company ID">
         </div>
-        <div class="field">
-            <label id="lbl-client-pass">كلمة المرور</label>
-            <input type="password" id="client-p" placeholder="Password">
+        <div class="input-wrapper">
+            <label id="l-client-p">كلمة المرور</label>
+            <input type="password" id="cp" placeholder="Password">
         </div>
-        <button class="submit-btn" onclick="handleLogin('client')">دخول بوابة الشركاء 😊</button>
+        <button class="action-btn" id="b-client" onclick="runAuth('client')">دخول بوابة الشركاء</button>
     </div>
 
-    <div id="error-msg">خطأ: يرجى التأكد من البيانات والمحاولة مرة أخرى</div>
+    <div id="err" class="error-container">بيانات الاعتماد غير صالحة. يرجى المحاولة مرة أخرى.</div>
 </div>
 
 <script>
-    let currentGate = 'admin';
-    let currentLang = 'ar';
-
-    function switchGate(gate) {
-        currentGate = gate;
-        document.querySelectorAll('.gate-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
-        
-        document.getElementById(`${gate}-gate-btn`).classList.add('active');
-        document.getElementById(`${gate}-form`).classList.add('active');
-        document.getElementById('error-msg').style.display = 'none';
+    let lang = 'ar';
+    
+    function setTab(type) {
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-content').forEach(f => f.classList.remove('active'));
+        document.getElementById(`${type}-tab`).classList.add('active');
+        document.getElementById(`${type}-form`).classList.add('active');
+        document.getElementById('err').style.display = 'none';
     }
 
-    function handleLogin(gate) {
-        const u = document.getElementById(`${gate}-u`).value;
-        const p = document.getElementById(`${gate}-p`).value;
+    function runAuth(type) {
+        const u = document.getElementById(type === 'admin' ? 'au' : 'cu').value;
+        const p = document.getElementById(type === 'admin' ? 'ap' : 'cp').value;
 
-        // ميزة التجاوز السريع للتطوير 😊
         if(u === 'admin' && p === 'n12026') {
-            sessionStorage.setItem('loggedInUser', JSON.stringify({username: u, role: 'admin', company_name: 'N1 Control'}));
+            sessionStorage.setItem('loggedInUser', JSON.stringify({username: u, role: 'admin', company_name: 'N1 Global Headquaters'}));
             window.location.href = 'admin.html';
         } else {
-            document.getElementById('error-msg').style.display = 'block';
+            document.getElementById('err').style.display = 'block';
         }
     }
 
-    function toggleLanguage() {
-        currentLang = currentLang === 'ar' ? 'en' : 'ar';
-        const isAr = currentLang === 'ar';
-        
+    function changeLang() {
+        lang = lang === 'ar' ? 'en' : 'ar';
+        const isAr = lang === 'ar';
         document.documentElement.lang = isAr ? 'ar' : 'en';
         document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+
+        document.querySelector('.lang-toggle').innerText = isAr ? 'English' : 'العربية';
+        document.getElementById('tagline').innerText = isAr ? 'نظام الإدارة اللوجستية' : 'LOGISTICS MANAGEMENT SYSTEM';
+        document.getElementById('admin-tab').innerText = isAr ? 'الإدارة' : 'ADMINISTRATION';
+        document.getElementById('client-tab').innerText = isAr ? 'الشركاء' : 'PARTNERS';
         
-        // تحديث النصوص
-        document.getElementById('main-title').innerText = isAr ? 'نظام N1 اللوجستي 😊' : 'N1 Logistic System 😊';
-        document.getElementById('sub-title').innerText = isAr ? 'يرجى اختيار بوابة الدخول المناسبة' : 'Please select the appropriate login gateway';
-        document.getElementById('admin-gate-btn').innerText = isAr ? 'بوابة الإدارة' : 'Admin Gateway';
-        document.getElementById('client-gate-btn').innerText = isAr ? 'بوابة الشركات' : 'Client Gateway';
-        document.querySelector('.lang-btn').innerText = isAr ? 'English' : 'العربية';
+        document.getElementById('l-admin-u').innerText = isAr ? 'اسم المستخدم' : 'USERNAME';
+        document.getElementById('l-admin-p').innerText = isAr ? 'كلمة المرور' : 'PASSWORD';
+        document.getElementById('b-admin').innerText = isAr ? 'تسجيل دخول الإدارة' : 'ADMIN LOGIN';
         
-        // تحديث حقول الإدارة
-        document.getElementById('lbl-admin-user').innerText = isAr ? 'اسم مدير النظام' : 'Admin Username';
-        document.getElementById('lbl-admin-pass').innerText = isAr ? 'كلمة المرور' : 'Password';
+        document.getElementById('l-client-u').innerText = isAr ? 'هوية الشركة' : 'COMPANY ID';
+        document.getElementById('l-client-p').innerText = isAr ? 'كلمة المرور' : 'PASSWORD';
+        document.getElementById('b-client').innerText = isAr ? 'دخول بوابة الشركاء' : 'PARTNER PORTAL ENTRY';
         
-        // تحديث حقول الشركة
-        document.getElementById('lbl-client-user').innerText = isAr ? 'اسم المستخدم للشركة' : 'Company Username';
-        document.getElementById('lbl-client-pass').innerText = isAr ? 'كلمة المرور' : 'Password';
+        document.getElementById('err').innerText = isAr ? 'بيانات الاعتماد غير صالحة' : 'Invalid credentials. Please try again.';
     }
 </script>
 </body>
