@@ -193,8 +193,8 @@
 <script>
     let currentMode = 'admin';
     let currentLang = 'ar';
+    const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
 
-    // حماية وفحص الدخول التلقائي عند فتح الصفحة 😊
     window.onload = () => {
         const activeSession = JSON.parse(localStorage.getItem('loggedInUser'));
         if (activeSession) {
@@ -208,7 +208,6 @@
         document.getElementById(`${type}-tab`).classList.add('active');
         document.getElementById('err-box').style.display = 'none';
         
-        // تحديث النصوص بناءً على التبويب المختار 😊
         if(currentLang === 'ar') {
             document.getElementById('lbl-u').innerText = type === 'admin' ? 'اسم المستخدم' : 'هوية الشركة';
             document.getElementById('login-action-btn').innerText = type === 'admin' ? 'تسجيل دخول الإدارة' : 'دخول بوابة الشركاء';
@@ -218,22 +217,42 @@
         }
     }
 
-    function executeAuth() {
+    async function executeAuth() {
         const u = document.getElementById('username-field').value;
         const p = document.getElementById('password-field').value;
+        const err = document.getElementById('err-box');
+        
+        err.style.display = 'none';
 
-        // ميزة التجاوز السريع للتطوير دون الحاجة للإكسل حالياً 😊
-        if(u === 'admin' && p === 'n12026') {
-            const userData = {
-                username: u,
-                role: currentMode,
-                company_name: currentMode === 'admin' ? 'N1 Global HQ' : 'N1 Authorized Partner'
-            };
-            // الحفظ الدائم في المتصفح 😊
-            localStorage.setItem('loggedInUser', JSON.stringify(userData));
-            window.location.href = currentMode === 'admin' ? 'admin.html' : 'client_dashboard.html';
-        } else {
-            document.getElementById('err-box').style.display = 'block';
+        // الدخول الخاص لمدير النظام (أدمن) 😊
+        if(currentMode === 'admin' && u === 'admin' && p === 'n12026') {
+            const adminData = {username: u, role: 'admin', company_name: 'N1 Global HQ'};
+            localStorage.setItem('loggedInUser', JSON.stringify(adminData));
+            window.location.href = 'admin.html';
+            return;
+        }
+
+        // البحث الفعلي في الإكسل للشركاء 😊
+        try {
+            const response = await fetch(`${API_URL}/search?username=${u}&password=${p}`);
+            const data = await response.json();
+
+            if(data.length > 0) {
+                const user = data[0];
+                if(user.status === 'paused') {
+                    err.innerText = currentLang === 'ar' ? "هذا الحساب معلق حالياً 😊" : "Account suspended 😊";
+                    err.style.display = 'block';
+                } else {
+                    localStorage.setItem('loggedInUser', JSON.stringify(user));
+                    window.location.href = 'client_dashboard.html';
+                }
+            } else {
+                err.innerText = currentLang === 'ar' ? "بيانات الدخول غير صحيحة 😊" : "Invalid credentials 😊";
+                err.style.display = 'block';
+            }
+        } catch (e) {
+            err.innerText = "Connection error";
+            err.style.display = 'block';
         }
     }
 
@@ -247,11 +266,7 @@
         document.getElementById('tagline').innerText = isAr ? 'نظام الإدارة اللوجستية' : 'LOGISTICS MANAGEMENT SYSTEM';
         document.getElementById('admin-tab').innerText = isAr ? 'الإدارة' : 'ADMINISTRATION';
         document.getElementById('client-tab').innerText = isAr ? 'الشركاء' : 'PARTNERS';
-        
         document.getElementById('lbl-p').innerText = isAr ? 'كلمة المرور' : 'PASSWORD';
-        document.getElementById('err-box').innerText = isAr ? 'بيانات الاعتماد غير صالحة. يرجى المحاولة مرة أخرى.' : 'Invalid credentials. Please try again.';
-        
-        // تحديث حقل اليوزر والزر بناءً على الوضع الحالي 😊
         setTab(currentMode);
     }
 </script>
