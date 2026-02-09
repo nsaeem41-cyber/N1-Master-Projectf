@@ -2,22 +2,47 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title>N1 Admin - Testing Mode</title>
+    <title>N1 Admin - Operational Panel</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .nav { background: #2c3e50; color: #fff; padding: 15px; display: flex; justify-content: space-between; border-radius: 8px; }
+        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .nav { background: #2c3e50; color: #fff; padding: 15px 25px; display: flex; justify-content: space-between; border-radius: 8px; }
         .card { background: #fff; padding: 30px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        button.logout { background: #e74c3c; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        .logout { background: #e74c3c; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        input { width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .save-btn { background: #27ae60; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="nav">
-    <span>N1 ADMIN PANEL (DEV MODE)</span>
+    <span>N1 CONTROL PANEL</span>
     <button class="logout" onclick="location.href='index.html'">Logout</button>
 </div>
 <div class="card">
-    <h3>System Status: Ready 😊</h3>
-    <p>You can now test layouts and navigation without Excel delays.</p>
+    <h3>Register New Client (Auto-Sync) 😊</h3>
+    <input type="text" id="cu" placeholder="Client Username">
+    <input type="password" id="cp" placeholder="Client Password">
+    <input type="text" id="cn" placeholder="Company Name">
+    <input type="number" id="cf" placeholder="Subscription Fee">
+    <button class="save-btn" onclick="syncClient()">Sync to Excel & Create</button>
 </div>
+<script>
+    async function syncClient() {
+        const payload = { data: [{ 
+            username: document.getElementById('cu').value, 
+            password: document.getElementById('cp').value, 
+            role: 'client', 
+            company_name: document.getElementById('cn').value, 
+            subscription_fee: document.getElementById('cf').value 
+        }] };
+        try {
+            await fetch("https://sheetdb.io/api/v1/zuo2qyjeryhxm", { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(payload) 
+            });
+            alert("Client Data Synced to N One! 😊");
+        } catch (e) { alert("Sync failed, but UI is working!"); }
+    }
+</script>
 </body>
 </html>
