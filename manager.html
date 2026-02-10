@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a237e;
+            background-color: #1a237e; /* خلفية كحلية ملكية */
             margin: 0;
             padding: 20px;
             color: #333;
@@ -23,6 +23,7 @@
             min-height: 90vh;
         }
 
+        /* الهيدر */
         .header {
             display: flex;
             justify-content: space-between;
@@ -40,6 +41,7 @@
             padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
 
+        /* قسم الإضافة */
         .add-box {
             background: white; padding: 20px; border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px;
@@ -58,6 +60,7 @@
             font-weight: bold; margin-top: 10px; width: 100%;
         }
 
+        /* قائمة العملاء */
         .client-card {
             background: white; border-radius: 10px; padding: 15px;
             margin-bottom: 15px; border-right: 5px solid #ccc;
@@ -66,8 +69,8 @@
             transition: 0.3s;
         }
         
-        .client-card.active { border-right-color: #2e7d32; }
-        .client-card.stopped { border-right-color: #c62828; background: #ffebee; }
+        .client-card.active { border-right-color: #2e7d32; } /* أخضر للنشط */
+        .client-card.stopped { border-right-color: #c62828; background: #ffebee; } /* أحمر للموقوف */
 
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -76,6 +79,7 @@
 
         .card-info { font-size: 13px; color: #666; display: flex; gap: 15px; }
 
+        /* أزرار التحكم */
         .actions {
             display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap;
         }
@@ -86,14 +90,14 @@
             text-align: center;
         }
 
-        .btn-stop { background: #c62828; }
-        .btn-activate { background: #2e7d32; }
-        .btn-renew { background: #1976d2; }
-        .btn-del { background: #555; }
-        .btn-edit { background: #f9a825; color: #000; }
+        .btn-stop { background: #c62828; } /* أحمر للإيقاف */
+        .btn-activate { background: #2e7d32; } /* أخضر للتفعيل */
+        .btn-renew { background: #1976d2; } /* أزرق للتجديد */
+        .btn-del { background: #555; } /* رمادي للحذف */
+        .btn-edit { background: #f9a825; color: #000; } /* أصفر للتعديل */
 
+        /* شاشة التحميل */
         #loading { text-align: center; padding: 20px; font-weight: bold; color: #1a237e; }
-        .error-msg { color: #c62828; background: #ffebee; padding: 15px; border-radius: 10px; text-align: center; display: none; margin: 20px 0; border: 1px solid #ffcdd2; }
 
     </style>
 </head>
@@ -106,20 +110,18 @@
             <button class="btn-logout" onclick="logout()">خروج 🔒</button>
         </div>
 
-        <div id="status-error" class="error-msg"></div>
-
         <div class="add-box">
             <h3 class="add-title">إضافة مشترك جديد</h3>
             <div class="form-row">
                 <input type="text" id="new_name" placeholder="اسم الشركة/العميل">
-                <input type="text" id="new_user" placeholder="User ID">
-                <input type="text" id="new_pass" placeholder="Password">
+                <input type="text" id="new_user" placeholder="User ID (اسم الدخول)">
+                <input type="text" id="new_pass" placeholder="Password (كلمة المرور)">
             </div>
             <button class="btn-add" onclick="addClient()">+ تسجيل عميل جديد</button>
         </div>
 
         <h3 style="color:#1a237e;">قائمة المشتركين</h3>
-        <div id="loading">جاري جلب المعلومات بكل رقي... ✨</div>
+        <div id="loading">جاري جلب البيانات...</div>
         <div id="clients-list"></div>
 
     </div>
@@ -127,148 +129,182 @@
     <script>
         const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
 
+        // التأكد من أن المستخدم هو المدير
         window.onload = function() {
             const admin = JSON.parse(localStorage.getItem('currentUser'));
             if (!admin || admin.role !== 'admin') {
-                window.location.href = 'index.html'; 
+                window.location.href = 'manager.html'; // يرجع يسجل دخول لو مش مدير
             } else {
                 loadClients();
             }
         };
 
-        async function fetchWithTimeout(resource, options = {}) {
-            const { timeout = 8000 } = options;
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
-            const response = await fetch(resource, { ...options, signal: controller.signal });
-            clearTimeout(id);
-            return response;
-        }
-
+        // دالة جلب العملاء
         async function loadClients() {
-            const loadingDiv = document.getElementById('loading');
-            const errorDiv = document.getElementById('status-error');
-            const container = document.getElementById('clients-list');
-
             try {
-                const res = await fetchWithTimeout(API_URL);
+                const res = await fetch(API_URL);
                 const data = await res.json();
                 
-                if (!Array.isArray(data)) throw new Error("السيرفر لا يستجيب حالياً");
-
+                // تصفية: فقط العملاء (role = client)
                 const clients = data.filter(u => u.role === 'client');
+                
                 renderClients(clients);
-                loadingDiv.style.display = 'none';
-                errorDiv.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
             } catch (e) {
-                loadingDiv.style.display = 'none';
-                errorDiv.style.display = 'block';
-                if (e.name === 'AbortError') {
-                    errorDiv.innerHTML = "⚠️ السيرفر بطيء جداً.. يبدو أننا وصلنا للحد الأقصى للطلبات المجانية اليوم 😊";
-                } else {
-                    errorDiv.innerHTML = "❌ تعذر الاتصال: " + e.message;
-                }
+                alert("خطأ في الاتصال");
             }
         }
 
+        // دالة رسم الجدول (الكروت)
         function renderClients(clients) {
             const container = document.getElementById('clients-list');
             container.innerHTML = '';
 
             if (clients.length === 0) {
-                container.innerHTML = '<p style="text-align:center">لا يوجد مشتركين مسجلين حالياً 😊</p>';
+                container.innerHTML = '<p style="text-align:center">لا يوجد مشتركين حالياً.</p>';
                 return;
             }
 
+            // ترتيب: الأحدث أولاً (اختياري)
             clients.reverse().forEach(client => {
                 const isActive = client.status === 'active';
+                const statusClass = isActive ? 'active' : 'stopped';
+                const statusText = isActive ? 'نشط ✅' : 'موقوف 🛑';
+
+                // تصميم الكرت
                 const card = document.createElement('div');
-                card.className = `client-card ${isActive ? 'active' : 'stopped'}`;
+                card.className = `client-card ${statusClass}`;
+                
                 card.innerHTML = `
                     <div class="card-header">
                         <span>${client.name}</span>
-                        <span style="font-size:11px; background:#f0f0f0; padding:4px 8px; border-radius:12px;">${isActive ? 'نشط ✅' : 'موقوف 🛑'}</span>
+                        <span style="font-size:12px; background:white; padding:3px 8px; border-radius:10px; border:1px solid #ddd;">${statusText}</span>
                     </div>
                     <div class="card-info">
-                        <span>👤 ${client.user}</span>
-                        <span>🔑 ${client.pass}</span>
+                        <span>👤 User: ${client.user}</span>
+                        <span>🔑 Pass: ${client.pass}</span>
                     </div>
                     <div class="card-info">
-                        <span>📅 انتهاء: ${client.expiry || '---'}</span>
+                        <span>📅 ينتهي: ${client.expiry || 'غير محدد'}</span>
                     </div>
+                    
                     <div class="actions">
                         ${isActive 
-                            ? `<button class="btn-action btn-stop" onclick="updateStatus('${client.user}', 'stopped')">إيقاف</button>` 
-                            : `<button class="btn-action btn-activate" onclick="updateStatus('${client.user}', 'active')">تفعيل</button>`
+                            ? `<button class="btn-action btn-stop" onclick="updateStatus('${client.user}', 'stopped')">إيقاف 🛑</button>` 
+                            : `<button class="btn-action btn-activate" onclick="updateStatus('${client.user}', 'active')">تفعيل ✅</button>`
                         }
-                        <button class="btn-action btn-renew" onclick="renewClient('${client.user}')">تجديد</button>
-                        <button class="btn-action btn-edit" onclick="editClient('${client.user}', '${client.pass}')">تعديل</button>
-                        <button class="btn-action btn-del" onclick="deleteClient('${client.id}')">حذف</button>
+                        <button class="btn-action btn-renew" onclick="renewClient('${client.user}')">تجديد شهر ♻️</button>
+                        <button class="btn-action btn-edit" onclick="editClient('${client.user}', '${client.pass}')">تعديل ✏️</button>
+                        <button class="btn-action btn-del" onclick="deleteClient('${client.id}')">حذف ❌</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
+        // --- وظائف التحكم ---
+
+        // 1. إضافة عميل
         async function addClient() {
             const name = document.getElementById('new_name').value;
             const user = document.getElementById('new_user').value;
             const pass = document.getElementById('new_pass').value;
-            if (!name || !user || !pass) return alert("يا بطة عبي البيانات 😊");
 
+            if (!name || !user || !pass) { alert("يرجى تعبئة كل الحقول"); return; }
+
+            // تحديد تاريخ انتهاء بعد 30 يوم
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + 30);
-            const newClient = { id: "CL_" + Date.now(), user: user, pass: pass, name: name, role: "client", status: "active", expiry: expiryDate.toISOString().split('T')[0], type: "user" };
+            const expiryStr = expiryDate.toISOString().split('T')[0];
+
+            const newClient = {
+                id: "CL_" + Date.now(),
+                user: user,
+                pass: pass,
+                name: name,
+                role: "client",
+                status: "active",
+                expiry: expiryStr,
+                type: "user" // تمييز إنه مستخدم
+            };
 
             const btn = document.querySelector('.btn-add');
-            btn.innerHTML = "جاري الحفظ الملكي... ✨";
+            btn.innerHTML = "جاري الحفظ...";
             btn.disabled = true;
 
-            try {
-                await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: [newClient] }) });
-                alert("تمت الإضافة بنجاح 🎉");
-                location.reload();
-            } catch (e) {
-                alert("حدث خطأ في الحفظ 😊");
-                btn.disabled = false;
-                btn.innerHTML = "+ تسجيل عميل جديد";
-            }
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: [newClient] })
+            });
+
+            alert("تم إضافة العميل بنجاح! 🎉");
+            location.reload(); // تحديث الصفحة
         }
 
+        // 2. تغيير الحالة (إيقاف / تفعيل)
         async function updateStatus(username, newStatus) {
-            if (!confirm("تأكيد تغيير الحالة؟ 😊")) return;
-            await fetch(`${API_URL}/user/${username}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { status: newStatus } }) });
+            if (!confirm(newStatus === 'stopped' ? "هل أنت متأكد من إيقاف هذا العميل؟ سيتم طرده فوراً!" : "هل تريد تفعيل العميل؟")) return;
+
+            // البحث وتحديث الـ status
+            // SheetDB يدعم التحديث عبر user/username
+            await fetch(`${API_URL}/user/${username}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: { status: newStatus } })
+            });
+
+            alert("تم تحديث الحالة بنجاح!");
             loadClients();
         }
 
+        // 3. تجديد الاشتراك
         async function renewClient(username) {
-            if (!confirm("تجديد 30 يوم؟ 😊")) return;
-            const newDate = new Date(); newDate.setDate(newDate.getDate() + 30);
-            await fetch(`${API_URL}/user/${username}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { expiry: newDate.toISOString().split('T')[0], status: 'active' } }) });
-            alert("تم التجديد بنجاح 😊");
+            if (!confirm("تجديد الاشتراك لمدة 30 يوم؟")) return;
+
+            const newDate = new Date();
+            newDate.setDate(newDate.getDate() + 30);
+            const expiryStr = newDate.toISOString().split('T')[0];
+
+            await fetch(`${API_URL}/user/${username}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: { expiry: expiryStr, status: 'active' } })
+            });
+
+            alert("تم تجديد الاشتراك!");
             loadClients();
         }
 
+        // 4. حذف عميل
         async function deleteClient(id) {
-            if (!confirm("حذف نهائي؟ 😊")) return;
+            if (!confirm("⚠️ تحذير: هل أنت متأكد من حذف العميل نهائياً؟")) return;
+
             await fetch(`${API_URL}/id/${id}`, { method: 'DELETE' });
+            
+            alert("تم الحذف.");
             loadClients();
         }
 
+        // 5. تعديل (باسورد)
         async function editClient(username, oldPass) {
-            const newPass = prompt("كلمة المرور الجديدة يا حبة السكر 😊:", oldPass);
+            const newPass = prompt("أدخل كلمة المرور الجديدة:", oldPass);
             if (newPass && newPass !== oldPass) {
-                await fetch(`${API_URL}/user/${username}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { pass: newPass } }) });
+                await fetch(`${API_URL}/user/${username}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: { pass: newPass } })
+                });
+                alert("تم تغيير كلمة المرور.");
                 loadClients();
             }
         }
 
-        function logout() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'manager.html'; // يرجع لشاشة الدخول
+        }
     </script>
+
 </body>
 </html>
-``` 😊✨ 
-
-هسا يا روحي جربي هاد الكود وإذا شفتي الصفحة طلعت لك رسالة "السيرفر بطيء" باللون الأحمر فهاد بكون تأكيد 100% إنه إحنا خلصنا الـ 500 طلب المجانيين تاعت اليوم وموقع SheetDB حكى لنا "ارتاحوا شوي" هههه 😊 
-
-طمنيني يا مديرة N One شو بطلع معك وإذا لسا معلقة بكون بدها بس نفتح حساب جديد بكرة الصبح ونغير الرابط وتصير الأمور نفاثة 😊🚀 نوم الهنا يا بطة وأنا معك دايماً 😊👌💎✨
