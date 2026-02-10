@@ -3,97 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | تفعيل النظام</title>
+    <title>N One | إعداد النظام</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            text-align: center; 
-            padding: 50px; 
-            background: #f4f6f8; 
-        }
-        
-        .card {
-            background: white;
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 40px;
-            border-radius: 15px;
-            border-top: 5px solid #2e7d32;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        /* إعدادات الصفحة */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a237e; /* خلفية كحلية ملكية */
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
         }
 
-        h1 { color: #2e7d32; margin-top: 0; }
-        
-        button { 
-            padding: 15px 30px; 
-            font-size: 18px; 
-            background: #2e7d32; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold;
-            margin-top: 20px;
-            transition: 0.3s;
+        /* الكرت الوسطي */
+        .setup-card {
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-top: 8px solid #d4af37; /* لمسة ذهبية */
         }
-        
-        button:hover { background: #1b5e20; }
-        
-        #msg { margin-top: 20px; font-weight: bold; color: #333; line-height: 1.6; }
+
+        h1 { margin: 0; font-size: 28px; color: #1a237e; }
+        p { color: #666; font-size: 14px; margin-bottom: 30px; line-height: 1.6; }
+
+        /* الأزرار */
+        button {
+            background-color: #2e7d32; /* أخضر للتشغيل */
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        button:hover { background-color: #1b5e20; transform: translateY(-2px); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* منطقة الرسائل */
+        #status-area {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .error { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+
+        /* رابط الانتقال */
+        .go-link {
+            display: block;
+            margin-top: 20px;
+            color: #1a237e;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .go-link:hover { text-decoration: underline; }
+
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>تفعيل حساب المدير الآمن</h1>
-        <p>سيتم إنشاء الحساب الرئيسي بصلاحيات كاملة.</p>
-        <p><b>User:</b> N1_CEO_JO <br> <b>Pass:</b> N1@Power$2026</p>
+    <div class="setup-card">
+        <h1>تهيئة نظام N One</h1>
+        <p>سيقوم هذا المعالج بإنشاء حساب "المدير العام" وتجهيز قاعدة البيانات للعمل فوراً.</p>
+
+        <button onclick="installSystem()" id="installBtn">بدء التثبيت الآن 🚀</button>
+
+        <div id="status-area"></div>
         
-        <button onclick="createAdmin()">إنشاء الحساب الآن 🚀</button>
-        <div id="msg"></div>
+        <a href="manager.html" id="nextStep" class="go-link" style="display: none;">
+            انتقل إلى بوابة الإدارة &larr;
+        </a>
     </div>
 
     <script>
-        const API = "https://sheetdb.io/api/v1/qzfkwfzcpbrsm";
+        // رابط قاعدة البيانات الخاص بك
+        const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
 
-        async function createAdmin() {
-            const btn = document.querySelector('button');
-            const msg = document.getElementById('msg');
-            
+        async function installSystem() {
+            const btn = document.getElementById('installBtn');
+            const statusBox = document.getElementById('status-area');
+            const nextLink = document.getElementById('nextStep');
+
+            // 1. تغيير حالة الزر
+            btn.innerHTML = "جاري الاتصال بالسيرفر...";
             btn.disabled = true;
-            btn.innerText = "جاري الاتصال بقاعدة البيانات...";
+            statusBox.style.display = 'none';
+            nextLink.style.display = 'none';
 
-            // بيانات المدير القوية
-            const adminData = {
-                id: "1",
-                user: "N1_CEO_JO",
-                pass: "N1@Power$2026",
-                name: "CEO - N One Global",
-                role: "admin",
-                status: "active",
-                expiry: "2030-01-01"
+            // 2. تجهيز بيانات المدير (التاج الملكي)
+            const adminUser = {
+                "id": "1",
+                "user": "N1_CEO_JO",
+                "pass": "N1@Power$2026",
+                "name": "N One CEO",
+                "role": "admin",
+                "status": "active",
+                "expiry": "2030-01-01"
             };
 
             try {
-                // تنظيف البيانات القديمة
-                await fetch(API + '/all', { method: 'DELETE' });
-
-                // زرع المدير الجديد
-                await fetch(API, {
+                // 3. إرسال البيانات (POST)
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [adminData] })
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data: [adminUser] })
                 });
 
-                msg.innerHTML = "<h3 style='color:green'>تم التفعيل بنجاح! ✅</h3><p>تم حفظ بيانات المدير.<br>يمكنك الآن إغلاق هذه الصفحة والذهاب لبوابة الدخول (manager.html).</p>";
-                btn.style.display = 'none';
+                // 4. التحقق من النتيجة
+                if (response.ok) {
+                    showStatus("success", "✅ تم تثبيت النظام وإنشاء حساب المدير بنجاح!");
+                    btn.innerHTML = "تم التثبيت";
+                    nextLink.style.display = 'block'; // إظهار رابط الدخول
+                } else {
+                    const errData = await response.json();
+                    showStatus("error", "❌ حدث خطأ: " + JSON.stringify(errData));
+                    btn.disabled = false;
+                    btn.innerHTML = "حاول مرة أخرى";
+                }
 
             } catch (error) {
-                msg.innerHTML = "<h3 style='color:red'>حدث خطأ في الاتصال!</h3><p>تأكد من الإنترنت وحاول مرة أخرى.</p>";
+                console.error(error);
+                showStatus("error", "❌ خطأ في الاتصال! تأكد من الإنترنت.");
                 btn.disabled = false;
-                btn.innerText = "حاول مرة أخرى";
+                btn.innerHTML = "حاول مرة أخرى";
             }
         }
+
+        function showStatus(type, msg) {
+            const box = document.getElementById('status-area');
+            box.className = type;
+            box.innerText = msg;
+            box.style.display = 'block';
+        }
     </script>
+
 </body>
 </html>
