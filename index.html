@@ -5,182 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | بوابة الشركاء</title>
     <style>
-        /* إعدادات الخط والخلفية */
+        /* إعدادات الصفحة الأساسية */
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            background: linear-gradient(135deg, #1a237e 0%, #000051 100%);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
-        /* تصميم صندوق الدخول */
-        .login-box {
+        /* صندوق تسجيل الدخول */
+        .login-card {
             background-color: #ffffff;
             width: 90%;
-            max-width: 400px;
+            max-width: 380px;
             padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
             text-align: center;
-            border-top: 6px solid #d4af37;
+            border-top: 5px solid #d4af37;
+            position: relative;
         }
 
-        /* تنسيق اللوجو */
-        h1 { margin: 0; letter-spacing: 2px; font-weight: 800; }
-        .n-letter { color: #1a237e; font-size: 45px; }
-        .one-word { color: #d4af37; font-size: 45px; }
+        /* تصميم الشعار */
+        .brand-title {
+            margin: 0 0 10px 0;
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .text-navy { color: #1a237e; }
+        .text-gold { color: #d4af37; }
 
-        p { color: #666; font-size: 14px; margin-top: 10px; margin-bottom: 30px; }
+        .subtitle {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
 
-        /* مدخلات البيانات */
-        .input-group { margin-bottom: 20px; text-align: right; }
-        label { display: block; margin-bottom: 8px; color: #333; font-weight: bold; font-size: 13px; }
+        /* حقول الإدخال */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
         input {
             width: 100%;
-            padding: 14px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
             box-sizing: border-box;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            background-color: #f9f9f9;
             outline: none;
-            text-align: left;
-            background: #f9f9f9;
+            text-align: left; /* لكتابة الإنجليزي بشكل صحيح */
         }
-        input:focus { border-color: #1a237e; background: #fff; box-shadow: 0 0 8px rgba(26, 35, 126, 0.2); }
 
-        /* أزرار الدخول */
+        input:focus {
+            border-color: #1a237e;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+        }
+
+        /* زر الدخول */
         button {
             width: 100%;
-            padding: 15px;
+            padding: 14px;
             background-color: #1a237e;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 17px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s ease;
             margin-top: 10px;
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        button:hover { background-color: #0d47a1; transform: translateY(-2px); }
-        button:active { transform: translateY(0); }
 
-        /* رسائل الخطأ */
-        .error-msg {
-            background-color: #ffebee;
-            color: #c62828;
+        button:hover {
+            background-color: #0d47a1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 35, 126, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* رسائل التنبيه */
+        .alert-box {
             padding: 12px;
             border-radius: 8px;
             font-size: 13px;
             margin-top: 20px;
             display: none;
+            line-height: 1.5;
+        }
+        
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
             border: 1px solid #ffcdd2;
         }
 
-        .footer { margin-top: 30px; font-size: 12px; color: #aaa; }
+        /* تذييل الصفحة */
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #aaa;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <h1>
-            <span class="n-letter">N</span>
-            <span class="one-word">One</span>
+    <div class="login-card">
+        <h1 class="brand-title">
+            <span class="text-navy">N</span>
+            <span class="text-gold">One</span>
         </h1>
-        <p>بوابة دخول الشركاء والعملاء المعتمدة</p>
+        <p class="subtitle">بوابة الدخول الموحدة للشركاء</p>
 
         <div class="input-group">
             <label>اسم المستخدم (User ID)</label>
-            <input type="text" id="username" placeholder="Username" autocomplete="off">
+            <input type="text" id="username" placeholder="Enter username" autocomplete="off">
         </div>
 
         <div class="input-group">
             <label>كلمة المرور (Password)</label>
-            <input type="password" id="password" placeholder="Password" autocomplete="off">
+            <input type="password" id="password" placeholder="Enter password" autocomplete="off">
         </div>
 
-        <button onclick="handleLogin()">تسجيل الدخول</button>
+        <button onclick="handleLogin()" id="loginBtn">تسجيل الدخول</button>
 
-        <div id="error-box" class="error-msg"></div>
+        <div id="msgBox" class="alert-box alert-error"></div>
 
         <div class="footer">
-            النظام الذكي &copy; 2026 N One Global
+            N One Global Systems &copy; 2026<br>
+            All Rights Reserved
         </div>
     </div>
 
     <script>
-        // الرابط الجديد الخاص بكِ
+        // رابط الاتصال بقاعدة البيانات
         const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
 
         async function handleLogin() {
-            const userInp = document.getElementById('username').value.trim();
-            const passInp = document.getElementById('password').value.trim();
-            const loginBtn = document.querySelector('button');
-            const errorBox = document.getElementById('error-box');
+            const userField = document.getElementById('username');
+            const passField = document.getElementById('password');
+            const btn = document.getElementById('loginBtn');
+            const msg = document.getElementById('msgBox');
 
-            // إعادة ضبط الحالة
-            errorBox.style.display = "none";
-            
-            if (!userInp || !passInp) {
-                showError("يرجى ملء كافة الحقول المطلوبة");
+            const u = userField.value.trim();
+            const p = passField.value.trim();
+
+            // إخفاء الرسائل السابقة
+            msg.style.display = "none";
+
+            // التحقق من تعبئة الحقول
+            if (!u || !p) {
+                showMessage("يرجى إدخال اسم المستخدم وكلمة المرور للمتابعة.");
                 return;
             }
 
-            loginBtn.innerText = "جاري التحقق...";
-            loginBtn.disabled = true;
+            // تفعيل حالة التحميل
+            btn.innerHTML = "جاري التحقق...";
+            btn.disabled = true;
+            userField.disabled = true;
+            passField.disabled = true;
 
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
 
-                // البحث عن المستخدم
-                const foundUser = data.find(item => item.user === userInp && item.pass === passInp);
+                // البحث عن المستخدم المطابق
+                const user = data.find(item => item.user === u && item.pass === p);
 
-                if (foundUser) {
-                    // منع دخول الأدمن من هذه البوابة
-                    if (foundUser.role === 'admin') {
-                        showError("عذراً، هذه البوابة للعملاء فقط. يرجى استخدام بوابة الإدارة");
-                        resetBtn();
+                if (user) {
+                    // 1. حماية: منع المدير من الدخول من هنا
+                    if (user.role === 'admin') {
+                        showMessage("عذراً، هذا الحساب إداري. يرجى استخدام بوابة الإدارة المختصة (manager.html).");
+                        resetState();
                         return;
                     }
 
-                    // التحقق من حالة الحساب
-                    if (foundUser.status !== 'active') {
-                        showError("هذا الحساب معلق حالياً، يرجى مراجعة الإدارة");
-                        resetBtn();
+                    // 2. حماية: التحقق من حالة الحساب (نشط أم موقوف)
+                    if (user.status !== 'active') {
+                        showMessage("عذراً، هذا الحساب موقوف مؤقتاً. يرجى مراجعة إدارة N One.");
+                        resetState();
                         return;
                     }
 
-                    // تخزين البيانات والتوجه للوحة العميل
-                    localStorage.setItem('currentUser', JSON.stringify(foundUser));
+                    // 3. نجاح: حفظ البيانات والتوجيه
+                    localStorage.setItem('currentUser', JSON.stringify(user));
                     window.location.href = 'client.html';
+
                 } else {
-                    showError("اسم المستخدم أو كلمة المرور غير صحيحة");
-                    resetBtn();
+                    // فشل: بيانات خاطئة
+                    showMessage("بيانات الدخول غير صحيحة، يرجى المحاولة مرة أخرى.");
+                    resetState();
                 }
 
-            } catch (err) {
-                showError("حدث خطأ في الاتصال بالسيرفر، حاول مجدداً");
-                resetBtn();
+            } catch (error) {
+                // خطأ في الاتصال
+                console.error(error);
+                showMessage("حدث خطأ في الاتصال بالخادم. يرجى التحقق من الإنترنت.");
+                resetState();
             }
-        }
 
-        function showError(text) {
-            const errorBox = document.getElementById('error-box');
-            errorBox.innerText = text;
-            errorBox.style.display = "block";
-        }
+            // دوال مساعدة داخلية
+            function showMessage(text) {
+                msg.innerText = text;
+                msg.style.display = "block";
+            }
 
-        function resetBtn() {
-            const loginBtn = document.querySelector('button');
-            loginBtn.innerText = "تسجيل الدخول";
-            loginBtn.disabled = false;
+            function resetState() {
+                btn.innerHTML = "تسجيل الدخول";
+                btn.disabled = false;
+                userField.disabled = false;
+                passField.disabled = false;
+            }
         }
     </script>
 
