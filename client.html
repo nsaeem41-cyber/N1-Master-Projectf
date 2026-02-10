@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | النظام المتكامل</title>
+    <title>N One | نظام العمليات</title>
     <style>
         /* ================= التنسيقات العامة ================= */
         body {
@@ -21,7 +21,7 @@
             width: 100%;
             max-width: 500px;
             margin-top: 20px;
-            padding-bottom: 80px; /* مساحة للقوائم السفلية */
+            padding-bottom: 80px;
         }
 
         /* الهيدر */
@@ -63,7 +63,7 @@
         .modal-title { font-size: 20px; font-weight: bold; color: #1a237e; }
         .close-btn { font-size: 24px; color: #c62828; cursor: pointer; font-weight: bold; border: none; background: none; }
 
-        /* ================= نموذج الطلب الرئيسي ================= */
+        /* ================= نموذج الطلب ================= */
         .input-group { margin-bottom: 15px; position: relative; }
         
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #555; }
@@ -94,7 +94,7 @@
             width: 50px; font-size: 20px; cursor: pointer;
         }
 
-        /* ================= الجداول (للسجل والكباتن) ================= */
+        /* ================= الجداول ================= */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #1a237e; color: white; padding: 10px; font-size: 12px; }
         td { border-bottom: 1px solid #eee; padding: 10px; font-size: 13px; text-align: center; }
@@ -103,12 +103,12 @@
         .btn-edit { background: #1976d2; }
         .btn-del { background: #d32f2f; }
 
-        /* ================= الرسوم البيانية (CSS Charts) ================= */
+        /* ================= الرسوم البيانية ================= */
         .chart-bar { background: #eee; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
         .chart-fill { height: 100%; background: #d4af37; width: 0%; transition: 1s; }
         .chart-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; font-weight: bold; }
 
-        /* ================= القوائم السفلية (Navigation) ================= */
+        /* ================= القوائم السفلية ================= */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background: white;
             display: flex; justify-content: space-around; padding: 15px 0;
@@ -222,8 +222,7 @@
         <button class="btn-send" onclick="addNewCaptain()" style="background:#2e7d32;">إضافة كابتن جديد</button>
         
         <h4 style="margin-top:30px;">قائمة الكباتن المسجلين</h4>
-        <div id="captains-list-container">
-            </div>
+        <div id="captains-list-container"></div>
     </div>
 
     <div id="records-modal" class="modal">
@@ -242,18 +241,15 @@
     <div id="reports-modal" class="modal">
         <div class="modal-header">
             <button class="close-btn" onclick="closeModal('reports-modal')">✖</button>
-            <div class="modal-title">التقارير المالية والبيانية</div>
+            <div class="modal-title">التقارير المالية</div>
         </div>
-
         <div style="background:#fafafa; padding:15px; border-radius:10px; margin-bottom:20px;">
             <h4>أداء اليوم (مستهدف 50 طلب)</h4>
             <div class="chart-label"><span>عدد الطلبات</span><span id="chart-orders-val">0</span></div>
             <div class="chart-bar"><div id="chart-orders-fill" class="chart-fill" style="width:0%"></div></div>
-
             <div class="chart-label"><span>قيمة التحصيل</span><span id="chart-money-val">0 د.أ</span></div>
             <div class="chart-bar"><div id="chart-money-fill" class="chart-fill" style="width:0%; background:#1a237e;"></div></div>
         </div>
-
         <table border="1" style="border-color:#eee;">
             <tr><td>إجمالي التوصيل</td><td id="rep-delivery">0.00</td></tr>
             <tr><td>إجمالي الشحنات</td><td id="rep-shipment">0.00</td></tr>
@@ -272,13 +268,11 @@
     <script>
         const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
         
-        // متغيرات عامة
         let allData = [];
         let captains = [];
         let orders = [];
         let currentUser = null;
 
-        // عند التحميل
         window.onload = async function() {
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) { window.location.href = 'index.html'; return; }
@@ -286,46 +280,75 @@
             
             await loadAllData();
             document.getElementById('loading-screen').style.display = 'none';
+
+            // تشغيل "الجاسوس" للحماية الفورية
+            startWatchdog(); 
         };
 
-        // جلب البيانات من السيرفر
+        // ================= كود الجاسوس (الحماية الفورية) =================
+        function startWatchdog() {
+            // كل 15 ثانية يتأكد من حالة الحساب
+            setInterval(async function() {
+                try {
+                    // بحث عن المستخدم في قاعدة البيانات
+                    const response = await fetch(`${API_URL}/search?user=${currentUser.user}`);
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        const freshUser = data[0];
+                        
+                        // 1. إذا تم الإيقاف
+                        if (freshUser.status !== 'active') {
+                            alert("⛔ تنبيه:\nتم إيقاف اشتراكك مؤقتاً من قبل الإدارة.\nيرجى مراجعة الشركة.");
+                            logout();
+                        }
+                        
+                        // تحديث الاسم لو تغير
+                        document.getElementById('display-name').innerText = freshUser.name;
+                        
+                    } else {
+                        // 2. إذا تم الحذف نهائياً
+                        alert("⚠️ تنبيه أمني:\nتم حذف حسابك من النظام.\nسيتم تسجيل الخروج فوراً.");
+                        logout();
+                    }
+                } catch (e) {
+                    console.log("Network glitch, skipping check...");
+                }
+            }, 15000); // 15000 ميلي ثانية = 15 ثانية
+        }
+
+        // ================= باقي وظائف النظام =================
         async function loadAllData() {
             try {
                 const res = await fetch(API_URL);
                 allData = await res.json();
                 
-                // تصفية البيانات (كباتن / طلبات)
                 captains = allData.filter(item => item.type === 'captain');
                 orders = allData.filter(item => item.type === 'order' && item.client_user === currentUser.user);
                 
                 updateCaptainsDropdown();
                 updateDashboard();
-            } catch (e) { console.error("Error loading data", e); }
+            } catch (e) { console.error(e); }
         }
 
-        // ================= إدارة الكباتن =================
         function updateCaptainsDropdown() {
             const select = document.getElementById('captain_select');
             select.innerHTML = '<option value="">-- اختر الكابتن --</option>';
-            
             const listContainer = document.getElementById('captains-list-container');
             let tableHTML = '<table><tr><th>الاسم</th><th>الهاتف</th><th>حذف</th></tr>';
 
             captains.forEach(cap => {
-                // للقائمة المنسدلة
                 const opt = document.createElement('option');
                 opt.value = cap.phone;
                 opt.text = cap.name;
                 opt.dataset.name = cap.name;
                 select.appendChild(opt);
 
-                // لجدول الإدارة
                 tableHTML += `<tr><td>${cap.name}</td><td>${cap.phone}</td><td><button class="btn-action btn-del" onclick="deleteItem('${cap.id}')">✖</button></td></tr>`;
             });
             tableHTML += '</table>';
             listContainer.innerHTML = captains.length ? tableHTML : '<p style="text-align:center">لا يوجد كباتن</p>';
 
-            // عند اختيار كابتن من القائمة
             select.onchange = function() {
                 const selectedOpt = select.options[select.selectedIndex];
                 document.getElementById('mandoob_name').value = selectedOpt.dataset.name || '';
@@ -349,10 +372,9 @@
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
             alert("تم إضافة الكابتن");
-            await loadAllData(); // تحديث
+            await loadAllData();
         }
 
-        // ================= إدارة الطلبات =================
         async function processOrder() {
             const capPhone = document.getElementById('captain_select').value;
             const capName = document.getElementById('mandoob_name').value;
@@ -362,12 +384,11 @@
 
             if(!capPhone || !pickup) return alert("اختر الكابتن والموقع");
 
-            // 1. حفظ الطلب في السجل
             const newOrder = {
                 id: "ORD_" + Date.now(),
                 type: "order",
                 client_user: currentUser.user,
-                date: new Date().toISOString(), // تاريخ ووقت
+                date: new Date().toISOString(),
                 cap_name: capName,
                 cap_phone: capPhone,
                 pickup: pickup,
@@ -375,24 +396,19 @@
                 val: val
             };
 
-            // إظهار تحميل سريع
             const btn = document.querySelector('.btn-send');
             btn.innerText = "جاري الحفظ...";
             btn.disabled = true;
 
             await saveDataToApi(newOrder);
-
-            // 2. فتح واتساب
             sendToWhatsApp(capPhone, capName, pickup, fee, val);
 
-            // إعادة تعيين
             btn.innerText = "حفظ وإرسال الطلب 🚀";
             btn.disabled = false;
             document.getElementById('pickup_loc').value = '';
             document.getElementById('delivery_fee').value = '';
             document.getElementById('shipment_val').value = '';
-            
-            await loadAllData(); // تحديث العدادات
+            await loadAllData();
         }
 
         function sendToWhatsApp(phone, name, pickup, fee, val) {
@@ -406,70 +422,46 @@
             window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // ================= السجلات والتقارير =================
         function openRecords() {
             openModal('records-modal');
             const tbody = document.querySelector('#records-table tbody');
             tbody.innerHTML = '';
-
-            // فرز الطلبات (الأحدث أولاً)
             const sorted = orders.sort((a,b) => new Date(b.date) - new Date(a.date));
 
             sorted.forEach(ord => {
                 const date = new Date(ord.date).toLocaleDateString('ar-EG');
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${date}</td>
-                        <td>${ord.cap_name}</td>
-                        <td>${ord.val}</td>
-                        <td>
-                            <button class="btn-action btn-del" onclick="deleteItem('${ord.id}')">حذف</button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr><td>${date}</td><td>${ord.cap_name}</td><td>${ord.val}</td><td><button class="btn-action btn-del" onclick="deleteItem('${ord.id}')">حذف</button></td></tr>`;
             });
         }
 
         function openReports() {
             openModal('reports-modal');
-            
-            // حسابات
             let totalFee = 0, totalVal = 0;
-            orders.forEach(o => {
-                totalFee += parseFloat(o.fee || 0);
-                totalVal += parseFloat(o.val || 0);
-            });
+            orders.forEach(o => { totalFee += parseFloat(o.fee || 0); totalVal += parseFloat(o.val || 0); });
 
             document.getElementById('rep-delivery').innerText = totalFee.toFixed(2);
             document.getElementById('rep-shipment').innerText = totalVal.toFixed(2);
             document.getElementById('rep-total').innerText = (totalFee + totalVal).toFixed(2);
 
-            // تحديث الرسوم البيانية (مستهدف افتراضي 50 طلب)
             const count = orders.length;
             const countPct = Math.min((count / 50) * 100, 100);
-            
             document.getElementById('chart-orders-val').innerText = count;
             document.getElementById('chart-orders-fill').style.width = countPct + "%";
 
-            // مستهدف مالي افتراضي 1000 دينار
             const moneyPct = Math.min(((totalFee + totalVal) / 1000) * 100, 100);
             document.getElementById('chart-money-val').innerText = (totalFee + totalVal).toFixed(2);
             document.getElementById('chart-money-fill').style.width = moneyPct + "%";
         }
 
         function updateDashboard() {
-            // تحديث العدادات في الصفحة الرئيسية
-            const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+            const today = new Date().toLocaleDateString('en-CA');
             const todayOrders = orders.filter(o => o.date.startsWith(today));
-            
             document.getElementById('today-count').innerText = todayOrders.length;
-            
             let total = 0;
             todayOrders.forEach(o => total += parseFloat(o.fee || 0) + parseFloat(o.val || 0));
             document.getElementById('today-total').innerText = total.toFixed(2);
         }
 
-        // ================= وظائف عامة (API) =================
         async function saveDataToApi(obj) {
             await fetch(API_URL, {
                 method: 'POST',
@@ -483,30 +475,14 @@
             await fetch(`${API_URL}/id/${id}`, { method: 'DELETE' });
             alert("تم الحذف");
             await loadAllData();
-            // تحديث الشاشة المفتوحة حالياً
             if(document.getElementById('records-modal').style.display === 'block') openRecords();
             if(document.getElementById('captains-modal').style.display === 'block') updateCaptainsDropdown();
         }
 
-        function openModal(id) {
-            closeAllModals();
-            document.getElementById(id).style.display = 'block';
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        function closeAllModals() {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        }
-
-        function logout() {
-            if(confirm('خروج؟')) {
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            }
-        }
+        function openModal(id) { closeAllModals(); document.getElementById(id).style.display = 'block'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function logout() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
     </script>
 </body>
 </html>
