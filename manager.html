@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N One | الدخول الإداري</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #263238; /* خلفية غامقة هيبة */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 350px;
+            border-top: 5px solid #d4af37;
+        }
+
+        /* تنسيق اللوجو */
+        .brand { margin-bottom: 20px; }
+        .n-letter { color: #1a237e; font-size: 40px; font-weight: 800; }
+        .one-word { color: #d4af37; font-size: 40px; font-weight: 800; }
+
+        h2 { color: #555; margin: 0 0 30px 0; font-size: 16px; font-weight: normal; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        input:focus { border-color: #d4af37; background: #fffde7; }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #d4af37;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #c49000; }
+
+        .error { color: #d32f2f; font-size: 13px; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <div class="brand">
+            <span class="n-letter">N</span>
+            <span class="one-word">One</span>
+        </div>
+        <h2>بوابة الإدارة المركزية</h2>
+        
+        <input type="text" id="username" placeholder="User ID">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button onclick="login()">دخول آمن 🔒</button>
+        <div id="error-msg" class="error">بيانات الدخول غير صحيحة</div>
+    </div>
+
+    <script>
+        const API = "https://sheetdb.io/api/v1/qzfkwfzcpbrsm";
+
+        async function login() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            const btn = document.querySelector('button');
+            const err = document.getElementById('error-msg');
+
+            btn.innerText = "جاري التحقق...";
+            btn.disabled = true;
+            err.style.display = "none";
+
+            try {
+                const res = await fetch(API);
+                const users = await res.json();
+                
+                // البحث عن الأدمن حصراً
+                const admin = users.find(x => x.user === u && x.pass === p && x.role === 'admin');
+
+                if (admin) {
+                    localStorage.setItem('currentUser', JSON.stringify(admin));
+                    window.location.href = 'admin.html';
+                } else {
+                    err.style.display = "block";
+                    btn.innerText = "دخول آمن 🔒";
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("خطأ في الاتصال");
+                btn.innerText = "دخول آمن 🔒";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
