@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a237e; /* خلفية كحلية ملكية */
+            background-color: #1a237e;
             margin: 0;
             padding: 20px;
             color: #333;
@@ -23,7 +23,6 @@
             min-height: 90vh;
         }
 
-        /* الهيدر */
         .header {
             display: flex;
             justify-content: space-between;
@@ -41,7 +40,6 @@
             padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
 
-        /* قسم الإضافة */
         .add-box {
             background: white; padding: 20px; border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px;
@@ -60,7 +58,6 @@
             font-weight: bold; margin-top: 10px; width: 100%;
         }
 
-        /* قائمة العملاء */
         .client-card {
             background: white; border-radius: 10px; padding: 15px;
             margin-bottom: 15px; border-right: 5px solid #ccc;
@@ -69,8 +66,8 @@
             transition: 0.3s;
         }
         
-        .client-card.active { border-right-color: #2e7d32; } /* أخضر للنشط */
-        .client-card.stopped { border-right-color: #c62828; background: #ffebee; } /* أحمر للموقوف */
+        .client-card.active { border-right-color: #2e7d32; }
+        .client-card.stopped { border-right-color: #c62828; background: #ffebee; }
 
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -79,7 +76,6 @@
 
         .card-info { font-size: 13px; color: #666; display: flex; gap: 15px; }
 
-        /* أزرار التحكم */
         .actions {
             display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap;
         }
@@ -90,14 +86,14 @@
             text-align: center;
         }
 
-        .btn-stop { background: #c62828; } /* أحمر للإيقاف */
-        .btn-activate { background: #2e7d32; } /* أخضر للتفعيل */
-        .btn-renew { background: #1976d2; } /* أزرق للتجديد */
-        .btn-del { background: #555; } /* رمادي للحذف */
-        .btn-edit { background: #f9a825; color: #000; } /* أصفر للتعديل */
+        .btn-stop { background: #c62828; }
+        .btn-activate { background: #2e7d32; }
+        .btn-renew { background: #1976d2; }
+        .btn-del { background: #555; }
+        .btn-edit { background: #f9a825; color: #000; }
 
-        /* شاشة التحميل */
         #loading { text-align: center; padding: 20px; font-weight: bold; color: #1a237e; }
+        .error-msg { color: #c62828; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; display: none; margin-bottom: 10px; }
 
     </style>
 </head>
@@ -110,6 +106,8 @@
             <button class="btn-logout" onclick="logout()">خروج 🔒</button>
         </div>
 
+        <div id="status-error" class="error-msg"></div>
+
         <div class="add-box">
             <h3 class="add-title">إضافة مشترك جديد</h3>
             <div class="form-row">
@@ -121,7 +119,7 @@
         </div>
 
         <h3 style="color:#1a237e;">قائمة المشتركين</h3>
-        <div id="loading">جاري جلب البيانات...</div>
+        <div id="loading">جاري جلب البيانات من السحابة... ☁️</div>
         <div id="clients-list"></div>
 
     </div>
@@ -129,49 +127,52 @@
     <script>
         const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
 
-        // التأكد من أن المستخدم هو المدير
         window.onload = function() {
             const admin = JSON.parse(localStorage.getItem('currentUser'));
+            // التعديل الجوهري: منع الدوامة اللانهائية بالتحويل لصفحة الدخول
             if (!admin || admin.role !== 'admin') {
-                window.location.href = 'manager.html'; // يرجع يسجل دخول لو مش مدير
+                window.location.href = 'index.html'; 
             } else {
                 loadClients();
             }
         };
 
-        // دالة جلب العملاء
         async function loadClients() {
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('status-error');
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 
-                // تصفية: فقط العملاء (role = client)
+                if (data.error || !Array.isArray(data)) {
+                    throw new Error("وصلنا للحد الأقصى للطلبات المجانية اليوم");
+                }
+
                 const clients = data.filter(u => u.role === 'client');
-                
                 renderClients(clients);
-                document.getElementById('loading').style.display = 'none';
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'none';
             } catch (e) {
-                alert("خطأ في الاتصال");
+                loadingDiv.style.display = 'none';
+                errorDiv.innerText = "⚠️ تنبيه: " + e.message;
+                errorDiv.style.display = 'block';
             }
         }
 
-        // دالة رسم الجدول (الكروت)
         function renderClients(clients) {
             const container = document.getElementById('clients-list');
             container.innerHTML = '';
 
             if (clients.length === 0) {
-                container.innerHTML = '<p style="text-align:center">لا يوجد مشتركين حالياً.</p>';
+                container.innerHTML = '<p style="text-align:center">لا يوجد مشتركين حالياً في إمبراطورية N One 😊</p>';
                 return;
             }
 
-            // ترتيب: الأحدث أولاً (اختياري)
             clients.reverse().forEach(client => {
                 const isActive = client.status === 'active';
                 const statusClass = isActive ? 'active' : 'stopped';
                 const statusText = isActive ? 'نشط ✅' : 'موقوف 🛑';
 
-                // تصميم الكرت
                 const card = document.createElement('div');
                 card.className = `client-card ${statusClass}`;
                 
@@ -202,17 +203,13 @@
             });
         }
 
-        // --- وظائف التحكم ---
-
-        // 1. إضافة عميل
         async function addClient() {
             const name = document.getElementById('new_name').value;
             const user = document.getElementById('new_user').value;
             const pass = document.getElementById('new_pass').value;
 
-            if (!name || !user || !pass) { alert("يرجى تعبئة كل الحقول"); return; }
+            if (!name || !user || !pass) { alert("يا بطة عبي البيانات كلها 😊"); return; }
 
-            // تحديد تاريخ انتهاء بعد 30 يوم
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + 30);
             const expiryStr = expiryDate.toISOString().split('T')[0];
@@ -225,42 +222,45 @@
                 role: "client",
                 status: "active",
                 expiry: expiryStr,
-                type: "user" // تمييز إنه مستخدم
+                type: "user"
             };
 
             const btn = document.querySelector('.btn-add');
-            btn.innerHTML = "جاري الحفظ...";
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "جاري الحفظ في السجلات... ✨";
             btn.disabled = true;
 
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [newClient] })
-            });
-
-            alert("تم إضافة العميل بنجاح! 🎉");
-            location.reload(); // تحديث الصفحة
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [newClient] })
+                });
+                alert("تمت إضافة المشترك بنجاح في نظام N One 🎉");
+                location.reload();
+            } catch (e) {
+                alert("حدث خطأ أثناء الحفظ 😊");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
-        // 2. تغيير الحالة (إيقاف / تفعيل)
         async function updateStatus(username, newStatus) {
-            if (!confirm(newStatus === 'stopped' ? "هل أنت متأكد من إيقاف هذا العميل؟ سيتم طرده فوراً!" : "هل تريد تفعيل العميل؟")) return;
+            const confirmMsg = newStatus === 'stopped' ? "أكيد بدك توقفي هالمشترك؟ 😊" : "تفعيل المشترك؟ 😊";
+            if (!confirm(confirmMsg)) return;
 
-            // البحث وتحديث الـ status
-            // SheetDB يدعم التحديث عبر user/username
             await fetch(`${API_URL}/user/${username}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: { status: newStatus } })
             });
 
-            alert("تم تحديث الحالة بنجاح!");
+            alert("تم تحديث الحالة بنجاح ✨");
             loadClients();
         }
 
-        // 3. تجديد الاشتراك
         async function renewClient(username) {
-            if (!confirm("تجديد الاشتراك لمدة 30 يوم؟")) return;
+            if (!confirm("تجديد الاشتراك لمدة 30 يوم إضافية؟ 😊")) return;
 
             const newDate = new Date();
             newDate.setDate(newDate.getDate() + 30);
@@ -272,37 +272,35 @@
                 body: JSON.stringify({ data: { expiry: expiryStr, status: 'active' } })
             });
 
-            alert("تم تجديد الاشتراك!");
+            alert("تم التجديد بنجاح يا مديرة 😊♻️");
             loadClients();
         }
 
-        // 4. حذف عميل
         async function deleteClient(id) {
-            if (!confirm("⚠️ تحذير: هل أنت متأكد من حذف العميل نهائياً؟")) return;
+            if (!confirm("⚠️ انتبهي: حذف نهائي من السيستم؟")) return;
 
             await fetch(`${API_URL}/id/${id}`, { method: 'DELETE' });
             
-            alert("تم الحذف.");
+            alert("تم الحذف بنجاح 😊");
             loadClients();
         }
 
-        // 5. تعديل (باسورد)
         async function editClient(username, oldPass) {
-            const newPass = prompt("أدخل كلمة المرور الجديدة:", oldPass);
+            const newPass = prompt("أدخل كلمة المرور الجديدة يا حبة السكر 😊:", oldPass);
             if (newPass && newPass !== oldPass) {
                 await fetch(`${API_URL}/user/${username}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: { pass: newPass } })
                 });
-                alert("تم تغيير كلمة المرور.");
+                alert("تم تحديث كلمة المرور بنجاح ✨");
                 loadClients();
             }
         }
 
         function logout() {
             localStorage.removeItem('currentUser');
-            window.location.href = 'manager.html'; // يرجع لشاشة الدخول
+            window.location.href = 'index.html';
         }
     </script>
 
