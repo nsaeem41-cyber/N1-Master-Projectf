@@ -3,179 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | نظام العمليات</title>
+    <title>N One | نظام الشركاء</title>
     <style>
-        /* ================= التنسيقات العامة ================= */
+        /* ================= تصميم Pro Mobile-First ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .main-container {
-            width: 100%;
-            max-width: 500px;
-            margin-top: 20px;
-            padding-bottom: 80px;
+            background-color: #f0f2f5; margin: 0; padding: 0;
+            user-select: none; /* منع النسخ لتبدو كتطبيق */
+            padding-bottom: 80px; /* مساحة للبار السفلي */
         }
 
         /* الهيدر */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .brand-text span { font-weight: 800; font-size: 26px; }
-        .n-char { color: #1a237e; }
-        .one-word { color: #d4af37; }
-
-        .settings-btn {
-            font-size: 24px; color: #555; cursor: pointer;
-            background: none; border: none; transition: 0.3s;
-        }
-        .settings-btn:hover { color: #1a237e; transform: rotate(90deg); }
-
-        .comp-name {
-            text-align: center; color: #1a237e; font-size: 18px;
-            font-weight: bold; margin-bottom: 20px;
-            background: #e8eaf6; padding: 10px; border-radius: 8px;
-        }
-
-        /* ================= الشاشات المنبثقة (Modals) ================= */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #fff; z-index: 2000; overflow-y: auto;
-            padding: 20px; box-sizing: border-box;
-        }
-
-        .modal-header {
+            background: white; padding: 15px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
+        }
+        .brand { font-size: 22px; font-weight: 900; color: #1a237e; }
+        .gold { color: #d4af37; }
+        .btn-settings { background: none; border: none; font-size: 24px; cursor: pointer; color: #555; }
+
+        /* المحتوى */
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+        /* ملخص اليوم */
+        .summary-box {
+            display: flex; gap: 10px; margin-bottom: 20px;
+        }
+        .stat-box {
+            flex: 1; background: white; padding: 15px; border-radius: 12px;
+            text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border-bottom: 3px solid #1a237e;
+        }
+        .stat-num { font-size: 24px; font-weight: bold; color: #1a237e; display: block; }
+        .stat-lbl { font-size: 12px; color: #777; }
+
+        /* نموذج الطلب */
+        .order-card {
+            background: white; padding: 25px; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .card-title {
+            font-size: 18px; font-weight: bold; color: #1a237e;
+            border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;
         }
 
-        .modal-title { font-size: 20px; font-weight: bold; color: #1a237e; }
-        .close-btn { font-size: 24px; color: #c62828; cursor: pointer; font-weight: bold; border: none; background: none; }
-
-        /* ================= نموذج الطلب ================= */
-        .input-group { margin-bottom: 15px; position: relative; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
         
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #555; }
-
         input, select {
-            width: 100%; padding: 14px;
-            border: 1px solid #ddd; border-radius: 10px;
-            font-size: 15px; box-sizing: border-box; outline: none;
-            text-align: right; background-color: #fff;
-            transition: 0.3s;
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+            font-size: 14px; background: #fafafa; outline: none; box-sizing: border-box;
         }
-        input:focus, select:focus { border-color: #1a237e; box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1); }
+        input:focus, select:focus { border-color: #d4af37; background: white; }
 
-        /* زر الإرسال */
-        .btn-send {
-            width: 100%; padding: 18px;
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-            color: white; border: none; border-radius: 12px;
-            font-size: 18px; font-weight: bold; cursor: pointer;
-            margin-top: 10px; box-shadow: 0 10px 20px rgba(26, 35, 126, 0.2);
-        }
-        .btn-send:hover { transform: translateY(-2px); }
-
-        /* ================= قائمة الكباتن ================= */
-        .captain-select-wrapper { display: flex; gap: 10px; }
-        .btn-add-cap {
-            background: #d4af37; color: white; border: none; border-radius: 8px;
+        /* إضافة كابتن سريع */
+        .cap-row { display: flex; gap: 10px; }
+        .btn-plus {
+            background: #d4af37; color: white; border: none; border-radius: 10px;
             width: 50px; font-size: 20px; cursor: pointer;
         }
 
-        /* ================= الجداول ================= */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #1a237e; color: white; padding: 10px; font-size: 12px; }
-        td { border-bottom: 1px solid #eee; padding: 10px; font-size: 13px; text-align: center; }
-        
-        .btn-action { padding: 5px 10px; border-radius: 5px; color: white; border: none; cursor: pointer; font-size: 11px; margin: 2px; }
-        .btn-edit { background: #1976d2; }
-        .btn-del { background: #d32f2f; }
+        .btn-send {
+            width: 100%; padding: 15px; background: #1a237e; color: white;
+            border: none; border-radius: 12px; font-size: 16px; font-weight: bold;
+            cursor: pointer; margin-top: 10px; box-shadow: 0 5px 15px rgba(26, 35, 126, 0.2);
+        }
+        .btn-send:active { transform: scale(0.98); }
 
-        /* ================= الرسوم البيانية ================= */
-        .chart-bar { background: #eee; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
-        .chart-fill { height: 100%; background: #d4af37; width: 0%; transition: 1s; }
-        .chart-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; font-weight: bold; }
-
-        /* ================= القوائم السفلية ================= */
+        /* القائمة السفلية */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 15px 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); border-top: 1px solid #eee;
+            display: flex; justify-content: space-around; padding: 12px 0;
+            border-top: 1px solid #eee; box-shadow: 0 -5px 15px rgba(0,0,0,0.03); z-index: 100;
         }
-        .nav-item { text-align: center; color: #777; cursor: pointer; font-size: 12px; }
-        .nav-item span { display: block; font-size: 20px; margin-bottom: 5px; }
+        .nav-item { text-align: center; color: #999; font-size: 11px; cursor: pointer; flex: 1; }
+        .nav-item span { display: block; font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: #1a237e; font-weight: bold; }
 
+        /* النوافذ المنبثقة (Modals) */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; padding: 20px; box-sizing: border-box;
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 400px; border-radius: 20px;
+            padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto;
+            position: relative; /* عشان زر الإغلاق */
+        }
+        .close-modal {
+            position: absolute; top: 15px; left: 15px; font-size: 24px;
+            color: #c62828; cursor: pointer; background: none; border: none;
+        }
+
+        /* الجداول والقوائم */
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #eee;
+        }
+        .btn-small { padding: 5px 10px; font-size: 12px; border-radius: 5px; border: none; cursor: pointer; color: white; }
+        .bg-red { background: #c62828; }
+
         /* شاشة التحميل */
-        #loading-screen {
+        #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column;
+            background: white; z-index: 3000; display: flex;
+            justify-content: center; align-items: center; flex-direction: column;
         }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
-        <h2 style="color:#1a237e;">جاري تشغيل النظام...</h2>
+    <div id="loader">
+        <h2 style="color:#1a237e;">N <span style="color:#d4af37">One</span></h2>
+        <p>جاري تحميل النظام...</p>
     </div>
 
-    <div class="main-container">
-        
-        <div class="header">
-            <button class="settings-btn" onclick="openModal('settings-modal')">⚙️</button>
-            <div class="brand-text">
-                <span class="n-char">N</span><span class="one-word">One</span>
+    <div class="header">
+        <div class="brand">N <span class="gold">One</span></div>
+        <button class="btn-settings" onclick="openModal('settings-modal')">⚙️</button>
+    </div>
+
+    <div class="container">
+        <div style="margin-bottom: 20px;">
+            <span style="color:#777; font-size:14px;">أهلاً بك،</span>
+            <div style="font-size:20px; font-weight:bold; color:#333;" id="partner-name">...</div>
+        </div>
+
+        <div class="summary-box">
+            <div class="stat-box">
+                <span class="stat-num" id="today-orders">0</span>
+                <span class="stat-lbl">طلبات اليوم</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-num" id="today-total">0</span>
+                <span class="stat-lbl">القيمة (د.أ)</span>
             </div>
         </div>
 
-        <div class="comp-name">أهلاً بك، <span id="display-name">...</span></div>
-
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <div style="flex:1; background:white; padding:15px; border-radius:10px; text-align:center; border-bottom:4px solid #d4af37; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div style="font-size:12px; color:#777;">طلبات اليوم</div>
-                <div id="today-count" style="font-size:20px; font-weight:bold; color:#1a237e;">0</div>
-            </div>
-            <div style="flex:1; background:white; padding:15px; border-radius:10px; text-align:center; border-bottom:4px solid #1a237e; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div style="font-size:12px; color:#777;">إجمالي المبالغ</div>
-                <div id="today-total" style="font-size:20px; font-weight:bold; color:#1a237e;">0.00</div>
-            </div>
-        </div>
-
-        <div style="background:white; padding:25px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
-            <h3 style="margin-top:0; color:#1a237e; border-bottom:1px solid #eee; padding-bottom:10px;">طلب جديد</h3>
+        <div class="order-card">
+            <div class="card-title">إنشاء طلب جديد 📦</div>
 
             <div class="input-group">
-                <label>الكابتن (المندوب)</label>
-                <div class="captain-select-wrapper">
-                    <select id="captain_select">
+                <label>اختيار الكابتن</label>
+                <div class="cap-row">
+                    <select id="captain_select" onchange="fillCaptainName()">
                         <option value="">-- اختر الكابتن --</option>
                     </select>
-                    <button class="btn-add-cap" onclick="openModal('captains-modal')">+</button>
+                    <button class="btn-plus" onclick="openModal('captains-modal')">+</button>
                 </div>
             </div>
+            
+            <input type="hidden" id="cap_name_hidden">
 
             <div class="input-group">
-                <label>اسم المندوب (تلقائي)</label>
-                <input type="text" id="mandoob_name" readonly style="background:#f9f9f9;">
-            </div>
-
-            <div class="input-group">
-                <label>موقع التحميل</label>
-                <input type="text" id="pickup_loc" placeholder="اسم المطعم / المتجر">
+                <label>موقع الاستلام (المطعم/المتجر)</label>
+                <input type="text" id="pickup_loc" placeholder="اسم المكان">
             </div>
 
             <div class="input-group">
@@ -184,311 +168,277 @@
             </div>
 
             <div class="input-group">
-                <label>قيمة الشحنة</label>
+                <label>قيمة الشحنة (التحصيل)</label>
                 <input type="number" id="shipment_val" placeholder="0.00">
             </div>
 
-            <button class="btn-send" onclick="processOrder()">حفظ وإرسال الطلب 🚀</button>
+            <button class="btn-send" onclick="sendOrder()">إرسال الطلب عبر واتساب 🚀</button>
         </div>
-
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="closeAllModals()">
-            <span>🏠</span>الرئيسية
-        </div>
-        <div class="nav-item" onclick="openRecords()">
-            <span>📝</span>السجل
-        </div>
-        <div class="nav-item" onclick="openReports()">
-            <span>📊</span>التقارير
-        </div>
-        <div class="nav-item" onclick="openModal('captains-modal')">
-            <span>👨‍✈️</span>الكباتن
-        </div>
+        <div class="nav-item active" onclick="closeAllModals()"><span>🏠</span>الرئيسية</div>
+        <div class="nav-item" onclick="openRecords()"><span>📝</span>السجل</div>
+        <div class="nav-item" onclick="openReports()"><span>📊</span>التقارير</div>
+        <div class="nav-item" onclick="openModal('captains-modal')"><span>👨‍✈️</span>الكباتن</div>
     </div>
 
     <div id="captains-modal" class="modal">
-        <div class="modal-header">
-            <button class="close-btn" onclick="closeModal('captains-modal')">✖</button>
-            <div class="modal-title">إدارة الكباتن</div>
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeAllModals()">✖</button>
+            <h3>إدارة الكباتن</h3>
+            <div class="input-group">
+                <input type="text" id="new_cap_name" placeholder="اسم الكابتن">
+            </div>
+            <div class="input-group">
+                <input type="tel" id="new_cap_phone" placeholder="رقم الهاتف (962...)">
+            </div>
+            <button class="btn-send" onclick="addCaptain()" style="background:#2e7d32;">إضافة كابتن ✅</button>
+            <hr>
+            <div id="captains-list"></div>
         </div>
-        <div class="input-group">
-            <input type="text" id="new_cap_name" placeholder="اسم الكابتن">
-        </div>
-        <div class="input-group">
-            <input type="tel" id="new_cap_phone" placeholder="رقم الهاتف (مثال: 079...)">
-        </div>
-        <button class="btn-send" onclick="addNewCaptain()" style="background:#2e7d32;">إضافة كابتن جديد</button>
-        
-        <h4 style="margin-top:30px;">قائمة الكباتن المسجلين</h4>
-        <div id="captains-list-container"></div>
     </div>
 
     <div id="records-modal" class="modal">
-        <div class="modal-header">
-            <button class="close-btn" onclick="closeModal('records-modal')">✖</button>
-            <div class="modal-title">سجل العمليات اليومي</div>
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeAllModals()">✖</button>
+            <h3>سجل الطلبات</h3>
+            <div id="orders-list"></div>
         </div>
-        <div style="overflow-x:auto;">
-            <table id="records-table">
-                <thead><tr><th>التاريخ</th><th>الكابتن</th><th>القيمة</th><th>تحكم</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="reports-modal" class="modal">
-        <div class="modal-header">
-            <button class="close-btn" onclick="closeModal('reports-modal')">✖</button>
-            <div class="modal-title">التقارير المالية</div>
-        </div>
-        <div style="background:#fafafa; padding:15px; border-radius:10px; margin-bottom:20px;">
-            <h4>أداء اليوم (مستهدف 50 طلب)</h4>
-            <div class="chart-label"><span>عدد الطلبات</span><span id="chart-orders-val">0</span></div>
-            <div class="chart-bar"><div id="chart-orders-fill" class="chart-fill" style="width:0%"></div></div>
-            <div class="chart-label"><span>قيمة التحصيل</span><span id="chart-money-val">0 د.أ</span></div>
-            <div class="chart-bar"><div id="chart-money-fill" class="chart-fill" style="width:0%; background:#1a237e;"></div></div>
-        </div>
-        <table border="1" style="border-color:#eee;">
-            <tr><td>إجمالي التوصيل</td><td id="rep-delivery">0.00</td></tr>
-            <tr><td>إجمالي الشحنات</td><td id="rep-shipment">0.00</td></tr>
-            <tr style="background:#e8f5e9; font-weight:bold;"><td>الصافي الكلي</td><td id="rep-total">0.00</td></tr>
-        </table>
     </div>
 
     <div id="settings-modal" class="modal">
-        <div class="modal-header">
-            <button class="close-btn" onclick="closeModal('settings-modal')">✖</button>
-            <div class="modal-title">الإعدادات</div>
+        <div class="modal-content" style="text-align:center;">
+            <button class="close-modal" onclick="closeAllModals()">✖</button>
+            <h3>⚙️ الإعدادات</h3>
+            
+            <div class="input-group" style="text-align:right;">
+                <label>تغيير كلمة المرور</label>
+                <input type="password" id="new_pass_input" placeholder="كلمة السر الجديدة">
+            </div>
+            <button class="btn-send" onclick="changeMyPass()" style="margin-bottom:20px;">حفظ التغيير</button>
+            
+            <hr>
+            <button class="btn-send" style="background:#c62828;" onclick="logout()">تسجيل الخروج 🔒</button>
+            <p style="color:#999; font-size:12px; margin-top:15px;">N One System v2.0 Pro</p>
         </div>
-        <button class="btn-send" style="background:#c62828;" onclick="logout()">تسجيل الخروج</button>
     </div>
 
     <script>
-        // الرابط الملكي الجديد (Google Apps Script) 😊💎
-        const API_URL = "https://script.google.com/macros/s/AKfycbz1dRYK_ga6arLxYQQovYlLvdoC5R7fupAP02L5Fe4qV9TWKmLlfvG2zyyDMzu91UGv/exec";
-        
-        let allData = [];
+        // 💎 الرابط الملكي 💎
+        const API_URL = "https://script.google.com/macros/s/AKfycbzRBp53Q3VnGPAeahcuKB_rQAwGHQkiw4fCtgTEtblTXSqoTxAMTmZv4rU1BJvQcJjh/exec";
+
+        let currentUser = null;
+        let myData = []; // داتا هذا العميل فقط
         let captains = [];
         let orders = [];
-        let currentUser = null;
 
         window.onload = async function() {
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) { window.location.href = 'index.html'; return; }
-            document.getElementById('display-name').innerText = currentUser.name;
-            
-            await loadAllData();
-            document.getElementById('loading-screen').style.display = 'none';
 
-            // تشغيل "الجاسوس" للحماية الفورية
-            startWatchdog(); 
+            document.getElementById('partner-name').innerText = currentUser.name;
+            
+            await refreshData();
+            document.getElementById('loader').style.display = 'none';
+
+            // تشغيل الحماية (Watchdog)
+            setInterval(checkMyStatus, 15000); // كل 15 ثانية
         };
 
-        // ================= كود الجاسوس (الحماية الفورية) =================
-        function startWatchdog() {
-            // كل 15 ثانية يتأكد من حالة الحساب
-            setInterval(async function() {
-                try {
-                    // تم تحديث طريقة الفحص للعمل مع السيرفر الجديد
-                    const response = await fetch(API_URL + "?action=read");
-                    const data = await response.json();
-                    
-                    // البحث عن المستخدم في البيانات المحملة
-                    const freshUser = data.find(u => u.user === currentUser.user);
-
-                    if (freshUser) {
-                        
-                        // 1. إذا تم الإيقاف
-                        if (freshUser.status !== 'active') {
-                            alert("⛔ تنبيه:\nتم إيقاف اشتراكك مؤقتاً من قبل الإدارة.\nيرجى مراجعة الشركة.");
-                            logout();
-                        }
-                        
-                        // تحديث الاسم لو تغير
-                        document.getElementById('display-name').innerText = freshUser.name;
-                        
-                    } else {
-                        // 2. إذا تم الحذف نهائياً (لم يتم العثور عليه)
-                        alert("⚠️ تنبيه أمني:\nتم حذف حسابك من النظام.\nسيتم تسجيل الخروج فوراً.");
-                        logout();
-                    }
-                } catch (e) {
-                    console.log("Network glitch, skipping check...");
-                }
-            }, 15000); // 15000 ميلي ثانية = 15 ثانية
-        }
-
-        // ================= باقي وظائف النظام =================
-        async function loadAllData() {
+        // 1. جلب البيانات (كباتن وطلبات هذا العميل فقط)
+        async function refreshData() {
             try {
-                // استخدام action=read
+                // نطلب البيانات مع فلتر client_user عشان السيرفر ما يبعت كل شي
                 const res = await fetch(API_URL + "?action=read");
-                allData = await res.json();
+                const all = await res.json();
                 
-                captains = allData.filter(item => item.type === 'captain');
-                orders = allData.filter(item => item.type === 'order' && item.client_user === currentUser.user);
+                // فلترة البيانات الخاصة بي فقط
+                myData = all.filter(item => item.client_user === currentUser.user);
                 
-                updateCaptainsDropdown();
-                updateDashboard();
+                // فصل الكباتن والطلبات
+                captains = myData.filter(i => i.type === 'captain');
+                orders = myData.filter(i => i.type === 'order');
+
+                updateUI();
             } catch (e) { console.error(e); }
         }
 
-        function updateCaptainsDropdown() {
+        // 2. تحديث الواجهة
+        function updateUI() {
+            // القوائم المنسدلة
             const select = document.getElementById('captain_select');
             select.innerHTML = '<option value="">-- اختر الكابتن --</option>';
-            const listContainer = document.getElementById('captains-list-container');
-            let tableHTML = '<table><tr><th>الاسم</th><th>الهاتف</th><th>حذف</th></tr>';
-
-            captains.forEach(cap => {
+            captains.forEach(c => {
                 const opt = document.createElement('option');
-                opt.value = cap.phone;
-                opt.text = cap.name;
-                opt.dataset.name = cap.name;
+                opt.value = c.phone;
+                opt.innerText = c.name;
+                opt.dataset.name = c.name;
                 select.appendChild(opt);
-
-                tableHTML += `<tr><td>${cap.name}</td><td>${cap.phone}</td><td><button class="btn-action btn-del" onclick="deleteItem('${cap.id}')">✖</button></td></tr>`;
             });
-            tableHTML += '</table>';
-            listContainer.innerHTML = captains.length ? tableHTML : '<p style="text-align:center">لا يوجد كباتن</p>';
 
-            select.onchange = function() {
-                const selectedOpt = select.options[select.selectedIndex];
-                document.getElementById('mandoob_name').value = selectedOpt.dataset.name || '';
-            };
+            // قائمة إدارة الكباتن
+            const capList = document.getElementById('captains-list');
+            capList.innerHTML = captains.map(c => `
+                <div class="list-item">
+                    <span>${c.name} <small>(${c.phone})</small></span>
+                    <button class="btn-small bg-red" onclick="deleteItem('${c.id}')">حذف</button>
+                </div>
+            `).join('');
+
+            // إحصائيات اليوم
+            const today = new Date().toISOString().split('T')[0];
+            const todayOrders = orders.filter(o => o.date && o.date.startsWith(today));
+            
+            document.getElementById('today-orders').innerText = todayOrders.length;
+            let total = 0;
+            todayOrders.forEach(o => total += (Number(o.fee)||0) + (Number(o.val)||0));
+            document.getElementById('today-total').innerText = total.toFixed(2);
         }
 
-        async function addNewCaptain() {
+        function fillCaptainName() {
+            const sel = document.getElementById('captain_select');
+            const name = sel.options[sel.selectedIndex].dataset.name;
+            document.getElementById('cap_name_hidden').value = name || "";
+        }
+
+        // 3. إضافة كابتن
+        async function addCaptain() {
             const name = document.getElementById('new_cap_name').value;
             const phone = document.getElementById('new_cap_phone').value;
-            if(!name || !phone) return alert("البيانات ناقصة");
+            
+            if(!name || !phone) return alert("يرجى تعبئة الاسم والرقم");
 
             const newCap = {
                 id: "CAP_" + Date.now(),
-                type: "captain",
+                type: "captain", // مهم جداً
                 name: name,
                 phone: phone,
-                client_user: currentUser.user
+                client_user: currentUser.user, // ربط الكابتن بالعميل
+                status: "active"
             };
 
-            await saveDataToApi(newCap);
+            await sendData(newCap);
+            alert("تم إضافة الكابتن بنجاح ✅");
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
-            alert("تم إضافة الكابتن");
-            await loadAllData();
+            refreshData();
         }
 
-        async function processOrder() {
-            const capPhone = document.getElementById('captain_select').value;
-            const capName = document.getElementById('mandoob_name').value;
-            const pickup = document.getElementById('pickup_loc').value;
+        // 4. إرسال طلب
+        async function sendOrder() {
+            const phone = document.getElementById('captain_select').value;
+            const capName = document.getElementById('cap_name_hidden').value;
+            const loc = document.getElementById('pickup_loc').value;
             const fee = document.getElementById('delivery_fee').value;
             const val = document.getElementById('shipment_val').value;
 
-            if(!capPhone || !pickup) return alert("اختر الكابتن والموقع");
+            if(!phone || !loc) return alert("اختر الكابتن والموقع");
 
             const newOrder = {
                 id: "ORD_" + Date.now(),
                 type: "order",
                 client_user: currentUser.user,
-                date: new Date().toISOString(),
                 cap_name: capName,
-                cap_phone: capPhone,
-                pickup: pickup,
+                cap_phone: phone,
+                pickup: loc,
                 fee: fee,
-                val: val
+                val: val,
+                date: new Date().toISOString(),
+                status: "new"
             };
 
-            const btn = document.querySelector('.btn-send');
-            btn.innerText = "جاري الحفظ...";
-            btn.disabled = true;
+            // الحفظ في الخلفية
+            sendData(newOrder); 
 
-            await saveDataToApi(newOrder);
-            sendToWhatsApp(capPhone, capName, pickup, fee, val);
-
-            btn.innerText = "حفظ وإرسال الطلب 🚀";
-            btn.disabled = false;
-            document.getElementById('pickup_loc').value = '';
-            document.getElementById('delivery_fee').value = '';
-            document.getElementById('shipment_val').value = '';
-            await loadAllData();
-        }
-
-        function sendToWhatsApp(phone, name, pickup, fee, val) {
+            // فتح واتساب
             let p = phone.replace(/\D/g, '');
-            if (p.startsWith('0')) p = p.substring(1);
-            if (!p.startsWith('962')) p = '962' + p;
-
-            const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickup)}`;
-            const msg = `*طلب جديد N One* 📦\n👤 الكابتن: ${name}\n📍 الموقع: ${pickup}\n🗺️ الرابط: \n${mapLink}\n💵 توصيل: ${fee}\n💰 شحنة: ${val}\n🚀 يرجى التأكيد`;
+            if (!p.startsWith('962')) p = '962' + p.replace(/^0+/, ''); // تنسيق الأردن
             
-            window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`, '_blank');
+            const msg = `*طلب جديد من ${currentUser.name}* 📦%0a👤 الكابتن: ${capName}%0a📍 الموقع: ${loc}%0a💵 التوصيل: ${fee}%0a💰 التحصيل: ${val}%0a🚀 يرجى الاستلام فوراً`;
+            
+            window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
+            
+            // تحديث الشاشة
+            setTimeout(refreshData, 2000);
+            alert("تم إرسال الطلب للكابتن 🚀");
         }
 
+        // 5. سجل الطلبات
         function openRecords() {
             openModal('records-modal');
-            const tbody = document.querySelector('#records-table tbody');
-            tbody.innerHTML = '';
-            const sorted = orders.sort((a,b) => new Date(b.date) - new Date(a.date));
+            const list = document.getElementById('orders-list');
+            const sorted = orders.sort((a,b) => b.id.localeCompare(a.id)); // الأحدث أولاً
+            
+            if(sorted.length === 0) { list.innerHTML = "<p>لا يوجد طلبات سابقة</p>"; return; }
 
-            sorted.forEach(ord => {
-                const date = new Date(ord.date).toLocaleDateString('ar-EG');
-                tbody.innerHTML += `<tr><td>${date}</td><td>${ord.cap_name}</td><td>${ord.val}</td><td><button class="btn-action btn-del" onclick="deleteItem('${ord.id}')">حذف</button></td></tr>`;
+            list.innerHTML = sorted.map(o => `
+                <div class="list-item" style="display:block;">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                        <span>${o.cap_name}</span>
+                        <span>${o.date.split('T')[0]}</span>
+                    </div>
+                    <div style="font-size:12px; color:#666; margin-top:5px;">
+                        توصيل: ${o.fee} | تحصيل: ${o.val}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 6. تغيير كلمة المرور
+        async function changeMyPass() {
+            const newPass = document.getElementById('new_pass_input').value;
+            if(!newPass) return alert("أدخل كلمة المرور الجديدة");
+
+            await fetch(API_URL + "?action=update&user=" + currentUser.user, {
+                method: 'POST', mode: 'no-cors',
+                body: JSON.stringify({ action:'update', user:currentUser.user, data:{pass:newPass} })
             });
+
+            alert("تم التغيير! سيتم تسجيل الخروج.");
+            logout();
         }
 
-        function openReports() {
-            openModal('reports-modal');
-            let totalFee = 0, totalVal = 0;
-            orders.forEach(o => { totalFee += parseFloat(o.fee || 0); totalVal += parseFloat(o.val || 0); });
-
-            document.getElementById('rep-delivery').innerText = totalFee.toFixed(2);
-            document.getElementById('rep-shipment').innerText = totalVal.toFixed(2);
-            document.getElementById('rep-total').innerText = (totalFee + totalVal).toFixed(2);
-
-            const count = orders.length;
-            const countPct = Math.min((count / 50) * 100, 100);
-            document.getElementById('chart-orders-val').innerText = count;
-            document.getElementById('chart-orders-fill').style.width = countPct + "%";
-
-            const moneyPct = Math.min(((totalFee + totalVal) / 1000) * 100, 100);
-            document.getElementById('chart-money-val').innerText = (totalFee + totalVal).toFixed(2);
-            document.getElementById('chart-money-fill').style.width = moneyPct + "%";
+        // 7. الحماية (Watchdog)
+        async function checkMyStatus() {
+            try {
+                const res = await fetch(API_URL + "?action=read");
+                const all = await res.json();
+                const me = all.find(u => u.user === currentUser.user);
+                
+                if (!me || me.status !== 'active') {
+                    alert("⛔ تنبيه: تم إيقاف حسابك من قبل الإدارة.");
+                    logout();
+                }
+            } catch(e) {}
         }
 
-        function updateDashboard() {
-            const today = new Date().toLocaleDateString('en-CA');
-            const todayOrders = orders.filter(o => o.date.startsWith(today));
-            document.getElementById('today-count').innerText = todayOrders.length;
-            let total = 0;
-            todayOrders.forEach(o => total += parseFloat(o.fee || 0) + parseFloat(o.val || 0));
-            document.getElementById('today-total').innerText = total.toFixed(2);
-        }
-
-        async function saveDataToApi(obj) {
-            // استخدام action=add
-            await fetch(API_URL + "?action=add", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [obj] })
+        // أدوات مساعدة
+        async function sendData(dataObj) {
+            await fetch(API_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: 'add', data: dataObj })
             });
         }
 
         async function deleteItem(id) {
-            if(!confirm("هل أنت متأكد من الحذف؟")) return;
-            // استخدام action=delete مع id
-            await fetch(API_URL + "?action=delete&id=" + id, { method: 'POST' });
-            alert("تم الحذف");
-            await loadAllData();
-            if(document.getElementById('records-modal').style.display === 'block') openRecords();
-            if(document.getElementById('captains-modal').style.display === 'block') updateCaptainsDropdown();
+            if(!confirm("حذف؟")) return;
+            // الحذف عن طريق ID
+            await fetch(API_URL + "?action=delete&id=" + id, { method: 'POST', mode: 'no-cors' });
+            // الانتظار قليلاً لأن no-cors لا يعيد رد
+            setTimeout(() => {
+                alert("تم الحذف");
+                refreshData();
+                closeAllModals();
+            }, 1000);
         }
 
-        function openModal(id) { closeAllModals(); document.getElementById(id).style.display = 'block'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
         function logout() { localStorage.removeItem('currentUser'); window.location.href = 'index.html'; }
+        function openReports() { alert("ميزة التقارير التفصيلية قادمة قريباً في التحديث القادم! 📊"); }
+
     </script>
 </body>
 </html>
