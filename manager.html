@@ -121,19 +121,20 @@
         </div>
 
         <h3 style="color:#1a237e;">قائمة المشتركين</h3>
-        <div id="loading">جاري جلب البيانات...</div>
+        <div id="loading">جاري جلب البيانات من السيرفر الملكي... ⏳</div>
         <div id="clients-list"></div>
 
     </div>
 
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
+        // تم التحديث للرابط الجديد (Google Apps Script)
+        const API_URL = "https://script.google.com/macros/s/AKfycbz1dRYK_ga6arLxYQQovYlLvdoC5R7fupAP02L5Fe4qV9TWKmLlfvG2zyyDMzu91UGv/exec";
 
         // التأكد من أن المستخدم هو المدير
         window.onload = function() {
             const admin = JSON.parse(localStorage.getItem('currentUser'));
             if (!admin || admin.role !== 'admin') {
-                window.location.href = 'manager.html'; // يرجع يسجل دخول لو مش مدير
+                window.location.href = 'index.html'; // تعديل بسيط للتوجيه للصفحة الرئيسية
             } else {
                 loadClients();
             }
@@ -142,7 +143,8 @@
         // دالة جلب العملاء
         async function loadClients() {
             try {
-                const res = await fetch(API_URL);
+                // إضافة ?action=read للرابط الجديد
+                const res = await fetch(API_URL + "?action=read");
                 const data = await res.json();
                 
                 // تصفية: فقط العملاء (role = client)
@@ -151,7 +153,7 @@
                 renderClients(clients);
                 document.getElementById('loading').style.display = 'none';
             } catch (e) {
-                alert("خطأ في الاتصال");
+                document.getElementById('loading').innerText = "خطأ في الاتصال بالسيرفر 😊";
             }
         }
 
@@ -161,11 +163,11 @@
             container.innerHTML = '';
 
             if (clients.length === 0) {
-                container.innerHTML = '<p style="text-align:center">لا يوجد مشتركين حالياً.</p>';
+                container.innerHTML = '<p style="text-align:center">لا يوجد مشتركين حالياً 😊</p>';
                 return;
             }
 
-            // ترتيب: الأحدث أولاً (اختياري)
+            // ترتيب: الأحدث أولاً
             clients.reverse().forEach(client => {
                 const isActive = client.status === 'active';
                 const statusClass = isActive ? 'active' : 'stopped';
@@ -195,7 +197,7 @@
                         }
                         <button class="btn-action btn-renew" onclick="renewClient('${client.user}')">تجديد شهر ♻️</button>
                         <button class="btn-action btn-edit" onclick="editClient('${client.user}', '${client.pass}')">تعديل ✏️</button>
-                        <button class="btn-action btn-del" onclick="deleteClient('${client.id}')">حذف ❌</button>
+                        <button class="btn-action btn-del" onclick="deleteClient('${client.user}')">حذف ❌</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -210,7 +212,7 @@
             const user = document.getElementById('new_user').value;
             const pass = document.getElementById('new_pass').value;
 
-            if (!name || !user || !pass) { alert("يرجى تعبئة كل الحقول"); return; }
+            if (!name || !user || !pass) { alert("يرجى تعبئة كل الحقول 😊"); return; }
 
             // تحديد تاريخ انتهاء بعد 30 يوم
             const expiryDate = new Date();
@@ -229,12 +231,12 @@
             };
 
             const btn = document.querySelector('.btn-add');
-            btn.innerHTML = "جاري الحفظ...";
+            btn.innerHTML = "جاري الحفظ الملكي... ⏳";
             btn.disabled = true;
 
-            await fetch(API_URL, {
+            // استخدام method: POST مع action=add
+            await fetch(API_URL + "?action=add", {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: [newClient] })
             });
 
@@ -246,15 +248,13 @@
         async function updateStatus(username, newStatus) {
             if (!confirm(newStatus === 'stopped' ? "هل أنت متأكد من إيقاف هذا العميل؟ سيتم طرده فوراً!" : "هل تريد تفعيل العميل؟")) return;
 
-            // البحث وتحديث الـ status
-            // SheetDB يدعم التحديث عبر user/username
-            await fetch(`${API_URL}/user/${username}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+            // استخدام action=update
+            await fetch(API_URL + "?action=update&user=" + username, {
+                method: 'POST',
                 body: JSON.stringify({ data: { status: newStatus } })
             });
 
-            alert("تم تحديث الحالة بنجاح!");
+            alert("تم تحديث الحالة بنجاح! 😊");
             loadClients();
         }
 
@@ -266,23 +266,24 @@
             newDate.setDate(newDate.getDate() + 30);
             const expiryStr = newDate.toISOString().split('T')[0];
 
-            await fetch(`${API_URL}/user/${username}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+            // استخدام action=update
+            await fetch(API_URL + "?action=update&user=" + username, {
+                method: 'POST',
                 body: JSON.stringify({ data: { expiry: expiryStr, status: 'active' } })
             });
 
-            alert("تم تجديد الاشتراك!");
+            alert("تم تجديد الاشتراك! ♻️");
             loadClients();
         }
 
         // 4. حذف عميل
-        async function deleteClient(id) {
+        async function deleteClient(username) {
             if (!confirm("⚠️ تحذير: هل أنت متأكد من حذف العميل نهائياً؟")) return;
 
-            await fetch(`${API_URL}/id/${id}`, { method: 'DELETE' });
+            // استخدام action=delete
+            await fetch(API_URL + "?action=delete&user=" + username, { method: 'POST' });
             
-            alert("تم الحذف.");
+            alert("تم الحذف بنجاح ❌");
             loadClients();
         }
 
@@ -290,19 +291,19 @@
         async function editClient(username, oldPass) {
             const newPass = prompt("أدخل كلمة المرور الجديدة:", oldPass);
             if (newPass && newPass !== oldPass) {
-                await fetch(`${API_URL}/user/${username}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                // استخدام action=update
+                await fetch(API_URL + "?action=update&user=" + username, {
+                    method: 'POST',
                     body: JSON.stringify({ data: { pass: newPass } })
                 });
-                alert("تم تغيير كلمة المرور.");
+                alert("تم تغيير كلمة المرور 🔐");
                 loadClients();
             }
         }
 
         function logout() {
             localStorage.removeItem('currentUser');
-            window.location.href = 'manager.html'; // يرجع لشاشة الدخول
+            window.location.href = 'index.html';
         }
     </script>
 
