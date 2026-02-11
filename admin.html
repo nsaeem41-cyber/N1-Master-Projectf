@@ -171,7 +171,7 @@
         <div class="brand">
             <h1><span class="navy">N</span> <span class="gold">One</span> Admin</h1>
         </div>
-        <button class="btn-logout" onclick="logout()">خروج</button>
+        <button class="btn-logout" onclick="logout()">خروج 🔒</button>
     </nav>
 
     <div class="container">
@@ -221,7 +221,7 @@
                     </select>
                 </div>
 
-                <button class="btn-add" onclick="addClient()">حفظ وتفعيل الحساب</button>
+                <button class="btn-add" onclick="addClient()">حفظ وتفعيل الحساب 🚀</button>
             </div>
 
             <div class="card">
@@ -237,7 +237,7 @@
                             </tr>
                         </thead>
                         <tbody id="clientTable">
-                            <tr><td colspan="4" style="text-align:center; padding:20px;">جاري تحميل البيانات...</td></tr>
+                            <tr><td colspan="4" style="text-align:center; padding:20px;">جاري تحميل البيانات من السيرفر الملكي... 😊</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -247,7 +247,8 @@
     </div>
 
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
+        // الرابط الملكي الجديد (Google Apps Script) 😊💎
+        const API_URL = "https://script.google.com/macros/s/AKfycbz1dRYK_ga6arLxYQQovYlLvdoC5R7fupAP02L5Fe4qV9TWKmLlfvG2zyyDMzu91UGv/exec";
 
         // التحقق من الصلاحية عند فتح الصفحة
         window.onload = function() {
@@ -262,12 +263,13 @@
         // جلب البيانات من السيرفر
         async function fetchData() {
             try {
-                const response = await fetch(API_URL);
+                // استخدام action=read
+                const response = await fetch(API_URL + "?action=read");
                 const data = await response.json();
                 renderDashboard(data);
             } catch (error) {
                 console.error(error);
-                alert("تعذر الاتصال بقاعدة البيانات");
+                document.getElementById('clientTable').innerHTML = '<tr><td colspan="4" style="text-align:center;">خطأ في الاتصال بالسيرفر 😊</td></tr>';
             }
         }
 
@@ -284,11 +286,11 @@
             table.innerHTML = '';
 
             if (clients.length === 0) {
-                table.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا يوجد شركات مسجلة حالياً</td></tr>';
+                table.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا يوجد شركات مسجلة حالياً 😊</td></tr>';
                 return;
             }
 
-            clients.forEach(client => {
+            clients.reverse().forEach(client => { // الأحدث أولاً
                 // حساب الأيام المتبقية
                 const expiryDate = new Date(client.expiry);
                 const today = new Date();
@@ -298,14 +300,14 @@
                 let actionBtn = '';
 
                 if (client.status === 'paused') {
-                    statusBadge = '<span class="badge badge-paused">موقف مؤقتاً</span>';
-                    actionBtn = `<button class="action-btn btn-activate" onclick="toggleStatus('${client.user}', 'active')">تفعيل</button>`;
+                    statusBadge = '<span class="badge badge-paused">موقف مؤقتاً 🛑</span>';
+                    actionBtn = `<button class="action-btn btn-activate" onclick="toggleStatus('${client.user}', 'active')">تفعيل ✅</button>`;
                 } else if (daysLeft <= 0) {
-                    statusBadge = '<span class="badge badge-expired">منتهي</span>';
-                    actionBtn = `<button class="action-btn btn-delete" onclick="deleteClient('${client.user}')">حذف</button>`;
+                    statusBadge = '<span class="badge badge-expired">منتهي ⌛</span>';
+                    actionBtn = `<button class="action-btn btn-delete" onclick="deleteClient('${client.user}')">حذف ❌</button>`;
                 } else {
-                    statusBadge = `<span class="badge badge-active">نشط (${daysLeft} يوم)</span>`;
-                    actionBtn = `<button class="action-btn btn-pause" onclick="toggleStatus('${client.user}', 'paused')">تجميد</button>`;
+                    statusBadge = `<span class="badge badge-active">نشط (${daysLeft} يوم) ✅</span>`;
+                    actionBtn = `<button class="action-btn btn-pause" onclick="toggleStatus('${client.user}', 'paused')">تجميد ⏸️</button>`;
                 }
 
                 const row = `
@@ -318,7 +320,7 @@
                         <td>${statusBadge}</td>
                         <td>
                             ${actionBtn}
-                            <button class="action-btn btn-delete" onclick="deleteClient('${client.user}')">حذف</button>
+                            <button class="action-btn btn-delete" onclick="deleteClient('${client.user}')">حذف ❌</button>
                         </td>
                     </tr>
                 `;
@@ -335,11 +337,11 @@
             const btn = document.querySelector('.btn-add');
 
             if (!name || !user || !pass) {
-                alert("يرجى تعبئة جميع الحقول المطلوبة");
+                alert("يرجى تعبئة جميع الحقول المطلوبة 😊");
                 return;
             }
 
-            btn.innerText = "جاري الحفظ...";
+            btn.innerText = "جاري الحفظ الملكي... ⏳";
             btn.disabled = true;
 
             // حساب تاريخ الانتهاء
@@ -347,26 +349,27 @@
             expDate.setDate(expDate.getDate() + duration);
 
             const newClient = {
-                id: Date.now(),
+                id: "CL_" + Date.now(),
                 user: user,
                 pass: pass,
                 name: name,
                 role: "client",
                 status: "active",
-                expiry: expDate.toISOString()
+                expiry: expDate.toISOString().split('T')[0], // تنسيق التاريخ
+                type: "user"
             };
 
             try {
-                await fetch(API_URL, {
+                // إرسال البيانات مع action=add
+                await fetch(API_URL + "?action=add", {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: [newClient] })
                 });
                 
-                alert("تمت إضافة الشركة بنجاح ✅");
+                alert("تمت إضافة الشركة بنجاح 🎉");
                 location.reload(); // تحديث الصفحة
             } catch (error) {
-                alert("حدث خطأ أثناء الإضافة");
+                alert("حدث خطأ أثناء الإضافة 😊");
                 btn.innerText = "حفظ وتفعيل الحساب";
                 btn.disabled = false;
             }
@@ -375,11 +378,12 @@
         // تغيير الحالة (تجميد/تفعيل)
         async function toggleStatus(user, newStatus) {
             if (confirm(newStatus === 'active' ? "هل تريد إعادة تفعيل هذا الحساب؟" : "هل أنت متأكد من تجميد هذا الحساب مؤقتاً؟")) {
-                await fetch(`${API_URL}/user/${user}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                // استخدام action=update
+                await fetch(API_URL + "?action=update&user=" + user, {
+                    method: 'POST',
                     body: JSON.stringify({ data: { status: newStatus } })
                 });
+                alert("تم تحديث الحالة بنجاح 😊");
                 fetchData(); // تحديث البيانات بدون إعادة تحميل الصفحة
             }
         }
@@ -387,7 +391,9 @@
         // حذف شركة
         async function deleteClient(user) {
             if (confirm("تحذير: سيتم حذف هذا الحساب نهائياً ولا يمكن استرجاعه. هل أنت متأكد؟")) {
-                await fetch(`${API_URL}/user/${user}`, { method: 'DELETE' });
+                // استخدام action=delete
+                await fetch(API_URL + "?action=delete&user=" + user, { method: 'POST' });
+                alert("تم الحذف بنجاح ❌");
                 fetchData();
             }
         }
