@@ -83,18 +83,18 @@
         <h1>تهيئة نظام N One</h1>
         <p>سيقوم هذا المعالج بإنشاء حساب "المدير العام" وتجهيز قاعدة البيانات للعمل فوراً.</p>
 
-        <button onclick="installSystem()" id="installBtn">بدء التثبيت الآن 🚀</button>
+        <button onclick="installSystem()" id="installBtn">بدء التثبيت الملكي 🚀</button>
 
         <div id="status-area"></div>
         
         <a href="manager.html" id="nextStep" class="go-link" style="display: none;">
-            انتقل إلى بوابة الإدارة &larr;
+            انتقل إلى بوابة الدخول (Manager) &larr;
         </a>
     </div>
 
     <script>
-        // رابط قاعدة البيانات الخاص بك
-        const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
+        // الرابط الملكي الجديد (Google Apps Script) 😊💎
+        const API_URL = "https://script.google.com/macros/s/AKfycbz1dRYK_ga6arLxYQQovYlLvdoC5R7fupAP02L5Fe4qV9TWKmLlfvG2zyyDMzu91UGv/exec";
 
         async function installSystem() {
             const btn = document.getElementById('installBtn');
@@ -102,7 +102,7 @@
             const nextLink = document.getElementById('nextStep');
 
             // 1. تغيير حالة الزر
-            btn.innerHTML = "جاري الاتصال بالسيرفر...";
+            btn.innerHTML = "جاري الاتصال بالسيرفر الملكي... ⏳";
             btn.disabled = true;
             statusBox.style.display = 'none';
             nextLink.style.display = 'none';
@@ -115,43 +115,39 @@
                 "name": "N One CEO",
                 "role": "admin",
                 "status": "active",
-                "expiry": "2030-01-01"
+                "expiry": "2030-01-01",
+                "type": "admin" // إضافة النوع ليتوافق مع الأعمدة
             };
 
             try {
-                // 3. إرسال البيانات (POST)
-                const response = await fetch(API_URL, {
+                // 3. إرسال البيانات (POST) مع action=add
+                const response = await fetch(API_URL + "?action=add", {
                     method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({ data: [adminUser] })
                 });
 
                 // 4. التحقق من النتيجة
                 if (response.ok) {
                     showStatus("success", "✅ تم تثبيت النظام وإنشاء حساب المدير بنجاح!");
-                    btn.innerHTML = "تم التثبيت";
+                    btn.innerHTML = "تم التثبيت بنجاح 🎉";
                     nextLink.style.display = 'block'; // إظهار رابط الدخول
                 } else {
-                    const errData = await response.json();
-                    showStatus("error", "❌ حدث خطأ: " + JSON.stringify(errData));
+                    showStatus("error", "❌ حدث خطأ بسيط، حاول مرة أخرى.");
                     btn.disabled = false;
-                    btn.innerHTML = "حاول مرة أخرى";
+                    btn.innerHTML = "حاول مرة أخرى 🔄";
                 }
 
             } catch (error) {
                 console.error(error);
-                showStatus("error", "❌ خطأ في الاتصال! تأكد من الإنترنت.");
+                showStatus("error", "❌ خطأ في الاتصال! تأكد من الإنترنت 😊");
                 btn.disabled = false;
-                btn.innerHTML = "حاول مرة أخرى";
+                btn.innerHTML = "حاول مرة أخرى 🔄";
             }
         }
 
         function showStatus(type, msg) {
             const box = document.getElementById('status-area');
-            box.className = type;
+            box.className = type; // يحدد لون الصندوق (أخضر أو أحمر)
             box.innerText = msg;
             box.style.display = 'block';
         }
