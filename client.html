@@ -266,7 +266,8 @@
     </div>
 
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/zuo2qyjeryhxm";
+        // الرابط الملكي الجديد (Google Apps Script) 😊💎
+        const API_URL = "https://script.google.com/macros/s/AKfycbz1dRYK_ga6arLxYQQovYlLvdoC5R7fupAP02L5Fe4qV9TWKmLlfvG2zyyDMzu91UGv/exec";
         
         let allData = [];
         let captains = [];
@@ -290,12 +291,14 @@
             // كل 15 ثانية يتأكد من حالة الحساب
             setInterval(async function() {
                 try {
-                    // بحث عن المستخدم في قاعدة البيانات
-                    const response = await fetch(`${API_URL}/search?user=${currentUser.user}`);
+                    // تم تحديث طريقة الفحص للعمل مع السيرفر الجديد
+                    const response = await fetch(API_URL + "?action=read");
                     const data = await response.json();
+                    
+                    // البحث عن المستخدم في البيانات المحملة
+                    const freshUser = data.find(u => u.user === currentUser.user);
 
-                    if (data.length > 0) {
-                        const freshUser = data[0];
+                    if (freshUser) {
                         
                         // 1. إذا تم الإيقاف
                         if (freshUser.status !== 'active') {
@@ -307,7 +310,7 @@
                         document.getElementById('display-name').innerText = freshUser.name;
                         
                     } else {
-                        // 2. إذا تم الحذف نهائياً
+                        // 2. إذا تم الحذف نهائياً (لم يتم العثور عليه)
                         alert("⚠️ تنبيه أمني:\nتم حذف حسابك من النظام.\nسيتم تسجيل الخروج فوراً.");
                         logout();
                     }
@@ -320,7 +323,8 @@
         // ================= باقي وظائف النظام =================
         async function loadAllData() {
             try {
-                const res = await fetch(API_URL);
+                // استخدام action=read
+                const res = await fetch(API_URL + "?action=read");
                 allData = await res.json();
                 
                 captains = allData.filter(item => item.type === 'captain');
@@ -463,7 +467,8 @@
         }
 
         async function saveDataToApi(obj) {
-            await fetch(API_URL, {
+            // استخدام action=add
+            await fetch(API_URL + "?action=add", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: [obj] })
@@ -472,7 +477,8 @@
 
         async function deleteItem(id) {
             if(!confirm("هل أنت متأكد من الحذف؟")) return;
-            await fetch(`${API_URL}/id/${id}`, { method: 'DELETE' });
+            // استخدام action=delete مع id
+            await fetch(API_URL + "?action=delete&id=" + id, { method: 'POST' });
             alert("تم الحذف");
             await loadAllData();
             if(document.getElementById('records-modal').style.display === 'block') openRecords();
