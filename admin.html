@@ -3,406 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | لوحة القيادة</title>
+    <title>N One | لوحة الإدارة</title>
     <style>
-        /* الألوان والهوية البصرية */
+        /* ================= أساسيات التصميم (Pro Theme) ================= */
         :root {
-            --primary: #1a237e;    /* كحلي */
-            --secondary: #d4af37;  /* ذهبي */
-            --bg: #f0f2f5;
-            --white: #ffffff;
+            --primary: #1a237e;    /* كحلي ملكي */
+            --gold: #d4af37;       /* ذهبي */
+            --bg: #f4f7f6;         /* خلفية فاتحة */
             --text: #333;
-            --danger: #c62828;
             --success: #2e7d32;
-            --warning: #ef6c00;
+            --danger: #c62828;
+            --warning: #f57f17;    /* برتقالي للتجميد */
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
-            margin: 0;
-            padding: 0;
-            color: var(--text);
+            margin: 0; padding: 0; color: var(--text);
         }
 
         /* الشريط العلوي */
         .navbar {
-            background: var(--white);
-            height: 70px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 30px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            border-bottom: 3px solid var(--secondary);
+            background: white; height: 70px; display: flex;
+            justify-content: space-between; align-items: center;
+            padding: 0 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000;
         }
 
-        .brand h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
-        .navy { color: var(--primary); }
-        .gold { color: var(--secondary); }
+        .brand { font-size: 24px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
+        .gold-text { color: var(--gold); }
 
-        .btn-logout {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
+        .nav-actions button {
+            background: none; border: none; font-size: 16px; cursor: pointer;
+            margin-left: 15px; padding: 8px 15px; border-radius: 8px; transition: 0.3s;
         }
-        .btn-logout:hover { background-color: #b71c1c; }
+        .btn-settings { color: #555; background: #eee !important; }
+        .btn-logout { background-color: var(--danger) !important; color: white; }
+        .btn-logout:hover { background-color: #b71c1c !important; }
 
         /* الحاوية الرئيسية */
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
 
         /* كروت الإحصائيات */
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; margin-bottom: 30px;
         }
-
         .stat-card {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            text-align: center;
-            border-top: 4px solid var(--primary);
+            background: white; padding: 25px; border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center;
+            border-top: 5px solid var(--primary); transition: 0.3s;
         }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-number { font-size: 36px; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .stat-label { color: #777; font-size: 14px; }
 
-        .stat-card h3 { margin: 0 0 10px; color: #777; font-size: 14px; font-weight: normal; }
-        .stat-card .number { font-size: 32px; font-weight: bold; color: var(--primary); }
-
-        /* التقسيم: إضافة وجدول */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 25px;
-        }
-
-        /* كرت الإضافة */
+        /* نموذج الإضافة */
         .card {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            background: white; padding: 30px; border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px;
+        }
+        .card-header {
+            font-size: 20px; font-weight: bold; color: var(--primary);
+            border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .card h2 { margin-top: 0; font-size: 18px; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 12px; color: #555; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         
         input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            outline: none;
-            font-family: inherit;
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+            outline: none; background: #fafafa;
         }
-        
-        input:focus, select:focus { border-color: var(--primary); background: #f9f9ff; }
+        input:focus { border-color: var(--primary); background: white; }
 
         .btn-add {
-            width: 100%;
-            padding: 12px;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: 0.3s;
+            background: var(--success); color: white; border: none; padding: 12px 25px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; height: 100%; width: 100%;
         }
         .btn-add:hover { background: #1b5e20; }
 
-        /* الجدول */
-        .table-responsive { overflow-x: auto; }
+        /* جدول البيانات */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        thead { background: #f8f9fa; color: #555; font-weight: bold; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #eee; }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-active { background: #e8f5e9; color: var(--success); }
+        .status-paused { background: #fff3e0; color: var(--warning); } /* لون التجميد */
 
-        thead { background-color: #f8f9fa; border-bottom: 2px solid #eee; }
-        th { padding: 15px; text-align: right; color: #555; font-weight: bold; }
-        td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        
-        .user-info { font-weight: bold; color: var(--primary); }
-        .credentials { font-size: 12px; color: #777; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px; }
-
-        /* حالات الاشتراك */
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .badge-active { background: #e8f5e9; color: var(--success); }
-        .badge-paused { background: #fff3e0; color: var(--warning); }
-        .badge-expired { background: #ffebee; color: var(--danger); }
-
-        /* أزرار الإجراءات */
+        /* أزرار التحكم في الجدول */
         .action-btn {
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 5px;
-            color: white;
-            transition: 0.2s;
+            padding: 6px 12px; border-radius: 6px; border: none;
+            color: white; cursor: pointer; font-size: 12px; margin-left: 5px;
         }
-        .btn-pause { background: var(--warning); }
-        .btn-delete { background: var(--danger); }
-        .btn-activate { background: var(--success); }
+        .act-freeze { background: var(--warning); } /* زر التجميد */
+        .act-active { background: var(--success); } /* زر التفعيل */
+        .act-delete { background: var(--danger); }  /* زر الحذف */
+        .act-renew { background: var(--primary); }  /* زر التجديد */
 
-        /* استجابة للموبايل */
-        @media (max-width: 900px) {
-            .content-grid { grid-template-columns: 1fr; }
+        /* نافذة الإعدادات المنبثقة (Modal) */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;
         }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .modal h3 { color: var(--primary); margin-top: 0; }
+        .close-modal { float: left; cursor: pointer; font-size: 20px; color: #999; }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="brand">
-            <h1><span class="navy">N</span> <span class="gold">One</span> Admin</h1>
+        <div class="brand">N <span class="gold-text">One</span> Admin</div>
+        <div class="nav-actions">
+            <button class="btn-settings" onclick="openSettings()">⚙️ الإعدادات</button>
+            <button class="btn-logout" onclick="logout()">خروج 🔒</button>
         </div>
-        <button class="btn-logout" onclick="logout()">خروج</button>
     </nav>
 
     <div class="container">
         
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>إجمالي الشركات</h3>
-                <div class="number" id="totalCount">0</div>
+                <div class="stat-label">إجمالي الشركات</div>
+                <div class="stat-number" id="total-count">0</div>
             </div>
-            <div class="stat-card">
-                <h3>الاشتراكات الفعالة</h3>
-                <div class="number" style="color: var(--success);" id="activeCount">0</div>
+            <div class="stat-card" style="border-top-color: var(--success);">
+                <div class="stat-label">الشركات النشطة</div>
+                <div class="stat-number" id="active-count" style="color: var(--success);">0</div>
             </div>
-            <div class="stat-card">
-                <h3>الحسابات الموقوفة</h3>
-                <div class="number" style="color: var(--warning);" id="pausedCount">0</div>
+            <div class="stat-card" style="border-top-color: var(--warning);">
+                <div class="stat-label">الشركات المجمدة</div>
+                <div class="stat-number" id="paused-count" style="color: var(--warning);">0</div>
             </div>
         </div>
 
-        <div class="content-grid">
+        <div class="card">
+            <div class="card-header">
+                <span>إضافة شريك جديد</span>
+                <span style="font-size:12px; color:#777;">سيتم إنشاء حساب فوري</span>
+            </div>
+            <div class="form-grid">
+                <input type="text" id="new_name" placeholder="اسم الشركة (مثال: مطاعم النور)">
+                <input type="text" id="new_user" placeholder="اسم المستخدم (Login ID)">
+                <input type="text" id="new_pass" placeholder="كلمة المرور (Password)">
+                <button class="btn-add" onclick="addClient()">+ حفظ وتفعيل 🚀</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">قائمة الشركات المسجلة</div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الشركة</th>
+                            <th>بيانات الدخول</th>
+                            <th>تاريخ الانتهاء</th>
+                            <th>الحالة</th>
+                            <th>التحكم (Control)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-table">
+                        <tr><td colspan="5" style="text-align:center; padding:20px;">جاري تحميل البيانات من السيرفر الملكي... ⏳</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeSettings()">✖</span>
+            <h3>⚙️ إعدادات المدير</h3>
+            <p style="color:#666; font-size:13px; margin-bottom:20px;">يمكنك تغيير كلمة مرور المدير من هنا</p>
             
-            <div class="card">
-                <h2>إضافة شريك جديد</h2>
-                
-                <div class="form-group">
-                    <label>اسم الشركة (Full Name)</label>
-                    <input type="text" id="newName" placeholder="مثال: شركة النور">
-                </div>
-
-                <div class="form-group">
-                    <label>اسم المستخدم (User ID)</label>
-                    <input type="text" id="newUser" placeholder="Username">
-                </div>
-
-                <div class="form-group">
-                    <label>كلمة المرور (Password)</label>
-                    <input type="text" id="newPass" placeholder="Password">
-                </div>
-
-                <div class="form-group">
-                    <label>مدة الاشتراك</label>
-                    <select id="newDuration">
-                        <option value="30">شهر واحد (30 يوم)</option>
-                        <option value="90">3 شهور (90 يوم)</option>
-                        <option value="180">6 شهور (180 يوم)</option>
-                        <option value="365">سنة كاملة (365 يوم)</option>
-                    </select>
-                </div>
-
-                <button class="btn-add" onclick="addClient()">حفظ وتفعيل الحساب</button>
-            </div>
-
-            <div class="card">
-                <h2>قائمة الشركاء المسجلين</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>الشركة / البيانات</th>
-                                <th>الانتهاء</th>
-                                <th>الحالة</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="clientTable">
-                            <tr><td colspan="4" style="text-align:center; padding:20px;">جاري تحميل البيانات من السيرفر الملكي... ⏳</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
+            <input type="password" id="admin_new_pass" placeholder="كلمة المرور الجديدة" style="margin-bottom:10px;">
+            <button class="btn-add" onclick="changeAdminPass()">حفظ التغييرات</button>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <button class="btn-logout" onclick="logout()" style="width:100%;">تسجيل الخروج النهائي</button>
         </div>
     </div>
 
     <script>
-        // الرابط الملكي الجديد (Google Apps Script) 😊💎
-        const API_URL = "https://script.google.com/macros/s/AKfycbz1dRYK_ga6arLxYQQovYlLvdoC5R7fupAP02L5Fe4qV9TWKmLlfvG2zyyDMzu91UGv/exec";
+        // 💎 الرابط الملكي 💎
+        const API_URL = "https://script.google.com/macros/s/AKfycbzRBp53Q3VnGPAeahcuKB_rQAwGHQkiw4fCtgTEtblTXSqoTxAMTmZv4rU1BJvQcJjh/exec";
 
-        // التحقق من الصلاحية عند فتح الصفحة
+        let allData = [];
+        let currentUser = null;
+
         window.onload = function() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user || user.role !== 'admin') {
-                window.location.href = 'manager.html'; // طرد المتطفلين
+            // التحقق من الصلاحية
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser || currentUser.role !== 'admin') {
+                window.location.href = 'index.html'; // طرد المتطفلين
             } else {
-                fetchData(); // جلب البيانات إذا كان مديراً
+                fetchData();
             }
         };
 
-        // جلب البيانات من السيرفر
         async function fetchData() {
             try {
-                // استخدام action=read
-                const response = await fetch(API_URL + "?action=read");
-                const data = await response.json();
-                renderDashboard(data);
-            } catch (error) {
-                console.error(error);
-                alert("تعذر الاتصال بقاعدة البيانات");
+                // قراءة البيانات من السيرفر
+                const res = await fetch(API_URL + "?action=read");
+                allData = await res.json();
+                renderTable();
+            } catch (e) {
+                console.error(e);
+                alert("حدث خطأ في الاتصال بالسيرفر!");
             }
         }
 
-        // عرض البيانات في الجدول والإحصائيات
-        function renderDashboard(data) {
-            const table = document.getElementById('clientTable');
-            const clients = data.filter(item => item.role === 'client'); // فقط الشركات
+        function renderTable() {
+            const tbody = document.getElementById('clients-table');
+            // تصفية: عرض الشركات فقط (العملاء)
+            const clients = allData.filter(u => u.role === 'client').reverse();
 
-            // تحديث الأرقام
-            document.getElementById('totalCount').innerText = clients.length;
-            document.getElementById('activeCount').innerText = clients.filter(c => c.status === 'active').length;
-            document.getElementById('pausedCount').innerText = clients.filter(c => c.status === 'paused').length;
-
-            table.innerHTML = '';
+            // تحديث الإحصائيات
+            document.getElementById('total-count').innerText = clients.length;
+            document.getElementById('active-count').innerText = clients.filter(c => c.status === 'active').length;
+            document.getElementById('paused-count').innerText = clients.filter(c => c.status === 'paused').length;
 
             if (clients.length === 0) {
-                table.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا يوجد شركات مسجلة حالياً</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا يوجد شركات مسجلة حالياً</td></tr>';
                 return;
             }
 
-            clients.reverse().forEach(client => { // عرض الأحدث أولاً
-                // حساب الأيام المتبقية
-                const expiryDate = new Date(client.expiry);
-                const today = new Date();
-                const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+            tbody.innerHTML = '';
+            clients.forEach(client => {
+                const isActive = client.status === 'active';
+                const statusBadge = isActive 
+                    ? `<span class="status-badge status-active">نشط ✅</span>`
+                    : `<span class="status-badge status-paused">مجمد ❄️</span>`;
                 
-                let statusBadge = '';
-                let actionBtn = '';
-
-                if (client.status === 'paused') {
-                    statusBadge = '<span class="badge badge-paused">موقف مؤقتاً</span>';
-                    actionBtn = `<button class="action-btn btn-activate" onclick="toggleStatus('${client.user}', 'active')">تفعيل</button>`;
-                } else if (daysLeft <= 0) {
-                    statusBadge = '<span class="badge badge-expired">منتهي</span>';
-                    actionBtn = `<button class="action-btn btn-delete" onclick="deleteClient('${client.user}')">حذف</button>`;
-                } else {
-                    statusBadge = `<span class="badge badge-active">نشط (${daysLeft} يوم)</span>`;
-                    actionBtn = `<button class="action-btn btn-pause" onclick="toggleStatus('${client.user}', 'paused')">تجميد</button>`;
-                }
+                // زر التجميد / التفعيل (التبديل)
+                const toggleBtn = isActive
+                    ? `<button class="action-btn act-freeze" onclick="setStatus('${client.user}', 'paused')">تجميد ❄️</button>`
+                    : `<button class="action-btn act-active" onclick="setStatus('${client.user}', 'active')">تفعيل ✅</button>`;
 
                 const row = `
                     <tr>
-                        <td>
-                            <div class="user-info">${client.name}</div>
-                            <div class="credentials">User: ${client.user} | Pass: ${client.pass}</div>
-                        </td>
-                        <td>${expiryDate.toLocaleDateString('ar-EG')}</td>
+                        <td><b>${client.name}</b></td>
+                        <td style="font-size:13px; color:#555;">User: ${client.user}<br>Pass: ${client.pass}</td>
+                        <td>${client.expiry || 'غير محدد'}</td>
                         <td>${statusBadge}</td>
                         <td>
-                            ${actionBtn}
-                            <button class="action-btn btn-delete" onclick="deleteClient('${client.user}')">حذف</button>
+                            ${toggleBtn}
+                            <button class="action-btn act-renew" onclick="renewClient('${client.user}')">تجديد ♻️</button>
+                            <button class="action-btn act-delete" onclick="deleteClient('${client.user}')">حذف ❌</button>
                         </td>
                     </tr>
                 `;
-                table.innerHTML += row;
+                tbody.innerHTML += row;
             });
         }
 
-        // إضافة شركة جديدة
+        // 1. إضافة شركة
         async function addClient() {
-            const name = document.getElementById('newName').value;
-            const user = document.getElementById('newUser').value;
-            const pass = document.getElementById('newPass').value;
-            const duration = parseInt(document.getElementById('newDuration').value);
-            const btn = document.querySelector('.btn-add');
+            const name = document.getElementById('new_name').value;
+            const user = document.getElementById('new_user').value;
+            const pass = document.getElementById('new_pass').value;
 
-            if (!name || !user || !pass) {
-                alert("يرجى تعبئة جميع الحقول المطلوبة");
-                return;
-            }
+            if (!name || !user || !pass) { alert("يرجى تعبئة جميع الحقول!"); return; }
 
-            btn.innerText = "جاري الحفظ...";
-            btn.disabled = true;
-
-            // حساب تاريخ الانتهاء
+            // تاريخ انتهاء بعد سنة افتراضياً
             const expDate = new Date();
-            expDate.setDate(expDate.getDate() + duration);
+            expDate.setFullYear(expDate.getFullYear() + 1);
+            const expStr = expDate.toISOString().split('T')[0];
+
+            const btn = document.querySelector('.btn-add');
+            btn.innerText = "جاري الحفظ..."; btn.disabled = true;
 
             const newClient = {
-                id: Date.now(),
-                user: user,
-                pass: pass,
-                name: name,
-                role: "client",
-                status: "active",
-                expiry: expDate.toISOString(),
-                type: "user" // إضافة بسيطة لنوع الحساب ليناسب الجدول
+                id: "CL_" + Date.now(),
+                user: user, pass: pass, name: name,
+                role: "client", type: "client", status: "active", expiry: expStr
             };
 
-            try {
-                // استخدام action=add
-                await fetch(API_URL + "?action=add", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [newClient] })
-                });
-                
-                alert("تمت إضافة الشركة بنجاح ✅");
-                location.reload(); // تحديث الصفحة
-            } catch (error) {
-                alert("حدث خطأ أثناء الإضافة");
-                btn.innerText = "حفظ وتفعيل الحساب";
-                btn.disabled = false;
-            }
+            await sendToServer('add', [newClient]);
+            alert("تمت الإضافة بنجاح! 🎉");
+            location.reload();
         }
 
-        // تغيير الحالة (تجميد/تفعيل)
-        async function toggleStatus(user, newStatus) {
-            if (confirm(newStatus === 'active' ? "هل تريد إعادة تفعيل هذا الحساب؟" : "هل أنت متأكد من تجميد هذا الحساب مؤقتاً؟")) {
-                // استخدام action=update
-                await fetch(API_URL + "?action=update&user=" + user, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: { status: newStatus } })
-                });
-                fetchData(); // تحديث البيانات بدون إعادة تحميل الصفحة
-            }
+        // 2. تغيير الحالة (تجميد / تفعيل)
+        async function setStatus(username, newStatus) {
+            const msg = newStatus === 'paused' ? "هل أنت متأكد من تجميد هذا الحساب؟" : "هل تريد إعادة تفعيل الحساب؟";
+            if (!confirm(msg)) return;
+            
+            await sendToServer('update', { status: newStatus }, username);
+            alert("تم تحديث الحالة بنجاح 👍");
+            fetchData(); // تحديث الجدول بدون ريلود
         }
 
-        // حذف شركة
-        async function deleteClient(user) {
-            if (confirm("تحذير: سيتم حذف هذا الحساب نهائياً ولا يمكن استرجاعه. هل أنت متأكد؟")) {
-                // استخدام action=delete
-                await fetch(API_URL + "?action=delete&user=" + user, { method: 'POST' });
-                fetchData();
-            }
+        // 3. تجديد الاشتراك
+        async function renewClient(username) {
+            const days = prompt("كم عدد الأيام للتجديد؟ (مثلاً: 30)", "30");
+            if (!days) return;
+
+            const newDate = new Date();
+            newDate.setDate(newDate.getDate() + parseInt(days));
+            const expStr = newDate.toISOString().split('T')[0];
+
+            await sendToServer('update', { expiry: expStr, status: 'active' }, username);
+            alert("تم تجديد الاشتراك! 📅");
+            fetchData();
         }
 
-        // تسجيل الخروج
+        // 4. حذف شركة
+        async function deleteClient(username) {
+            if (!confirm("⚠️ تحذير نهائي: هل أنت متأكد من حذف الشركة؟ لا يمكن التراجع!")) return;
+            
+            // استخدام action: delete مع user
+            // ملاحظة: دالة sendToServer في الأسفل معدلة لتقبل باراميترات مختلفة
+            await fetch(API_URL + "?action=delete&user=" + username, { method: 'POST' });
+            
+            alert("تم الحذف.");
+            fetchData();
+        }
+
+        // 5. تغيير كلمة مرور المدير (من الإعدادات)
+        async function changeAdminPass() {
+            const newPass = document.getElementById('admin_new_pass').value;
+            if (!newPass) return alert("اكتب كلمة المرور الجديدة");
+
+            await sendToServer('update', { pass: newPass }, currentUser.user);
+            alert("تم تغيير كلمة المرور بنجاح! سيتم تسجيل الخروج.");
+            logout();
+        }
+
+        // دالة مساعدة للاتصال بالسيرفر
+        async function sendToServer(action, data, user = null) {
+            let url = API_URL + "?action=" + action;
+            if (user) url += "&user=" + user;
+
+            await fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: action,
+                    data: data,
+                    user: user // مهم للتحديث
+                })
+            });
+            // انتظار بسيط لضمان وصول البيانات في وضع no-cors
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        // وظائف الإعدادات
+        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+        
         function logout() {
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         }
     </script>
+
 </body>
 </html>
