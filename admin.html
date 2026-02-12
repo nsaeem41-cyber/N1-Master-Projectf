@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | لوحة الإدارة</title>
+    <title>N One | غرفة القيادة المركزية</title>
     <style>
         /* ================= أساسيات التصميم (Pro Theme) ================= */
         :root {
@@ -20,6 +20,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
             margin: 0; padding: 0; color: var(--text);
+            /* منع تحديد النصوص لزيادة الطابع التطبيقي */
+            user-select: none; 
         }
 
         /* الشريط العلوي */
@@ -85,23 +87,24 @@
 
         /* جدول البيانات */
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         thead { background: #f8f9fa; color: #555; font-weight: bold; }
         th, td { padding: 15px; text-align: right; border-bottom: 1px solid #eee; }
         
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .status-active { background: #e8f5e9; color: var(--success); }
-        .status-paused { background: #fff3e0; color: var(--warning); } /* لون التجميد */
+        .status-paused { background: #fff3e0; color: var(--warning); }
+        .status-expired { background: #ffebee; color: var(--danger); } /* منتهي الصلاحية */
 
         /* أزرار التحكم في الجدول */
         .action-btn {
             padding: 6px 12px; border-radius: 6px; border: none;
             color: white; cursor: pointer; font-size: 12px; margin-left: 5px;
         }
-        .act-freeze { background: var(--warning); } /* زر التجميد */
-        .act-active { background: var(--success); } /* زر التفعيل */
-        .act-delete { background: var(--danger); }  /* زر الحذف */
-        .act-renew { background: var(--primary); }  /* زر التجديد */
+        .act-freeze { background: var(--warning); }
+        .act-active { background: var(--success); }
+        .act-delete { background: var(--danger); }
+        .act-renew { background: var(--primary); }
 
         /* نافذة الإعدادات المنبثقة (Modal) */
         .modal {
@@ -134,43 +137,53 @@
                 <div class="stat-number" id="total-count">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--success);">
-                <div class="stat-label">الشركات النشطة</div>
+                <div class="stat-label">اشتراكات نشطة</div>
                 <div class="stat-number" id="active-count" style="color: var(--success);">0</div>
             </div>
-            <div class="stat-card" style="border-top-color: var(--warning);">
-                <div class="stat-label">الشركات المجمدة</div>
-                <div class="stat-number" id="paused-count" style="color: var(--warning);">0</div>
+            <div class="stat-card" style="border-top-color: var(--gold);">
+                <div class="stat-label">المردود المالي (اشتراكات)</div>
+                <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <span>إضافة شريك جديد</span>
-                <span style="font-size:12px; color:#777;">سيتم إنشاء حساب فوري</span>
+                <span>✨ إضافة شركة جديدة (اشتراك)</span>
+                <span style="font-size:12px; color:#777;">سيتم إنشاء حساب معزول بالكامل</span>
             </div>
             <div class="form-grid">
-                <input type="text" id="new_name" placeholder="اسم الشركة (مثال: مطاعم النور)">
-                <input type="text" id="new_user" placeholder="اسم المستخدم (Login ID)">
+                <input type="text" id="new_name" placeholder="اسم الشركة (White Label)">
+                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
                 <input type="text" id="new_pass" placeholder="كلمة المرور (Password)">
-                <button class="btn-add" onclick="addClient()">+ حفظ وتفعيل 🚀</button>
+                
+                <select id="sub_duration">
+                    <option value="30">شهر واحد (30 يوم)</option>
+                    <option value="90">3 أشهر (ربع سنوي)</option>
+                    <option value="180">6 أشهر (نصف سنوي)</option>
+                    <option value="365">سنة كاملة (VIP)</option>
+                </select>
+                <input type="number" id="sub_price" placeholder="قيمة الاشتراك (د.أ)">
+
+                <button class="btn-add" onclick="addClient()">+ تفعيل الاشتراك 🚀</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">قائمة الشركات المسجلة</div>
+            <div class="card-header">سجل الشركات والعداد التنازلي ⏳</div>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
                             <th>الشركة</th>
                             <th>بيانات الدخول</th>
-                            <th>تاريخ الانتهاء</th>
+                            <th>الخطة / السعر</th>
+                            <th>الأيام المتبقية</th>
                             <th>الحالة</th>
-                            <th>التحكم (Control)</th>
+                            <th>التحكم</th>
                         </tr>
                     </thead>
                     <tbody id="clients-table">
-                        <tr><td colspan="5" style="text-align:center; padding:20px;">جاري تحميل البيانات من السيرفر الملكي... ⏳</td></tr>
+                        <tr><td colspan="6" style="text-align:center; padding:20px;">جاري الاتصال بالسيرفر... ⏳</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -181,29 +194,31 @@
         <div class="modal-content">
             <span class="close-modal" onclick="closeSettings()">✖</span>
             <h3>⚙️ إعدادات المدير</h3>
-            <p style="color:#666; font-size:13px; margin-bottom:20px;">يمكنك تغيير كلمة مرور المدير من هنا</p>
-            
+            <p style="color:#666; font-size:13px; margin-bottom:20px;">تغيير كلمة المرور الخاصة بالنظام المركزي</p>
             <input type="password" id="admin_new_pass" placeholder="كلمة المرور الجديدة" style="margin-bottom:10px;">
             <button class="btn-add" onclick="changeAdminPass()">حفظ التغييرات</button>
-            
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-            <button class="btn-logout" onclick="logout()" style="width:100%;">تسجيل الخروج النهائي</button>
+            <button class="btn-logout" onclick="logout()" style="width:100%;">إنهاء الجلسة تماماً</button>
         </div>
     </div>
 
     <script>
-        // 💎 الرابط الملكي 💎
         const API_URL = "https://script.google.com/macros/s/AKfycby8Lvhri3wDGXFwXY2EPKy_sf6vrIEAyPVGreob8gDe_mx9EbpqWsqqR511LXdqjjU1/exec";
-
 
         let allData = [];
         let currentUser = null;
 
+        // تنفيذ خطة: أمن الجلسات ومنع التلاعب (Prevent Back Button)
         window.onload = function() {
-            // التحقق من الصلاحية
+            // منع الرجوع للصفحة السابقة
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+            };
+
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser || currentUser.role !== 'admin') {
-                window.location.href = 'index.html'; // طرد المتطفلين
+                window.location.replace('index.html'); // استخدام replace بدلاً من href لمنع العودة
             } else {
                 fetchData();
             }
@@ -211,53 +226,77 @@
 
         async function fetchData() {
             try {
-                // قراءة البيانات من السيرفر
                 const res = await fetch(API_URL + "?action=read");
                 allData = await res.json();
                 renderTable();
             } catch (e) {
                 console.error(e);
-                alert("حدث خطأ في الاتصال بالسيرفر!");
+                alert("خطأ في الاتصال!");
             }
         }
 
         function renderTable() {
             const tbody = document.getElementById('clients-table');
-            // تصفية: عرض الشركات فقط (العملاء)
             const clients = allData.filter(u => u.role === 'client').reverse();
 
-            // تحديث الإحصائيات
+            // الإحصائيات
             document.getElementById('total-count').innerText = clients.length;
             document.getElementById('active-count').innerText = clients.filter(c => c.status === 'active').length;
-            document.getElementById('paused-count').innerText = clients.filter(c => c.status === 'paused').length;
+            
+            // حساب المردود المالي من الاشتراكات
+            let totalRev = 0;
+            clients.forEach(c => totalRev += Number(c.price || 0));
+            document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
 
             if (clients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا يوجد شركات مسجلة حالياً</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا يوجد اشتراكات نشطة</td></tr>';
                 return;
             }
 
             tbody.innerHTML = '';
             clients.forEach(client => {
-                const isActive = client.status === 'active';
-                const statusBadge = isActive 
-                    ? `<span class="status-badge status-active">نشط ✅</span>`
-                    : `<span class="status-badge status-paused">مجمد ❄️</span>`;
+                // منطق العداد التنازلي ⏳
+                const today = new Date();
+                const expiryDate = new Date(client.expiry);
+                const diffTime = expiryDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                let statusBadge = '';
+                let daysText = '';
+
+                // فحص الحالة والمدة
+                if (client.status === 'paused') {
+                    statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
+                    daysText = `<span style="color:#f57f17;">موقف مؤقتاً</span>`;
+                } else if (diffDays <= 0) {
+                    statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
+                    daysText = `<span style="color:#c62828; font-weight:bold;">انتهى الاشتراك</span>`;
+                    // ملاحظة: هنا ممكن نضيف كود يرسل أمر للسيرفر بتجميد الحساب تلقائياً إذا لم يكن مجمداً
+                } else {
+                    statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
+                    // تنبيه قبل 3 أيام
+                    if (diffDays <= 3) {
+                        daysText = `<span style="color:#c62828; font-weight:bold;">${diffDays} يوم (تنبيه!) ⚠️</span>`;
+                    } else {
+                        daysText = `<span style="color:#2e7d32; font-weight:bold;">${diffDays} يوم</span>`;
+                    }
+                }
                 
-                // زر التجميد / التفعيل (التبديل)
-                const toggleBtn = isActive
-                    ? `<button class="action-btn act-freeze" onclick="setStatus('${client.user}', 'paused')">تجميد ❄️</button>`
-                    : `<button class="action-btn act-active" onclick="setStatus('${client.user}', 'active')">تفعيل ✅</button>`;
+                const toggleBtn = client.status === 'active'
+                    ? `<button class="action-btn act-freeze" onclick="setStatus('${client.user}', 'paused')">تجميد</button>`
+                    : `<button class="action-btn act-active" onclick="setStatus('${client.user}', 'active')">تفعيل</button>`;
 
                 const row = `
                     <tr>
                         <td><b>${client.name}</b></td>
-                        <td style="font-size:13px; color:#555;">User: ${client.user}<br>Pass: ${client.pass}</td>
-                        <td>${client.expiry || 'غير محدد'}</td>
+                        <td style="font-size:12px; color:#555;">${client.user}<br>Pwd: ${client.pass}</td>
+                        <td style="font-size:12px;">${client.price || 0} د.أ</td>
+                        <td>${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
                             ${toggleBtn}
-                            <button class="action-btn act-renew" onclick="renewClient('${client.user}')">تجديد ♻️</button>
-                            <button class="action-btn act-delete" onclick="deleteClient('${client.user}')">حذف ❌</button>
+                            <button class="action-btn act-renew" onclick="renewClient('${client.user}')">تجديد</button>
+                            <button class="action-btn act-delete" onclick="deleteClient('${client.user}')">حذف</button>
                         </td>
                     </tr>
                 `;
@@ -265,105 +304,93 @@
             });
         }
 
-        // 1. إضافة شركة
         async function addClient() {
             const name = document.getElementById('new_name').value;
             const user = document.getElementById('new_user').value;
             const pass = document.getElementById('new_pass').value;
+            const days = parseInt(document.getElementById('sub_duration').value);
+            const price = document.getElementById('sub_price').value;
 
-            if (!name || !user || !pass) { alert("يرجى تعبئة جميع الحقول!"); return; }
+            if (!name || !user || !pass || !price) { alert("البيانات ناقصة يا حبة السكر 😊"); return; }
 
-            // تاريخ انتهاء بعد سنة افتراضياً
+            // حساب تاريخ الانتهاء بدقة
             const expDate = new Date();
-            expDate.setFullYear(expDate.getFullYear() + 1);
+            expDate.setDate(expDate.getDate() + days);
             const expStr = expDate.toISOString().split('T')[0];
 
             const btn = document.querySelector('.btn-add');
-            btn.innerText = "جاري الحفظ..."; btn.disabled = true;
+            btn.innerText = "جاري إنشاء الحساب..."; btn.disabled = true;
 
             const newClient = {
                 id: "CL_" + Date.now(),
                 user: user, pass: pass, name: name,
-                role: "client", type: "client", status: "active", expiry: expStr
+                role: "client", type: "client", status: "active",
+                expiry: expStr,
+                price: price, // حفظ المبلغ للجرد المالي
+                plan_days: days
             };
 
             await sendToServer('add', [newClient]);
-            alert("تمت الإضافة بنجاح! 🎉");
+            alert("تم تفعيل الاشتراك وإنشاء الحساب المعزول ✅");
             location.reload();
         }
 
-        // 2. تغيير الحالة (تجميد / تفعيل)
         async function setStatus(username, newStatus) {
-            const msg = newStatus === 'paused' ? "هل أنت متأكد من تجميد هذا الحساب؟" : "هل تريد إعادة تفعيل الحساب؟";
-            if (!confirm(msg)) return;
-            
+            if (!confirm(newStatus === 'paused' ? "تجميد الحساب ومنع الدخول؟" : "إعادة تفعيل الحساب؟")) return;
             await sendToServer('update', { status: newStatus }, username);
-            alert("تم تحديث الحالة بنجاح 👍");
-            fetchData(); // تحديث الجدول بدون ريلود
+            alert("تم تحديث الحالة.");
+            fetchData();
         }
 
-        // 3. تجديد الاشتراك
         async function renewClient(username) {
-            const days = prompt("كم عدد الأيام للتجديد؟ (مثلاً: 30)", "30");
+            const days = prompt("عدد أيام التجديد؟", "30");
+            const price = prompt("قيمة التجديد (للجرد المالي):", "0");
             if (!days) return;
 
             const newDate = new Date();
             newDate.setDate(newDate.getDate() + parseInt(days));
             const expStr = newDate.toISOString().split('T')[0];
 
-            await sendToServer('update', { expiry: expStr, status: 'active' }, username);
-            alert("تم تجديد الاشتراك! 📅");
+            // تحديث التاريخ والسعر والحالة
+            await sendToServer('update', { expiry: expStr, status: 'active', price: price }, username);
+            alert("تم تجديد الاشتراك بنجاح 📅");
             fetchData();
         }
 
-        // 4. حذف شركة
         async function deleteClient(username) {
-            if (!confirm("⚠️ تحذير نهائي: هل أنت متأكد من حذف الشركة؟ لا يمكن التراجع!")) return;
-            
-            // استخدام action: delete مع user
-            // ملاحظة: دالة sendToServer في الأسفل معدلة لتقبل باراميترات مختلفة
+            if (!confirm("هل أنت متأكد من الحذف النهائي للبيانات؟")) return;
             await fetch(API_URL + "?action=delete&user=" + username, { method: 'POST' });
-            
-            alert("تم الحذف.");
+            alert("تم حذف الشركة.");
             fetchData();
         }
 
-        // 5. تغيير كلمة مرور المدير (من الإعدادات)
         async function changeAdminPass() {
             const newPass = document.getElementById('admin_new_pass').value;
-            if (!newPass) return alert("اكتب كلمة المرور الجديدة");
-
+            if (!newPass) return;
             await sendToServer('update', { pass: newPass }, currentUser.user);
-            alert("تم تغيير كلمة المرور بنجاح! سيتم تسجيل الخروج.");
+            alert("تم تغيير كلمة المرور.");
             logout();
         }
 
-        // دالة مساعدة للاتصال بالسيرفر
         async function sendToServer(action, data, user = null) {
             let url = API_URL + "?action=" + action;
             if (user) url += "&user=" + user;
-
             await fetch(url, {
-                method: 'POST',
-                mode: 'no-cors',
+                method: 'POST', mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: action,
-                    data: data,
-                    user: user // مهم للتحديث
-                })
+                body: JSON.stringify({ action: action, data: data, user: user })
             });
-            // انتظار بسيط لضمان وصول البيانات في وضع no-cors
             await new Promise(r => setTimeout(r, 1000));
         }
 
-        // وظائف الإعدادات
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
         
+        // تنفيذ خطة: تدمير البيانات عند الخروج
         function logout() {
             localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
+            sessionStorage.clear(); // مسح الجلسة
+            window.location.replace('index.html'); // استخدام replace لمنع العودة
         }
     </script>
 
