@@ -6,7 +6,7 @@
     <title>N One | نظام الشركاء</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ================= تصميم Pro Mobile-First (نفس التنسيق الأصلي) ================= */
+        /* ================= تصميم Pro Mobile-First (نفس التنسيق الأصلي 100%) ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5; margin: 0; padding: 0;
@@ -51,7 +51,6 @@
         }
         input:focus { border-color: #d4af37; background: white; }
 
-        /* ميزة الخرائط */
         .location-row { display: flex; gap: 8px; }
         .btn-location {
             background: #2e7d32; color: white; border: none; border-radius: 10px;
@@ -143,7 +142,8 @@
                 </select>
             </div>
 
-            <div class="input-group" style="display:none;"> <input type="text" id="manual_cap_name">
+            <div class="input-group" style="display:none;"> 
+                <input type="text" id="manual_cap_name">
                 <input type="tel" id="manual_cap_phone">
             </div>
 
@@ -186,7 +186,6 @@
             
             <div class="input-group"><input type="date" id="new_cap_dob" placeholder="تاريخ الميلاد (اختياري)"></div>
             <div class="input-group"><input type="text" id="new_cap_addr" placeholder="مكان السكن (اختياري)"></div>
-            
             <div class="input-group"><input type="number" id="new_cap_comm" placeholder="نسبة الشركة % (اختياري)"></div>
 
             <button class="btn-send" onclick="addCaptain()" style="background:#2e7d32;">حفظ الكابتن ✅</button>
@@ -228,7 +227,6 @@
     </div>
 
     <script>
-        // 💎 الرابط الملكي 💎
         const API_URL = "https://script.google.com/macros/s/AKfycby8Lvhri3wDGXFwXY2EPKy_sf6vrIEAyPVGreob8gDe_mx9EbpqWsqqR511LXdqjjU1/exec";
 
         let currentUser = null;
@@ -236,9 +234,7 @@
         let captains = [];
         let orders = [];
 
-        // أمن الجلسات (Req 6 & 7)
         window.onload = async function() {
-            // منع الرجوع للخلف
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() { window.history.pushState(null, "", window.location.href); };
 
@@ -249,7 +245,6 @@
             await refreshData();
             document.getElementById('loader').style.display = 'none';
 
-            // التحقق اللحظي من الحالة (Req 8)
             setInterval(checkMyStatus, 10000); 
         };
 
@@ -258,30 +253,27 @@
                 const res = await fetch(API_URL + "?action=read");
                 const all = await res.json();
                 
-                // عزل البيانات (Req 3 in Admin Plan)
                 myData = all.filter(item => (item.cl || item.client_user) === currentUser.user);
                 
                 captains = myData.filter(i => i.type === 'captain');
                 orders = myData.filter(i => i.type === 'order');
 
                 updateUI();
-                updateCharts(); // تحديث الرسم البياني
+                updateCharts();
             } catch (e) { console.error(e); }
         }
 
         function updateUI() {
-            // تحديث القائمة (Req 5: حل مشكلة التحديد)
             const select = document.getElementById('captain_select');
             select.innerHTML = '<option value="">-- اختر الكابتن --</option>';
             captains.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.phone;
                 opt.innerText = c.name; 
-                opt.dataset.name = c.name; // تخزين الاسم للطباعة الصحيحة
+                opt.dataset.name = c.name; 
                 select.appendChild(opt);
             });
 
-            // تحديث قائمة إدارة الكباتن
             const capList = document.getElementById('captains-list');
             capList.innerHTML = captains.map(c => `
                 <div class="list-item">
@@ -293,7 +285,6 @@
                 </div>
             `).join('');
 
-            // تحديث ملخص اليوم
             const today = new Date().toISOString().split('T')[0];
             const todayOrders = orders.filter(o => o.date && o.date.startsWith(today));
             document.getElementById('today-orders').innerText = todayOrders.length;
@@ -302,19 +293,20 @@
             document.getElementById('today-total').innerText = total.toFixed(2);
         }
 
+        // تم التحديث: تعبئة البيانات إجبارياً
         function fillCaptainData() {
             const sel = document.getElementById('captain_select');
-            const name = sel.options[sel.selectedIndex].dataset.name;
-            const phone = sel.value;
-            // تعبئة الخانات المخفية لضمان الإرسال الصحيح
-            document.getElementById('manual_cap_name').value = name || "";
-            document.getElementById('manual_cap_phone').value = phone || "";
+            if(sel.selectedIndex > 0) {
+                const name = sel.options[sel.selectedIndex].dataset.name;
+                const phone = sel.value;
+                document.getElementById('manual_cap_name').value = name;
+                document.getElementById('manual_cap_phone').value = phone;
+            }
         }
 
         async function addCaptain() {
             const name = document.getElementById('new_cap_name').value;
             const phone = document.getElementById('new_cap_phone').value;
-            // بيانات اختيارية (Req 3)
             const dob = document.getElementById('new_cap_dob').value;
             const addr = document.getElementById('new_cap_addr').value;
             const comm = document.getElementById('new_cap_comm').value;
@@ -326,9 +318,9 @@
                 type: "captain",
                 name: name,
                 phone: phone,
-                dob: dob,         // اختياري
-                address: addr,    // اختياري
-                commission: comm, // اختياري (Req 4)
+                dob: dob,
+                address: addr,
+                commission: comm,
                 client_user: currentUser.user, 
                 status: "active"
             };
@@ -339,7 +331,9 @@
         }
 
         async function sendOrder() {
-            // الاعتماد على البيانات المعبأة من القائمة (Req 5 fix)
+            // تم التحديث: ضمان تعبئة بيانات الكابتن قبل الإرسال
+            fillCaptainData(); 
+            
             const capName = document.getElementById('manual_cap_name').value;
             const capPhone = document.getElementById('manual_cap_phone').value;
             let loc = document.getElementById('pickup_loc').value;
@@ -348,7 +342,6 @@
 
             if(!capPhone || !loc) return alert("اختر الكابتن وحدد الموقع 😊");
 
-            // ميزة البحث التلقائي للخرائط
             if (!loc.includes('http')) {
                 loc = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`;
             }
@@ -357,7 +350,8 @@
                 id: "ORD_" + Date.now(),
                 type: "order",
                 client_user: currentUser.user,
-                cap_name: capName, // هذا الاسم سيرسل للإكسل بشكل صحيح الآن
+                // تم التحديث: التأكد من إرسال الاسم وليس الرقم
+                cap_name: capName, 
                 cap_phone: capPhone,
                 pickup: loc,
                 cust_phone: cPhone,
@@ -368,7 +362,6 @@
 
             await sendData(newOrder);
 
-            // واتساب
             let p = capPhone.replace(/\D/g, '');
             if (!p.startsWith('962')) p = '962' + p.replace(/^0+/, '');
             const msg = `*طلب جديد - N One* 📦%0a👤 الكابتن: ${capName}%0a📍 الموقع: ${loc}%0a👤 الزبون: ${cPhone}%0a💰 القيمة: ${val}`;
@@ -378,14 +371,13 @@
             refreshData();
         }
 
-        // إدارة الطلبات (تعديل وحذف - Req 2)
         function openRecords() {
             openModal('records-modal');
             const list = document.getElementById('orders-list');
             list.innerHTML = orders.slice().reverse().map(o => `
                 <div class="list-item" style="display:block;">
                     <div style="display:flex; justify-content:space-between;">
-                        <b>${o.cap_name}</b> 
+                        <b>${o.cap_name || 'غير محدد'}</b> 
                         <span style="font-size:12px;">${o.date.split('T')[0]}</span>
                     </div>
                     <div style="font-size:12px; margin:5px 0;">${o.val} د.أ | ${o.pickup.substring(0,20)}...</div>
@@ -400,7 +392,6 @@
         async function editOrder(id, oldVal) {
             const newVal = prompt("أدخل القيمة المالية الجديدة:", oldVal);
             if (newVal === null) return;
-            
             await fetch(API_URL + "?action=update&id=" + id, {
                 method: 'POST', mode: 'no-cors',
                 body: JSON.stringify({ action: 'update', id: id, data: { val: newVal } })
@@ -409,26 +400,20 @@
             refreshData();
         }
 
-        // الرسوم البيانية (Req 9)
         function updateCharts() {
             const ctx = document.getElementById('ordersChart').getContext('2d');
-            
-            // تجهيز البيانات (آخر 7 أيام)
             const days = [];
             const values = [];
             for(let i=6; i>=0; i--) {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
                 const dateStr = d.toISOString().split('T')[0];
-                days.push(dateStr.slice(5)); // شهر-يوم
-                
+                days.push(dateStr.slice(5));
                 const dayTotal = orders.filter(o => o.date.startsWith(dateStr))
                                        .reduce((sum, o) => sum + Number(o.val || 0), 0);
                 values.push(dayTotal);
             }
-
             if(window.myChart) window.myChart.destroy();
-            
             window.myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -446,7 +431,6 @@
             });
         }
 
-        // التحقق من الحالة (Req 8)
         async function checkMyStatus() {
             try {
                 const res = await fetch(API_URL + "?action=read");
@@ -484,7 +468,6 @@
             setTimeout(() => { alert("تم الحذف"); refreshData(); closeAllModals(); }, 1000);
         }
 
-        // تدمير الجلسة (Req 7)
         function logout() {
             localStorage.removeItem('currentUser');
             sessionStorage.clear();
