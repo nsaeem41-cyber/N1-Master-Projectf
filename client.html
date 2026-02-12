@@ -3,233 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | نظام الشركاء</title>
+    <title>N One | غرفة العمليات والمالية</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ================= تصميم Pro Mobile-First (نفس التنسيق الأصلي 100%) ================= */
+        /* ================= تصميم Command Center (Split Screen) ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5; margin: 0; padding: 0;
-            user-select: none; padding-bottom: 80px;
+            background-color: #eef2f5; margin: 0; padding: 0;
+            user-select: none; height: 100vh; overflow: hidden; /* منع التمرير للصفحة كاملة */
+            display: flex; flex-direction: column;
         }
 
-        .header {
-            background: white; padding: 15px 20px;
+        /* 1. الشريط العلوي (المالية والإعدادات) */
+        .top-bar {
+            background: #1a237e; color: white; padding: 10px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;
+            height: 60px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000;
         }
-        .brand { font-size: 22px; font-weight: 900; color: #1a237e; }
+        .brand { font-size: 20px; font-weight: 900; }
         .gold { color: #d4af37; }
-        .btn-settings { background: none; border: none; font-size: 24px; cursor: pointer; color: #555; }
-
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
-
-        /* الكروت */
-        .card {
-            background: white; padding: 25px; border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px;
+        
+        /* إعدادات النسبة */
+        .finance-controls { display: flex; gap: 10px; align-items: center; }
+        .finance-input {
+            width: 60px; padding: 5px; border-radius: 5px; border: none;
+            text-align: center; font-weight: bold; color: #1a237e;
         }
+        .btn-reset {
+            background: #c62828; color: white; border: none; padding: 5px 10px;
+            border-radius: 5px; cursor: pointer; font-size: 12px;
+        }
+
+        /* 2. تقسيم الشاشة (Split Screen) */
+        .main-layout {
+            display: flex; flex: 1; height: calc(100vh - 60px);
+        }
+
+        /* الجانب الأيمن: إدخال الطلبات */
+        .right-panel {
+            width: 40%; background: white; padding: 20px;
+            overflow-y: auto; border-left: 2px solid #ddd;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+        }
+
+        /* الجانب الأيسر: السجل اللحظي */
+        .left-panel {
+            width: 60%; background: #f4f7f6; padding: 20px;
+            overflow-y: auto; display: flex; flex-direction: column;
+        }
+
+        /* بطاقات الإدخال */
         .card-title {
             font-size: 18px; font-weight: bold; color: #1a237e;
-            border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;
+            border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 15px;
         }
-
-        /* زر القائمة المستقلة (Navigation Button) */
-        .btn-nav-large {
-            display: block; width: 100%; padding: 15px; margin-bottom: 20px;
-            background: white; border: 2px solid #1a237e; color: #1a237e;
-            border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer;
-            text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: 0.3s;
-        }
-        .btn-nav-large:active { transform: scale(0.98); background: #f5f5f5; }
-
-        .input-group { margin-bottom: 15px; }
+        .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
-        
         input, select {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;
             font-size: 14px; background: #fafafa; outline: none; box-sizing: border-box;
         }
-        input:focus { border-color: #d4af37; background: white; }
-
-        .location-row { display: flex; gap: 8px; }
-        .btn-location {
-            background: #2e7d32; color: white; border: none; border-radius: 10px;
-            padding: 0 15px; font-size: 18px; cursor: pointer; display: flex; align-items: center;
-        }
+        input:focus { border-color: #1a237e; background: white; }
 
         .btn-send {
             width: 100%; padding: 15px; background: #1a237e; color: white;
             border: none; border-radius: 12px; font-size: 16px; font-weight: bold;
-            cursor: pointer; margin-top: 10px; box-shadow: 0 5px 15px rgba(26, 35, 126, 0.2);
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
         }
-        .btn-send:active { transform: scale(0.98); }
+        .btn-send:hover { background: #0d155a; transform: scale(1.02); }
 
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            border-top: 1px solid #eee; box-shadow: 0 -5px 15px rgba(0,0,0,0.03); z-index: 100;
-        }
-        .nav-item { text-align: center; color: #999; font-size: 11px; cursor: pointer; flex: 1; }
-        .nav-item span { display: block; font-size: 20px; margin-bottom: 3px; }
-        .nav-item.active { color: #1a237e; font-weight: bold; }
-
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2000; padding: 20px; box-sizing: border-box;
-            align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background: white; width: 100%; max-width: 400px; border-radius: 20px;
-            padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-height: 85vh; overflow-y: auto;
-            position: relative;
-        }
-        .close-modal {
-            position: absolute; top: 15px; left: 15px; font-size: 24px;
-            color: #c62828; cursor: pointer; background: none; border: none;
-        }
-
-        .list-item {
+        /* بطاقات السجل (اليسار) */
+        .log-card {
+            background: white; padding: 15px; border-radius: 10px;
+            margin-bottom: 10px; border-right: 4px solid #1a237e;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; border-bottom: 1px solid #eee;
+            animation: fadeIn 0.5s ease-in;
         }
-        .btn-small { padding: 5px 10px; font-size: 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-left: 2px; }
-        .bg-red { background: #c62828; }
-        .bg-blue { background: #1976d2; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .log-info { font-size: 13px; color: #333; }
+        .log-finance { font-size: 12px; color: #2e7d32; font-weight: bold; }
+        .log-time { font-size: 11px; color: #888; }
 
+        /* لوحة مستحقات الكباتن (Finance Dashboard) */
+        .finance-dashboard {
+            background: #fff3e0; padding: 15px; border-radius: 10px;
+            margin-bottom: 20px; border: 1px solid #ffe0b2;
+        }
+        .finance-item {
+            display: flex; justify-content: space-between; border-bottom: 1px solid #eee;
+            padding: 5px 0; font-size: 13px;
+        }
+
+        /* إخفاء العناصر القديمة للحفاظ على الكود */
+        .legacy-hidden { display: none; }
+
+        /* شاشة التحميل */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 3000; display: flex;
+            background: white; z-index: 5000; display: flex;
             justify-content: center; align-items: center; flex-direction: column;
         }
-        
-        /* إخفاء العناصر غير المطلوبة في الواجهة الجديدة */
-        .hidden-legacy { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <h2 style="color:#1a237e;">N <span style="color:#d4af37">One</span></h2>
-        <p>جاري تحميل النظام... 😊🚀</p>
+        <p>جاري تحميل غرفة العمليات... 😊🚀</p>
     </div>
 
-    <div id="main-view">
-        <div class="header">
-            <div class="brand">N <span class="gold">One</span></div>
-            <button class="btn-settings" onclick="openModal('settings-modal')">⚙️</button>
+    <div class="top-bar">
+        <div class="brand">N <span class="gold">One</span> Admin</div>
+        <div class="finance-controls">
+            <span style="font-size:12px;">نسبة الشركة (%):</span>
+            <input type="number" id="company_percentage" class="finance-input" value="10" onchange="saveSettings()">
+            <button class="btn-reset" onclick="resetFinanceWeek()">🔄 تصفير أسبوعي</button>
+            <button onclick="logout()" style="background:none; border:none; color:white; cursor:pointer; font-size:18px;">🔒</button>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        
+        <div class="left-panel">
+            <div class="finance-dashboard">
+                <h4 style="margin:0 0 10px 0; color:#e65100;">💰 مستحقات الكباتن (الأسبوعية)</h4>
+                <div id="finance-list">
+                    <div style="text-align:center; color:#777;">لا يوجد عمليات مسجلة بعد</div>
+                </div>
+            </div>
+
+            <h4 style="margin:0 0 10px 0; color:#555;">📋 السجل اللحظي للطلبات (Live Feed)</h4>
+            <div id="live-feed">
+                </div>
         </div>
 
-        <div class="container">
-            
-            <button class="btn-nav-large" onclick="openRecordsInNewTab()">📂 فتح سجل الطلبات (صفحة مستقلة)</button>
+        <div class="right-panel">
+            <div class="card-title">تسجيل طلب جديد 📦</div>
 
-            <div class="card order-card">
-                <div class="card-title">تسجيل طلب جديد (إدخال يدوي) 📦</div>
+            <div class="input-group">
+                <label>👤 اسم الكابتن</label>
+                <input type="text" id="manual_cap_name" placeholder="مثال: محمد أحمد">
+            </div>
 
-                <div class="input-group">
-                    <label>👤 اسم الكابتن</label>
-                    <input type="text" id="manual_cap_name" placeholder="أدخل اسم الكابتن">
-                </div>
+            <div class="input-group">
+                <label>📱 رقم هاتف الكابتن</label>
+                <input type="tel" id="manual_cap_phone" placeholder="079...">
+            </div>
 
-                <div class="input-group">
-                    <label>📱 رقم هاتف الكابتن</label>
-                    <input type="tel" id="manual_cap_phone" placeholder="أدخل رقم الكابتن">
-                </div>
+            <div class="input-group">
+                <label>📍 اسم المطعم / المنشأة (بحث تلقائي)</label>
+                <input type="text" id="pickup_name" placeholder="اكتب الاسم للبحث في خرائط جوجل">
+            </div>
 
-                <div class="hidden-legacy">
-                    <select id="captain_select"><option>Legacy</option></select>
-                    <input type="text" id="cust_name" value="زبون عام">
-                    <input type="text" id="cust_phone" value="00000000">
-                    <input type="text" id="cust_location" value="Local">
-                </div>
+            <div class="input-group">
+                <label>💰 قيمة الطلب (التحصيل)</label>
+                <input type="number" id="order_val" placeholder="0.00">
+            </div>
 
-                <div class="input-group">
-                    <label>📍 موقع المنشأة (نقطة الاستلام)</label>
-                    <div class="location-row">
-                        <input type="text" id="pickup_loc" placeholder="رابط موقعك (Google Maps)">
-                        <button class="btn-location" onclick="getMyGPS()">📍 جلب</button>
-                    </div>
-                </div>
+            <div class="input-group">
+                <label>🛵 قيمة التوصيل (للعميل)</label>
+                <input type="number" id="delivery_fee" placeholder="0.00">
+            </div>
 
-                <div class="input-group">
-                    <label>💰 قيمة الطلب</label>
-                    <input type="number" id="order_val" placeholder="0.00">
-                </div>
+            <button class="btn-send" onclick="sendOrder()">إرسال وتوثيق 🚀</button>
 
-                <div class="input-group">
-                    <label>🛵 قيمة التوصيل</label>
-                    <input type="number" id="delivery_fee" placeholder="0.00">
-                </div>
-
-                <button class="btn-send" onclick="sendOrder()">إرسال وتوثيق الطلب 🚀</button>
+            <div class="legacy-hidden">
+                <select id="captain_select"></select>
+                <input type="text" id="pickup_loc_link"> <input type="text" id="cust_name" value="General">
+                <input type="text" id="cust_phone" value="000">
             </div>
         </div>
-
-        <div class="bottom-nav">
-            <div class="nav-item active"><span>🏠</span>الرئيسية</div>
-            <div class="nav-item" onclick="openModal('reports-modal')"><span>📊</span>التقارير</div>
-        </div>
     </div>
 
-    <div id="records-view" style="display:none; padding:20px;">
-        <h2 style="color:#1a237e; text-align:center;">📦 سجل الطلبات الشامل</h2>
-        <div id="orders-list"></div>
-        <button onclick="window.close()" style="width:100%; padding:15px; margin-top:20px; background:#ddd; border:none; border-radius:10px;">إغلاق الصفحة</button>
-    </div>
-
-    <div id="reports-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeAllModals()">✖</button>
-            <h3>📊 التحليل البياني</h3>
-            <canvas id="ordersChart" width="400" height="300"></canvas>
-        </div>
-    </div>
-
-    <div id="settings-modal" class="modal">
-        <div class="modal-content" style="text-align:center;">
-            <button class="close-modal" onclick="closeAllModals()">✖</button>
-            <h3>⚙️ الإعدادات</h3>
-            <div class="input-group"><input type="password" id="new_pass_input" placeholder="********"></div>
-            <button class="btn-send" onclick="changeMyPass()">حفظ</button>
-            <hr>
-            <button class="btn-send" style="background:#c62828;" onclick="logout()">خروج آمن 🔒</button>
-        </div>
-    </div>
+    <audio id="alert-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"></audio>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycby8Lvhri3wDGXFwXY2EPKy_sf6vrIEAyPVGreob8gDe_mx9EbpqWsqqR511LXdqjjU1/exec";
-
+        
         let currentUser = null;
         let myData = []; 
-        let captains = [];
         let orders = [];
+        let captainsDues = {}; // سجل المستحقات
 
         window.onload = async function() {
-            // التحقق إذا كنا في "صفحة السجل" المستقلة
-            const urlParams = new URLSearchParams(window.location.search);
-            const isRecordsPage = urlParams.get('page') === 'records';
+            // استعادة الإعدادات المالية
+            if(localStorage.getItem('nOne_percent')) {
+                document.getElementById('company_percentage').value = localStorage.getItem('nOne_percent');
+            }
+            if(localStorage.getItem('nOne_dues')) {
+                captainsDues = JSON.parse(localStorage.getItem('nOne_dues'));
+                updateFinanceDisplay();
+            }
 
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) { window.location.replace('index.html'); return; }
 
-            if (isRecordsPage) {
-                // تفعيل وضع صفحة السجل المستقلة
-                document.getElementById('main-view').style.display = 'none';
-                document.getElementById('records-view').style.display = 'block';
-                document.title = "N One | سجل الطلبات";
-            } else {
-                // تفعيل الوضع الرئيسي (منع الرجوع للخلف)
-                window.history.pushState(null, "", window.location.href);
-                window.onpopstate = function() { window.history.pushState(null, "", window.location.href); };
-            }
-
             await refreshData();
             document.getElementById('loader').style.display = 'none';
-
-            if(isRecordsPage) renderRecords(); // عرض السجل فوراً
-
             setInterval(checkMyStatus, 10000); 
         };
 
@@ -237,138 +208,128 @@
             try {
                 const res = await fetch(API_URL + "?action=read");
                 const all = await res.json();
-                
                 myData = all.filter(item => (item.cl || item.client_user) === currentUser.user);
-                
-                captains = myData.filter(i => i.type === 'captain');
                 orders = myData.filter(i => i.type === 'order');
-
-                updateCharts();
+                updateLiveFeed();
             } catch (e) { console.error(e); }
         }
 
-        // دالة فتح السجل في صفحة جديدة (Isolation)
-        function openRecordsInNewTab() {
-            // نستخدم نفس الرابط مع إضافة باراميتر
-            const newUrl = window.location.href.split('?')[0] + '?page=records';
-            window.open(newUrl, '_blank');
-        }
-
-        // عرض السجل (في الصفحة المستقلة)
-        function renderRecords() {
-            const list = document.getElementById('orders-list');
-            list.innerHTML = orders.slice().reverse().map(o => `
-                <div class="list-item" style="display:block; background:white; padding:15px; margin-bottom:10px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>👮 ${o.cap_name || 'يدوي'}</b> 
-                        <span style="font-size:12px;">${o.date.split('T')[0]}</span>
+        // تحديث السجل اللحظي (اليسار)
+        function updateLiveFeed() {
+            const feed = document.getElementById('live-feed');
+            feed.innerHTML = orders.slice().reverse().map(o => `
+                <div class="log-card">
+                    <div>
+                        <div style="font-weight:bold; color:#1a237e;">${o.cap_name}</div>
+                        <div class="log-info">${o.pickup.split('=')[1] || 'موقع'} | ${o.val} د.أ</div>
                     </div>
-                    <div style="font-size:12px; margin:5px 0;">
-                        المنشأة: ${o.cl_name} | القيمة: ${o.val} د.أ
-                    </div>
-                     <div style="text-align:left;">
-                        <button class="btn-small bg-blue" onclick="editOrder('${o.id}', '${o.val}')">تعديل ✏️</button>
-                        <button class="btn-small bg-red" onclick="deleteItem('${o.id}')">حذف ❌</button>
+                    <div style="text-align:left;">
+                        <div class="log-finance">التوصيل: ${o.fee}</div>
+                        <div class="log-time">${o.date.split('T')[1].substring(0,5)}</div>
                     </div>
                 </div>
             `).join('');
         }
 
         async function sendOrder() {
-            // الاعتماد على الإدخال اليدوي المباشر (Simplification)
+            // 1. جمع البيانات
             const capName = document.getElementById('manual_cap_name').value;
             const capPhone = document.getElementById('manual_cap_phone').value;
-            let pickupLoc = document.getElementById('pickup_loc').value; // موقع المنشأة
+            const shopName = document.getElementById('pickup_name').value;
             const val = document.getElementById('order_val').value;
             const fee = document.getElementById('delivery_fee').value;
+            
+            // 2. التحقق
+            if(!capName || !shopName || !val || !fee) return alert("البيانات ناقصة يا حبة السكر 😊");
 
-            if(!capName || !capPhone || !pickupLoc || !val) return alert("البيانات ناقصة يا حبة السكر 😊");
+            // 3. توليد رابط البحث التلقائي (Google Maps Search Link)
+            const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+            document.getElementById('pickup_loc_link').value = mapLink; // للحفاظ على الهيكل
 
-            if (!pickupLoc.includes('http')) {
-                pickupLoc = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickupLoc)}`;
-            }
+            // 4. الحسابات المالية (نسبة الشركة)
+            const percent = document.getElementById('company_percentage').value;
+            const companyShare = (fee * (percent / 100)).toFixed(2);
+            
+            // تسجيل المستحقات
+            if(!captainsDues[capName]) captainsDues[capName] = 0;
+            captainsDues[capName] += parseFloat(companyShare);
+            localStorage.setItem('nOne_dues', JSON.stringify(captainsDues));
+            updateFinanceDisplay();
 
+            // 5. بناء الطلب
             const newOrder = {
                 id: "ORD_" + Date.now(),
                 type: "order",
                 client_user: currentUser.user,
-                cl_name: currentUser.name,   // اسم المنشأة مثبت
+                cl_name: currentUser.name,
                 
-                cap_name: capName,   // الاسم اليدوي
-                cap_phone: capPhone, // الرقم اليدوي
+                cap_name: capName,
+                cap_phone: capPhone,
+                pickup: mapLink, // الرابط المولد
                 
-                pickup: pickupLoc,   // موقع المنشأة
-                fee: fee,            
-                val: val,            
+                val: val,
+                fee: fee,
+                company_share: companyShare, // حقل جديد للتوثيق
                 
-                // بيانات مخفية للحفاظ على الهيكل القديم
                 cust_name: "General",
                 cust_phone: "000",
-                
                 date: new Date().toISOString(),
                 status: "new"
             };
 
+            // تشغيل صوت التنبيه (Heartbeat)
+            playAlert();
+
             await sendData(newOrder);
 
-            // واتساب للكابتن
+            // 6. واتساب المطور
             let p = capPhone.replace(/\D/g, '');
             if (!p.startsWith('962')) p = '962' + p.replace(/^0+/, '');
             
-            // رسالة واتساب مبسطة
-            const msg = `*طلب جديد - ${currentUser.name}* 📦%0a%0a📍 *موقع الاستلام:* ${pickupLoc}%0a💰 *قيمة الطلب:* ${val}%0a🛵 *التوصيل:* ${fee}%0a%0a🚀 يعطيك العافية كابتن ${capName}`;
+            const msg = `*طلب جديد - ${currentUser.name}* 📦%0a%0a👤 *الكابتن:* ${capName}%0a📍 *الموقع:* ${mapLink}%0a💰 *التحصيل:* ${val} د.أ%0a🛵 *أجرة المندوب:* ${fee} د.أ%0a%0a⚠️ *الرجاء الالتزام بتعاليم الشركة وتوصيل الطلب بأمان.*`;
             
             window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
             
-            alert("تم التوثيق والإرسال 🚀");
+            alert("تم التوثيق والإرسال ✅");
             refreshData();
         }
 
-        async function editOrder(id, oldVal) {
-            const newVal = prompt("تعديل القيمة المالية:", oldVal);
-            if (newVal === null) return;
-            await fetch(API_URL + "?action=update&id=" + id, {
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ action: 'update', id: id, data: { val: newVal } })
-            });
-            alert("تم التعديل ✅");
-            // إعادة تحميل بسيطة لتحديث البيانات
-            location.reload();
-        }
-
-        // الوظائف المساعدة (GPS, Charts, Logout...)
-        function getMyGPS() {
-            if (navigator.geolocation) {
-                document.getElementById('pickup_loc').value = "جاري التحديد...";
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const link = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                    document.getElementById('pickup_loc').value = link;
-                });
-            } else alert("المتصفح لا يدعم");
-        }
-
-        function updateCharts() {
-            const ctx = document.getElementById('ordersChart').getContext('2d');
-            const days = []; const values = [];
-            for(let i=6; i>=0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                days.push(dateStr.slice(5));
-                const dayTotal = orders.filter(o => o.date.startsWith(dateStr))
-                                       .reduce((sum, o) => sum + Number(o.val || 0), 0);
-                values.push(dayTotal);
+        // إدارة المالية
+        function updateFinanceDisplay() {
+            const list = document.getElementById('finance-list');
+            let html = '';
+            for (let [cap, amount] of Object.entries(captainsDues)) {
+                html += `
+                    <div class="finance-item">
+                        <span>${cap}</span>
+                        <span style="font-weight:bold; color:#d4af37;">${amount.toFixed(2)} د.أ</span>
+                    </div>
+                `;
             }
-            if(window.myChart) window.myChart.destroy();
-            window.myChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: days, datasets: [{ label: 'الطلبات', data: values, borderColor: '#1a237e', fill: true }] }
-            });
+            if(html === '') html = '<div style="text-align:center; color:#777;">سجل نظيف</div>';
+            list.innerHTML = html;
         }
 
-        // دوال وهمية للحفاظ على الكود القديم (الميثاق)
-        function fillCaptainData() {} 
-        function addCaptain() {} 
+        function saveSettings() {
+            const p = document.getElementById('company_percentage').value;
+            localStorage.setItem('nOne_percent', p);
+        }
 
+        function resetFinanceWeek() {
+            if(!confirm("هل أنت متأكد من تصفير الحسابات الأسبوعية؟")) return;
+            captainsDues = {};
+            localStorage.removeItem('nOne_dues');
+            updateFinanceDisplay();
+            alert("تم بدء دورة مالية جديدة 🔄");
+        }
+
+        function playAlert() {
+            // محاكاة صوت نبضة (يمكن استبدال الرابط بملف صوتي حقيقي)
+            const audio = document.getElementById('alert-sound');
+            if(audio) audio.play().catch(e => console.log("Audio requires interaction"));
+        }
+
+        // الوظائف الأساسية (للحفاظ على الكود)
         async function sendData(dataObj) {
             await fetch(API_URL, {
                 method: 'POST', mode: 'no-cors',
@@ -376,12 +337,6 @@
                 body: JSON.stringify({ action: 'add', data: dataObj })
             });
             await new Promise(r => setTimeout(r, 1000));
-        }
-
-        async function deleteItem(id) {
-            if(!confirm("حذف؟")) return;
-            await fetch(API_URL + "?action=delete&id=" + id, { method: 'POST', mode: 'no-cors' });
-            setTimeout(() => { alert("تم الحذف"); location.reload(); }, 1000);
         }
 
         async function checkMyStatus() {
@@ -393,16 +348,15 @@
             } catch(e) {}
         }
 
-        async function changeMyPass() { /* ... */ }
-
         function logout() {
             localStorage.removeItem('currentUser');
             sessionStorage.clear();
             window.location.replace('index.html');
         }
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; if(id==='reports-modal') updateCharts(); }
-        function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        
+        // دوال وهمية للتوافق
+        function getMyGPS() {}
+        function fillCaptainData() {}
     </script>
 </body>
 </html>
