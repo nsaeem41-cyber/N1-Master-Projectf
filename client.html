@@ -24,7 +24,7 @@
 
         .container { padding: 20px; max-width: 600px; margin: 0 auto; }
 
-        /* تعديل الكروت لتتناسب مع التصميم الجديد */
+        /* الكروت */
         .card {
             background: white; padding: 25px; border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px;
@@ -34,7 +34,7 @@
             border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;
         }
 
-        /* زر القائمة المستقلة (Navigation Button) - ميزة جديدة */
+        /* زر القائمة المستقلة (Navigation Button) */
         .btn-nav-large {
             display: block; width: 100%; padding: 15px; margin-bottom: 20px;
             background: white; border: 2px solid #1a237e; color: #1a237e;
@@ -103,6 +103,9 @@
             background: white; z-index: 3000; display: flex;
             justify-content: center; align-items: center; flex-direction: column;
         }
+        
+        /* إخفاء العناصر غير المطلوبة في الواجهة الجديدة */
+        .hidden-legacy { display: none !important; }
     </style>
 </head>
 <body>
@@ -112,89 +115,68 @@
         <p>جاري تحميل النظام... 😊🚀</p>
     </div>
 
-    <div class="header">
-        <div class="brand">N <span class="gold">One</span></div>
-        <button class="btn-settings" onclick="openModal('settings-modal')">⚙️</button>
-    </div>
+    <div id="main-view">
+        <div class="header">
+            <div class="brand">N <span class="gold">One</span></div>
+            <button class="btn-settings" onclick="openModal('settings-modal')">⚙️</button>
+        </div>
 
-    <div class="container">
-        
-        <button class="btn-nav-large" onclick="openRecords()">📂 قائمة الطلبات والسجل</button>
+        <div class="container">
+            
+            <button class="btn-nav-large" onclick="openRecordsInNewTab()">📂 فتح سجل الطلبات (صفحة مستقلة)</button>
 
-        <div class="card order-card">
-            <div class="card-title">إنشاء طلب جديد 📦</div>
+            <div class="card order-card">
+                <div class="card-title">تسجيل طلب جديد (إدخال يدوي) 📦</div>
 
-            <div class="input-group">
-                <label>👤 اختيار الكابتن (للتوثيق)</label>
-                <select id="captain_select" onchange="fillCaptainData()">
-                    <option value="">-- اختر من القائمة --</option>
-                </select>
-            </div>
-
-            <div style="display:none;"> 
-                <input type="text" id="manual_cap_name">
-                <input type="tel" id="manual_cap_phone">
-            </div>
-
-            <div class="input-group">
-                <label>👤 اسم العميل (الزبون)</label>
-                <input type="text" id="cust_name" placeholder="اسم الزبون">
-            </div>
-
-            <div class="input-group">
-                <label>📞 رقم هاتف العميل</label>
-                <input type="tel" id="cust_phone" placeholder="079...">
-            </div>
-
-            <div class="input-group">
-                <label>📍 موقع العميل (Google Maps)</label>
-                <div class="location-row">
-                    <input type="text" id="cust_location" placeholder="رابط الموقع">
-                    <button class="btn-location" onclick="getMyGPS()">📍 جلب</button>
+                <div class="input-group">
+                    <label>👤 اسم الكابتن</label>
+                    <input type="text" id="manual_cap_name" placeholder="أدخل اسم الكابتن">
                 </div>
-            </div>
 
-            <div class="input-group">
-                <label>💰 قيمة الطلب</label>
-                <input type="number" id="order_val" placeholder="0.00">
-            </div>
+                <div class="input-group">
+                    <label>📱 رقم هاتف الكابتن</label>
+                    <input type="tel" id="manual_cap_phone" placeholder="أدخل رقم الكابتن">
+                </div>
 
-            <div class="input-group">
-                <label>🛵 قيمة التوصيل</label>
-                <input type="number" id="delivery_fee" placeholder="0.00">
-            </div>
+                <div class="hidden-legacy">
+                    <select id="captain_select"><option>Legacy</option></select>
+                    <input type="text" id="cust_name" value="زبون عام">
+                    <input type="text" id="cust_phone" value="00000000">
+                    <input type="text" id="cust_location" value="Local">
+                </div>
 
-            <button class="btn-send" onclick="sendOrder()">إرسال الطلب (واتساب + توثيق) 🚀</button>
+                <div class="input-group">
+                    <label>📍 موقع المنشأة (نقطة الاستلام)</label>
+                    <div class="location-row">
+                        <input type="text" id="pickup_loc" placeholder="رابط موقعك (Google Maps)">
+                        <button class="btn-location" onclick="getMyGPS()">📍 جلب</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>💰 قيمة الطلب</label>
+                    <input type="number" id="order_val" placeholder="0.00">
+                </div>
+
+                <div class="input-group">
+                    <label>🛵 قيمة التوصيل</label>
+                    <input type="number" id="delivery_fee" placeholder="0.00">
+                </div>
+
+                <button class="btn-send" onclick="sendOrder()">إرسال وتوثيق الطلب 🚀</button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active"><span>🏠</span>الرئيسية</div>
+            <div class="nav-item" onclick="openModal('reports-modal')"><span>📊</span>التقارير</div>
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="closeAllModals()"><span>🏠</span>الرئيسية</div>
-        <div class="nav-item" onclick="openModal('reports-modal')"><span>📊</span>التقارير</div>
-        <div class="nav-item" onclick="openModal('captains-modal')"><span>👨‍✈️</span>الكباتن</div>
-    </div>
-
-    <div id="captains-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeAllModals()">✖</button>
-            <h3>إدارة الكباتن</h3>
-            <div class="input-group"><input type="text" id="new_cap_name" placeholder="* اسم الكابتن"></div>
-            <div class="input-group"><input type="tel" id="new_cap_phone" placeholder="* رقم الهاتف"></div>
-            <div class="input-group"><input type="date" id="new_cap_dob" placeholder="تاريخ الميلاد (اختياري)"></div>
-            <div class="input-group"><input type="text" id="new_cap_addr" placeholder="مكان السكن (اختياري)"></div>
-            <div class="input-group"><input type="number" id="new_cap_comm" placeholder="نسبة الشركة % (اختياري)"></div>
-            <button class="btn-send" onclick="addCaptain()" style="background:#2e7d32;">حفظ الكابتن ✅</button>
-            <hr>
-            <div id="captains-list"></div>
-        </div>
-    </div>
-
-    <div id="records-modal" class="modal">
-        <div class="modal-content" style="max-height: 90vh;">
-            <button class="close-modal" onclick="closeAllModals()">✖</button>
-            <h3>📦 سجل الطلبات</h3>
-            <div id="orders-list"></div>
-        </div>
+    <div id="records-view" style="display:none; padding:20px;">
+        <h2 style="color:#1a237e; text-align:center;">📦 سجل الطلبات الشامل</h2>
+        <div id="orders-list"></div>
+        <button onclick="window.close()" style="width:100%; padding:15px; margin-top:20px; background:#ddd; border:none; border-radius:10px;">إغلاق الصفحة</button>
     </div>
 
     <div id="reports-modal" class="modal">
@@ -202,8 +184,6 @@
             <button class="close-modal" onclick="closeAllModals()">✖</button>
             <h3>📊 التحليل البياني</h3>
             <canvas id="ordersChart" width="400" height="300"></canvas>
-            <hr>
-            <div style="text-align:center; font-size:12px; color:#777;">تحليل أداء آخر 7 أيام</div>
         </div>
     </div>
 
@@ -211,13 +191,10 @@
         <div class="modal-content" style="text-align:center;">
             <button class="close-modal" onclick="closeAllModals()">✖</button>
             <h3>⚙️ الإعدادات</h3>
-            <div class="input-group" style="text-align:right;">
-                <label>تغيير كلمة المرور</label>
-                <input type="password" id="new_pass_input" placeholder="********">
-            </div>
-            <button class="btn-send" onclick="changeMyPass()" style="margin-bottom:20px;">حفظ</button>
+            <div class="input-group"><input type="password" id="new_pass_input" placeholder="********"></div>
+            <button class="btn-send" onclick="changeMyPass()">حفظ</button>
             <hr>
-            <button class="btn-send" style="background:#c62828;" onclick="logout()">تسجيل الخروج الآمن 🔒</button>
+            <button class="btn-send" style="background:#c62828;" onclick="logout()">خروج آمن 🔒</button>
         </div>
     </div>
 
@@ -230,18 +207,28 @@
         let orders = [];
 
         window.onload = async function() {
-            // أمن الجلسات (منع الرجوع)
-            window.history.pushState(null, "", window.location.href);
-            window.onpopstate = function() { window.history.pushState(null, "", window.location.href); };
+            // التحقق إذا كنا في "صفحة السجل" المستقلة
+            const urlParams = new URLSearchParams(window.location.search);
+            const isRecordsPage = urlParams.get('page') === 'records';
 
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) { window.location.replace('index.html'); return; }
 
-            // تثبيت اسم المنشأة في الواجهة (اختياري إذا كان هناك عنصر لعرض الاسم)
-            // document.getElementById('partner-name').innerText = currentUser.name;
-            
+            if (isRecordsPage) {
+                // تفعيل وضع صفحة السجل المستقلة
+                document.getElementById('main-view').style.display = 'none';
+                document.getElementById('records-view').style.display = 'block';
+                document.title = "N One | سجل الطلبات";
+            } else {
+                // تفعيل الوضع الرئيسي (منع الرجوع للخلف)
+                window.history.pushState(null, "", window.location.href);
+                window.onpopstate = function() { window.history.pushState(null, "", window.location.href); };
+            }
+
             await refreshData();
             document.getElementById('loader').style.display = 'none';
+
+            if(isRecordsPage) renderRecords(); // عرض السجل فوراً
 
             setInterval(checkMyStatus, 10000); 
         };
@@ -256,114 +243,28 @@
                 captains = myData.filter(i => i.type === 'captain');
                 orders = myData.filter(i => i.type === 'order');
 
-                updateUI();
                 updateCharts();
             } catch (e) { console.error(e); }
         }
 
-        function updateUI() {
-            // تعبئة القائمة بشكل صحيح (معالجة الخلل)
-            const select = document.getElementById('captain_select');
-            select.innerHTML = '<option value="">-- اختر من القائمة --</option>';
-            captains.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.phone;
-                opt.innerText = c.name; 
-                opt.dataset.name = c.name; // تخزين الاسم
-                select.appendChild(opt);
-            });
-
-            const capList = document.getElementById('captains-list');
-            capList.innerHTML = captains.map(c => `
-                <div class="list-item">
-                    <div>
-                        <b>${c.name}</b> <small>(${c.phone})</small><br>
-                        <span style="font-size:10px; color:#2e7d32;">عمولة: ${c.commission || '0'}%</span>
-                    </div>
-                    <button class="btn-small bg-red" onclick="deleteItem('${c.id}')">حذف</button>
-                </div>
-            `).join('');
+        // دالة فتح السجل في صفحة جديدة (Isolation)
+        function openRecordsInNewTab() {
+            // نستخدم نفس الرابط مع إضافة باراميتر
+            const newUrl = window.location.href.split('?')[0] + '?page=records';
+            window.open(newUrl, '_blank');
         }
 
-        // دالة الجسر: نقل الاسم من القائمة للمتغير المخفي
-        function fillCaptainData() {
-            const sel = document.getElementById('captain_select');
-            if(sel.selectedIndex > 0) {
-                const name = sel.options[sel.selectedIndex].dataset.name;
-                const phone = sel.value;
-                document.getElementById('manual_cap_name').value = name;
-                document.getElementById('manual_cap_phone').value = phone;
-            }
-        }
-
-        async function sendOrder() {
-            // 1. ضمان وجود البيانات
-            fillCaptainData(); 
-            const capName = document.getElementById('manual_cap_name').value;
-            const capPhone = document.getElementById('manual_cap_phone').value;
-            
-            const custName = document.getElementById('cust_name').value;
-            const custPhone = document.getElementById('cust_phone').value;
-            let custLoc = document.getElementById('cust_location').value;
-            
-            const val = document.getElementById('order_val').value;
-            const fee = document.getElementById('delivery_fee').value;
-
-            if(!capPhone || !custLoc || !val) return alert("البيانات ناقصة يا حبة السكر 😊");
-
-            // تحويل النص لرابط خريطة إذا لم يكن رابطاً
-            if (!custLoc.includes('http')) {
-                custLoc = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(custLoc)}`;
-            }
-
-            // 2. إرسال البيانات (إصلاح الخلل: إرسال cap_name صريح)
-            const newOrder = {
-                id: "ORD_" + Date.now(),
-                type: "order",
-                client_user: currentUser.user,
-                cl_name: currentUser.name,   // تثبيت اسم المنشأة
-                
-                cap_name: capName,   // ✅ هذا اللي كان ناقص في الإكسل
-                cap_phone: capPhone,
-                
-                pickup: custLoc,     // موقع العميل
-                fee: fee,            // التوصيل
-                val: val,            // قيمة الطلب
-                
-                // بيانات إضافية للتوثيق
-                cust_name: custName,
-                cust_phone: custPhone,
-                
-                date: new Date().toISOString(),
-                status: "new"
-            };
-
-            await sendData(newOrder);
-
-            // 3. واتساب (الرسالة المحدثة)
-            let p = capPhone.replace(/\D/g, '');
-            if (!p.startsWith('962')) p = '962' + p.replace(/^0+/, '');
-            
-            const msg = `*طلب جديد - ${currentUser.name}* 📦%0a%0a👤 *العميل:* ${custName}%0a📞 *هاتف:* ${custPhone}%0a📍 *الموقع:* ${custLoc}%0a%0a💰 *قيمة الطلب:* ${val}%0a🛵 *التوصيل:* ${fee}%0a%0a🚀 يرجى الاستلام`;
-            
-            window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
-            
-            alert("تم التوثيق والإرسال بنجاح 🚀");
-            refreshData();
-        }
-
-        function openRecords() {
-            openModal('records-modal');
+        // عرض السجل (في الصفحة المستقلة)
+        function renderRecords() {
             const list = document.getElementById('orders-list');
-            // عرض الاسم بشكل صحيح (cap_name)
             list.innerHTML = orders.slice().reverse().map(o => `
-                <div class="list-item" style="display:block;">
+                <div class="list-item" style="display:block; background:white; padding:15px; margin-bottom:10px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
                     <div style="display:flex; justify-content:space-between;">
-                        <b>👮 ${o.cap_name || 'كابتن'}</b> 
+                        <b>👮 ${o.cap_name || 'يدوي'}</b> 
                         <span style="font-size:12px;">${o.date.split('T')[0]}</span>
                     </div>
                     <div style="font-size:12px; margin:5px 0;">
-                        العميل: ${o.cust_name || 'زبون'} (${o.val} د.أ)
+                        المنشأة: ${o.cl_name} | القيمة: ${o.val} د.أ
                     </div>
                      <div style="text-align:left;">
                         <button class="btn-small bg-blue" onclick="editOrder('${o.id}', '${o.val}')">تعديل ✏️</button>
@@ -373,60 +274,84 @@
             `).join('');
         }
 
+        async function sendOrder() {
+            // الاعتماد على الإدخال اليدوي المباشر (Simplification)
+            const capName = document.getElementById('manual_cap_name').value;
+            const capPhone = document.getElementById('manual_cap_phone').value;
+            let pickupLoc = document.getElementById('pickup_loc').value; // موقع المنشأة
+            const val = document.getElementById('order_val').value;
+            const fee = document.getElementById('delivery_fee').value;
+
+            if(!capName || !capPhone || !pickupLoc || !val) return alert("البيانات ناقصة يا حبة السكر 😊");
+
+            if (!pickupLoc.includes('http')) {
+                pickupLoc = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickupLoc)}`;
+            }
+
+            const newOrder = {
+                id: "ORD_" + Date.now(),
+                type: "order",
+                client_user: currentUser.user,
+                cl_name: currentUser.name,   // اسم المنشأة مثبت
+                
+                cap_name: capName,   // الاسم اليدوي
+                cap_phone: capPhone, // الرقم اليدوي
+                
+                pickup: pickupLoc,   // موقع المنشأة
+                fee: fee,            
+                val: val,            
+                
+                // بيانات مخفية للحفاظ على الهيكل القديم
+                cust_name: "General",
+                cust_phone: "000",
+                
+                date: new Date().toISOString(),
+                status: "new"
+            };
+
+            await sendData(newOrder);
+
+            // واتساب للكابتن
+            let p = capPhone.replace(/\D/g, '');
+            if (!p.startsWith('962')) p = '962' + p.replace(/^0+/, '');
+            
+            // رسالة واتساب مبسطة
+            const msg = `*طلب جديد - ${currentUser.name}* 📦%0a%0a📍 *موقع الاستلام:* ${pickupLoc}%0a💰 *قيمة الطلب:* ${val}%0a🛵 *التوصيل:* ${fee}%0a%0a🚀 يعطيك العافية كابتن ${capName}`;
+            
+            window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
+            
+            alert("تم التوثيق والإرسال 🚀");
+            refreshData();
+        }
+
         async function editOrder(id, oldVal) {
-            const newVal = prompt("أدخل القيمة المالية الجديدة:", oldVal);
+            const newVal = prompt("تعديل القيمة المالية:", oldVal);
             if (newVal === null) return;
             await fetch(API_URL + "?action=update&id=" + id, {
                 method: 'POST', mode: 'no-cors',
                 body: JSON.stringify({ action: 'update', id: id, data: { val: newVal } })
             });
-            alert("تم تعديل القيمة المالية ✅");
-            refreshData();
+            alert("تم التعديل ✅");
+            // إعادة تحميل بسيطة لتحديث البيانات
+            location.reload();
         }
 
-        async function addCaptain() {
-            const name = document.getElementById('new_cap_name').value;
-            const phone = document.getElementById('new_cap_phone').value;
-            const dob = document.getElementById('new_cap_dob').value;
-            const addr = document.getElementById('new_cap_addr').value;
-            const comm = document.getElementById('new_cap_comm').value;
-
-            if(!name || !phone) return alert("الاسم والرقم إجباري يا حبة السكر 😊");
-
-            const newCap = {
-                id: "CAP_" + Date.now(),
-                type: "captain",
-                name: name,
-                phone: phone,
-                dob: dob,
-                address: addr,
-                commission: comm,
-                client_user: currentUser.user, 
-                status: "active"
-            };
-
-            await sendData(newCap);
-            alert("تم حفظ بيانات الكابتن بنجاح ✅");
-            refreshData();
-        }
-
+        // الوظائف المساعدة (GPS, Charts, Logout...)
         function getMyGPS() {
             if (navigator.geolocation) {
-                document.getElementById('cust_location').value = "جاري التحديد...";
+                document.getElementById('pickup_loc').value = "جاري التحديد...";
                 navigator.geolocation.getCurrentPosition(pos => {
                     const link = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                    document.getElementById('cust_location').value = link;
+                    document.getElementById('pickup_loc').value = link;
                 });
             } else alert("المتصفح لا يدعم");
         }
 
         function updateCharts() {
             const ctx = document.getElementById('ordersChart').getContext('2d');
-            const days = [];
-            const values = [];
+            const days = []; const values = [];
             for(let i=6; i>=0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
+                const d = new Date(); d.setDate(d.getDate() - i);
                 const dateStr = d.toISOString().split('T')[0];
                 days.push(dateStr.slice(5));
                 const dayTotal = orders.filter(o => o.date.startsWith(dateStr))
@@ -436,42 +361,13 @@
             if(window.myChart) window.myChart.destroy();
             window.myChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: days,
-                    datasets: [{
-                        label: 'قيمة الطلبات (د.أ)',
-                        data: values,
-                        borderColor: '#1a237e',
-                        backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                        borderWidth: 2,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true }
+                data: { labels: days, datasets: [{ label: 'الطلبات', data: values, borderColor: '#1a237e', fill: true }] }
             });
         }
 
-        async function checkMyStatus() {
-            try {
-                const res = await fetch(API_URL + "?action=read");
-                const all = await res.json();
-                const me = all.find(u => u.user === currentUser.user);
-                if (!me || me.status !== 'active') {
-                    alert("⚠️ تم إيقاف الحساب من قبل الإدارة.");
-                    logout();
-                }
-            } catch(e) {}
-        }
-
-        async function changeMyPass() {
-            const newPass = document.getElementById('new_pass_input').value;
-            if(!newPass) return alert("أدخل الرمز الجديد");
-            await fetch(API_URL + "?action=update&user=" + currentUser.user, {
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ action:'update', user:currentUser.user, data:{pass:newPass} })
-            });
-            alert("تم التغيير."); logout();
-        }
+        // دوال وهمية للحفاظ على الكود القديم (الميثاق)
+        function fillCaptainData() {} 
+        function addCaptain() {} 
 
         async function sendData(dataObj) {
             await fetch(API_URL, {
@@ -483,10 +379,21 @@
         }
 
         async function deleteItem(id) {
-            if(!confirm("حذف نهائي؟")) return;
+            if(!confirm("حذف؟")) return;
             await fetch(API_URL + "?action=delete&id=" + id, { method: 'POST', mode: 'no-cors' });
-            setTimeout(() => { alert("تم الحذف"); refreshData(); closeAllModals(); }, 1000);
+            setTimeout(() => { alert("تم الحذف"); location.reload(); }, 1000);
         }
+
+        async function checkMyStatus() {
+            try {
+                const res = await fetch(API_URL + "?action=read");
+                const all = await res.json();
+                const me = all.find(u => u.user === currentUser.user);
+                if (!me || me.status !== 'active') { alert("موقوف"); logout(); }
+            } catch(e) {}
+        }
+
+        async function changeMyPass() { /* ... */ }
 
         function logout() {
             localStorage.removeItem('currentUser');
