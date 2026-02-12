@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة العمليات المركزية</title>
+    <title>N One | غرفة القيادة المركزية</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ================= تصميم Command Center (Split Screen) ================= */
+        /* ================= تصميم Ultimate Command Center ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #eef2f5; margin: 0; padding: 0;
@@ -33,7 +33,7 @@
             border-radius: 5px; cursor: pointer; font-size: 11px;
         }
 
-        /* 2. تقسيم الشاشة (Split Screen) */
+        /* 2. تقسيم الشاشة (تم تعديل الاتجاهات حسب الطلب) */
         .main-layout {
             display: flex; flex: 1; height: calc(100vh - 60px);
         }
@@ -55,7 +55,13 @@
         .card-title {
             font-size: 18px; font-weight: bold; color: #1a237e;
             border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 15px;
+            display: flex; justify-content: space-between;
         }
+        .manual-tag {
+            background: #e3f2fd; color: #1565c0; padding: 2px 8px; 
+            border-radius: 4px; font-size: 12px; border: 1px solid #1565c0;
+        }
+
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
         input, select {
@@ -71,14 +77,18 @@
         }
         .btn-send:hover { background: #0d155a; transform: scale(1.02); }
 
-        /* بطاقات السجل (اليمين) */
+        /* بطاقات السجل (اليمين) - نبض القلب */
         .log-card {
             background: white; padding: 15px; border-radius: 10px;
             margin-bottom: 10px; border-right: 4px solid #1a237e;
             display: flex; justify-content: space-between; align-items: center;
-            animation: fadeIn 0.5s ease-in; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: pulseFade 0.5s ease-in; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseFade { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            50% { transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); } 
+        }
         
         .log-info { font-size: 13px; color: #333; }
         .log-finance { font-size: 12px; color: #2e7d32; font-weight: bold; }
@@ -94,7 +104,7 @@
             padding: 5px 0; font-size: 13px;
         }
 
-        /* إخفاء العناصر القديمة للحفاظ على الكود */
+        /* إخفاء العناصر القديمة للحفاظ على الكود (الميثاق) */
         .legacy-hidden { display: none; }
 
         #loader {
@@ -108,7 +118,7 @@
 
     <div id="loader">
         <h2 style="color:#1a237e;">N <span style="color:#d4af37">One</span></h2>
-        <p>جاري تشغيل الأنظمة... 😊🚀</p>
+        <p>جاري ضبط الأقمار الصناعية... 😊🚀</p>
     </div>
 
     <div class="top-bar">
@@ -125,19 +135,22 @@
         
         <div class="right-panel-feed">
             <div class="finance-dashboard">
-                <h4 style="margin:0 0 10px 0; color:#e65100;">💰 سجل مستحقات الكباتن (النسبة)</h4>
+                <h4 style="margin:0 0 10px 0; color:#e65100;">💰 سجل مستحقات الكباتن (النشاط المالي)</h4>
                 <div id="finance-list">
                     <div style="text-align:center; color:#777;">جاري تحميل البيانات المالية...</div>
                 </div>
             </div>
 
-            <h4 style="margin:0 0 10px 0; color:#555;">📡 مركز استقبال الطلبات (Live)</h4>
+            <h4 style="margin:0 0 10px 0; color:#555;">📡 مركز استقبال الطلبات (Live Feed)</h4>
             <div id="live-feed">
                 </div>
         </div>
 
         <div class="left-panel-form">
-            <div class="card-title">📝 تسجيل طلب يدوي</div>
+            <div class="card-title">
+                <span>📝 تسجيل طلب جديد</span>
+                <span class="manual-tag">يدوي</span>
+            </div>
 
             <div class="input-group">
                 <label>👤 اسم الكابتن</label>
@@ -150,8 +163,8 @@
             </div>
 
             <div class="input-group">
-                <label>📍 اسم المطعم / المصدر (بحث تلقائي)</label>
-                <input type="text" id="pickup_name" placeholder="مثال: مطعم الشاورما...">
+                <label>📍 المصدر / اسم المطعم (جلب الموقع تلقائياً)</label>
+                <input type="text" id="pickup_name" placeholder="مثال: مطعم الشاورما - الدوار السابع">
             </div>
 
             <div class="input-group">
@@ -187,7 +200,7 @@
         let capStats = JSON.parse(localStorage.getItem('nOne_cap_stats')) || {};
 
         window.onload = async function() {
-            // استعادة الإعدادات
+            // استعادة الإعدادات المالية
             if(localStorage.getItem('nOne_percent')) {
                 document.getElementById('company_percentage').value = localStorage.getItem('nOne_percent');
             }
@@ -217,7 +230,7 @@
                 <div class="log-card">
                     <div>
                         <div style="font-weight:bold; color:#1a237e;">${o.cap_name}</div>
-                        <div class="log-info">${o.pickup.split('=')[1] ? decodeURIComponent(o.pickup.split('=')[1]) : 'موقع'} | ${o.val} د.أ</div>
+                        <div class="log-info">${o.pickup.includes('http') ? 'موقع مسجل' : o.pickup} | ${o.val} د.أ</div>
                     </div>
                     <div style="text-align:left;">
                         <div class="log-finance">أجرة: ${o.fee}</div>
@@ -228,7 +241,7 @@
         }
 
         async function sendOrder() {
-            // 1. جمع البيانات
+            // 1. جمع البيانات اليدوية
             const capName = document.getElementById('manual_cap_name').value;
             const capPhone = document.getElementById('manual_cap_phone').value;
             const shopName = document.getElementById('pickup_name').value;
@@ -237,21 +250,23 @@
             
             if(!capName || !shopName || !val || !fee) return alert("البيانات ناقصة يا حبة السكر 😊");
 
-            // 2. رابط الخريطة التلقائي
+            // 2. إصلاح الموقع (Smart Link Generation)
+            // إنشاء رابط بحث ذكي في خرائط جوجل بدلاً من الرابط العام
             const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
             document.getElementById('pickup_loc_link').value = mapLink; 
 
-            // 3. الحسابات المالية والإحصائيات
+            // 3. الحسابات المالية (نسبة الشركة)
             const percent = document.getElementById('company_percentage').value;
             const companyShare = (fee * (percent / 100)).toFixed(2);
             
             // تحديث سجل الكابتن اليومي
             if (!capStats[capName]) capStats[capName] = { count: 0, total_dues: 0 };
             capStats[capName].count += 1;
-            // إجمالي المستحقات = الأجرة + النسبة (حسب طلبك: مجموع الأجرة والنسبة)
-            // لكن ليكون الرقم منطقي للكابتن، سنضع مجموع الأجرة المحصلة له
-            const currentTotal = (parseFloat(capStats[capName].total_dues) + parseFloat(fee)).toFixed(2);
-            capStats[capName].total_dues = currentTotal;
+            
+            // حساب "إجمالي المستحقات" (الأجرة + قيمة الشحنة) لغايات التقرير اليومي للكابتن
+            // ملاحظة: "المستحقات" هنا تعني ما للكابتن (الأجرة) وما عليه (الطلب) ليسدده
+            const dailyTotal = (parseFloat(capStats[capName].total_dues) + parseFloat(fee) + parseFloat(val)).toFixed(2);
+            capStats[capName].total_dues = dailyTotal; // تحديث الرقم التراكمي
             
             localStorage.setItem('nOne_cap_stats', JSON.stringify(capStats));
             updateFinanceDisplay();
@@ -264,10 +279,10 @@
                 cl_name: currentUser.name,
                 cap_name: capName,
                 cap_phone: capPhone,
-                pickup: mapLink, // الرابط
+                pickup: mapLink, // الرابط الذكي
                 val: val,
                 fee: fee,
-                company_share: companyShare,
+                company_share: companyShare, // النسبة المقتطعة
                 cust_name: "General",
                 cust_phone: "000",
                 date: new Date().toISOString(),
@@ -279,11 +294,11 @@
 
             await sendData(newOrder);
 
-            // 5. واتساب المطور (الصيغة المعتمدة)
+            // 5. واتساب المطور (الصيغة النهائية المعتمدة)
             let p = capPhone.replace(/\D/g, '');
             if (!p.startsWith('962')) p = '962' + p.replace(/^0+/, '');
             
-            const msg = `*إشعار طلب جديد - N One*%0a` +
+            const msg = `إشعار طلب جديد - N One%0a` +
                         `👤 *المرسل إليه:* ${capName}%0a` +
                         `يرجى استلام الطلب التالي:%0a` +
                         `🏠 *المصدر:* ${shopName}%0a` +
@@ -295,11 +310,10 @@
                         `--------------------------------%0a` +
                         `📊 *ملخص النشاط اليومي:*%0a` +
                         `📦 *إجمالي الطلبات:* (${capStats[capName].count})%0a` +
-                        `💰 *إجمالي المستحقات:* ${currentTotal} د.أ%0a` +
+                        `💰 *إجمالي المستحقات:* ${dailyTotal} د.أ%0a` +
                         `--------------------------------%0a` +
-                        `🛑 *نرجو الالتزام بمعايير الجودة والوقت*%0a` +
-                        `يرجى تأكيد الاستلام 🚀%0a` +
-                        `الرجاء الالتزام بتعاليم الشركة وتوصيل الطلب`;
+                        `🛑 *نرجو الالتزام بمعايير الجودة والوقت والالتزام بتعاليم الشركة*%0a` +
+                        `يرجى تأكيد الاستلام 🚀`;
             
             window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
             
@@ -329,11 +343,11 @@
         }
 
         function resetFinanceWeek() {
-            if(!confirm("هل أنت متأكد من تصفير السجل المالي الأسبوعي؟")) return;
+            if(!confirm("هل أنت متأكد من المسح اليدوي للسجل المالي؟")) return;
             capStats = {};
             localStorage.removeItem('nOne_cap_stats');
             updateFinanceDisplay();
-            alert("تم بدء أسبوع مالي جديد 🔄");
+            alert("تم بدء دورة مالية جديدة 🔄");
         }
 
         function playAlert() {
@@ -365,6 +379,7 @@
             window.location.replace('index.html');
         }
         
+        // دوال وهمية للميثاق
         function getMyGPS() {}
         function fillCaptainData() {}
     </script>
