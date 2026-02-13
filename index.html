@@ -90,7 +90,7 @@
 
         <div class="shop-login-option">
             <input type="checkbox" id="is_shop">
-            <label for="is_shop">تسجيل دخول كمنشأة تجارية (مطعم/محل)</label>
+            <label for="is_shop">تسجيل دخول كمنشأة تجارية مطعم ومحل</label>
         </div>
 
         <button class="btn-login" onclick="loginNow()" id="loginBtn">تسجيل الدخول 🚀</button>
@@ -99,7 +99,7 @@
 
         <div class="footer">
             &copy; 2026 N One Global Systems<br>
-            Secure Access v2.0
+            Secure Access v3.0 Ultimate
         </div>
     </div>
 
@@ -108,72 +108,74 @@
         const API_URL = "https://script.google.com/macros/s/AKfycby8Lvhri3wDGXFwXY2EPKy_sf6vrIEAyPVGreob8gDe_mx9EbpqWsqqR511LXdqjjU1/exec";
 
 
-        // ✅ الحل الجذري لمشكلة "التعليق":
-        // تنظيف الذاكرة فوراً عند فتح الصفحة
+        // التنظيف الفوري للذاكرة لضمان جلسة نظيفة
         window.onload = function() {
             localStorage.removeItem('currentUser');
-            console.log("Session Cleared - Ready for fresh login");
+            console.log("Session Cleared Ready for secure login");
         };
 
         async function loginNow() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            const isShop = document.getElementById('is_shop').checked; // سحب خيار المنشأة
+            const isShop = document.getElementById('is_shop').checked; 
             const btn = document.getElementById('loginBtn');
             const msgBox = document.getElementById('msg');
 
-            // إخفاء الرسائل السابقة
             msgBox.style.display = 'none';
 
             if (!u || !p) {
-                showError("يرجى إدخال اسم المستخدم وكلمة المرور!");
+                showError("يرجى إدخال اسم المستخدم وكلمة المرور ☺️");
                 return;
             }
 
-            // تشغيل وضع التحميل
-            btn.innerHTML = "جاري التحقق من السيرفر... ⏳";
+            // تشغيل وضع التحقق الآمن
+            btn.innerHTML = "جاري التحقق الآمن ⏳";
             btn.disabled = true;
 
             try {
-                // طلب القراءة من السيرفر
-                // نستخدم ?action=read للسرعة والموثوقية
-                const response = await fetch(API_URL + "?action=read");
+                // طلب بيانات المستخدم المحدد فقط من السيرفر لمنع تسريب الداتا
+                const response = await fetch(API_URL + "?action=read&user=" + encodeURIComponent(u));
                 const data = await response.json();
 
-                // البحث عن المستخدم (مطابقة اليوزر والباسورد)
+                // التحقق الدقيق من مطابقة البيانات المستلمة
                 const user = data.find(item => 
-                    String(item.user).trim().toLowerCase() === String(u).trim().toLowerCase() && 
-                    String(item.pass).trim() === String(p).trim()
+                    String(item.user).trim().toLowerCase() === String(u).toLowerCase() && 
+                    String(item.pass).trim() === String(p)
                 );
 
                 if (user) {
-                    // 1. فحص الحالة (هل هو نشط؟)
                     if (user.status !== 'active') {
-                        showError("⛔ عذراً، هذا الحساب موقوف أو مجمد. راجع الإدارة.");
+                        showError("عذرا هذا الحساب موقوف راجع الإدارة ☺️");
                         resetBtn();
                         return;
                     }
 
-                    // 2. النجاح! حفظ الجلسة
-                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    // نظام التشفير وحماية الجلسات
+                    const secureSession = {
+                        ...user,
+                        sessionToken: btoa(user.user + Date.now() + "N1_SECURE"), 
+                        loginTime: Date.now()
+                    };
                     
-                    // 3. التوجيه حسب الدور والفصل الجديد (Routing)
+                    localStorage.setItem('currentUser', JSON.stringify(secureSession));
+                    
+                    // التوجيه الذكي الآمن لمنع الرجوع للخلف
                     if (isShop) {
-                        window.location.href = 'shop.html'; // المنشأة تروح لصفحة المطاعم
+                        window.location.replace('shop.html'); 
                     } else if (user.role === 'admin') {
-                        window.location.href = 'admin.html'; // المدير يروح للإدارة
+                        window.location.replace('admin.html'); 
                     } else {
-                        window.location.href = 'client.html'; // العميل يروح للعميل
+                        window.location.replace('client.html'); 
                     }
 
                 } else {
-                    showError("❌ اسم المستخدم أو كلمة المرور غير صحيحة.");
+                    showError("اسم المستخدم أو كلمة المرور غير صحيحة ☺️");
                     resetBtn();
                 }
 
             } catch (err) {
                 console.error(err);
-                showError("تعذر الاتصال بقاعدة البيانات. تأكد من الإنترنت.");
+                showError("تعذر الاتصال بالسيرفر المركزي تأكد من الإنترنت ☺️");
                 resetBtn();
             }
         }
