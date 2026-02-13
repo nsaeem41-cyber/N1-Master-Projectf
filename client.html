@@ -118,7 +118,7 @@
 
     <div id="loader">
         <h2 style="color:#1a237e;">N <span style="color:#d4af37">One</span></h2>
-        <p>جاري ضبط الأقمار الصناعية... 😊🚀</p>
+        <p>جاري ضبط الأقمار الصناعية ☺️🚀</p>
     </div>
 
     <div class="top-bar">
@@ -137,8 +137,9 @@
             <div class="finance-dashboard">
                 <h4 style="margin:0 0 10px 0; color:#e65100;">💰 سجل مستحقات الكباتن (النشاط المالي)</h4>
                 <div id="finance-list">
-                    <div style="text-align:center; color:#777;">جاري تحميل البيانات المالية...</div>
+                    <div style="text-align:center; color:#777;">جاري تحميل البيانات المالية ☺️</div>
                 </div>
+                <canvas id="financeChart" height="120" style="margin-top: 15px;"></canvas>
             </div>
 
             <h4 style="margin:0 0 10px 0; color:#555;">📡 مركز استقبال الطلبات (Live Feed)</h4>
@@ -154,17 +155,17 @@
 
             <div class="input-group">
                 <label>👤 اسم الكابتن</label>
-                <input type="text" id="manual_cap_name" placeholder="محمد أحمد...">
+                <input type="text" id="manual_cap_name" placeholder="محمد أحمد">
             </div>
 
             <div class="input-group">
                 <label>📱 رقم هاتف الكابتن</label>
-                <input type="tel" id="manual_cap_phone" placeholder="079...">
+                <input type="tel" id="manual_cap_phone" placeholder="079">
             </div>
 
             <div class="input-group">
                 <label>📍 المصدر / اسم المطعم (جلب الموقع تلقائياً)</label>
-                <input type="text" id="pickup_name" placeholder="مثال: مطعم الشاورما - الدوار السابع">
+                <input type="text" id="pickup_name" placeholder="مثال مطعم الشاورما الدوار السابع">
             </div>
 
             <div class="input-group">
@@ -196,8 +197,11 @@
         let currentUser = null;
         let myData = []; 
         let orders = [];
-        // سجل مالي محلي للكباتن (الاسم: {عدد_الطلبات, إجمالي_المستحقات})
-        let capStats = JSON.parse(localStorage.getItem('nOne_cap_stats')) || {};
+        let financeChartInstance = null;
+        
+        // سجل مالي ذكي يعتمد على السيرفر ويتم فلترته بناء على دورة الجرد
+        let cycleStartDate = localStorage.getItem('nOne_cycle_start') || '2000-01-01T00:00:00.000Z';
+        let capStats = {};
 
         window.onload = async function() {
             // استعادة الإعدادات المالية
@@ -211,7 +215,6 @@
             await refreshData();
             document.getElementById('loader').style.display = 'none';
             setInterval(checkMyStatus, 10000); 
-            updateFinanceDisplay();
         };
 
         async function refreshData() {
@@ -221,7 +224,23 @@
                 myData = all.filter(item => (item.cl || item.client_user) === currentUser.user);
                 orders = myData.filter(i => i.type === 'order');
                 updateLiveFeed();
+                calculateServerFinance(); 
             } catch (e) { console.error(e); }
+        }
+
+        // دالة جديدة لحساب الجرد المالي مباشرة من بيانات السيرفر
+        function calculateServerFinance() {
+            capStats = {};
+            const cycleOrders = orders.filter(o => new Date(o.date) >= new Date(cycleStartDate));
+            
+            cycleOrders.forEach(o => {
+                const cName = o.cap_name;
+                if (!capStats[cName]) capStats[cName] = { count: 0, total_dues: 0 };
+                capStats[cName].count += 1;
+                const dailyTotal = parseFloat(o.fee || 0) + parseFloat(o.val || 0);
+                capStats[cName].total_dues = (parseFloat(capStats[cName].total_dues) + dailyTotal).toFixed(2);
+            });
+            updateFinanceDisplay();
         }
 
         function updateLiveFeed() {
@@ -248,28 +267,24 @@
             const val = document.getElementById('order_val').value;
             const fee = document.getElementById('delivery_fee').value;
             
-            if(!capName || !shopName || !val || !fee) return alert("البيانات ناقصة يا حبة السكر 😊");
+            if(!capName || !shopName || !val || !fee) return alert("البيانات ناقصة يا حبة السكر ☺️");
+            
+            // إضافة فلاتر الحماية لمنع القيم السالبة
+            if(parseFloat(val) < 0 || parseFloat(fee) < 0) return alert("ممنوع إدخال قيم سالبة يا بطة ☺️");
 
-            // 2. إصلاح الموقع (Smart Link Generation)
-            // إنشاء رابط بحث ذكي في خرائط جوجل بدلاً من الرابط العام
-            const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+            // 2. إصلاح الموقع (Smart Link Generation) مع إضافة علامة الدولار البرمجية
+            const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
             document.getElementById('pickup_loc_link').value = mapLink; 
 
             // 3. الحسابات المالية (نسبة الشركة)
             const percent = document.getElementById('company_percentage').value;
             const companyShare = (fee * (percent / 100)).toFixed(2);
             
-            // تحديث سجل الكابتن اليومي
-            if (!capStats[capName]) capStats[capName] = { count: 0, total_dues: 0 };
-            capStats[capName].count += 1;
-            
-            // حساب "إجمالي المستحقات" (الأجرة + قيمة الشحنة) لغايات التقرير اليومي للكابتن
-            // ملاحظة: "المستحقات" هنا تعني ما للكابتن (الأجرة) وما عليه (الطلب) ليسدده
-            const dailyTotal = (parseFloat(capStats[capName].total_dues) + parseFloat(fee) + parseFloat(val)).toFixed(2);
-            capStats[capName].total_dues = dailyTotal; // تحديث الرقم التراكمي
-            
-            localStorage.setItem('nOne_cap_stats', JSON.stringify(capStats));
-            updateFinanceDisplay();
+            // حساب الأرقام اللحظية للواتساب قبل تحديث السيرفر
+            let currentDues = capStats[capName] ? parseFloat(capStats[capName].total_dues) : 0;
+            let currentCount = capStats[capName] ? capStats[capName].count : 0;
+            const dailyTotal = (currentDues + parseFloat(fee) + parseFloat(val)).toFixed(2);
+            const newCount = currentCount + 1;
 
             // 4. بناء الطلب للسيرفر
             const newOrder = {
@@ -279,10 +294,10 @@
                 cl_name: currentUser.name,
                 cap_name: capName,
                 cap_phone: capPhone,
-                pickup: mapLink, // الرابط الذكي
+                pickup: mapLink, 
                 val: val,
                 fee: fee,
-                company_share: companyShare, // النسبة المقتطعة
+                company_share: companyShare, 
                 cust_name: "General",
                 cust_phone: "000",
                 date: new Date().toISOString(),
@@ -309,7 +324,7 @@
                         `🔸 *قيمة الشحنة:* ${val} د.أ%0a` +
                         `--------------------------------%0a` +
                         `📊 *ملخص النشاط اليومي:*%0a` +
-                        `📦 *إجمالي الطلبات:* (${capStats[capName].count})%0a` +
+                        `📦 *إجمالي الطلبات:* (${newCount})%0a` +
                         `💰 *إجمالي المستحقات:* ${dailyTotal} د.أ%0a` +
                         `--------------------------------%0a` +
                         `🛑 *نرجو الالتزام بمعايير الجودة والوقت والالتزام بتعاليم الشركة*%0a` +
@@ -317,14 +332,17 @@
             
             window.open(`https://wa.me/${p}?text=${msg}`, '_blank');
             
-            alert("تم التوثيق والإرسال ✅");
-            refreshData();
+            alert("تم التوثيق والإرسال ☺️");
+            refreshData(); // هذا السطر سيقوم بتحديث الجرد المالي والرسوم البيانية تلقائيا من السيرفر
         }
 
-        // عرض السجل المالي
+        // عرض السجل المالي والرسوم البيانية
         function updateFinanceDisplay() {
             const list = document.getElementById('finance-list');
             let html = '';
+            let chartLabels = [];
+            let chartData = [];
+
             for (let [cap, data] of Object.entries(capStats)) {
                 html += `
                     <div class="finance-item">
@@ -332,9 +350,46 @@
                         <span style="font-weight:bold; color:#d4af37;">${data.total_dues} د.أ</span>
                     </div>
                 `;
+                chartLabels.push(cap);
+                chartData.push(parseFloat(data.total_dues));
             }
             if(html === '') html = '<div style="text-align:center; color:#777;">سجل نظيف</div>';
             list.innerHTML = html;
+            
+            // تفعيل رسم المخططات البيانية
+            drawChart(chartLabels, chartData);
+        }
+
+        // دالة إنشاء الرسوم البيانية الذكية
+        function drawChart(labels, data) {
+            const ctx = document.getElementById('financeChart');
+            if(!ctx) return;
+            
+            if (financeChartInstance) {
+                financeChartInstance.destroy(); // تدمير الرسم القديم قبل تحديثه
+            }
+            
+            financeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'إجمالي المستحقات (د.أ)',
+                        data: data,
+                        backgroundColor: '#1a237e',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
         }
 
         function saveSettings() {
@@ -343,11 +398,12 @@
         }
 
         function resetFinanceWeek() {
-            if(!confirm("هل أنت متأكد من المسح اليدوي للسجل المالي؟")) return;
-            capStats = {};
-            localStorage.removeItem('nOne_cap_stats');
-            updateFinanceDisplay();
-            alert("تم بدء دورة مالية جديدة 🔄");
+            if(!confirm("هل أنت متأكد من بدء دورة مالية جديدة وتصفير العدادات ☺️")) return;
+            // تعيين تاريخ الدورة الجديدة بدل حذف البيانات لضمان بقائها في السيرفر
+            cycleStartDate = new Date().toISOString();
+            localStorage.setItem('nOne_cycle_start', cycleStartDate);
+            calculateServerFinance();
+            alert("تم بدء دورة مالية جديدة ☺️");
         }
 
         function playAlert() {
@@ -369,7 +425,7 @@
                 const res = await fetch(API_URL + "?action=read");
                 const all = await res.json();
                 const me = all.find(u => u.user === currentUser.user);
-                if (!me || me.status !== 'active') { alert("موقوف"); logout(); }
+                if (!me || me.status !== 'active') { alert("الحساب موقوف ☺️"); logout(); }
             } catch(e) {}
         }
 
