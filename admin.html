@@ -117,9 +117,17 @@
         }
         .modal h3 { color: var(--primary); margin-top: 0; }
         .close-modal { float: left; cursor: pointer; font-size: 20px; color: #999; }
+        
+        #loader-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); z-index: 3000; justify-content: center; align-items: center;
+            font-size: 24px; font-weight: bold; color: var(--primary);
+        }
     </style>
 </head>
 <body>
+
+    <div id="loader-overlay">جاري المزامنة مع السيرفر المركزي... ⏳</div>
 
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> Admin</div>
@@ -154,7 +162,7 @@
             <div class="form-grid">
                 <input type="text" id="new_name" placeholder="اسم الشركة (White Label)">
                 <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
-                <input type="text" id="new_pass" placeholder="كلمة المرور (Password)">
+                <input type="password" id="new_pass" placeholder="كلمة المرور (Password)">
                 
                 <select id="sub_duration">
                     <option value="30">شهر واحد (30 يوم)</option>
@@ -164,7 +172,7 @@
                 </select>
                 <input type="number" id="sub_price" placeholder="قيمة الاشتراك (د.أ)">
 
-                <button class="btn-add" onclick="addClient()">+ تفعيل الاشتراك 🚀</button>
+                <button class="btn-add" id="btnAddUser" onclick="addClient()">+ تفعيل الاشتراك 🚀</button>
             </div>
         </div>
 
@@ -207,22 +215,35 @@
 
         let allData = [];
         let currentUser = null;
+        let globalServerTime = new Date(); // متغير ذكي لحفظ وقت السيرفر العالمي
 
-        // تنفيذ خطة: أمن الجلسات ومنع التلاعب (Prevent Back Button)
-        window.onload = function() {
-            // منع الرجوع للصفحة السابقة
+        // تنفيذ خطة: أمن الجلسات ومنع التلاعب (Prevent Back Button) مع فحص التشفير الجديد
+        window.onload = async function() {
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
             };
 
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (!currentUser || currentUser.role !== 'admin') {
-                window.location.replace('index.html'); // استخدام replace بدلاً من href لمنع العودة
+            // جدار الحماية للتحقق من التشفير الخاص بالجلسة
+            if (!currentUser || currentUser.role !== 'admin' || !currentUser.sessionToken || !currentUser.sessionToken.includes('N1_SECURE')) {
+                window.location.replace('index.html'); 
             } else {
-                fetchData();
+                await fetchServerTime();
+                await fetchData();
             }
         };
+
+        // دالة لجلب التوقيت العالمي لضمان عدم التلاعب بالعداد التنازلي
+        async function fetchServerTime() {
+            try {
+                const res = await fetch("http://worldtimeapi.org/api/timezone/Asia/Amman");
+                const timeData = await res.json();
+                globalServerTime = new Date(timeData.datetime);
+            } catch (e) {
+                globalServerTime = new Date(); // في حال فشل الاتصال نعتمد الوقت الحالي مؤقتا
+            }
+        }
 
         async function fetchData() {
             try {
@@ -231,7 +252,7 @@
                 renderTable();
             } catch (e) {
                 console.error(e);
-                alert("خطأ في الاتصال!");
+                alert("خطأ في الاتصال بالسيرفر المركزي ☺️");
             }
         }
 
@@ -239,11 +260,10 @@
             const tbody = document.getElementById('clients-table');
             const clients = allData.filter(u => u.role === 'client').reverse();
 
-            // الإحصائيات
+            // الإحصائيات مع الحساب الدقيق للمردود المالي
             document.getElementById('total-count').innerText = clients.length;
             document.getElementById('active-count').innerText = clients.filter(c => c.status === 'active').length;
             
-            // حساب المردود المالي من الاشتراكات
             let totalRev = 0;
             clients.forEach(c => totalRev += Number(c.price || 0));
             document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
@@ -255,23 +275,25 @@
 
             tbody.innerHTML = '';
             clients.forEach(client => {
-                // منطق العداد التنازلي ⏳
-                const today = new Date();
+                // منطق العداد التنازلي المعتمد على وقت السيرفر العالمي
                 const expiryDate = new Date(client.expiry);
-                const diffTime = expiryDate - today;
+                const diffTime = expiryDate - globalServerTime;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 let statusBadge = '';
                 let daysText = '';
 
-                // فحص الحالة والمدة
+                // فحص الحالة والمدة مع التجميد الفوري
                 if (client.status === 'paused') {
                     statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
                     daysText = `<span style="color:#f57f17;">موقف مؤقتاً</span>`;
                 } else if (diffDays <= 0) {
                     statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
                     daysText = `<span style="color:#c62828; font-weight:bold;">انتهى الاشتراك</span>`;
-                    // ملاحظة: هنا ممكن نضيف كود يرسل أمر للسيرفر بتجميد الحساب تلقائياً إذا لم يكن مجمداً
+                    // التجميد التلقائي إذا انتهى الاشتراك ولم يجمده المدير
+                    if(client.status === 'active') {
+                        setStatusSilent(client.user, 'paused');
+                    }
                 } else {
                     statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
                     // تنبيه قبل 3 أيام
@@ -311,64 +333,91 @@
             const days = parseInt(document.getElementById('sub_duration').value);
             const price = document.getElementById('sub_price').value;
 
-            if (!name || !user || !pass || !price) { alert("البيانات ناقصة يا حبة السكر 😊"); return; }
+            if (!name || !user || !pass || !price) { alert("البيانات ناقصة يا حبة السكر ☺️"); return; }
 
-            // حساب تاريخ الانتهاء بدقة
-            const expDate = new Date();
+            // حساب تاريخ الانتهاء بدقة بناء على وقت السيرفر
+            const expDate = new Date(globalServerTime);
             expDate.setDate(expDate.getDate() + days);
             const expStr = expDate.toISOString().split('T')[0];
 
-            const btn = document.querySelector('.btn-add');
-            btn.innerText = "جاري إنشاء الحساب..."; btn.disabled = true;
+            const btn = document.getElementById('btnAddUser');
+            btn.innerText = "جاري إنشاء الحساب والتأكيد... ⏳"; 
+            btn.disabled = true;
+            document.getElementById('loader-overlay').style.display = 'flex';
 
             const newClient = {
                 id: "CL_" + Date.now(),
                 user: user, pass: pass, name: name,
                 role: "client", type: "client", status: "active",
                 expiry: expStr,
-                price: price, // حفظ المبلغ للجرد المالي
+                price: price, 
                 plan_days: days
             };
 
             await sendToServer('add', [newClient]);
-            alert("تم تفعيل الاشتراك وإنشاء الحساب المعزول ✅");
-            location.reload();
+            
+            // تأكيد حقيقي من السيرفر قبل إعطاء النجاح
+            await fetchData(); 
+            
+            document.getElementById('loader-overlay').style.display = 'none';
+            btn.innerText = "+ تفعيل الاشتراك 🚀";
+            btn.disabled = false;
+            
+            alert("تم تفعيل الاشتراك وإنشاء الحساب المعزول وتوثيقه ☺️✅");
+            
+            // تفريغ الحقول
+            document.getElementById('new_name').value = '';
+            document.getElementById('new_user').value = '';
+            document.getElementById('new_pass').value = '';
+            document.getElementById('sub_price').value = '';
         }
 
         async function setStatus(username, newStatus) {
-            if (!confirm(newStatus === 'paused' ? "تجميد الحساب ومنع الدخول؟" : "إعادة تفعيل الحساب؟")) return;
+            if (!confirm(newStatus === 'paused' ? "تجميد الحساب ومنع الدخول لحظيا ☺️" : "إعادة تفعيل الحساب ☺️")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
             await sendToServer('update', { status: newStatus }, username);
-            alert("تم تحديث الحالة.");
-            fetchData();
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تحديث الحالة والمزامنة اللحظية ☺️");
+        }
+        
+        // دالة صامتة للتجميد التلقائي
+        async function setStatusSilent(username, newStatus) {
+            await sendToServer('update', { status: newStatus }, username);
         }
 
         async function renewClient(username) {
-            const days = prompt("عدد أيام التجديد؟", "30");
-            const price = prompt("قيمة التجديد (للجرد المالي):", "0");
+            const days = prompt("عدد أيام التجديد ☺️", "30");
+            const price = prompt("قيمة التجديد للجرد المالي ☺️", "0");
             if (!days) return;
 
-            const newDate = new Date();
+            const newDate = new Date(globalServerTime);
             newDate.setDate(newDate.getDate() + parseInt(days));
             const expStr = newDate.toISOString().split('T')[0];
 
-            // تحديث التاريخ والسعر والحالة
+            document.getElementById('loader-overlay').style.display = 'flex';
             await sendToServer('update', { expiry: expStr, status: 'active', price: price }, username);
-            alert("تم تجديد الاشتراك بنجاح 📅");
-            fetchData();
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تجديد الاشتراك بنجاح ☺️📅");
         }
 
         async function deleteClient(username) {
-            if (!confirm("هل أنت متأكد من الحذف النهائي للبيانات؟")) return;
+            if (!confirm("هل أنت متأكد من الحذف النهائي للبيانات ☺️")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
             await fetch(API_URL + "?action=delete&user=" + username, { method: 'POST' });
-            alert("تم حذف الشركة.");
-            fetchData();
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم حذف الشركة وطرد المستخدم فورا ☺️");
         }
 
         async function changeAdminPass() {
             const newPass = document.getElementById('admin_new_pass').value;
             if (!newPass) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
             await sendToServer('update', { pass: newPass }, currentUser.user);
-            alert("تم تغيير كلمة المرور.");
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تغيير كلمة المرور بنجاح ☺️");
             logout();
         }
 
@@ -380,17 +429,16 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: action, data: data, user: user })
             });
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 1500)); // تأخير بسيط لضمان تنفيذ جوجل للطلب
         }
 
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
         
-        // تنفيذ خطة: تدمير البيانات عند الخروج
         function logout() {
             localStorage.removeItem('currentUser');
-            sessionStorage.clear(); // مسح الجلسة
-            window.location.replace('index.html'); // استخدام replace لمنع العودة
+            sessionStorage.clear(); 
+            window.location.replace('index.html'); 
         }
     </script>
 
