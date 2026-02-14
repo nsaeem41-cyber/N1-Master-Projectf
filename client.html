@@ -78,7 +78,14 @@
         .btn-delete { background: var(--danger); }
         .btn-active { background: var(--success); }
         
-        .btn-save-day { background: var(--primary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .btn-save-day { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-save-day:hover { background: #004d40; }
+
+        /* تصميم المحاسب التاريخي */
+        .history-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .history-item { background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid var(--gold); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .history-date { font-weight: bold; color: var(--primary); }
+        .history-stats { font-size: 13px; color: #555; }
 
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
     </style>
@@ -103,7 +110,7 @@
     <div class="container">
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
+            <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات والمحاسبة</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
             <button class="tab-btn" onclick="switchTab('operations', event)">📡 غرفة العمليات (Live)</button>
             <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار للمناطق ↗️</button>
@@ -118,7 +125,16 @@
                 <div class="card" style="text-align:center; border-top-color:var(--success);">
                     <h3 style="margin:0; color:#555;">إجمالي الأرباح المرحلة</h3>
                     <h1 id="total-profit" style="color:var(--success); font-size:40px; margin:10px 0;">0 د.أ</h1>
-                    <small style="color:#888;">يتم التحديث عند إغلاق اليومية</small>
+                    <small style="color:#888;">(أرباح تراكمية)</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>📅 السجل التاريخي للأرباح (Accountant Log)</span>
+                </div>
+                <div id="history-container" class="history-list">
+                    <div style="text-align:center; color:#aaa;">لا يوجد سجلات مرحلة بعد</div>
                 </div>
             </div>
         </div>
@@ -217,7 +233,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <button class="btn-save-day" onclick="storeDayData()">💾 إغلاق اليومية وترحيل الأرباح 🌙</button>
+                        <button class="btn-save-day" onclick="storeDayData()">💾 إغلاق اليومية وترحيل الأرباح للسجل 🌙</button>
                     </div>
                 </div>
 
@@ -263,12 +279,11 @@
         let allData = [];
         let lastOrderCount = 0;
         
-        // ذاكرة الكباتن المحلية
+        // الذاكرة المحلية والأنظمة
         let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
-        // الأرشيف اليومي
         let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive_' + new Date().toLocaleDateString()) || '[]');
-        // الأرباح المرحلة (Lifetime)
         let totalLifetimeProfit = parseFloat(localStorage.getItem('n1_lifetime_profit') || '0');
+        let historyLog = JSON.parse(localStorage.getItem('n1_history_log') || '[]');
 
         window.onload = async function() {
             if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
@@ -278,7 +293,8 @@
                 document.getElementById('total-profit').innerText = totalLifetimeProfit.toFixed(1) + " د.أ";
                 await fetchData();
                 renderArchive();
-                setInterval(fetchDataSilent, 10000);
+                renderHistory(); // تفعيل المحاسب التاريخي
+                setInterval(fetchDataSilent, 8000); // تحديث صامت كل 8 ثواني
             }
         };
 
@@ -304,16 +320,15 @@
             event.target.classList.add('active');
         }
 
-        // ================= ذاكرة الكباتن الذكية =================
+        // ================= ذاكرة الكباتن =================
         function checkCaptainMemory() {
             const phone = document.getElementById('man_phone').value;
             const hint = document.getElementById('cap_memory_hint');
-            const nameInput = document.getElementById('man_cap_name');
             
             if (captainMemory[phone]) {
                 hint.style.display = 'block';
                 document.getElementById('mem_cap_name').innerText = captainMemory[phone];
-                nameInput.value = captainMemory[phone];
+                document.getElementById('man_cap_name').value = captainMemory[phone];
             } else { hint.style.display = 'none'; }
         }
 
@@ -324,14 +339,14 @@
             }
         }
 
-        // ================= الإرسال اليدوي (واتساب + أرشفة + نسبة الشركة) =================
+        // ================= الإرسال اليدوي =================
         function sendManualOrder() {
             const phoneInput = document.getElementById('man_phone').value;
             const capName = document.getElementById('man_cap_name').value;
             const locName = document.getElementById('man_loc').value; 
             const fee = document.getElementById('man_fee').value;
-            const price = document.getElementById('man_price').value; // قيمة الأوردر
-            const ratio = document.getElementById('man_ratio').value || 0; // نسبة الشركة
+            const price = document.getElementById('man_price').value; 
+            const ratio = document.getElementById('man_ratio').value || 0; 
 
             if(!phoneInput || !locName || !capName) { alert("بيانات ناقصة ☺️"); return; }
 
@@ -342,9 +357,8 @@
 
             const smartLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locName);
 
-            // حساب النسبة المقتطعة من التوصيل فقط
+            // حساب النسبة المقتطعة من التوصيل
             const commValue = (fee * (ratio / 100)).toFixed(2);
-            
             const dailyCount = dailyArchive.filter(o => o.phone === phoneInput).length + 1;
 
             let msg = `إشعار طلب جديد - N One%0a`;
@@ -364,19 +378,16 @@
         }
 
         function addToArchive(capName, phone, locName, fee, price, commValue, ratio) {
-            // إضافة البيانات الجديدة للأرشيف
             const order = { capName, phone, locName, fee, price, commValue, ratio, time: new Date().toLocaleTimeString() };
             dailyArchive.unshift(order);
             localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
             renderArchive();
             
-            // تفريغ الحقول ما عدا النسبة
             document.getElementById('man_loc').value = '';
             document.getElementById('man_fee').value = '';
             document.getElementById('man_price').value = '';
         }
 
-        // رسم الأرشيف مع زر التعديل
         function renderArchive() {
             const tbody = document.getElementById('archive-table-body');
             if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>'; return; }
@@ -398,10 +409,9 @@
             });
         }
 
-        // ميزة التعديل الشامل للأرشيف
+        // تعديل شامل
         function editArchiveOrder(index) {
             const order = dailyArchive[index];
-            
             const newFee = prompt("تعديل أجرة التوصيل:", order.fee);
             if (newFee === null) return;
             const newPrice = prompt("تعديل قيمة الأوردر:", order.price);
@@ -409,7 +419,6 @@
             const newRatio = prompt("تعديل النسبة %:", order.ratio);
             if (newRatio === null) return;
             
-            // إعادة الحساب
             const updatedComm = (parseFloat(newFee) * (parseFloat(newRatio) / 100)).toFixed(2);
             
             dailyArchive[index].fee = newFee;
@@ -419,26 +428,60 @@
             
             localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
             renderArchive();
-            alert("تم تعديل بيانات الطلب بنجاح ✅");
         }
 
-        // ميزة إغلاق اليومية
+        // ================= المحاسب التاريخي (إغلاق اليومية) =================
         function storeDayData() {
-            if (!confirm("هل أنت متأكد من إغلاق اليومية؟ سيتم ترحيل الأرباح للوحة المعلومات.")) return;
+            if (!confirm("هل أنت متأكد من إغلاق اليومية؟ سيتم ترحيل البيانات للسجل التاريخي وتصفير الجدول الحالي.")) return;
             
             let dayProfit = 0;
             dailyArchive.forEach(o => dayProfit += parseFloat(o.commValue || 0));
             
+            // 1. تحديث الأرباح التراكمية
             totalLifetimeProfit += dayProfit;
             localStorage.setItem('n1_lifetime_profit', totalLifetimeProfit.toString());
-            
-            // تحديث لوحة المعلومات
             document.getElementById('total-profit').innerText = totalLifetimeProfit.toFixed(1) + " د.أ";
+
+            // 2. تسجيل اليوم في التاريخ
+            const todayRecord = {
+                date: new Date().toLocaleDateString('ar-JO'),
+                time: new Date().toLocaleTimeString('ar-JO'),
+                ordersCount: dailyArchive.length,
+                profit: dayProfit.toFixed(2)
+            };
             
-            alert(`تم إغلاق اليومية بنجاح! 🌙\nإجمالي أرباح اليوم المرحلة: ${dayProfit.toFixed(2)} د.أ`);
+            historyLog.unshift(todayRecord); // إضافة للأحدث
+            localStorage.setItem('n1_history_log', JSON.stringify(historyLog));
+            renderHistory();
+
+            // 3. تصفير اليوم الحالي لبدء يوم جديد
+            dailyArchive = [];
+            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify([]));
+            renderArchive();
+            
+            alert(`تم إغلاق اليومية بنجاح! 🌙\nالأرباح المرحلة: ${dayProfit.toFixed(2)} د.أ`);
         }
 
-        // ================= إدارة المنشآت (مع التجميد الفعال) =================
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if(historyLog.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#aaa;">لا يوجد سجلات مرحلة بعد</div>';
+                return;
+            }
+            container.innerHTML = '';
+            historyLog.forEach(rec => {
+                container.innerHTML += `
+                    <div class="history-item">
+                        <div class="history-date">📅 ${rec.date} <small>(${rec.time})</small></div>
+                        <div class="history-stats">
+                            📦 ${rec.ordersCount} طلب | 💰 <span style="color:var(--success); font-weight:bold;">+${rec.profit} د.أ</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ================= إدارة المنشآت =================
         async function addShop() {
             const name = document.getElementById('shop_name').value;
             const user = document.getElementById('shop_user').value;
@@ -471,7 +514,6 @@
             myShops.forEach(shop => {
                 const subBadge = shop.sub_type === 'paid' ? '<span class="badge bg-paid">مدفوع 💎</span>' : '<span class="badge bg-free">مجاني</span>';
                 
-                // منطق عرض الحالة الصحيح (الحالة من السيرفر)
                 const isPaused = shop.status === 'paused';
                 const statusHtml = isPaused 
                     ? '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ⏸️</span>' 
@@ -485,7 +527,7 @@
             });
         }
 
-        // ================= مركز العمليات (Live - إصلاحات جذرية) =================
+        // ================= Live Orders (تعديلات شاملة) =================
         function renderOrders() {
             const tbody = document.getElementById('orders-table-body');
             const myShopsUsers = allData.filter(i => i.type === 'shop' && i.client_user === currentUser.user).map(s => s.user);
@@ -493,7 +535,6 @@
 
             if (orders.length > lastOrderCount && lastOrderCount !== 0) {
                 const audio = document.getElementById('notif-sound');
-                // تشغيل الصوت لفترة 3 ثواني
                 audio.currentTime = 0;
                 audio.play().catch(e => console.log("Sound check"));
             }
@@ -503,24 +544,18 @@
             tbody.innerHTML = '';
             
             orders.forEach(ord => {
-                // البحث عن كائن المنشأة للحصول على الاسم والموقع الحقيقي
                 const shop = allData.find(s => s.user === ord.client_user);
                 
-                // اسم المنشأة (إذا لم يوجد نعرض الاسم القديم)
                 const shopName = shop ? shop.name : (ord.cl_name || 'Unknown');
-                
-                // الموقع المسجل
                 let shopLoc = '...';
                 if (shop && shop.location_link) {
-                    // محاولة استخراج الاسم من الرابط إذا كان مشفر
                     if (shop.location_link.includes('=')) shopLoc = decodeURIComponent(shop.location_link.split('=')[1]);
                     else shopLoc = shop.location_link;
                 }
                 
                 const deliveryFee = Number(ord.fee || 0);
-                const orderVal = Number(ord.val || 0); // قيمة الأوردر
+                const orderVal = Number(ord.val || 0);
                 
-                // رابط الموقع
                 const mapUrl = (shop && shop.location_link) ? shop.location_link : '#';
 
                 tbody.innerHTML += `
@@ -551,9 +586,7 @@
             if(!confirm(newS === 'paused' ? "تجميد الحساب؟ لن يتمكن من إرسال طلبات." : "إعادة التفعيل؟")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            // إرسال التحديث للسيرفر
             await N_ONE_CORE.postData('update', { user: u, data: { status: newS } });
-            // إعادة جلب البيانات فوراً لتحديث الواجهة
             await fetchData(); 
             document.getElementById('loader-overlay').style.display = 'none';
         }
