@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة عمليات الشحن (Diamond Pro)</title>
+    <title>N One | غرفة عمليات الشحن (Smart Integrated)</title>
     
     <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
 
@@ -32,7 +32,6 @@
         .tab-btn:hover { background: #e0e0e0; }
         .tab-btn.active { background: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 105, 92, 0.3); }
         
-        /* زر القائمة الخارجية (مميز) */
         .tab-link { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
         .tab-link:hover { background: #ffe0b2; }
 
@@ -54,7 +53,7 @@
         .btn-whatsapp { background: #25d366; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; } 
         .btn-whatsapp:hover { background: #128c7e; }
 
-        .table-wrapper { overflow-x: auto; max-height: 500px; }
+        .table-wrapper { overflow-x: auto; max-height: 400px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         thead { background: #f0f2f5; color: #444; position: sticky; top: 0; z-index: 10; }
         th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
@@ -66,18 +65,40 @@
         .operations-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .operations-grid { grid-template-columns: 1fr; } }
 
+        /* تصميم خانة الهاتف المدمجة */
+        .phone-wrapper {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .phone-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
+        .phone-prefix {
+            background: #e0e0e0;
+            padding: 12px 15px;
+            font-weight: bold;
+            color: #555;
+            border-left: 1px solid #ccc;
+            direction: ltr;
+        }
+        #man_phone {
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            margin: 0;
+            direction: ltr;
+            text-align: left;
+        }
+
         /* أزرار التحكم */
-        .controls { display: flex; gap: 5px; }
-        .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; margin-left:5px; }
         .btn-edit { background: var(--warning); }
         .btn-freeze { background: #78909c; }
         .btn-delete { background: var(--danger); }
         .btn-active { background: var(--success); }
-
-        /* تنسيق خانة الهاتف مع المقدمة */
-        .phone-input-group { position: relative; }
-        .phone-prefix { position: absolute; left: 10px; top: 12px; color: #555; font-weight: bold; direction: ltr; }
-        #man_phone { padding-left: 50px; text-align: left; direction: ltr; }
 
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
     </style>
@@ -171,43 +192,67 @@
         <div id="operations" class="tab-content">
             <div class="operations-grid">
                 
-                <div class="card">
-                    <div class="card-header">
-                        <span>📦 سجل الطلبات الواردة (Live Log)</span>
-                        <span id="live-indicator" style="font-size:12px; color:var(--success);">● متصل</span>
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span>📦 سجل الطلبات الواردة (Live Log)</span>
+                            <span id="live-indicator" style="font-size:12px; color:var(--success);">● متصل (نبض القلب مفعل 🔔)</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الوقت</th>
+                                        <th>المصدر</th>
+                                        <th>الموقع (Smart Map)</th>
+                                        <th>التوصيل</th>
+                                        <th>الربح</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body">
+                                    <tr><td colspan="5" style="text-align:center;">بانتظار طلبات...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>الوقت</th>
-                                    <th>المصدر</th>
-                                    <th>الموقع (Smart Map)</th>
-                                    <th>التوصيل</th>
-                                    <th>الربح</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body">
-                                <tr><td colspan="5" style="text-align:center;">بانتظار طلبات...</td></tr>
-                            </tbody>
-                        </table>
+
+                    <div class="card" style="border-top-color: #7b1fa2;">
+                        <div class="card-header">
+                            <span style="color:#7b1fa2;">🗂️ أرشيف الإرسال اليومي (المنجز)</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الكابتن</th>
+                                        <th>المطعم</th>
+                                        <th>التوصيل</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archive-table-body">
+                                    <tr><td colspan="4" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card" style="border-top-color: #25d366;">
+                <div class="card" style="border-top-color: #25d366; height: fit-content;">
                     <div class="card-header">
                         <span>📲 إرسال يدوي للكابتن</span>
                         <span style="font-size:20px;">👨‍✈️</span>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
-                        <input type="text" id="man_cap_name" placeholder="اسم الكابتن (مطلوب)">
-                        
-                        <div class="phone-input-group">
-                            <span class="phone-prefix">+962</span>
-                            <input type="tel" id="man_phone" placeholder="79xxxxxxx">
+                        <div class="phone-wrapper">
+                            <div class="phone-prefix">+962</div>
+                            <input type="tel" id="man_phone" placeholder="7xxxxxxxx" oninput="checkCaptainMemory()">
                         </div>
+                        <small id="cap_memory_hint" style="color:var(--primary); font-size:11px; font-weight:bold; display:none;">✨ تم التعرف على الكابتن: <span id="mem_cap_name"></span></small>
 
-                        <input type="text" id="man_loc" placeholder="موقع التحميل (مثال: مطعم هاشم - وسط البلد)">
+                        <input type="text" id="man_cap_name" placeholder="اسم الكابتن">
+                        
+                        <input type="text" id="man_loc" placeholder="اسم المطعم / المنطقة (بحث ذكي)">
                         
                         <div style="display:flex; gap:10px;">
                             <input type="number" id="man_fee" placeholder="التوصيل (د.أ)">
@@ -215,13 +260,10 @@
                         </div>
 
                         <button class="btn-action btn-whatsapp" onclick="sendManualOrder()">
-                            <span>إرسال للكابتن</span>
+                            <span>إرسال واتساب</span>
                             <span>📤</span>
                         </button>
                     </div>
-                    <p style="font-size:11px; color:#777; margin-top:10px; line-height:1.4;">
-                        * سيتم تحويل "اسم المنطقة" لرابط خرائط جوجل دقيق وتضمينه في الرسالة تلقائياً.
-                    </p>
                 </div>
 
             </div>
@@ -232,17 +274,19 @@
     <script>
         let currentUser = null;
         let allData = [];
-        let lastOrderCount = 0; 
+        let lastOrderCount = 0;
+        
+        // ذاكرة الكباتن المحلية
+        let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
+        let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive_' + new Date().toLocaleDateString()) || '[]');
 
         window.onload = async function() {
             if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
-            
             currentUser = N_ONE_CORE.checkSession('client');
-            
             if (currentUser) {
                 document.getElementById('welcome-msg').innerText = `أهلاً، ${currentUser.name}`;
                 await fetchData();
-                // تحديث تلقائي كل 10 ثواني (Live)
+                renderArchive();
                 setInterval(fetchDataSilent, 10000);
             }
         };
@@ -269,8 +313,103 @@
             event.target.classList.add('active');
         }
 
-        // ================= إدارة المنشآت =================
+        // ================= ذاكرة الكباتن الذكية =================
+        function checkCaptainMemory() {
+            const phone = document.getElementById('man_phone').value;
+            const hint = document.getElementById('cap_memory_hint');
+            const nameInput = document.getElementById('man_cap_name');
+            
+            if (captainMemory[phone]) {
+                hint.style.display = 'block';
+                document.getElementById('mem_cap_name').innerText = captainMemory[phone];
+                nameInput.value = captainMemory[phone]; // تعبئة تلقائية
+            } else {
+                hint.style.display = 'none';
+            }
+        }
 
+        function saveCaptain(phone, name) {
+            if (phone && name) {
+                captainMemory[phone] = name;
+                localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
+            }
+        }
+
+        // ================= الإرسال اليدوي (واتساب + أرشفة) =================
+        function sendManualOrder() {
+            const phoneInput = document.getElementById('man_phone').value;
+            const capName = document.getElementById('man_cap_name').value;
+            const locName = document.getElementById('man_loc').value; // اسم المطعم
+            const fee = document.getElementById('man_fee').value;
+            const price = document.getElementById('man_price').value;
+
+            if(!phoneInput || !locName || !capName) { alert("بيانات ناقصة ☺️"); return; }
+
+            // 1. حفظ في الذاكرة
+            saveCaptain(phoneInput, capName);
+
+            // 2. معالجة الرقم
+            let finalPhone = phoneInput.startsWith('0') ? phoneInput.substring(1) : phoneInput;
+            finalPhone = "962" + finalPhone;
+
+            // 3. الموقع الذكي
+            const smartLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locName);
+
+            // 4. حساب النشاط اليومي لهذا الكابتن
+            // نعد كم مرة ظهر هذا الكابتن في الأرشيف اليومي + 1 (الطلب الحالي)
+            const dailyCount = dailyArchive.filter(o => o.phone === phoneInput).length + 1;
+
+            // 5. تنسيق الرسالة الدقيق
+            let msg = `إشعار طلب جديد - N One%0a`;
+            msg += `المرسل إليه: ${capName}%0a`;
+            msg += `يرجى استلام الطلب التالي:%0a`;
+            msg += `المصدر: ${locName}%0a`;
+            msg += `الموقع الجغرافي: ${smartLink}%0a%0a`;
+            msg += `بيانات التوصيل:%0a`;
+            msg += `أجرة المندوب: ${fee || 0} د.أ%0a`;
+            msg += `قيمة الشحنة: ${price || 0} د.أ%0a%0a`;
+            msg += `ملخص النشاط اليومي:%0a`;
+            msg += `إجمالي الطلبات: ${dailyCount}%0a`;
+            msg += `نرجو الالتزام بمعايير الجودة والوقت.`;
+
+            // 6. فتح واتساب
+            window.open(`https://wa.me/${finalPhone}?text=${msg}`, '_blank');
+
+            // 7. الأرشفة المحلية
+            addToArchive(capName, phoneInput, locName, fee);
+        }
+
+        function addToArchive(capName, phone, locName, fee) {
+            const order = { capName, phone, locName, fee, time: new Date().toLocaleTimeString() };
+            dailyArchive.unshift(order); // إضافة للأول
+            // تحديث التخزين المحلي لليوم
+            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
+            renderArchive();
+            
+            // تفريغ الحقول
+            document.getElementById('man_loc').value = '';
+            document.getElementById('man_fee').value = '';
+            document.getElementById('man_price').value = '';
+        }
+
+        function renderArchive() {
+            const tbody = document.getElementById('archive-table-body');
+            if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>'; return; }
+            
+            tbody.innerHTML = '';
+            dailyArchive.forEach(o => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${o.capName}</b></td>
+                        <td>${o.locName}</td>
+                        <td>${o.fee} د.أ</td>
+                        <td><span class="badge bg-paid">تم الإرسال ✅</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= إدارة المنشآت =================
         async function addShop() {
             const name = document.getElementById('shop_name').value;
             const user = document.getElementById('shop_user').value;
@@ -279,148 +418,67 @@
             const comm = document.getElementById('commission_rate').value;
 
             if (!name || !user || !pass || !comm) { alert("يرجى تعبئة كافة الحقول والنسبة ☺️"); return; }
-
-            // رابط ذكي للمنشأة
             const smartMapLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name);
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            
             const newShop = {
-                id: "SH_" + Date.now(),
-                user: user, pass: pass, name: name,
-                role: "shop", type: "shop", 
-                client_user: currentUser.user,
-                status: "active",
-                sub_type: subType,
-                commission: comm, 
-                location_link: smartMapLink
+                id: "SH_" + Date.now(), user: user, pass: pass, name: name,
+                role: "shop", type: "shop", client_user: currentUser.user,
+                status: "active", sub_type: subType, commission: comm, location_link: smartMapLink
             };
-
             await N_ONE_CORE.postData('add', [newShop]);
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم إضافة المنشأة بنجاح ☺️✅");
-            
-            document.getElementById('shop_name').value = '';
-            document.getElementById('shop_user').value = '';
-            document.getElementById('shop_pass').value = '';
+            document.getElementById('shop_name').value = ''; document.getElementById('shop_user').value = ''; document.getElementById('shop_pass').value = '';
         }
 
         function renderShops() {
             const tbody = document.getElementById('shops-table-body');
             const myShops = allData.filter(i => i.type === 'shop' && i.client_user === currentUser.user).reverse();
-
             document.getElementById('total-shops').innerText = myShops.length;
-
             if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
-
             tbody.innerHTML = '';
             myShops.forEach(shop => {
                 const subBadge = shop.sub_type === 'paid' ? '<span class="badge bg-paid">مدفوع 💎</span>' : '<span class="badge bg-free">مجاني</span>';
-                const statusHtml = shop.status === 'active' 
-                    ? '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>' 
-                    : '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ⏸️</span>';
-                
-                const toggleBtn = shop.status === 'active' 
-                    ? `<button class="btn-freeze" onclick="toggleStatus('${shop.user}', 'active')">تجميد</button>`
-                    : `<button class="btn-active" onclick="toggleStatus('${shop.user}', 'paused')">تفعيل</button>`;
-
-                const row = `
-                    <tr>
-                        <td><b>${shop.name}</b></td>
-                        <td style="font-size:12px;">${shop.user} | ${shop.pass}</td>
-                        <td>${subBadge}</td>
-                        <td><b>${shop.commission || 0}%</b></td>
-                        <td>${statusHtml}</td>
-                        <td class="controls">
-                            <button class="btn-edit" onclick="editShop('${shop.user}', '${shop.name}', '${shop.pass}')">✏️</button>
-                            ${toggleBtn}
-                            <button class="btn-delete" onclick="deleteShop('${shop.user}')">❌</button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                const statusHtml = shop.status === 'active' ? '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>' : '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ⏸️</span>';
+                const toggleBtn = shop.status === 'active' ? `<button class="btn-freeze" onclick="toggleStatus('${shop.user}', 'active')">تجميد</button>` : `<button class="btn-active" onclick="toggleStatus('${shop.user}', 'paused')">تفعيل</button>`;
+                tbody.innerHTML += `<tr><td><b>${shop.name}</b></td><td style="font-size:12px;">${shop.user} | ${shop.pass}</td><td>${subBadge}</td><td><b>${shop.commission || 0}%</b></td><td>${statusHtml}</td><td class="controls"><button class="btn-edit" onclick="editShop('${shop.user}', '${shop.name}', '${shop.pass}')">✏️</button>${toggleBtn}<button class="btn-delete" onclick="deleteShop('${shop.user}')">❌</button></td></tr>`;
             });
         }
 
-        // ================= مركز العمليات (القلب النابض) =================
-
+        // ================= مركز العمليات (Live) =================
         function renderOrders() {
             const tbody = document.getElementById('orders-table-body');
-            
             const myShopsUsers = allData.filter(i => i.type === 'shop' && i.client_user === currentUser.user).map(s => s.user);
             const orders = allData.filter(i => i.type === 'order' && myShopsUsers.includes(i.client_user)).reverse();
 
-            // 🔔 منطق التنبيه الصوتي (نبض القلب الرقيق)
             if (orders.length > lastOrderCount && lastOrderCount !== 0) {
                 const audio = document.getElementById('notif-sound');
-                // محاولة التشغيل (تتطلب تفاعل مسبق من المستخدم مع الصفحة)
-                audio.play().catch(e => console.log("Sound muted: User interaction needed"));
+                audio.play().catch(e => console.log("Sound check"));
             }
             lastOrderCount = orders.length;
 
             let totalProfit = 0;
             if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد طلبات واردة</td></tr>'; return; }
-
             tbody.innerHTML = '';
             orders.forEach(ord => {
                 const shop = allData.find(s => s.user === ord.client_user);
                 const commRate = shop ? Number(shop.commission || 0) : 0;
-                
-                // 💰 الحسبة المالية: الربح من أجرة التوصيل فقط
                 const deliveryFee = Number(ord.fee || 0);
                 const profit = deliveryFee * (commRate / 100);
                 totalProfit += profit;
-
                 const mapUrl = ord.pickup || (shop ? shop.location_link : '#');
-
-                const row = `
-                    <tr>
-                        <td style="font-size:12px;">${ord.date.split('T')[1]?.substring(0,5) || 'Now'}</td>
-                        <td><b>${shop ? shop.name : 'Unknown'}</b></td>
-                        <td><a href="${mapUrl}" target="_blank" style="text-decoration:none; color:#1565c0;">📍 الموقع</a></td>
-                        <td>${deliveryFee}</td>
-                        <td><span class="badge bg-money">+${profit.toFixed(2)}</span></td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                tbody.innerHTML += `<tr><td style="font-size:12px;">${ord.date.split('T')[1]?.substring(0,5) || 'Now'}</td><td><b>${shop ? shop.name : 'Unknown'}</b></td><td><a href="${mapUrl}" target="_blank" style="text-decoration:none; color:#1565c0;">📍 الموقع</a></td><td>${deliveryFee}</td><td><span class="badge bg-money">+${profit.toFixed(2)}</span></td></tr>`;
             });
-
             document.getElementById('total-profit').innerText = totalProfit.toFixed(1) + " د.أ";
         }
 
-        // ================= الإرسال اليدوي للكابتن (واتساب) =================
-        function sendManualOrder() {
-            const capName = document.getElementById('man_cap_name').value;
-            const phoneInput = document.getElementById('man_phone').value;
-            const locName = document.getElementById('man_loc').value;
-            const fee = document.getElementById('man_fee').value;
-            const price = document.getElementById('man_price').value;
-
-            if(!capName || !phoneInput || !locName) { alert("أدخل اسم الكابتن، الرقم والموقع ☺️"); return; }
-
-            // 1. معالجة رقم الهاتف (إزالة الصفر في البداية إن وجد)
-            let finalPhone = phoneInput.startsWith('0') ? phoneInput.substring(1) : phoneInput;
-            // إضافة المقدمة 962
-            finalPhone = "962" + finalPhone;
-
-            // 2. الموقع الذكي (بحث جوجل)
-            const smartLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locName);
-            
-            // 3. صياغة الرسالة
-            const msg = `*طلب جديد للكابتن: ${capName}* 👨‍✈️%0a%0a📍 *الموقع:* ${locName}%0a🗺️ *رابط الخريطة:* ${smartLink}%0a%0a💰 *التوصيل:* ${fee || 0} د.أ%0a📦 *قيمة الطلب:* ${price || 0} د.أ%0a%0a*مرسل من:* ${currentUser.name}`;
-
-            window.open(`https://wa.me/${finalPhone}?text=${msg}`, '_blank');
-        }
-
         // ================= أدوات التحكم =================
-
         async function editShop(u, n, p) {
-            const newN = prompt("تعديل اسم المنشأة:", n);
-            if (!newN) return;
+            const newN = prompt("تعديل اسم المنشأة:", n); if (!newN) return;
             const newP = prompt("تعديل كلمة المرور:", p);
             const newMapLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(newN);
-
             document.getElementById('loader-overlay').style.display = 'flex';
             await N_ONE_CORE.postData('update', { user: u, data: { name: newN, pass: newP, location_link: newMapLink } });
             await fetchData();
