@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة عمليات الشحن (Diamond)</title>
+    <title>N One | غرفة عمليات الشحن (Smart Integrated)</title>
     
     <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
 
     <style>
         /* ================= تصميم Client Pro (Teal Theme) ================= */
         :root {
-            --primary: #00695c; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
-            --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --money: #1b5e20;
+            --primary: #00695c; /* لون مميز للشركات (Teal) */
+            --gold: #d4af37; --bg: #f4f7f6; --text: #333;
+            --success: #2e7d32; --danger: #c62828; --warning: #f57f17;
+            --money: #1b5e20;
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
@@ -29,7 +31,9 @@
         .tab-btn { padding: 10px 20px; border: none; background: #eee; border-radius: 8px; cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; white-space: nowrap; }
         .tab-btn:hover { background: #e0e0e0; }
         .tab-btn.active { background: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 105, 92, 0.3); }
+        
         .tab-link { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+        .tab-link:hover { background: #ffe0b2; }
 
         /* المحتوى */
         .tab-content { display: none; animation: fadeIn 0.4s; }
@@ -45,7 +49,7 @@
         input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
         
         .btn-action { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-        .btn-add { background: var(--primary); } 
+        .btn-add { background: var(--primary); } .btn-add:hover { background: #004d40; }
         .btn-whatsapp { background: #25d366; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; } 
         .btn-whatsapp:hover { background: #128c7e; }
 
@@ -53,45 +57,76 @@
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         thead { background: #f0f2f5; color: #444; position: sticky; top: 0; z-index: 10; }
         th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
+        
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
         .bg-money { background: #e8f5e9; color: var(--money); font-family: 'Courier New', monospace; font-weight: bold; font-size: 13px; }
-        .bg-paid { background: #e3f2fd; color: #1565c0; }
 
-        /* الشبكة */
+        /* تصميم القسمين (Split View) */
         .operations-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .operations-grid { grid-template-columns: 1fr; } }
 
-        /* خانة الهاتف المدمجة */
-        .phone-wrapper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; overflow: hidden; }
-        .phone-prefix { background: #e0e0e0; padding: 12px 15px; font-weight: bold; color: #555; direction: ltr; }
-        #man_phone { border: none; background: transparent; margin: 0; direction: ltr; text-align: left; }
+        /* تصميم خانة الهاتف المدمجة */
+        .phone-wrapper {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .phone-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
+        .phone-prefix {
+            background: #e0e0e0;
+            padding: 12px 15px;
+            font-weight: bold;
+            color: #555;
+            border-left: 1px solid #ccc;
+            direction: ltr;
+        }
+        #man_phone {
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            margin: 0;
+            direction: ltr;
+            text-align: left;
+        }
 
         /* أزرار التحكم */
         .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; margin-left:5px; }
-        .btn-edit { background: var(--warning); } .btn-freeze { background: #78909c; } .btn-delete { background: var(--danger); } .btn-active { background: var(--success); }
-        
+        .btn-edit { background: var(--warning); }
+        .btn-freeze { background: #78909c; }
+        .btn-delete { background: var(--danger); }
+        .btn-active { background: var(--success); }
+
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
     <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-    <div id="loader-overlay"><div style="font-size:35px; margin-bottom:10px;">🚚</div><div>جاري الاتصال بالنواة المركزية...</div></div>
+
+    <div id="loader-overlay">
+        <div style="font-size:35px; margin-bottom:10px;">🚚</div>
+        <div>جاري الاتصال بالنواة المركزية...</div>
+    </div>
 
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> Partner</div>
         <div style="display:flex; gap:15px; align-items:center;">
             <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#555;">مرحباً</span>
-            <button class="btn-logout" onclick="N_ONE_CORE.logout()">خروج 🔒</button>
+            <button class="btn-logout" onclick="logout()">خروج 🔒</button>
         </div>
     </nav>
 
     <div class="container">
+        
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
             <button class="tab-btn" onclick="switchTab('operations', event)">📡 غرفة العمليات (Live)</button>
-            <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار ↗️</button>
+            <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار للمناطق ↗️</button>
         </div>
 
         <div id="dashboard" class="tab-content active">
@@ -103,30 +138,52 @@
                 <div class="card" style="text-align:center; border-top-color:var(--success);">
                     <h3 style="margin:0; color:#555;">صافي أرباح التوصيل</h3>
                     <h1 id="total-profit" style="color:var(--success); font-size:40px; margin:10px 0;">0 د.أ</h1>
+                    <small style="color:#888;">بناءً على النسب المدخلة يدوياً</small>
                 </div>
             </div>
         </div>
 
         <div id="shops" class="tab-content">
             <div class="card">
-                <div class="card-header">✨ إضافة منشأة جديدة</div>
+                <div class="card-header">
+                    <span>✨ إضافة منشأة جديدة (مطعم/محل)</span>
+                </div>
                 <div class="form-grid">
                     <input type="text" id="shop_name" placeholder="اسم المنشأة">
-                    <input type="text" id="shop_user" placeholder="اسم المستخدم">
+                    <input type="text" id="shop_user" placeholder="اسم المستخدم للمنشأة">
                     <input type="password" id="shop_pass" placeholder="كلمة المرور">
-                    <select id="sub_type"><option value="paid">مدفوع</option><option value="free">مجاني</option></select>
+                    
+                    <select id="sub_type">
+                        <option value="paid">اشتراك مدفوع (Premium)</option>
+                        <option value="free">مجاني (Basic)</option>
+                    </select>
+                    
                     <div style="position:relative;">
-                        <input type="number" id="commission_rate" placeholder="النسبة %" style="border-color:var(--money);">
-                        <span style="position:absolute; left:10px; top:12px;">%</span>
+                        <input type="number" id="commission_rate" placeholder="نسبة الشركة % (مثلاً 15)" style="border-color:var(--money); font-weight:bold;">
+                        <span style="position:absolute; left:10px; top:12px; color:#aaa;">%</span>
                     </div>
-                    <button class="btn-action btn-add" onclick="addShop()">+ إضافة وتفعيل</button>
+
+                    <button class="btn-action btn-add" onclick="addShop()">+ إضافة وتفعيل 🚀</button>
                 </div>
             </div>
+
             <div class="card">
+                <div class="card-header">سجل المنشآت والتحكم الشامل</div>
                 <div class="table-wrapper">
                     <table>
-                        <thead><tr><th>المنشأة</th><th>بيانات الدخول</th><th>النوع</th><th>النسبة</th><th>الحالة</th><th>التحكم</th></tr></thead>
-                        <tbody id="shops-table-body"></tbody>
+                        <thead>
+                            <tr>
+                                <th>المنشأة</th>
+                                <th>بيانات الدخول</th>
+                                <th>نوع الاشتراك</th>
+                                <th>نسبتي (%)</th>
+                                <th>الحالة</th>
+                                <th>التحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shops-table-body">
+                            <tr><td colspan="6" style="text-align:center;">جاري سحب البيانات... ⏳</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -134,83 +191,318 @@
 
         <div id="operations" class="tab-content">
             <div class="operations-grid">
+                
                 <div>
                     <div class="card">
                         <div class="card-header">
-                            <span>📦 سجل الطلبات الواردة (Live)</span>
-                            <span id="live-indicator" style="font-size:12px; color:var(--success);">● متصل</span>
+                            <span>📦 سجل الطلبات الواردة (Live Log)</span>
+                            <span id="live-indicator" style="font-size:12px; color:var(--success);">● متصل (نبض القلب مفعل 🔔)</span>
                         </div>
                         <div class="table-wrapper">
                             <table>
-                                <thead><tr><th>الوقت</th><th>المصدر</th><th>الموقع</th><th>التوصيل</th><th>الربح</th></tr></thead>
-                                <tbody id="orders-table-body"><tr><td colspan="5" style="text-align:center;">جاري الاتصال بالعقل المدبر...</td></tr></tbody>
+                                <thead>
+                                    <tr>
+                                        <th>الوقت</th>
+                                        <th>المصدر</th>
+                                        <th>الموقع (Smart Map)</th>
+                                        <th>التوصيل</th>
+                                        <th>الربح</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body">
+                                    <tr><td colspan="5" style="text-align:center;">بانتظار طلبات...</td></tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
+
                     <div class="card" style="border-top-color: #7b1fa2;">
-                        <div class="card-header"><span style="color:#7b1fa2;">🗂️ أرشيف الإرسال اليومي</span></div>
+                        <div class="card-header">
+                            <span style="color:#7b1fa2;">🗂️ أرشيف الإرسال اليومي (المنجز)</span>
+                        </div>
                         <div class="table-wrapper">
                             <table>
-                                <thead><tr><th>الكابتن</th><th>المطعم</th><th>التوصيل</th><th>الحالة</th></tr></thead>
-                                <tbody id="archive-table-body"></tbody>
+                                <thead>
+                                    <tr>
+                                        <th>الكابتن</th>
+                                        <th>المطعم</th>
+                                        <th>التوصيل</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archive-table-body">
+                                    <tr><td colspan="4" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
                 <div class="card" style="border-top-color: #25d366; height: fit-content;">
-                    <div class="card-header"><span>📲 إرسال يدوي للكابتن</span><span style="font-size:20px;">👨‍✈️</span></div>
+                    <div class="card-header">
+                        <span>📲 إرسال يدوي للكابتن</span>
+                        <span style="font-size:20px;">👨‍✈️</span>
+                    </div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <div class="phone-wrapper">
                             <div class="phone-prefix">+962</div>
-                            <input type="tel" id="man_phone" placeholder="7xxxxxxxx">
+                            <input type="tel" id="man_phone" placeholder="7xxxxxxxx" oninput="checkCaptainMemory()">
                         </div>
-                        <small id="cap_memory_hint" style="color:var(--primary); font-size:11px; font-weight:bold; display:none;">✨ <span id="mem_cap_name"></span></small>
+                        <small id="cap_memory_hint" style="color:var(--primary); font-size:11px; font-weight:bold; display:none;">✨ تم التعرف على الكابتن: <span id="mem_cap_name"></span></small>
 
                         <input type="text" id="man_cap_name" placeholder="اسم الكابتن">
-                        <input type="text" id="man_loc" placeholder="المطعم / المنطقة">
+                        
+                        <input type="text" id="man_loc" placeholder="اسم المطعم / المنطقة (بحث ذكي)">
                         
                         <div style="display:flex; gap:10px;">
-                            <input type="number" id="man_fee" placeholder="التوصيل">
-                            <input type="number" id="man_price" placeholder="القيمة">
+                            <input type="number" id="man_fee" placeholder="التوصيل (د.أ)">
+                            <input type="number" id="man_price" placeholder="القيمة (د.أ)">
                         </div>
-                        
-                        <button class="btn-action btn-whatsapp" onclick="sendManualOrderExternal()">إرسال واتساب 📤</button>
+
+                        <button class="btn-action btn-whatsapp" onclick="sendManualOrder()">
+                            <span>إرسال واتساب</span>
+                            <span>📤</span>
+                        </button>
                     </div>
                 </div>
+
             </div>
         </div>
+
     </div>
 
     <script>
-        // كود بسيط جداً لتهيئة الصفحة والتبويبات فقط
-        function switchTab(id, e) {
-            document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); e.target.classList.add('active');
-        }
+        let currentUser = null;
+        let allData = [];
+        let lastOrderCount = 0;
+        
+        // ذاكرة الكباتن المحلية
+        let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
+        let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive_' + new Date().toLocaleDateString()) || '[]');
 
-        // بدء التشغيل يعتمد على العقل المدبر
         window.onload = async function() {
-            if (typeof N_ONE_CORE === 'undefined') {
-                alert("⚠️ لم يتم تحميل العقل المدبر (n-one-core.js). يرجى التأكد من الإنترنت أو الرابط.");
-                return;
-            }
-            
-            // التحقق من الجلسة
-            window.currentUser = N_ONE_CORE.checkSession('client');
-            
-            if (window.currentUser) {
-                document.getElementById('welcome-msg').innerText = `أهلاً، ${window.currentUser.name}`;
-                
-                // جلب البيانات الأولية
-                window.allData = await N_ONE_CORE.fetchData('read');
-                
-                // استدعاء دوال العرض من الملف الخارجي (إذا كانت محملة)
-                if(typeof renderShops === 'function') renderShops();
-                if(typeof overrideRenderOrders === 'function') overrideRenderOrders(window.allData, window.currentUser);
+            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
+            currentUser = N_ONE_CORE.checkSession('client');
+            if (currentUser) {
+                document.getElementById('welcome-msg').innerText = `أهلاً، ${currentUser.name}`;
+                await fetchData();
+                renderArchive();
+                setInterval(fetchDataSilent, 10000);
             }
         };
+
+        async function fetchData() {
+            try {
+                allData = await N_ONE_CORE.fetchData('read');
+                renderShops();
+                renderOrders();
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchDataSilent() {
+            try {
+                allData = await N_ONE_CORE.fetchData('read');
+                renderOrders(); 
+            } catch (e) {}
+        }
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ================= ذاكرة الكباتن الذكية =================
+        function checkCaptainMemory() {
+            const phone = document.getElementById('man_phone').value;
+            const hint = document.getElementById('cap_memory_hint');
+            const nameInput = document.getElementById('man_cap_name');
+            
+            if (captainMemory[phone]) {
+                hint.style.display = 'block';
+                document.getElementById('mem_cap_name').innerText = captainMemory[phone];
+                nameInput.value = captainMemory[phone]; // تعبئة تلقائية
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+
+        function saveCaptain(phone, name) {
+            if (phone && name) {
+                captainMemory[phone] = name;
+                localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
+            }
+        }
+
+        // ================= الإرسال اليدوي (واتساب + أرشفة) =================
+        function sendManualOrder() {
+            const phoneInput = document.getElementById('man_phone').value;
+            const capName = document.getElementById('man_cap_name').value;
+            const locName = document.getElementById('man_loc').value; // اسم المطعم
+            const fee = document.getElementById('man_fee').value;
+            const price = document.getElementById('man_price').value;
+
+            if(!phoneInput || !locName || !capName) { alert("بيانات ناقصة ☺️"); return; }
+
+            // 1. حفظ في الذاكرة
+            saveCaptain(phoneInput, capName);
+
+            // 2. معالجة الرقم
+            let finalPhone = phoneInput.startsWith('0') ? phoneInput.substring(1) : phoneInput;
+            finalPhone = "962" + finalPhone;
+
+            // 3. الموقع الذكي
+            const smartLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locName);
+
+            // 4. حساب النشاط اليومي لهذا الكابتن
+            // نعد كم مرة ظهر هذا الكابتن في الأرشيف اليومي + 1 (الطلب الحالي)
+            const dailyCount = dailyArchive.filter(o => o.phone === phoneInput).length + 1;
+
+            // 5. تنسيق الرسالة الدقيق
+            let msg = `إشعار طلب جديد - N One%0a`;
+            msg += `المرسل إليه: ${capName}%0a`;
+            msg += `يرجى استلام الطلب التالي:%0a`;
+            msg += `المصدر: ${locName}%0a`;
+            msg += `الموقع الجغرافي: ${smartLink}%0a%0a`;
+            msg += `بيانات التوصيل:%0a`;
+            msg += `أجرة المندوب: ${fee || 0} د.أ%0a`;
+            msg += `قيمة الشحنة: ${price || 0} د.أ%0a%0a`;
+            msg += `ملخص النشاط اليومي:%0a`;
+            msg += `إجمالي الطلبات: ${dailyCount}%0a`;
+            msg += `نرجو الالتزام بمعايير الجودة والوقت.`;
+
+            // 6. فتح واتساب
+            window.open(`https://wa.me/${finalPhone}?text=${msg}`, '_blank');
+
+            // 7. الأرشفة المحلية
+            addToArchive(capName, phoneInput, locName, fee);
+        }
+
+        function addToArchive(capName, phone, locName, fee) {
+            const order = { capName, phone, locName, fee, time: new Date().toLocaleTimeString() };
+            dailyArchive.unshift(order); // إضافة للأول
+            // تحديث التخزين المحلي لليوم
+            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
+            renderArchive();
+            
+            // تفريغ الحقول
+            document.getElementById('man_loc').value = '';
+            document.getElementById('man_fee').value = '';
+            document.getElementById('man_price').value = '';
+        }
+
+        function renderArchive() {
+            const tbody = document.getElementById('archive-table-body');
+            if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>'; return; }
+            
+            tbody.innerHTML = '';
+            dailyArchive.forEach(o => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${o.capName}</b></td>
+                        <td>${o.locName}</td>
+                        <td>${o.fee} د.أ</td>
+                        <td><span class="badge bg-paid">تم الإرسال ✅</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= إدارة المنشآت =================
+        async function addShop() {
+            const name = document.getElementById('shop_name').value;
+            const user = document.getElementById('shop_user').value;
+            const pass = document.getElementById('shop_pass').value;
+            const subType = document.getElementById('sub_type').value;
+            const comm = document.getElementById('commission_rate').value;
+
+            if (!name || !user || !pass || !comm) { alert("يرجى تعبئة كافة الحقول والنسبة ☺️"); return; }
+            const smartMapLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name);
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            const newShop = {
+                id: "SH_" + Date.now(), user: user, pass: pass, name: name,
+                role: "shop", type: "shop", client_user: currentUser.user,
+                status: "active", sub_type: subType, commission: comm, location_link: smartMapLink
+            };
+            await N_ONE_CORE.postData('add', [newShop]);
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم إضافة المنشأة بنجاح ☺️✅");
+            document.getElementById('shop_name').value = ''; document.getElementById('shop_user').value = ''; document.getElementById('shop_pass').value = '';
+        }
+
+        function renderShops() {
+            const tbody = document.getElementById('shops-table-body');
+            const myShops = allData.filter(i => i.type === 'shop' && i.client_user === currentUser.user).reverse();
+            document.getElementById('total-shops').innerText = myShops.length;
+            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
+            tbody.innerHTML = '';
+            myShops.forEach(shop => {
+                const subBadge = shop.sub_type === 'paid' ? '<span class="badge bg-paid">مدفوع 💎</span>' : '<span class="badge bg-free">مجاني</span>';
+                const statusHtml = shop.status === 'active' ? '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>' : '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ⏸️</span>';
+                const toggleBtn = shop.status === 'active' ? `<button class="btn-freeze" onclick="toggleStatus('${shop.user}', 'active')">تجميد</button>` : `<button class="btn-active" onclick="toggleStatus('${shop.user}', 'paused')">تفعيل</button>`;
+                tbody.innerHTML += `<tr><td><b>${shop.name}</b></td><td style="font-size:12px;">${shop.user} | ${shop.pass}</td><td>${subBadge}</td><td><b>${shop.commission || 0}%</b></td><td>${statusHtml}</td><td class="controls"><button class="btn-edit" onclick="editShop('${shop.user}', '${shop.name}', '${shop.pass}')">✏️</button>${toggleBtn}<button class="btn-delete" onclick="deleteShop('${shop.user}')">❌</button></td></tr>`;
+            });
+        }
+
+        // ================= مركز العمليات (Live) =================
+        function renderOrders() {
+            const tbody = document.getElementById('orders-table-body');
+            const myShopsUsers = allData.filter(i => i.type === 'shop' && i.client_user === currentUser.user).map(s => s.user);
+            const orders = allData.filter(i => i.type === 'order' && myShopsUsers.includes(i.client_user)).reverse();
+
+            if (orders.length > lastOrderCount && lastOrderCount !== 0) {
+                const audio = document.getElementById('notif-sound');
+                audio.play().catch(e => console.log("Sound check"));
+            }
+            lastOrderCount = orders.length;
+
+            let totalProfit = 0;
+            if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد طلبات واردة</td></tr>'; return; }
+            tbody.innerHTML = '';
+            orders.forEach(ord => {
+                const shop = allData.find(s => s.user === ord.client_user);
+                const commRate = shop ? Number(shop.commission || 0) : 0;
+                const deliveryFee = Number(ord.fee || 0);
+                const profit = deliveryFee * (commRate / 100);
+                totalProfit += profit;
+                const mapUrl = ord.pickup || (shop ? shop.location_link : '#');
+                tbody.innerHTML += `<tr><td style="font-size:12px;">${ord.date.split('T')[1]?.substring(0,5) || 'Now'}</td><td><b>${shop ? shop.name : 'Unknown'}</b></td><td><a href="${mapUrl}" target="_blank" style="text-decoration:none; color:#1565c0;">📍 الموقع</a></td><td>${deliveryFee}</td><td><span class="badge bg-money">+${profit.toFixed(2)}</span></td></tr>`;
+            });
+            document.getElementById('total-profit').innerText = totalProfit.toFixed(1) + " د.أ";
+        }
+
+        // ================= أدوات التحكم =================
+        async function editShop(u, n, p) {
+            const newN = prompt("تعديل اسم المنشأة:", n); if (!newN) return;
+            const newP = prompt("تعديل كلمة المرور:", p);
+            const newMapLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(newN);
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await N_ONE_CORE.postData('update', { user: u, data: { name: newN, pass: newP, location_link: newMapLink } });
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+
+        async function toggleStatus(u, currentS) {
+            const newS = currentS === 'active' ? 'paused' : 'active';
+            if(!confirm("تغيير الحالة؟")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await N_ONE_CORE.postData('update', { user: u, data: { status: newS } });
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+
+        async function deleteShop(u) {
+            if(!confirm("حذف نهائي؟")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await N_ONE_CORE.fetchData('delete', { user: u });
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+
+        function logout() { N_ONE_CORE.logout(); }
     </script>
 
 </body>
