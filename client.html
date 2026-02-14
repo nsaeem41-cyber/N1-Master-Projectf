@@ -31,9 +31,7 @@
         .tab-btn { padding: 10px 20px; border: none; background: #eee; border-radius: 8px; cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; white-space: nowrap; }
         .tab-btn:hover { background: #e0e0e0; }
         .tab-btn.active { background: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 105, 92, 0.3); }
-        
         .tab-link { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
-        .tab-link:hover { background: #ffe0b2; }
 
         /* المحتوى */
         .tab-content { display: none; animation: fadeIn 0.4s; }
@@ -54,45 +52,24 @@
         .btn-whatsapp:hover { background: #128c7e; }
 
         .table-wrapper { overflow-x: auto; max-height: 400px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         thead { background: #f0f2f5; color: #444; position: sticky; top: 0; z-index: 10; }
         th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
         
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
         .bg-money { background: #e8f5e9; color: var(--money); font-family: 'Courier New', monospace; font-weight: bold; font-size: 13px; }
         .bg-val { background: #fff3e0; color: #e65100; font-family: 'Courier New', monospace; font-weight: bold; font-size: 13px; }
+        .bg-ratio { background: #ffebee; color: #c62828; font-family: 'Courier New', monospace; font-weight: bold; font-size: 13px; }
 
         /* تصميم القسمين (Split View) */
         .operations-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .operations-grid { grid-template-columns: 1fr; } }
 
         /* تصميم خانة الهاتف المدمجة */
-        .phone-wrapper {
-            display: flex;
-            align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #fafafa;
-            overflow: hidden;
-            transition: 0.3s;
-        }
+        .phone-wrapper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; overflow: hidden; transition: 0.3s; }
         .phone-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
-        .phone-prefix {
-            background: #e0e0e0;
-            padding: 12px 15px;
-            font-weight: bold;
-            color: #555;
-            border-left: 1px solid #ccc;
-            direction: ltr;
-        }
-        #man_phone {
-            border: none;
-            box-shadow: none;
-            background: transparent;
-            margin: 0;
-            direction: ltr;
-            text-align: left;
-        }
+        .phone-prefix { background: #e0e0e0; padding: 12px 15px; font-weight: bold; color: #555; border-left: 1px solid #ccc; direction: ltr; }
+        #man_phone { border: none; box-shadow: none; background: transparent; margin: 0; direction: ltr; text-align: left; }
 
         /* أزرار التحكم */
         .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; margin-left:5px; }
@@ -100,13 +77,15 @@
         .btn-freeze { background: #78909c; }
         .btn-delete { background: var(--danger); }
         .btn-active { background: var(--success); }
+        
+        .btn-save-day { background: var(--primary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
 
     <div id="loader-overlay">
         <div style="font-size:35px; margin-bottom:10px;">🚚</div>
@@ -137,9 +116,9 @@
                     <h1 id="total-shops" style="color:var(--primary); font-size:40px; margin:10px 0;">0</h1>
                 </div>
                 <div class="card" style="text-align:center; border-top-color:var(--success);">
-                    <h3 style="margin:0; color:#555;">صافي أرباح التوصيل</h3>
+                    <h3 style="margin:0; color:#555;">إجمالي الأرباح المرحلة</h3>
                     <h1 id="total-profit" style="color:var(--success); font-size:40px; margin:10px 0;">0 د.أ</h1>
-                    <small style="color:#888;">بناءً على النسب المدخلة يدوياً</small>
+                    <small style="color:#888;">يتم التحديث عند إغلاق اليومية</small>
                 </div>
             </div>
         </div>
@@ -227,16 +206,18 @@
                                     <tr>
                                         <th>الكابتن</th>
                                         <th>المطعم</th>
+                                        <th>قيمة الأوردر</th>
                                         <th>التوصيل</th>
                                         <th>النسبة (للشركة)</th>
-                                        <th>الحالة</th>
+                                        <th>تحكم</th>
                                     </tr>
                                 </thead>
                                 <tbody id="archive-table-body">
-                                    <tr><td colspan="5" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>
+                                    <tr><td colspan="6" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>
                                 </tbody>
                             </table>
                         </div>
+                        <button class="btn-save-day" onclick="storeDayData()">💾 إغلاق اليومية وترحيل الأرباح 🌙</button>
                     </div>
                 </div>
 
@@ -261,8 +242,8 @@
                         </div>
 
                         <div style="display:flex; gap:10px;">
+                            <input type="number" id="man_price" placeholder="قيمة الأوردر (د.أ)">
                             <input type="number" id="man_fee" placeholder="التوصيل (د.أ)">
-                            <input type="number" id="man_price" placeholder="القيمة (د.أ)">
                         </div>
 
                         <button class="btn-action btn-whatsapp" onclick="sendManualOrder()">
@@ -284,13 +265,17 @@
         
         // ذاكرة الكباتن المحلية
         let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
+        // الأرشيف اليومي
         let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive_' + new Date().toLocaleDateString()) || '[]');
+        // الأرباح المرحلة (Lifetime)
+        let totalLifetimeProfit = parseFloat(localStorage.getItem('n1_lifetime_profit') || '0');
 
         window.onload = async function() {
             if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
             currentUser = N_ONE_CORE.checkSession('client');
             if (currentUser) {
                 document.getElementById('welcome-msg').innerText = `أهلاً، ${currentUser.name}`;
+                document.getElementById('total-profit').innerText = totalLifetimeProfit.toFixed(1) + " د.أ";
                 await fetchData();
                 renderArchive();
                 setInterval(fetchDataSilent, 10000);
@@ -328,10 +313,8 @@
             if (captainMemory[phone]) {
                 hint.style.display = 'block';
                 document.getElementById('mem_cap_name').innerText = captainMemory[phone];
-                nameInput.value = captainMemory[phone]; // تعبئة تلقائية
-            } else {
-                hint.style.display = 'none';
-            }
+                nameInput.value = captainMemory[phone];
+            } else { hint.style.display = 'none'; }
         }
 
         function saveCaptain(phone, name) {
@@ -345,83 +328,117 @@
         function sendManualOrder() {
             const phoneInput = document.getElementById('man_phone').value;
             const capName = document.getElementById('man_cap_name').value;
-            const locName = document.getElementById('man_loc').value; // اسم المطعم
+            const locName = document.getElementById('man_loc').value; 
             const fee = document.getElementById('man_fee').value;
-            const price = document.getElementById('man_price').value;
+            const price = document.getElementById('man_price').value; // قيمة الأوردر
             const ratio = document.getElementById('man_ratio').value || 0; // نسبة الشركة
 
             if(!phoneInput || !locName || !capName) { alert("بيانات ناقصة ☺️"); return; }
 
-            // 1. حفظ في الذاكرة
             saveCaptain(phoneInput, capName);
 
-            // 2. معالجة الرقم
             let finalPhone = phoneInput.startsWith('0') ? phoneInput.substring(1) : phoneInput;
             finalPhone = "962" + finalPhone;
 
-            // 3. الموقع الذكي
             const smartLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locName);
 
-            // 4. حساب النشاط اليومي لهذا الكابتن
+            // حساب النسبة المقتطعة من التوصيل فقط
+            const commValue = (fee * (ratio / 100)).toFixed(2);
+            
             const dailyCount = dailyArchive.filter(o => o.phone === phoneInput).length + 1;
 
-            // 5. حساب قيمة النسبة المقتطعة من التوصيل
-            const commValue = (fee * (ratio / 100)).toFixed(2);
-
-            // 6. تنسيق الرسالة الدقيق
             let msg = `إشعار طلب جديد - N One%0a`;
             msg += `المرسل إليه: ${capName}%0a`;
-            msg += `يرجى استلام الطلب التالي:%0a`;
             msg += `المصدر: ${locName}%0a`;
             msg += `الموقع الجغرافي: ${smartLink}%0a%0a`;
             msg += `بيانات التوصيل:%0a`;
-            msg += `أجرة المندوب: ${fee || 0} د.أ%0a`;
-            msg += `قيمة الشحنة: ${price || 0} د.أ%0a%0a`;
+            msg += `قيمة الشحنة: ${price || 0} د.أ%0a`;
+            msg += `أجرة المندوب: ${fee || 0} د.أ%0a%0a`;
             msg += `ملخص النشاط اليومي:%0a`;
             msg += `إجمالي الطلبات: ${dailyCount}%0a`;
             msg += `نرجو الالتزام بمعايير الجودة والوقت.`;
 
-            // 7. فتح واتساب
             window.open(`https://wa.me/${finalPhone}?text=${msg}`, '_blank');
 
-            // 8. الأرشفة المحلية (مع النسبة)
-            addToArchive(capName, phoneInput, locName, fee, commValue);
+            addToArchive(capName, phoneInput, locName, fee, price, commValue, ratio);
         }
 
-        function addToArchive(capName, phone, locName, fee, commValue) {
-            // إضافة commValue للأرشفة
-            const order = { capName, phone, locName, fee, commValue, time: new Date().toLocaleTimeString() };
-            dailyArchive.unshift(order); // إضافة للأول
-            // تحديث التخزين المحلي لليوم
+        function addToArchive(capName, phone, locName, fee, price, commValue, ratio) {
+            // إضافة البيانات الجديدة للأرشيف
+            const order = { capName, phone, locName, fee, price, commValue, ratio, time: new Date().toLocaleTimeString() };
+            dailyArchive.unshift(order);
             localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
             renderArchive();
             
-            // تفريغ الحقول
+            // تفريغ الحقول ما عدا النسبة
             document.getElementById('man_loc').value = '';
             document.getElementById('man_fee').value = '';
             document.getElementById('man_price').value = '';
-            // لا نفرغ النسبة لتسهيل الإرسال المتكرر
         }
 
+        // رسم الأرشيف مع زر التعديل
         function renderArchive() {
             const tbody = document.getElementById('archive-table-body');
-            if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>'; return; }
+            if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>'; return; }
             
             tbody.innerHTML = '';
-            dailyArchive.forEach(o => {
+            dailyArchive.forEach((o, index) => {
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${o.capName}</b></td>
                         <td>${o.locName}</td>
+                        <td><span class="badge bg-val">${o.price || 0} د.أ</span></td>
                         <td>${o.fee} د.أ</td>
-                        <td><span class="badge" style="background:#ffebee; color:#c62828;">${o.commValue} د.أ</span></td>
-                        <td><span class="badge bg-paid">تم الإرسال ✅</span></td>
+                        <td><span class="badge bg-ratio">${o.commValue} د.أ (${o.ratio}%)</span></td>
+                        <td class="controls">
+                            <button class="btn-edit" onclick="editArchiveOrder(${index})">تعديل ✏️</button>
+                        </td>
                     </tr>
                 `;
             });
         }
 
-        // ================= إدارة المنشآت (مع إصلاح التجميد) =================
+        // ميزة التعديل الشامل للأرشيف
+        function editArchiveOrder(index) {
+            const order = dailyArchive[index];
+            
+            const newFee = prompt("تعديل أجرة التوصيل:", order.fee);
+            if (newFee === null) return;
+            const newPrice = prompt("تعديل قيمة الأوردر:", order.price);
+            if (newPrice === null) return;
+            const newRatio = prompt("تعديل النسبة %:", order.ratio);
+            if (newRatio === null) return;
+            
+            // إعادة الحساب
+            const updatedComm = (parseFloat(newFee) * (parseFloat(newRatio) / 100)).toFixed(2);
+            
+            dailyArchive[index].fee = newFee;
+            dailyArchive[index].price = newPrice;
+            dailyArchive[index].ratio = newRatio;
+            dailyArchive[index].commValue = updatedComm;
+            
+            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
+            renderArchive();
+            alert("تم تعديل بيانات الطلب بنجاح ✅");
+        }
+
+        // ميزة إغلاق اليومية
+        function storeDayData() {
+            if (!confirm("هل أنت متأكد من إغلاق اليومية؟ سيتم ترحيل الأرباح للوحة المعلومات.")) return;
+            
+            let dayProfit = 0;
+            dailyArchive.forEach(o => dayProfit += parseFloat(o.commValue || 0));
+            
+            totalLifetimeProfit += dayProfit;
+            localStorage.setItem('n1_lifetime_profit', totalLifetimeProfit.toString());
+            
+            // تحديث لوحة المعلومات
+            document.getElementById('total-profit').innerText = totalLifetimeProfit.toFixed(1) + " د.أ";
+            
+            alert(`تم إغلاق اليومية بنجاح! 🌙\nإجمالي أرباح اليوم المرحلة: ${dayProfit.toFixed(2)} د.أ`);
+        }
+
+        // ================= إدارة المنشآت (مع التجميد الفعال) =================
         async function addShop() {
             const name = document.getElementById('shop_name').value;
             const user = document.getElementById('shop_user').value;
@@ -454,34 +471,34 @@
             myShops.forEach(shop => {
                 const subBadge = shop.sub_type === 'paid' ? '<span class="badge bg-paid">مدفوع 💎</span>' : '<span class="badge bg-free">مجاني</span>';
                 
-                // منطق عرض الحالة الصحيح
-                const statusHtml = shop.status === 'active' 
-                    ? '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>' 
-                    : '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ⏸️</span>';
+                // منطق عرض الحالة الصحيح (الحالة من السيرفر)
+                const isPaused = shop.status === 'paused';
+                const statusHtml = isPaused 
+                    ? '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ⏸️</span>' 
+                    : '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>';
                 
-                // زر التبديل بناءً على الحالة الحالية
-                const toggleBtn = shop.status === 'active' 
-                    ? `<button class="btn-freeze" onclick="toggleStatus('${shop.user}', 'active')">تجميد</button>` 
-                    : `<button class="btn-active" onclick="toggleStatus('${shop.user}', 'paused')">تفعيل</button>`;
+                const toggleBtn = isPaused 
+                    ? `<button class="btn-active" onclick="toggleStatus('${shop.user}', 'active')">تفعيل</button>` 
+                    : `<button class="btn-freeze" onclick="toggleStatus('${shop.user}', 'paused')">تجميد</button>`;
                 
                 tbody.innerHTML += `<tr><td><b>${shop.name}</b></td><td style="font-size:12px;">${shop.user} | ${shop.pass}</td><td>${subBadge}</td><td><b>${shop.commission || 0}%</b></td><td>${statusHtml}</td><td class="controls"><button class="btn-edit" onclick="editShop('${shop.user}', '${shop.name}', '${shop.pass}')">✏️</button>${toggleBtn}<button class="btn-delete" onclick="deleteShop('${shop.user}')">❌</button></td></tr>`;
             });
         }
 
-        // ================= مركز العمليات (Live - إصلاح المصدر والموقع وقيمة الأوردر) =================
+        // ================= مركز العمليات (Live - إصلاحات جذرية) =================
         function renderOrders() {
             const tbody = document.getElementById('orders-table-body');
-            // المستخدمون التابعون لي
             const myShopsUsers = allData.filter(i => i.type === 'shop' && i.client_user === currentUser.user).map(s => s.user);
             const orders = allData.filter(i => i.type === 'order' && myShopsUsers.includes(i.client_user)).reverse();
 
             if (orders.length > lastOrderCount && lastOrderCount !== 0) {
                 const audio = document.getElementById('notif-sound');
+                // تشغيل الصوت لفترة 3 ثواني
+                audio.currentTime = 0;
                 audio.play().catch(e => console.log("Sound check"));
             }
             lastOrderCount = orders.length;
 
-            let totalProfit = 0;
             if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد طلبات واردة</td></tr>'; return; }
             tbody.innerHTML = '';
             
@@ -493,29 +510,29 @@
                 const shopName = shop ? shop.name : (ord.cl_name || 'Unknown');
                 
                 // الموقع المسجل
-                const shopLoc = shop ? (shop.location_link || 'موقع غير مسجل') : '...';
+                let shopLoc = '...';
+                if (shop && shop.location_link) {
+                    // محاولة استخراج الاسم من الرابط إذا كان مشفر
+                    if (shop.location_link.includes('=')) shopLoc = decodeURIComponent(shop.location_link.split('=')[1]);
+                    else shopLoc = shop.location_link;
+                }
                 
-                const commRate = shop ? Number(shop.commission || 0) : 0;
                 const deliveryFee = Number(ord.fee || 0);
                 const orderVal = Number(ord.val || 0); // قيمة الأوردر
                 
-                const profit = deliveryFee * (commRate / 100);
-                totalProfit += profit;
-                
                 // رابط الموقع
-                const mapUrl = (shopLoc.includes('http')) ? shopLoc : '#';
+                const mapUrl = (shop && shop.location_link) ? shop.location_link : '#';
 
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-size:12px;">${ord.date.split('T')[1]?.substring(0,5) || 'Now'}</td>
                         <td><b>${shopName}</b></td>
-                        <td><a href="${mapUrl}" target="_blank" style="text-decoration:none; color:#1565c0;">📍 الموقع المسجل</a></td>
+                        <td><a href="${mapUrl}" target="_blank" style="text-decoration:none; color:#1565c0;">📍 ${shopLoc}</a></td>
                         <td><span class="badge bg-val">${orderVal} د.أ</span></td>
                         <td><span class="badge bg-money">${deliveryFee} د.أ</span></td>
                     </tr>
                 `;
             });
-            document.getElementById('total-profit').innerText = totalProfit.toFixed(1) + " د.أ";
         }
 
         // ================= أدوات التحكم =================
@@ -531,7 +548,7 @@
 
         async function toggleStatus(u, currentS) {
             const newS = currentS === 'active' ? 'paused' : 'active';
-            if(!confirm(newS === 'paused' ? "تجميد الحساب؟" : "إعادة التفعيل؟")) return;
+            if(!confirm(newS === 'paused' ? "تجميد الحساب؟ لن يتمكن من إرسال طلبات." : "إعادة التفعيل؟")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             // إرسال التحديث للسيرفر
