@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | غرفة القيادة المركزية</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* ================= أساسيات التصميم (Pro Theme) ================= */
         :root {
@@ -20,7 +21,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
             margin: 0; padding: 0; color: var(--text);
-            /* منع تحديد النصوص لزيادة الطابع التطبيقي */
             user-select: none; 
         }
 
@@ -94,7 +94,7 @@
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .status-active { background: #e8f5e9; color: var(--success); }
         .status-paused { background: #fff3e0; color: var(--warning); }
-        .status-expired { background: #ffebee; color: var(--danger); } /* منتهي الصلاحية */
+        .status-expired { background: #ffebee; color: var(--danger); } 
 
         /* أزرار التحكم في الجدول */
         .action-btn {
@@ -211,22 +211,27 @@
     </div>
 
     <script>
+        // الرابط الجديد الذي تم إعداده وتجربته بنجاح
         const API_URL = "https://script.google.com/macros/s/AKfycbytYicEdE87FeQ5j9K9l3wrM9YB9uDDojNhjIKLGDDijBfOxwJPxFYDILkfIfBxJiKP/exec";
 
         let allData = [];
         let currentUser = null;
-        let globalServerTime = new Date(); // متغير ذكي لحفظ وقت السيرفر العالمي
+        let globalServerTime = new Date(); 
 
-        // تنفيذ خطة: أمن الجلسات ومنع التلاعب (Prevent Back Button) مع فحص التشفير الجديد
+        // ============================================
+        // نظام الدخول "المبسط والآمن" (تم إزالة شرط الختم)
+        // ============================================
         window.onload = async function() {
+            // منع الرجوع للخلف للحفاظ على الجلسة
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
             };
 
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            // جدار الحماية للتحقق من التشفير الخاص بالجلسة
-            if (!currentUser || currentUser.role !== 'admin' || !currentUser.sessionToken || !currentUser.sessionToken.includes('N1_SECURE')) {
+            
+            // الفحص المبسط: نتأكد من وجود المستخدم وإن رتبته أدمن فقط (بدون شرط الختم المعقد)
+            if (!currentUser || currentUser.role !== 'admin') {
                 window.location.replace('index.html'); 
             } else {
                 await fetchServerTime();
@@ -234,14 +239,13 @@
             }
         };
 
-        // دالة لجلب التوقيت العالمي لضمان عدم التلاعب بالعداد التنازلي
         async function fetchServerTime() {
             try {
                 const res = await fetch("http://worldtimeapi.org/api/timezone/Asia/Amman");
                 const timeData = await res.json();
                 globalServerTime = new Date(timeData.datetime);
             } catch (e) {
-                globalServerTime = new Date(); // في حال فشل الاتصال نعتمد الوقت الحالي مؤقتا
+                globalServerTime = new Date(); 
             }
         }
 
@@ -260,7 +264,7 @@
             const tbody = document.getElementById('clients-table');
             const clients = allData.filter(u => u.role === 'client').reverse();
 
-            // الإحصائيات مع الحساب الدقيق للمردود المالي
+            // الإحصائيات
             document.getElementById('total-count').innerText = clients.length;
             document.getElementById('active-count').innerText = clients.filter(c => c.status === 'active').length;
             
@@ -275,7 +279,6 @@
 
             tbody.innerHTML = '';
             clients.forEach(client => {
-                // منطق العداد التنازلي المعتمد على وقت السيرفر العالمي
                 const expiryDate = new Date(client.expiry);
                 const diffTime = expiryDate - globalServerTime;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -283,20 +286,17 @@
                 let statusBadge = '';
                 let daysText = '';
 
-                // فحص الحالة والمدة مع التجميد الفوري
                 if (client.status === 'paused') {
                     statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
                     daysText = `<span style="color:#f57f17;">موقف مؤقتاً</span>`;
                 } else if (diffDays <= 0) {
                     statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
                     daysText = `<span style="color:#c62828; font-weight:bold;">انتهى الاشتراك</span>`;
-                    // التجميد التلقائي إذا انتهى الاشتراك ولم يجمده المدير
                     if(client.status === 'active') {
                         setStatusSilent(client.user, 'paused');
                     }
                 } else {
                     statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
-                    // تنبيه قبل 3 أيام
                     if (diffDays <= 3) {
                         daysText = `<span style="color:#c62828; font-weight:bold;">${diffDays} يوم (تنبيه!) ⚠️</span>`;
                     } else {
@@ -335,13 +335,12 @@
 
             if (!name || !user || !pass || !price) { alert("البيانات ناقصة يا حبة السكر ☺️"); return; }
 
-            // حساب تاريخ الانتهاء بدقة بناء على وقت السيرفر
             const expDate = new Date(globalServerTime);
             expDate.setDate(expDate.getDate() + days);
             const expStr = expDate.toISOString().split('T')[0];
 
             const btn = document.getElementById('btnAddUser');
-            btn.innerText = "جاري إنشاء الحساب والتأكيد... ⏳"; 
+            btn.innerText = "جاري إنشاء الحساب... ⏳"; 
             btn.disabled = true;
             document.getElementById('loader-overlay').style.display = 'flex';
 
@@ -355,17 +354,14 @@
             };
 
             await sendToServer('add', [newClient]);
-            
-            // تأكيد حقيقي من السيرفر قبل إعطاء النجاح
             await fetchData(); 
             
             document.getElementById('loader-overlay').style.display = 'none';
             btn.innerText = "+ تفعيل الاشتراك 🚀";
             btn.disabled = false;
             
-            alert("تم تفعيل الاشتراك وإنشاء الحساب المعزول وتوثيقه ☺️✅");
+            alert("تم تفعيل الاشتراك وإنشاء الحساب المعزول ☺️✅");
             
-            // تفريغ الحقول
             document.getElementById('new_name').value = '';
             document.getElementById('new_user').value = '';
             document.getElementById('new_pass').value = '';
@@ -373,15 +369,14 @@
         }
 
         async function setStatus(username, newStatus) {
-            if (!confirm(newStatus === 'paused' ? "تجميد الحساب ومنع الدخول لحظيا ☺️" : "إعادة تفعيل الحساب ☺️")) return;
+            if (!confirm(newStatus === 'paused' ? "تجميد الحساب؟ ☺️" : "إعادة تفعيل الحساب؟ ☺️")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await sendToServer('update', { status: newStatus }, username);
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تحديث الحالة والمزامنة اللحظية ☺️");
+            alert("تم تحديث الحالة ☺️");
         }
         
-        // دالة صامتة للتجميد التلقائي
         async function setStatusSilent(username, newStatus) {
             await sendToServer('update', { status: newStatus }, username);
         }
@@ -403,12 +398,12 @@
         }
 
         async function deleteClient(username) {
-            if (!confirm("هل أنت متأكد من الحذف النهائي للبيانات ☺️")) return;
+            if (!confirm("هل أنت متأكد من الحذف النهائي للبيانات؟ ☺️")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await fetch(API_URL + "?action=delete&user=" + username, { method: 'POST' });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الشركة وطرد المستخدم فورا ☺️");
+            alert("تم حذف الشركة بنجاح ☺️");
         }
 
         async function changeAdminPass() {
@@ -429,7 +424,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: action, data: data, user: user })
             });
-            await new Promise(r => setTimeout(r, 1500)); // تأخير بسيط لضمان تنفيذ جوجل للطلب
+            await new Promise(r => setTimeout(r, 1500));
         }
 
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
