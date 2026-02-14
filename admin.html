@@ -3,169 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة القيادة المركزية (Pro)</title>
+    <title>N One | غرفة القيادة المركزية (Pro Max)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
 
     <style>
         /* ================= أساسيات التصميم (Pro Theme) ================= */
         :root {
-            --primary: #1a237e;    /* كحلي ملكي */
-            --gold: #d4af37;       /* ذهبي */
-            --bg: #f4f7f6;         /* خلفية فاتحة */
-            --text: #333;
-            --success: #2e7d32;
-            --danger: #c62828;
-            --warning: #f57f17;    /* برتقالي للتجميد */
-            --info: #0288d1;       /* أزرق للتجديد */
+            --primary: #1a237e; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
+            --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --info: #0288d1;
+            --shop-color: #00695c; /* لون مميز للمنشآت */
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 0; color: var(--text);
-            user-select: none; 
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
 
-        /* الشريط العلوي */
-        .navbar {
-            background: white; height: 70px; display: flex;
-            justify-content: space-between; align-items: center;
-            padding: 0 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000;
-        }
-
+        .navbar { background: white; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
         .brand { font-size: 24px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
         .gold-text { color: var(--gold); }
+        .btn-logout { background: none; border: none; font-size: 16px; cursor: pointer; padding: 8px 15px; border-radius: 8px; background-color: var(--danger); color: white; transition: 0.3s; }
+        .btn-logout:hover { background-color: #b71c1c; }
 
-        .nav-actions button {
-            background: none; border: none; font-size: 16px; cursor: pointer;
-            margin-left: 15px; padding: 8px 15px; border-radius: 8px; transition: 0.3s;
-        }
-        .btn-logout { background-color: var(--danger) !important; color: white; }
-        .btn-logout:hover { background-color: #b71c1c !important; }
-
-        /* الحاوية الرئيسية */
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
 
-        /* كروت الإحصائيات */
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px; margin-bottom: 30px;
-        }
-        .stat-card {
-            background: white; padding: 25px; border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center;
-            border-top: 5px solid var(--primary); transition: 0.3s;
-        }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-number { font-size: 36px; font-weight: bold; color: var(--primary); margin: 10px 0; }
-        .stat-label { color: #777; font-size: 14px; }
+        /* الإحصائيات */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center; border-top: 5px solid var(--primary); }
+        .stat-number { font-size: 32px; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .stat-label { color: #777; font-size: 13px; }
 
-        /* 🧠 قسم الذكاء الاستباقي (الرادار الرسمي) 🧠 */
-        .ai-section {
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-            color: white; padding: 25px; border-radius: 20px; margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(26, 35, 126, 0.2); border: 2px solid #d4af37;
-        }
+        /* الرادار الذكي */
+        .ai-section { background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%); color: white; padding: 25px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(26, 35, 126, 0.2); border: 2px solid #d4af37; }
         .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .ai-title { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .ai-title { font-size: 20px; font-weight: bold; }
         .ai-badge { background: #d4af37; color: #1a237e; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
-        
-        .recommendation-card {
-            background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;
-            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-            border-right: 4px solid #d4af37;
-        }
-        .rec-info { font-size: 14px; }
-        .rec-btn {
-            background: #d4af37; color: #1a237e; border: none; padding: 8px 15px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .rec-btn:hover { background: white; }
+        .recommendation-card { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid #d4af37; }
+        .rec-btn { background: #d4af37; color: #1a237e; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         /* نموذج الإضافة */
-        .card {
-            background: white; padding: 30px; border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px;
-        }
-        .card-header {
-            font-size: 20px; font-weight: bold; color: var(--primary);
-            border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        
-        input, select {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
-            outline: none; background: #fafafa;
-        }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px; position: relative; }
+        .card-header { font-size: 20px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: #fafafa; }
         input:focus { border-color: var(--primary); background: white; }
+        .btn-add { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; height: 100%; width: 100%; }
 
-        .btn-add {
-            background: var(--success); color: white; border: none; padding: 12px 25px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; height: 100%; width: 100%;
-        }
-        .btn-add:hover { background: #1b5e20; }
-
-        /* جدول البيانات الكامل */
+        /* الجداول */
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
         thead { background: #f8f9fa; color: #555; font-weight: bold; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #eee; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
         
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
         .status-active { background: #e8f5e9; color: var(--success); }
         .status-paused { background: #fff3e0; color: var(--warning); }
         .status-expired { background: #ffebee; color: var(--danger); } 
 
-        /* أزرار التحكم المستعادة بالكامل */
-        .action-btn {
-            padding: 6px 12px; border-radius: 6px; border: none;
-            color: white; cursor: pointer; font-size: 12px; margin-left: 5px;
-        }
+        /* أزرار التحكم */
+        .action-group { display: flex; gap: 5px; }
+        .action-btn { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .act-freeze { background: var(--warning); }
         .act-active { background: var(--success); }
         .act-delete { background: var(--danger); }
-        .act-renew { background: var(--primary); }
+        .act-renew { background: var(--info); }
+        .act-edit { background: var(--primary); }
 
-        #loader-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); z-index: 3000; justify-content: center; align-items: center;
-            font-size: 24px; font-weight: bold; color: var(--primary);
-            flex-direction: column;
-        }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: var(--primary); flex-direction: column; }
     </style>
 </head>
 <body>
 
     <div id="loader-overlay">
-        <div>📡</div>
-        <div style="font-size:16px; margin-top:10px; color:#555;">جاري الاتصال بالنواة المركزية...</div>
+        <div style="font-size:30px; margin-bottom:10px;">📡</div>
+        <div>جاري الاتصال بالنواة المركزية...</div>
     </div>
 
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> Admin</div>
-        <div class="nav-actions">
-            <button class="btn-logout" onclick="logout()">خروج 🔒</button>
-        </div>
+        <button class="btn-logout" onclick="logout()">خروج 🔒</button>
     </nav>
 
     <div class="container">
         
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">إجمالي الشركات</div>
-                <div class="stat-number" id="total-count">0</div>
+                <div class="stat-label">شركات النقل</div>
+                <div class="stat-number" id="count-clients">0</div>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--shop-color);">
+                <div class="stat-label">المنشآت التجارية</div>
+                <div class="stat-number" id="count-shops" style="color: var(--shop-color);">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--success);">
-                <div class="stat-label">اشتراكات نشطة</div>
-                <div class="stat-number" id="active-count" style="color: var(--success);">0</div>
+                <div class="stat-label">نشط كلياً</div>
+                <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--gold);">
-                <div class="stat-label">المردود المالي (المتوقع)</div>
+                <div class="stat-label">المردود المالي</div>
                 <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
             </div>
         </div>
@@ -173,37 +107,41 @@
         <div class="ai-section">
             <div class="ai-header">
                 <div class="ai-title">📡 رادار التميز الذكي (Smart Excellence Radar)</div>
-                <div class="ai-badge">AI System Active</div>
+                <div class="ai-badge">AI Active</div>
             </div>
             <div id="ai-recommendations">
-                <p style="font-size:13px; opacity:0.8;">جاري تحليل أداء الكباتن بالخلفية...</p>
+                <p style="font-size:13px; opacity:0.8;">جاري تحليل الأداء...</p>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <span>✨ إضافة شركة جديدة (اشتراك)</span>
-                <span style="font-size:12px; color:#777;">حساب معزول وآمن</span>
+                <span>✨ إضافة حساب جديد (شركة / منشأة)</span>
             </div>
             <div class="form-grid">
-                <input type="text" id="new_name" placeholder="اسم الشركة (White Label)">
-                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
-                <input type="password" id="new_pass" placeholder="كلمة المرور (Password)">
-                
-                <select id="sub_duration">
-                    <option value="30">شهر واحد (30 يوم)</option>
-                    <option value="90">3 أشهر (ربع سنوي)</option>
-                    <option value="180">6 أشهر (نصف سنوي)</option>
-                    <option value="365">سنة كاملة (VIP)</option>
+                <select id="new_role" style="background:#e3f2fd; color:#1565c0; font-weight:bold;">
+                    <option value="client">🏢 شركة نقل (Ride Hailing)</option>
+                    <option value="shop">🏪 منشأة تجارية (Shop/Rest)</option>
                 </select>
-                <input type="number" id="sub_price" placeholder="قيمة الاشتراك (د.أ)">
-
-                <button class="btn-add" id="btnAddUser" onclick="addClient()">+ تفعيل الاشتراك 🚀</button>
+                <input type="text" id="new_name" placeholder="الاسم التجاري">
+                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
+                <input type="password" id="new_pass" placeholder="كلمة المرور">
+                <select id="sub_duration">
+                    <option value="30">30 يوم</option>
+                    <option value="90">3 أشهر</option>
+                    <option value="180">6 أشهر</option>
+                    <option value="365">سنة كاملة</option>
+                </select>
+                <input type="number" id="sub_price" placeholder="القيمة (د.أ)">
+                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ إضافة وتفعيل 🚀</button>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">سجل الشركات والتحكم الشامل 🎛️</div>
+            <div class="card-header">
+                <span>🏢 سجل شركات النقل (Companies)</span>
+                <span style="font-size:12px; color:#1a237e;">White Label Clients</span>
+            </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -211,13 +149,37 @@
                             <th>الشركة</th>
                             <th>بيانات الدخول</th>
                             <th>الخطة / السعر</th>
-                            <th>الأيام المتبقية</th>
+                            <th>الصلاحية</th>
                             <th>الحالة</th>
-                            <th>التحكم والإجراءات</th>
+                            <th>التحكم الشامل</th>
                         </tr>
                     </thead>
                     <tbody id="clients-table">
-                        <tr><td colspan="6" style="text-align:center; padding:20px;">جاري سحب البيانات... ⏳</td></tr>
+                        <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="border-top: 5px solid var(--shop-color);">
+            <div class="card-header">
+                <span style="color: var(--shop-color);">🏪 سجل المنشآت التجارية (Shops)</span>
+                <span style="font-size:12px; color:var(--shop-color);">Restaurants & Stores</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>المنشأة</th>
+                            <th>بيانات الدخول</th>
+                            <th>الخطة / السعر</th>
+                            <th>الصلاحية</th>
+                            <th>الحالة</th>
+                            <th>التحكم الشامل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shops-table">
+                        <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -225,28 +187,12 @@
     </div>
 
     <script>
-        // المتغيرات العامة
         let allData = [];
-        let currentUser = null;
         let globalServerTime = new Date(); 
 
-        // ============================================
-        // بدء النظام عبر المصلح المركزي
-        // ============================================
         window.onload = async function() {
-            if (typeof N_ONE_CORE === 'undefined') {
-                alert("خطأ: لم يتم تحميل المصلح المركزي! تأكد من الإنترنت.");
-                return;
-            }
-
-            // فحص الجلسة (admin)
-            currentUser = N_ONE_CORE.checkSession('admin');
-            
-            if (currentUser) {
-                // منع الرجوع للخلف
-                window.history.pushState(null, "", window.location.href);
-                window.onpopstate = function() { window.history.pushState(null, "", window.location.href); };
-
+            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
+            if (N_ONE_CORE.checkSession('admin')) {
                 await fetchServerTime();
                 await fetchData();
             }
@@ -257,125 +203,81 @@
                 const res = await fetch("http://worldtimeapi.org/api/timezone/Asia/Amman");
                 const timeData = await res.json();
                 globalServerTime = new Date(timeData.datetime);
-            } catch (e) {
-                globalServerTime = new Date(); 
-            }
+            } catch (e) { globalServerTime = new Date(); }
         }
 
         async function fetchData() {
             try {
                 allData = await N_ONE_CORE.fetchData('read');
-                renderTable();
-                runSmartRadar(); // تشغيل الرادار باسمه الجديد
-            } catch (e) {
-                console.error(e);
-                alert("خطأ في الاتصال بالسيرفر المركزي ☺️");
-            }
+                renderTables();
+                runSmartRadar();
+            } catch (e) { console.error(e); }
         }
 
-        // 🧠 رادار التميز الذكي (خوارزمية 555 المخفية) 🧠
-        function runSmartRadar() {
-            const aiContainer = document.getElementById('ai-recommendations');
-            aiContainer.innerHTML = '';
-
-            const orders = allData.filter(item => item.type === 'order');
+        function renderTables() {
+            const clientTbody = document.getElementById('clients-table');
+            const shopTbody = document.getElementById('shops-table');
             
-            // تجميع الإحصائيات
-            let captainsStats = {};
-            orders.forEach(order => {
-                const capName = order.cap_name || "Unknown";
-                if (!captainsStats[capName]) {
-                    captainsStats[capName] = { count: 0, totalVal: 0 };
-                }
-                captainsStats[capName].count++;
-                captainsStats[capName].totalVal += Number(order.val || 0);
-            });
+            // فصل البيانات (شركات vs منشآت)
+            const clients = allData.filter(u => u.role === 'client' || u.type === 'client').reverse();
+            const shops = allData.filter(u => u.role === 'shop' || u.type === 'shop').reverse();
 
-            // معيار التميز (قابل للتعديل)
-            const eliteCaptains = Object.entries(captainsStats).filter(([name, stat]) => stat.count >= 5);
-
-            if (eliteCaptains.length === 0) {
-                aiContainer.innerHTML = '<p style="font-size:13px; opacity:0.8;">لا توجد توصيات بالتميز حالياً. النظام يراقب بصمت 🦅</p>';
-                return;
-            }
-
-            eliteCaptains.forEach(([name, stat]) => {
-                const card = document.createElement('div');
-                card.className = 'recommendation-card';
-                card.innerHTML = `
-                    <div class="rec-info">
-                        <strong>🏅 مرشح للتميز: ${name}</strong><br>
-                        أداء استثنائي: ${stat.count} طلب مكتمل
-                    </div>
-                    <button class="rec-btn" onclick="alert('تم اعتماد التوصية للكابتن ${name} ✅\\nإجراء التميز: منح يوم إجازة مدفوع (System Reward)')">
-                        اعتماد مكافأة التميز 🎁
-                    </button>
-                `;
-                aiContainer.appendChild(card);
-            });
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('clients-table');
-            const clients = allData.filter(u => u.role === 'client').reverse();
-
-            // الإحصائيات
-            document.getElementById('total-count').innerText = clients.length;
-            document.getElementById('active-count').innerText = clients.filter(c => c.status === 'active').length;
+            // تحديث الإحصائيات
+            document.getElementById('count-clients').innerText = clients.length;
+            document.getElementById('count-shops').innerText = shops.length;
+            document.getElementById('count-active').innerText = allData.filter(c => c.status === 'active' && c.role !== 'admin').length;
             
             let totalRev = 0;
-            clients.forEach(c => totalRev += Number(c.price || 0));
+            [...clients, ...shops].forEach(c => totalRev += Number(c.price || 0));
             document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
 
-            if (clients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا يوجد اشتراكات نشطة</td></tr>';
-                return;
-            }
+            // رسم الجداول
+            renderRows(clientTbody, clients);
+            renderRows(shopTbody, shops);
+        }
 
+        function renderRows(tbody, data) {
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد بيانات</td></tr>'; return; }
             tbody.innerHTML = '';
-            clients.forEach(client => {
-                const expiryDate = new Date(client.expiry);
+            
+            data.forEach(item => {
+                const expiryDate = new Date(item.expiry);
                 const diffTime = expiryDate - globalServerTime;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 let statusBadge = '';
                 let daysText = '';
 
-                // منطق الحالة والألوان
-                if (client.status === 'paused') {
+                if (item.status === 'paused') {
                     statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
-                    daysText = `<span style="color:#f57f17;">موقف مؤقتاً</span>`;
+                    daysText = `<span style="color:#f57f17;">موقف</span>`;
                 } else if (diffDays <= 0) {
                     statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
-                    daysText = `<span style="color:#c62828; font-weight:bold;">انتهى الاشتراك</span>`;
-                    if(client.status === 'active') {
-                        setStatusSilent(client.user, 'paused'); // تجميد تلقائي صامت
-                    }
+                    daysText = `<span style="color:#c62828; font-weight:bold;">انتهى</span>`;
+                    if(item.status === 'active') setStatusSilent(item.user, 'paused');
                 } else {
                     statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
-                    if (diffDays <= 3) {
-                        daysText = `<span style="color:#c62828; font-weight:bold;">${diffDays} يوم (تنبيه!) ⚠️</span>`;
-                    } else {
-                        daysText = `<span style="color:#2e7d32; font-weight:bold;">${diffDays} يوم</span>`;
-                    }
+                    daysText = diffDays <= 3 ? `<span style="color:#c62828;">${diffDays} يوم ⚠️</span>` : `<span style="color:#2e7d32;">${diffDays} يوم</span>`;
                 }
                 
-                // زر التجميد/التفعيل
-                const toggleBtn = client.status === 'active'
-                    ? `<button class="action-btn act-freeze" title="تجميد الحساب" onclick="setStatus('${client.user}', 'paused')">تجميد ❄️</button>`
-                    : `<button class="action-btn act-active" title="تفعيل الحساب" onclick="setStatus('${client.user}', 'active')">تفعيل ▶️</button>`;
+                const toggleBtn = item.status === 'active'
+                    ? `<button class="action-btn act-freeze" title="تجميد" onclick="setStatus('${item.user}', 'paused')">❄️</button>`
+                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.user}', 'active')">▶️</button>`;
 
                 const row = `
                     <tr>
-                        <td><b>${client.name}</b></td>
-                        <td style="font-size:12px; color:#555;">${client.user}<br>Pwd: ${client.pass}</td>
-                        <td style="font-size:12px;">${client.price || 0} د.أ<br><span style="color:#777; font-size:10px;">(${client.plan_days || 0} يوم)</span></td>
+                        <td><b>${item.name}</b></td>
+                        <td style="font-size:12px; color:#555;">${item.user}<br>Pwd: ${item.pass}</td>
+                        <td style="font-size:12px;">${item.price || 0} د.أ</td>
                         <td>${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
-                            ${toggleBtn}
-                            <button class="action-btn act-renew" title="تجديد الاشتراك / تعديل" onclick="renewClient('${client.user}')">تجديد 🔄</button>
-                            <button class="action-btn act-delete" title="حذف نهائي" onclick="deleteClient('${client.user}')">حذف ❌</button>
+                            <div class="action-group">
+                                <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.user}', '${item.name}', '${item.pass}')">✏️</button>
+                                ${toggleBtn}
+                                <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.user}')">🔄</button>
+                                <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.user}')">❌</button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -383,102 +285,113 @@
             });
         }
 
-        async function addClient() {
+        // ================= العمليات (ADD, EDIT, DELETE, RENEW) =================
+
+        async function addUser() {
+            const role = document.getElementById('new_role').value;
             const name = document.getElementById('new_name').value;
             const user = document.getElementById('new_user').value;
             const pass = document.getElementById('new_pass').value;
-            const days = parseInt(document.getElementById('sub_duration').value);
+            const days = document.getElementById('sub_duration').value;
             const price = document.getElementById('sub_price').value;
 
-            if (!name || !user || !pass || !price) { alert("البيانات ناقصة يا حبة السكر ☺️"); return; }
+            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول ☺️"); return; }
 
             const expDate = new Date(globalServerTime);
-            expDate.setDate(expDate.getDate() + days);
-            const expStr = expDate.toISOString().split('T')[0];
-
-            const btn = document.getElementById('btnAddUser');
-            btn.innerText = "جاري الاتصال بالنواة... ⏳"; 
-            btn.disabled = true;
+            expDate.setDate(expDate.getDate() + parseInt(days));
+            
             document.getElementById('loader-overlay').style.display = 'flex';
-
-            const newClient = {
-                id: "CL_" + Date.now(),
-                user: user, pass: pass, name: name,
-                role: "client", type: "client", status: "active",
-                expiry: expStr,
-                price: price, 
-                plan_days: days
+            const newItem = {
+                id: (role === 'client' ? "CL_" : "SH_") + Date.now(),
+                user: user, pass: pass, name: name, role: role, type: role, status: "active",
+                expiry: expDate.toISOString().split('T')[0], price: price, plan_days: days
             };
 
-            await N_ONE_CORE.postData('add', [newClient]);
-            await fetchData(); 
-            
+            await N_ONE_CORE.postData('add', [newItem]);
+            await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
-            btn.innerText = "+ تفعيل الاشتراك 🚀";
-            btn.disabled = false;
+            alert("تمت الإضافة بنجاح ☺️✅");
             
-            alert("تم تفعيل الاشتراك وإنشاء الحساب المعزول ☺️✅");
-            
-            // تفريغ الحقول
             document.getElementById('new_name').value = '';
             document.getElementById('new_user').value = '';
             document.getElementById('new_pass').value = '';
-            document.getElementById('sub_price').value = '';
+        }
+
+        async function editUser(username, oldName, oldPass) {
+            const newName = prompt("تعديل الاسم التجاري:", oldName);
+            if (newName === null) return;
+            const newPass = prompt("تعديل كلمة المرور:", oldPass);
+            if (newPass === null) return;
+
+            if (newName === oldName && newPass === oldPass) return;
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await N_ONE_CORE.postData('update', { user: username, data: { name: newName, pass: newPass } });
+            await fetchData();
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تحديث البيانات ☺️");
         }
 
         async function setStatus(username, newStatus) {
-            if (!confirm(newStatus === 'paused' ? "تجميد الحساب ومنع الدخول؟ ☺️" : "إعادة تفعيل الحساب؟ ☺️")) return;
+            if (!confirm(newStatus === 'paused' ? "تجميد الحساب؟" : "إعادة التفعيل؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { 
-                user: username, 
-                data: { status: newStatus } 
-            });
+            await N_ONE_CORE.postData('update', { user: username, data: { status: newStatus } });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
-        
+
         async function setStatusSilent(username, newStatus) {
-            await N_ONE_CORE.postData('update', { 
-                user: username, 
-                data: { status: newStatus } 
-            });
+            await N_ONE_CORE.postData('update', { user: username, data: { status: newStatus } });
         }
 
-        async function renewClient(username) {
-            const days = prompt("عدد أيام التجديد الإضافية ☺️", "30");
+        async function renewUser(username) {
+            const days = prompt("عدد أيام التجديد الإضافية:", "30");
             if (!days) return;
-            const price = prompt("قيمة التجديد للجرد المالي (إن وجد) ☺️", "0");
+            const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
 
             const newDate = new Date(globalServerTime);
             newDate.setDate(newDate.getDate() + parseInt(days));
-            const expStr = newDate.toISOString().split('T')[0];
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            
-            await N_ONE_CORE.postData('update', { 
-                user: username, 
-                data: { expiry: expStr, status: 'active', price: price } 
-            });
-
+            await N_ONE_CORE.postData('update', { user: username, data: { expiry: newDate.toISOString().split('T')[0], status: 'active', price: newPrice } });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تجديد الاشتراك بنجاح وتحديث الصلاحية ☺️📅");
+            alert("تم تجديد الاشتراك ☺️📅");
         }
 
-        async function deleteClient(username) {
-            if (!confirm("تحذير: هل أنت متأكد من الحذف النهائي؟ لا يمكن التراجع ☺️")) return;
+        async function deleteUser(username) {
+            if (!confirm("تحذير: حذف نهائي لا يمكن التراجع عنه! هل أنت متأكد؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
-            
             await N_ONE_CORE.fetchData('delete', { user: username });
-            
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الشركة بنجاح ☺️");
+            alert("تم حذف الحساب 🗑️");
         }
 
-        function logout() {
-            N_ONE_CORE.logout();
+        // 🧠 رادار التميز 🧠
+        function runSmartRadar() {
+            const container = document.getElementById('ai-recommendations');
+            container.innerHTML = '';
+            const orders = allData.filter(i => i.type === 'order');
+            let stats = {};
+            orders.forEach(o => {
+                const n = o.cap_name || "Unknown";
+                if (!stats[n]) stats[n] = { c: 0 };
+                stats[n].c++;
+            });
+            const elite = Object.entries(stats).filter(([n, s]) => s.c >= 5);
+            
+            if (elite.length === 0) { container.innerHTML = '<p style="font-size:13px; opacity:0.8;">الرادار يعمل بصمت 🦅 لا توصيات حالياً</p>'; return; }
+
+            elite.forEach(([n, s]) => {
+                const el = document.createElement('div');
+                el.className = 'recommendation-card';
+                el.innerHTML = `<div style="font-size:14px;"><strong>🏅 مرشح للتميز: ${n}</strong><br>أداء استثنائي: ${s.c} طلب</div><button class="rec-btn" onclick="alert('تم اعتماد المكافأة للكابتن ${n} ✅')">مكافأة 🎁</button>`;
+                container.appendChild(el);
+            });
         }
+
+        function logout() { N_ONE_CORE.logout(); }
     </script>
 
 </body>
