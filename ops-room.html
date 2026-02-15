@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N One | غرفة العمليات المركزية (Live Ops)</title>
+    
+    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
+
+    <style>
+        /* ================= تصميم Ops Room Pro (Dark Mode Hybrid) ================= */
+        :root {
+            --primary: #00695c; --gold: #d4af37; --bg: #e0f2f1; --text: #333;
+            --dark-panel: #263238; --light-panel: #ffffff;
+            --success: #2e7d32; --danger: #c62828; --money: #1b5e20;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; overflow-x: hidden; }
+
+        /* الهيدر الملكي */
+        .navbar { background: var(--dark-panel); height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000; border-bottom: 3px solid var(--gold); }
+        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .gold-text { color: var(--gold); }
+        
+        .status-badge { background: rgba(0, 255, 0, 0.1); color: #00e676; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; border: 1px solid #00e676; }
+        .live-dot { height: 8px; width: 8px; background-color: #00e676; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 230, 118, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); } }
+
+        /* تخطيط الشاشة المنقسمة (Split Screen) */
+        .ops-container { display: grid; grid-template-columns: 65% 35%; height: calc(100vh - 60px); }
+        
+        /* القسم الأيمن: الطلبات الحية */
+        .live-section { padding: 20px; overflow-y: auto; border-left: 2px solid #b0bec5; }
+        
+        /* القسم الأيسر: التحكم اليدوي */
+        .manual-section { background: white; padding: 20px; overflow-y: auto; box-shadow: -5px 0 15px rgba(0,0,0,0.05); }
+
+        /* الكروت والجداول */
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid var(--primary); }
+        .card-header { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #f5f5f5; position: sticky; top: 0; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #eee; }
+        tr:hover { background-color: #f1f8e9; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        .bg-money { background: #e8f5e9; color: var(--money); }
+        .bg-loc { background: #e3f2fd; color: #1565c0; text-decoration: none; }
+        .bg-phone { background: #fff3e0; color: #e65100; font-family: monospace; }
+
+        /* فورم الإرسال اليدوي */
+        .manual-form { display: flex; flex-direction: column; gap: 10px; }
+        input { padding: 10px; border: 1px solid #cfd8dc; border-radius: 6px; outline: none; background: #fafafa; width: 100%; box-sizing: border-box; }
+        input:focus { border-color: var(--primary); background: white; }
+        
+        .btn-whatsapp { background: #25d366; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-whatsapp:hover { background: #128c7e; transform: translateY(-2px); }
+
+        /* تلميح الذاكرة */
+        .memory-hint { font-size: 11px; color: var(--primary); background: #e0f2f1; padding: 5px; border-radius: 4px; display: none; margin-top: -5px; margin-bottom: 5px; }
+
+        /* الأرشيف المصغر */
+        .mini-archive { font-size: 11px; margin-top: 20px; border-top: 2px dashed #eee; padding-top: 10px; }
+        .mini-archive h4 { margin: 0 0 10px 0; color: #555; }
+
+        /* التجاوب */
+        @media (max-width: 900px) { .ops-container { grid-template-columns: 1fr; height: auto; } .live-section { border-left: none; border-bottom: 2px solid #ddd; } }
+    </style>
+</head>
+<body onclick="enableSound()">
+
+    <audio id="notif-sound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <nav class="navbar">
+        <div class="brand">N <span class="gold-text">One</span> Operations</div>
+        <div class="status-badge"><span class="live-dot"></span> متصل بالسيرفر v7.0</div>
+    </nav>
+
+    <div class="ops-container">
+        
+        <div class="live-section">
+            <div class="card">
+                <div class="card-header">
+                    <span>📡 رادار الطلبات (Live Feed)</span>
+                    <span id="order-count" style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:12px;">0</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الوقت</th>
+                            <th>المصدر (المنشأة)</th>
+                            <th>بيانات المنشأة</th>
+                            <th>القيمة</th>
+                            <th>التوصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="live-table-body">
+                        <tr><td colspan="5" style="text-align:center;">جاري الاتصال بالأقمار الصناعية... 🛰️</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="manual-section">
+            <div class="card">
+                <div class="card-header">
+                    <span>📲 المرسل اليدوي (WhatsApp)</span>
+                    <span>⚡</span>
+                </div>
+                
+                <div class="manual-form">
+                    <div>
+                        <input type="tel" id="man_phone" placeholder="رقم الكابتن (07xxxxxxxx)" oninput="checkCaptainMemory()">
+                        <div id="mem_hint" class="memory-hint">✨ تم التعرف: <span id="mem_name"></span></div>
+                    </div>
+
+                    <input type="text" id="man_cap_name" placeholder="اسم الكابتن">
+                    <input type="text" id="man_rest_name" placeholder="اسم المطعم / الموقع">
+                    
+                    <div style="display:flex; gap:5px;">
+                        <input type="number" id="man_val" placeholder="قيمة الطلب">
+                        <input type="number" id="man_fee" placeholder="التوصيل">
+                    </div>
+
+                    <div style="display:flex; gap:5px;">
+                        <input type="number" id="man_ratio" placeholder="النسبة %" style="border-color:var(--gold);">
+                    </div>
+
+                    <button class="btn-whatsapp" onclick="sendManualOrder()">
+                        إرسال واتساب وتوثيق 📤
+                    </button>
+                </div>
+            </div>
+
+            <div class="mini-archive">
+                <h4>🗂️ الأرشيف اليومي (الجرد اللحظي)</h4>
+                <div style="margin-bottom:10px; font-weight:bold; color:var(--money);">
+                    إجمالي العمولات اليوم: <span id="daily-total">0.00</span> د.أ
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الكابتن</th>
+                            <th>المطعم</th>
+                            <th>العمولة</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-body">
+                        <tr><td colspan="4" style="text-align:center;">لا يوجد عمليات يدوية اليوم</td></tr>
+                    </tbody>
+                </table>
+                <button onclick="clearDailyArchive()" style="width:100%; margin-top:10px; padding:8px; border:none; background:#eceff1; color:#555; cursor:pointer; border-radius:5px;">تصفير الأرشيف اليومي 🗑️</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ========================================================
+        // كود غرفة العمليات - القلب النابض v7.0
+        // ========================================================
+        
+        // الرابط الملكي (نفس الموجود في Client و Admin)
+        if (typeof N_ONE_CORE !== 'undefined') {
+            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbybaX1dgu-rVIkUAz2w6H2NdYIuv3zKkmPbHON8NTRclD3H6cVgyW5SAzFfAPNcMt6g/exec";
+        }
+
+        let allData = [];
+        let lastOrderCount = 0;
+        let soundEnabled = false;
+        
+        // الذاكرة المحلية للكباتن والأرشيف
+        let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
+        let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive') || '[]');
+
+        window.onload = async function() {
+            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ في النواة!"); return; }
+            
+            // تفعيل التحديث التلقائي (النبض)
+            await fetchData();
+            setInterval(fetchDataSilent, 5000); // تحديث كل 5 ثواني لسرعة الاستجابة
+            
+            renderArchive(); // عرض الأرشيف المحفوظ
+        };
+
+        // تفعيل الصوت بذكاء (مرة واحدة عند أول نقرة)
+        function enableSound() {
+            if (!soundEnabled) {
+                const audio = document.getElementById('notif-sound');
+                audio.play().then(() => { audio.pause(); audio.currentTime = 0; soundEnabled = true; }).catch(() => {});
+            }
+        }
+
+        async function fetchData() {
+            try {
+                // جلب البيانات من السيرفر
+                allData = await N_ONE_CORE.fetchData('read');
+                renderLiveTable();
+            } catch (e) { console.error("Connection Error", e); }
+        }
+
+        async function fetchDataSilent() {
+            try {
+                const newData = await N_ONE_CORE.fetchData('read');
+                if (newData.length > 0) { allData = newData; renderLiveTable(); }
+            } catch (e) {}
+        }
+
+        // ================= القسم الأيمن: رادار الطلبات =================
+        function renderLiveTable() {
+            const tbody = document.getElementById('live-table-body');
+            
+            // فلترة الطلبات فقط
+            const orders = allData.filter(i => i.type === 'order').reverse();
+            document.getElementById('order-count').innerText = orders.length;
+
+            // منطق التنبيه الصوتي الخارق
+            if (orders.length > lastOrderCount && lastOrderCount !== 0) {
+                const audio = document.getElementById('notif-sound');
+                audio.play().catch(e => console.log("Sound blocked"));
+            }
+            lastOrderCount = orders.length;
+
+            if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">لا توجد طلبات نشطة حالياً 😴</td></tr>'; return; }
+            
+            tbody.innerHTML = '';
+            orders.forEach(ord => {
+                // البحث الذكي عن بيانات المنشأة (الهاتف والموقع) من السجل العام
+                // نستخدم client_user للبحث في جدول المستخدمين
+                const shopData = allData.find(u => String(u.user) === String(ord.client_user) && u.type === 'shop');
+                
+                // استخراج البيانات (الأولوية لبيانات المنشأة المسجلة، ثم البيانات المرسلة مع الطلب)
+                const shopPhone = shopData ? (shopData.cap_phone || 'غير مسجل') : '---';
+                let shopLoc = shopData ? (shopData.pickup || '#') : '#';
+                
+                // إذا كان الرابط في الطلب نفسه (للطلبات اليدوية من المتجر) نستخدمه
+                if (ord.pickup && ord.pickup.includes('http')) shopLoc = ord.pickup;
+
+                // تنسيق الوقت
+                let time = ord.date.split('T')[1] ? ord.date.split('T')[1].substring(0,5) : 'Now';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${time}</b></td>
+                        <td style="color:var(--primary); font-weight:bold;">${ord.cl_name || 'مطعم'}</td>
+                        <td>
+                            <span class="badge bg-phone">${shopPhone}</span>
+                            <a href="${shopLoc}" target="_blank" class="badge bg-loc">📍 الموقع</a>
+                        </td>
+                        <td><span class="badge bg-money">${ord.val} د.أ</span></td>
+                        <td>${ord.fee}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= القسم الأيسر: المرسل اليدوي والأرشيف =================
+        
+        function checkCaptainMemory() {
+            const phone = document.getElementById('man_phone').value;
+            const hint = document.getElementById('mem_hint');
+            
+            if (captainMemory[phone]) {
+                hint.style.display = 'block';
+                document.getElementById('mem_name').innerText = captainMemory[phone];
+                document.getElementById('man_cap_name').value = captainMemory[phone];
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+
+        function sendManualOrder() {
+            const phone = document.getElementById('man_phone').value;
+            const capName = document.getElementById('man_cap_name').value;
+            const restName = document.getElementById('man_rest_name').value;
+            const val = document.getElementById('man_val').value;
+            const fee = document.getElementById('man_fee').value;
+            const ratio = document.getElementById('man_ratio').value || 0;
+
+            if (!phone || !restName) { alert("يرجى إدخال الرقم واسم المطعم ☺️"); return; }
+
+            // 1. حفظ الكابتن في الذاكرة
+            if (capName) {
+                captainMemory[phone] = capName;
+                localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
+            }
+
+            // 2. إرسال الواتساب الملكي
+            let finalPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
+            // إذا لم يبدأ بـ 0 ولا 962، نفترض أنه دولي أو نضيف 962
+             if (!finalPhone.startsWith('962')) finalPhone = '962' + phone;
+
+            const msg = `*طلب جديد - N One* 🚀%0a` +
+                        `👤 الكابتن: ${capName}%0a` +
+                        `🏪 المطعم: ${restName}%0a` +
+                        `💰 القيمة: ${val} د.أ%0a` +
+                        `🛵 التوصيل: ${fee} د.أ%0a` +
+                        `-- بالتوفيق! --`;
+            
+            window.open(`https://wa.me/${finalPhone}?text=${msg}`, '_blank');
+
+            // 3. التوثيق في الأرشيف اليومي
+            const commission = (parseFloat(fee || 0) * (parseFloat(ratio) / 100)).toFixed(2);
+            
+            const logEntry = {
+                id: Date.now(),
+                cap: capName || phone,
+                rest: restName,
+                comm: commission
+            };
+            
+            dailyArchive.unshift(logEntry);
+            localStorage.setItem('n1_daily_archive', JSON.stringify(dailyArchive));
+            renderArchive();
+
+            // تنظيف الحقول (ما عدا النسبة لتسهيل التكرار)
+            document.getElementById('man_rest_name').value = '';
+            document.getElementById('man_val').value = '';
+            document.getElementById('man_fee').value = '';
+        }
+
+        function renderArchive() {
+            const tbody = document.getElementById('archive-body');
+            let totalComm = 0;
+            
+            if (dailyArchive.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; font-size:11px; color:#aaa;">لا يوجد عمليات يدوية اليوم</td></tr>';
+                document.getElementById('daily-total').innerText = "0.00";
+                return;
+            }
+
+            tbody.innerHTML = '';
+            dailyArchive.forEach((item, index) => {
+                totalComm += parseFloat(item.comm);
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.cap}</td>
+                        <td>${item.rest}</td>
+                        <td style="color:var(--money); font-weight:bold;">${item.comm}</td>
+                        <td><button onclick="deleteArchiveItem(${index})" style="background:none; border:none; cursor:pointer;">❌</button></td>
+                    </tr>
+                `;
+            });
+            document.getElementById('daily-total').innerText = totalComm.toFixed(2);
+        }
+
+        function deleteArchiveItem(index) {
+            if(!confirm("حذف من السجل اليومي؟")) return;
+            dailyArchive.splice(index, 1);
+            localStorage.setItem('n1_daily_archive', JSON.stringify(dailyArchive));
+            renderArchive();
+        }
+
+        function clearDailyArchive() {
+            if(!confirm("هل تريد تصفير العداد اليومي؟")) return;
+            dailyArchive = [];
+            localStorage.setItem('n1_daily_archive', JSON.stringify([]));
+            renderArchive();
+        }
+    </script>
+</body>
+</html>
