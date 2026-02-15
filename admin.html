@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة القيادة المركزية (Pro Max)</title>
+    <title>N One | غرفة قيادة الشركات (Corporate Only)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
 
     <style>
@@ -12,7 +13,6 @@
         :root {
             --primary: #1a237e; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
             --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --info: #0288d1;
-            --shop-color: #00695c; /* لون مميز للمنشآت */
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
@@ -30,14 +30,6 @@
         .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center; border-top: 5px solid var(--primary); }
         .stat-number { font-size: 32px; font-weight: bold; color: var(--primary); margin: 10px 0; }
         .stat-label { color: #777; font-size: 13px; }
-
-        /* الرادار الذكي */
-        .ai-section { background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%); color: white; padding: 25px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(26, 35, 126, 0.2); border: 2px solid #d4af37; }
-        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .ai-title { font-size: 20px; font-weight: bold; }
-        .ai-badge { background: #d4af37; color: #1a237e; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
-        .recommendation-card { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid #d4af37; }
-        .rec-btn { background: #d4af37; color: #1a237e; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         /* نموذج الإضافة */
         .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px; position: relative; }
@@ -87,15 +79,11 @@
         
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">شركات النقل</div>
+                <div class="stat-label">شركات النقل (العملاء)</div>
                 <div class="stat-number" id="count-clients">0</div>
             </div>
-            <div class="stat-card" style="border-top-color: var(--shop-color);">
-                <div class="stat-label">المنشآت التجارية</div>
-                <div class="stat-number" id="count-shops" style="color: var(--shop-color);">0</div>
-            </div>
             <div class="stat-card" style="border-top-color: var(--success);">
-                <div class="stat-label">نشط كلياً</div>
+                <div class="stat-label">شركات نشطة</div>
                 <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--gold);">
@@ -104,26 +92,12 @@
             </div>
         </div>
 
-        <div class="ai-section">
-            <div class="ai-header">
-                <div class="ai-title">📡 رادار التميز الذكي (Smart Excellence Radar)</div>
-                <div class="ai-badge">AI Active</div>
-            </div>
-            <div id="ai-recommendations">
-                <p style="font-size:13px; opacity:0.8;">جاري تحليل الأداء...</p>
-            </div>
-        </div>
-
         <div class="card">
             <div class="card-header">
-                <span>✨ إضافة حساب جديد (شركة / منشأة)</span>
+                <span>✨ إضافة شركة نقل جديدة (Client)</span>
             </div>
             <div class="form-grid">
-                <select id="new_role" style="background:#e3f2fd; color:#1565c0; font-weight:bold;">
-                    <option value="client">🏢 شركة نقل (Ride Hailing)</option>
-                    <option value="shop">🏪 منشأة تجارية (Shop/Rest)</option>
-                </select>
-                <input type="text" id="new_name" placeholder="الاسم التجاري">
+                <input type="text" id="new_name" placeholder="الاسم التجاري للشركة">
                 <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
                 <input type="password" id="new_pass" placeholder="كلمة المرور">
                 <select id="sub_duration">
@@ -132,14 +106,14 @@
                     <option value="180">6 أشهر</option>
                     <option value="365">سنة كاملة</option>
                 </select>
-                <input type="number" id="sub_price" placeholder="القيمة (د.أ)">
+                <input type="number" id="sub_price" placeholder="قيمة الاشتراك (د.أ)">
                 <button class="btn-add" id="btnAddUser" onclick="addUser()">+ إضافة وتفعيل 🚀</button>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <span>🏢 سجل شركات النقل (Companies)</span>
+                <span>🏢 سجل شركات النقل (Companies Log)</span>
                 <span style="font-size:12px; color:#1a237e;">White Label Clients</span>
             </div>
             <div class="table-wrapper">
@@ -161,32 +135,14 @@
             </div>
         </div>
 
-        <div class="card" style="border-top: 5px solid var(--shop-color);">
-            <div class="card-header">
-                <span style="color: var(--shop-color);">🏪 سجل المنشآت التجارية (Shops)</span>
-                <span style="font-size:12px; color:var(--shop-color);">Restaurants & Stores</span>
-            </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>المنشأة</th>
-                            <th>بيانات الدخول</th>
-                            <th>الخطة / السعر</th>
-                            <th>الصلاحية</th>
-                            <th>الحالة</th>
-                            <th>التحكم الشامل</th>
-                        </tr>
-                    </thead>
-                    <tbody id="shops-table">
-                        <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
     <script>
+        // رابط السيرفر المحدث (نفس اللي اعتمدناه)
+        if (typeof N_ONE_CORE !== 'undefined') {
+            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbxMzCw3e2LXl5vqNMKd1qB4OkEcagVD68cyBc8VttWwLHTlMDUT82tgIbFml0Ve3Yx3/exec";
+        }
+
         let allData = [];
         let globalServerTime = new Date(); 
 
@@ -210,34 +166,28 @@
             try {
                 allData = await N_ONE_CORE.fetchData('read');
                 renderTables();
-                runSmartRadar();
             } catch (e) { console.error(e); }
         }
 
         function renderTables() {
             const clientTbody = document.getElementById('clients-table');
-            const shopTbody = document.getElementById('shops-table');
             
-            // فصل البيانات (شركات vs منشآت)
+            // عرض الشركات فقط (Clients)
             const clients = allData.filter(u => u.role === 'client' || u.type === 'client').reverse();
-            const shops = allData.filter(u => u.role === 'shop' || u.type === 'shop').reverse();
 
-            // تحديث الإحصائيات
+            // تحديث الإحصائيات (خاصة بالشركات فقط)
             document.getElementById('count-clients').innerText = clients.length;
-            document.getElementById('count-shops').innerText = shops.length;
-            document.getElementById('count-active').innerText = allData.filter(c => c.status === 'active' && c.role !== 'admin').length;
+            document.getElementById('count-active').innerText = clients.filter(c => c.status === 'active').length;
             
             let totalRev = 0;
-            [...clients, ...shops].forEach(c => totalRev += Number(c.price || 0));
+            clients.forEach(c => totalRev += Number(c.price || 0));
             document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
 
-            // رسم الجداول
             renderRows(clientTbody, clients);
-            renderRows(shopTbody, shops);
         }
 
         function renderRows(tbody, data) {
-            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد بيانات</td></tr>'; return; }
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة</td></tr>'; return; }
             tbody.innerHTML = '';
             
             data.forEach(item => {
@@ -248,21 +198,23 @@
                 let statusBadge = '';
                 let daysText = '';
 
-                if (item.status === 'paused') {
+                let currentStatus = String(item.status || 'active').trim().toLowerCase();
+
+                if (currentStatus === 'paused') {
                     statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
                     daysText = `<span style="color:#f57f17;">موقف</span>`;
                 } else if (diffDays <= 0) {
                     statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
                     daysText = `<span style="color:#c62828; font-weight:bold;">انتهى</span>`;
-                    if(item.status === 'active') setStatusSilent(item.user, 'paused');
+                    if(currentStatus === 'active') setStatusSilent(item.user, 'paused');
                 } else {
                     statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
                     daysText = diffDays <= 3 ? `<span style="color:#c62828;">${diffDays} يوم ⚠️</span>` : `<span style="color:#2e7d32;">${diffDays} يوم</span>`;
                 }
                 
-                const toggleBtn = item.status === 'active'
-                    ? `<button class="action-btn act-freeze" title="تجميد" onclick="setStatus('${item.user}', 'paused')">❄️</button>`
-                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.user}', 'active')">▶️</button>`;
+                const toggleBtn = currentStatus === 'active'
+                    ? `<button class="action-btn act-freeze" title="تجميد" onclick="setStatus('${item.user}', 'active')">❄️</button>`
+                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.user}', 'paused')">▶️</button>`;
 
                 const row = `
                     <tr>
@@ -285,10 +237,11 @@
             });
         }
 
-        // ================= العمليات (ADD, EDIT, DELETE, RENEW) =================
+        // ================= العمليات =================
 
         async function addUser() {
-            const role = document.getElementById('new_role').value;
+            // تثبيت النوع كـ client تلقائياً
+            const role = 'client';
             const name = document.getElementById('new_name').value;
             const user = document.getElementById('new_user').value;
             const pass = document.getElementById('new_pass').value;
@@ -302,7 +255,7 @@
             
             document.getElementById('loader-overlay').style.display = 'flex';
             const newItem = {
-                id: (role === 'client' ? "CL_" : "SH_") + Date.now(),
+                id: "CL_" + Date.now(),
                 user: user, pass: pass, name: name, role: role, type: role, status: "active",
                 expiry: expDate.toISOString().split('T')[0], price: price, plan_days: days
             };
@@ -310,7 +263,7 @@
             await N_ONE_CORE.postData('add', [newItem]);
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تمت الإضافة بنجاح ☺️✅");
+            alert("تم إضافة الشركة بنجاح ☺️✅");
             
             document.getElementById('new_name').value = '';
             document.getElementById('new_user').value = '';
@@ -332,10 +285,12 @@
             alert("تم تحديث البيانات ☺️");
         }
 
-        async function setStatus(username, newStatus) {
-            if (!confirm(newStatus === 'paused' ? "تجميد الحساب؟" : "إعادة التفعيل؟")) return;
+        async function setStatus(username, currentStatus) {
+            const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
+            if (!confirm(nextStatus === 'paused' ? "تجميد الحساب؟" : "إعادة التفعيل؟")) return;
+            
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: username, data: { status: newStatus } });
+            await N_ONE_CORE.postData('update', { user: username, data: { status: nextStatus } });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
@@ -366,29 +321,6 @@
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم حذف الحساب 🗑️");
-        }
-
-        // 🧠 رادار التميز 🧠
-        function runSmartRadar() {
-            const container = document.getElementById('ai-recommendations');
-            container.innerHTML = '';
-            const orders = allData.filter(i => i.type === 'order');
-            let stats = {};
-            orders.forEach(o => {
-                const n = o.cap_name || "Unknown";
-                if (!stats[n]) stats[n] = { c: 0 };
-                stats[n].c++;
-            });
-            const elite = Object.entries(stats).filter(([n, s]) => s.c >= 5);
-            
-            if (elite.length === 0) { container.innerHTML = '<p style="font-size:13px; opacity:0.8;">الرادار يعمل بصمت 🦅 لا توصيات حالياً</p>'; return; }
-
-            elite.forEach(([n, s]) => {
-                const el = document.createElement('div');
-                el.className = 'recommendation-card';
-                el.innerHTML = `<div style="font-size:14px;"><strong>🏅 مرشح للتميز: ${n}</strong><br>أداء استثنائي: ${s.c} طلب</div><button class="rec-btn" onclick="alert('تم اعتماد المكافأة للكابتن ${n} ✅')">مكافأة 🎁</button>`;
-                container.appendChild(el);
-            });
         }
 
         function logout() { N_ONE_CORE.logout(); }
