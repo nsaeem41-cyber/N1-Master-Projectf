@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة عمليات الشحن (Final Connection)</title>
+    <title>N One | غرفة عمليات الشحن (Speed Edition)</title>
     
     <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
 
     <style>
         /* ================= تصميم Client Pro (Teal Theme) ================= */
         :root {
-            --primary: #00695c; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
-            --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --money: #1b5e20;
+            --primary: #00695c; /* لون مميز للشركات (Teal) */
+            --gold: #d4af37; --bg: #f4f7f6; --text: #333;
+            --success: #2e7d32; --danger: #c62828; --warning: #f57f17;
+            --money: #1b5e20;
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
@@ -76,15 +78,6 @@
         .btn-delete { background: var(--danger); }
         .btn-active { background: var(--success); }
         
-        .btn-save-day { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn-save-day:hover { background: #004d40; }
-
-        /* المحاسب التاريخي */
-        .history-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
-        .history-item { background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid var(--gold); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .history-date { font-weight: bold; color: var(--primary); }
-        .history-stats { font-size: 13px; color: #555; }
-
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
     </style>
 </head>
@@ -108,7 +101,7 @@
     <div class="container">
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات والمحاسبة</button>
+            <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
             <button class="tab-btn" onclick="switchTab('operations', event)">📡 غرفة العمليات (Live)</button>
             <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار للمناطق ↗️</button>
@@ -120,22 +113,7 @@
                     <h3 style="margin:0; color:#555;">المنشآت التابعة لي</h3>
                     <h1 id="total-shops" style="color:var(--primary); font-size:40px; margin:10px 0;">0</h1>
                 </div>
-                <div class="card" style="text-align:center; border-top-color:var(--success);">
-                    <h3 style="margin:0; color:#555;">إجمالي الأرباح التراكمية</h3>
-                    <h1 id="total-profit" style="color:var(--success); font-size:40px; margin:10px 0;">0 د.أ</h1>
-                    <small style="color:#888;">(حصيلة كل الأيام المغلقة)</small>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span>📅 السجل التاريخي للأرباح (Accountant Log)</span>
-                    <button class="btn-delete" style="font-size:11px;" onclick="clearHistory()">مسح السجل</button>
-                </div>
-                <div id="history-container" class="history-list">
-                    <div style="text-align:center; color:#aaa;">لا يوجد سجلات مرحلة بعد</div>
-                </div>
-            </div>
         </div>
 
         <div id="shops" class="tab-content">
@@ -213,7 +191,8 @@
 
                     <div class="card" style="border-top-color: #7b1fa2;">
                         <div class="card-header">
-                            <span style="color:#7b1fa2;">🗂️ أرشيف الإرسال اليومي (المنجز)</span>
+                            <span style="color:#7b1fa2;">🗂️ أرشيف الإرسال (اليومي والشامل)</span>
+                            <button class="btn-delete" style="font-size:12px; padding:5px 10px;" onclick="clearArchive()">مسح الأرشيف 🗑️</button>
                         </div>
                         <div class="table-wrapper">
                             <table>
@@ -228,12 +207,11 @@
                                     </tr>
                                 </thead>
                                 <tbody id="archive-table-body">
-                                    <tr><td colspan="6" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>
+                                    <tr><td colspan="6" style="text-align:center;">لا يوجد طلبات مرسلة</td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        <button class="btn-save-day" onclick="storeDayData()">💾 إغلاق اليومية وترحيل الأرباح للسجل 🌙</button>
-                    </div>
+                        </div>
                 </div>
 
                 <div class="card" style="border-top-color: #25d366; height: fit-content;">
@@ -281,16 +259,14 @@
         
         // الذاكرة المحلية والأنظمة
         let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
-        let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive_' + new Date().toLocaleDateString()) || '[]');
-        let totalLifetimeProfit = parseFloat(localStorage.getItem('n1_lifetime_profit') || '0');
-        let historyLog = JSON.parse(localStorage.getItem('n1_history_log') || '[]');
+        // تم إلغاء الفصل اليومي والاعتماد على أرشيف واحد مستمر
+        let fullArchive = JSON.parse(localStorage.getItem('n1_full_archive') || '[]');
 
         window.onload = async function() {
             if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
             currentUser = N_ONE_CORE.checkSession('client');
             if (currentUser) {
                 document.getElementById('welcome-msg').innerText = `أهلاً، ${currentUser.name}`;
-                document.getElementById('total-profit').innerText = totalLifetimeProfit.toFixed(1) + " د.أ";
                 
                 await fetchData();
                 
@@ -301,7 +277,6 @@
                 lastOrderCount = initialOrders.length;
 
                 renderArchive();
-                renderHistory();
                 
                 setInterval(fetchDataSilent, 8000); 
             }
@@ -422,7 +397,8 @@
             const smartLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locName);
 
             const commValue = (fee * (ratio / 100)).toFixed(2);
-            const dailyCount = dailyArchive.filter(o => o.phone === phoneInput).length + 1;
+            // حساب رقم الطلب للكابتن (يعتمد على الأرشيف الحالي)
+            const dailyCount = fullArchive.filter(o => o.phone === phoneInput).length + 1;
 
             let msg = `إشعار طلب جديد - N One%0a`;
             msg += `المرسل إليه: ${capName}%0a`;
@@ -431,8 +407,7 @@
             msg += `بيانات التوصيل:%0a`;
             msg += `قيمة الشحنة: ${price || 0} د.أ%0a`;
             msg += `أجرة المندوب: ${fee || 0} د.أ%0a%0a`;
-            msg += `ملخص النشاط اليومي:%0a`;
-            msg += `إجمالي الطلبات: ${dailyCount}%0a`;
+            msg += `رقم الطلب: ${dailyCount}%0a`;
             msg += `نرجو الالتزام بمعايير الجودة والوقت.`;
 
             window.open(`https://wa.me/${finalPhone}?text=${msg}`, '_blank');
@@ -442,8 +417,8 @@
 
         function addToArchive(capName, phone, locName, fee, price, commValue, ratio) {
             const order = { capName, phone, locName, fee, price, commValue, ratio, time: new Date().toLocaleTimeString() };
-            dailyArchive.unshift(order);
-            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
+            fullArchive.unshift(order);
+            localStorage.setItem('n1_full_archive', JSON.stringify(fullArchive));
             renderArchive();
             
             document.getElementById('man_loc').value = '';
@@ -453,10 +428,10 @@
 
         function renderArchive() {
             const tbody = document.getElementById('archive-table-body');
-            if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لم يتم إرسال طلبات يدوية اليوم</td></tr>'; return; }
+            if (fullArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا يوجد طلبات مرسلة</td></tr>'; return; }
             
             tbody.innerHTML = '';
-            dailyArchive.forEach((o, index) => {
+            fullArchive.forEach((o, index) => {
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${o.capName}</b></td>
@@ -473,7 +448,7 @@
         }
 
         function editArchiveOrder(index) {
-            const order = dailyArchive[index];
+            const order = fullArchive[index];
             const newFee = prompt("تعديل أجرة التوصيل:", order.fee);
             if (newFee === null) return;
             const newPrice = prompt("تعديل قيمة الأوردر:", order.price);
@@ -483,68 +458,20 @@
             
             const updatedComm = (parseFloat(newFee) * (parseFloat(newRatio) / 100)).toFixed(2);
             
-            dailyArchive[index].fee = newFee;
-            dailyArchive[index].price = newPrice;
-            dailyArchive[index].ratio = newRatio;
-            dailyArchive[index].commValue = updatedComm;
+            fullArchive[index].fee = newFee;
+            fullArchive[index].price = newPrice;
+            fullArchive[index].ratio = newRatio;
+            fullArchive[index].commValue = updatedComm;
             
-            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify(dailyArchive));
+            localStorage.setItem('n1_full_archive', JSON.stringify(fullArchive));
             renderArchive();
         }
 
-        // ================= المحاسب التاريخي =================
-        function storeDayData() {
-            if (!confirm("هل أنت متأكد من إغلاق اليومية؟ سيتم ترحيل البيانات للسجل التاريخي وتصفير الجدول الحالي.")) return;
-            
-            let dayProfit = 0;
-            dailyArchive.forEach(o => dayProfit += parseFloat(o.commValue || 0));
-            
-            totalLifetimeProfit += dayProfit;
-            localStorage.setItem('n1_lifetime_profit', totalLifetimeProfit.toString());
-            document.getElementById('total-profit').innerText = totalLifetimeProfit.toFixed(1) + " د.أ";
-
-            const todayRecord = {
-                date: new Date().toLocaleDateString('ar-JO'),
-                time: new Date().toLocaleTimeString('ar-JO'),
-                ordersCount: dailyArchive.length,
-                profit: dayProfit.toFixed(2)
-            };
-            
-            historyLog.unshift(todayRecord);
-            localStorage.setItem('n1_history_log', JSON.stringify(historyLog));
-            renderHistory();
-
-            dailyArchive = [];
-            localStorage.setItem('n1_daily_archive_' + new Date().toLocaleDateString(), JSON.stringify([]));
+        function clearArchive() {
+            if(!confirm("هل أنت متأكد من مسح الأرشيف؟ لا يمكن التراجع.")) return;
+            fullArchive = [];
+            localStorage.setItem('n1_full_archive', JSON.stringify([]));
             renderArchive();
-            
-            alert(`تم إغلاق اليومية بنجاح! 🌙\nالأرباح المرحلة: ${dayProfit.toFixed(2)} د.أ`);
-        }
-
-        function renderHistory() {
-            const container = document.getElementById('history-container');
-            if(historyLog.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#aaa;">لا يوجد سجلات مرحلة بعد</div>';
-                return;
-            }
-            container.innerHTML = '';
-            historyLog.forEach(rec => {
-                container.innerHTML += `
-                    <div class="history-item">
-                        <div class="history-date">📅 ${rec.date} <small>(${rec.time})</small></div>
-                        <div class="history-stats">
-                            📦 ${rec.ordersCount} طلب | 💰 <span style="color:var(--success); font-weight:bold;">+${rec.profit} د.أ</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        
-        function clearHistory() {
-            if(!confirm("حذف السجل التاريخي كاملاً؟")) return;
-            historyLog = [];
-            localStorage.setItem('n1_history_log', JSON.stringify([]));
-            renderHistory();
         }
 
         function checkCaptainMemory() {
