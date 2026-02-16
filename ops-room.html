@@ -10,16 +10,14 @@
     <style>
         /* ================= تصميم Ops Royal (Navy & Gold) ================= */
         :root {
-            --primary: #0f172a;      /* نيفي بلو عميق (Midnight) */
+            --primary: #0f172a;      /* نيفي بلو عميق */
             --accent: #1e293b;       /* نيفي بلو فاتح */
             --gold: #d4af37;         /* ذهبي ملكي */
-            --gold-light: #fbe083;   /* ذهبي فاتح */
-            --bg: #f1f5f9;           /* خلفية رمادية فاتحة جداً وهادئة */
-            --panel: #ffffff;        /* كروت بيضاء نظيفة */
+            --bg: #f1f5f9;           /* خلفية هادئة */
+            --panel: #ffffff;        /* كروت بيضاء */
             --text: #334155;         /* نص رمادي غامق */
             --success: #10b981;      /* أخضر */
             --danger: #ef4444;       /* أحمر */
-            --glow: rgba(212, 175, 55, 0.25); /* إضاءة ذهبية ناعمة */
         }
 
         body { 
@@ -90,25 +88,29 @@
         tr { transition: 0.2s; }
         tr:hover { background-color: #f8fafc; }
 
-        /* === نظام الإضاءة الذكي (Smart Glow) === */
+        /* إضاءة ناعمة */
         @keyframes softPulse {
             0% { box-shadow: inset 0 0 0 transparent; background: white; }
             50% { box-shadow: inset 5px 0 0 var(--gold); background: #fffbeb; }
             100% { box-shadow: inset 0 0 0 transparent; background: white; }
         }
         .new-order-active { animation: softPulse 2s infinite; border-left: 4px solid var(--gold); }
-        
-        @keyframes urgentPulse {
-            0% { background: #fef2f2; } 50% { background: #fee2e2; } 100% { background: #fef2f2; }
-        }
-        .urgent-order { animation: urgentPulse 1s infinite; border-left: 4px solid var(--danger); }
+        .urgent-order { border-left: 4px solid var(--danger); background: #fef2f2; }
 
         /* الشارات الأنيقة */
-        .badge { padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; }
-        .bg-money { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
-        .bg-phone { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; font-family: monospace; }
+        .badge { padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-block; }
+        
+        .bg-money { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; } /* سعر الطلب */
+        .bg-fee { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; } /* سعر التوصيل */
+        
+        .bg-phone { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; font-family: monospace; letter-spacing: 0.5px; }
         .bg-time { color: #94a3b8; font-size: 12px; font-weight: 600; }
-        .bg-shop { font-weight: 700; color: var(--primary); }
+        .bg-shop { font-weight: 800; color: var(--primary); font-size: 14px; }
+
+        /* تنسيق الخلية المالية (جنب بعض) */
+        .financial-cell {
+            display: flex; gap: 8px; justify-content: flex-end; align-items: center;
+        }
 
         /* زر التأكيد (صح) */
         .btn-ack { 
@@ -119,7 +121,7 @@
         }
         .btn-ack:hover { border-color: var(--success); color: var(--success); transform: scale(1.1); }
         .row-acked .btn-ack { background: var(--success); border-color: var(--success); color: white; cursor: default; }
-        .row-acked { opacity: 0.6; background: #f8fafc !important; animation: none !important; border-left: 4px solid #cbd5e1 !important; }
+        .row-acked { opacity: 0.5; background: #f8fafc !important; animation: none !important; border-left: 4px solid #cbd5e1 !important; filter: grayscale(100%); }
 
         /* فورم الإرسال */
         .manual-form { display: flex; flex-direction: column; gap: 15px; padding: 20px; }
@@ -129,7 +131,6 @@
             width: 100%; box-sizing: border-box; transition: 0.3s; font-weight: 600;
         }
         input:focus { border-color: var(--primary); background: white; }
-        input::placeholder { color: #94a3b8; font-weight: 400; }
         
         .btn-whatsapp { 
             background: var(--primary); color: white; border: none; 
@@ -188,7 +189,7 @@
                             <th>منذ</th>
                             <th>المصدر</th>
                             <th>الهاتف</th>
-                            <th>القيمة</th>
+                            <th>المالية (الطلب + التوصيل)</th>
                             <th>الموقع</th>
                         </tr>
                     </thead>
@@ -259,7 +260,7 @@
 
     <script>
         // ========================================================
-        // كود الرادار الملكي - v9.0 (Persistent State)
+        // كود الرادار الماسي - v10.0 (Diamond Edition)
         // ========================================================
         
         if (typeof N_ONE_CORE !== 'undefined') {
@@ -267,9 +268,7 @@
         }
 
         let allData = [];
-        
-        // === الذاكرة الدائمة (الحل الجذري) ===
-        // تحميل الطلبات المؤكدة من ذاكرة المتصفح لمنع ضياعها عند التحديث
+        // ذاكرة دائمة للطلبات المؤكدة
         let acknowledgedSet = new Set(JSON.parse(localStorage.getItem('nOne_acked_orders') || '[]'));
         
         let soundEnabled = false;
@@ -322,11 +321,10 @@
             
             document.getElementById('stat-total').innerText = orders.length;
             
-            // حساب الطلبات غير المؤكدة فقط
+            // حساب غير المؤكدين
             const pendingCount = orders.filter(o => !acknowledgedSet.has(o.id)).length;
             document.getElementById('stat-pending').innerText = pendingCount;
             
-            // الجرس يعمل فقط إذا وجد طلب جديد لم يتم تأكيده
             if (pendingCount > 0) playAlarm(); else stopAlarm();
 
             if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">الرادار هادئ...</td></tr>'; return; }
@@ -336,14 +334,13 @@
             orders.forEach(ord => {
                 const isAck = acknowledgedSet.has(ord.id);
                 
-                // تحديد الستايل
                 let rowClass = '';
                 const orderTime = new Date(ord.date).getTime();
                 const now = Date.now();
                 const diffSec = Math.floor((now - orderTime) / 1000);
                 
                 if (isAck) {
-                    rowClass = 'row-acked'; // كلاس جديد للطلبات المؤكدة (هادئة)
+                    rowClass = 'row-acked';
                 } else {
                     if (diffSec > 120) rowClass = 'urgent-order';
                     else rowClass = 'new-order-active';
@@ -351,12 +348,18 @@
 
                 const ackIcon = isAck ? '✔' : '✓';
                 
-                // جلب رقم الهاتف المرسل من المنشأة
-                const shopPhone = ord.cap_phone || '---';
+                // === التأكد من رقم الهاتف (الأولوية للرقم المرسل مع الطلب) ===
+                // إذا لم يوجد cap_phone، نبحث في قاعدة بيانات المستخدمين
+                let shopPhone = ord.cap_phone;
+                if (!shopPhone || shopPhone === "غير مسجل") {
+                    const userRecord = allData.find(u => u.user === ord.client_user && u.type === 'shop');
+                    if (userRecord && userRecord.cap_phone) shopPhone = userRecord.cap_phone;
+                    else shopPhone = "---";
+                }
                 
                 let shopLocLink = '#';
-                if (ord.pickup && ord.pickup.includes('http')) shopLocLink = ord.pickup; // إذا كان رابط
-                else if (ord.pickup) shopLocLink = `http://googleusercontent.com/maps.google.com/search?q=${encodeURIComponent(ord.pickup)}`; // بحث
+                if (ord.pickup && ord.pickup.includes('http')) shopLocLink = ord.pickup;
+                else if (ord.pickup) shopLocLink = `http://googleusercontent.com/maps.google.com/search?q=${encodeURIComponent(ord.pickup)}`;
 
                 const timeObj = new Date(ord.date);
                 const exactTime = timeObj.toLocaleTimeString('en-US', {hour12:false}); 
@@ -371,8 +374,10 @@
                         <td class="bg-shop">${ord.cl_name || '---'}</td>
                         <td><span class="badge bg-phone">${shopPhone}</span></td>
                         <td>
-                            <span class="badge bg-money">${ord.val}</span>
-                            <span class="badge" style="color:#94a3b8;">+ ${ord.fee}</span>
+                            <div class="financial-cell">
+                                <span class="badge bg-money" title="قيمة الطلب">${ord.val} د.أ</span>
+                                <span class="badge bg-fee" title="التوصيل">+ ${ord.fee}</span>
+                            </div>
                         </td>
                         <td><a href="${shopLocLink}" target="_blank" class="badge" style="background:#e0f2fe; color:#0284c7; text-decoration:none;">📍 خريطة</a></td>
                     </tr>
@@ -381,10 +386,8 @@
             updateTimersAndColors();
         }
 
-        // === دالة التأكيد مع الحفظ الدائم ===
         function acknowledgeOrder(id) {
             acknowledgedSet.add(id);
-            // حفظ الحالة في المتصفح فوراً
             localStorage.setItem('nOne_acked_orders', JSON.stringify(Array.from(acknowledgedSet)));
             renderLiveTable(); 
         }
@@ -401,10 +404,8 @@
                     const timerEl = document.getElementById(`timer-${id}`);
                     if (timerEl) {
                         timerEl.innerText = diff + "s";
-                        // إيقاف عداد اللون للأحمر إذا تم التأكيد
                         if (diff > 120 && !isAck) timerEl.style.color = "var(--danger)";
                     }
-                    
                     if (!isAck && diff > 120 && !row.classList.contains('urgent-order')) {
                         row.classList.remove('new-order-active');
                         row.classList.add('urgent-order');
@@ -499,8 +500,26 @@
         }
 
         function deleteItem(index) { if(confirm("حذف؟")) { dailyArchive.splice(index, 1); saveAndRender(); } }
-        function editItem(index) { /* ... same as before ... */ }
-        function cancelEdit() { /* ... same as before ... */ }
+        function editItem(index) { 
+            const item = dailyArchive[index];
+            document.getElementById('man_phone').value = item.phone;
+            document.getElementById('man_cap_name').value = item.cap;
+            document.getElementById('man_rest_name').value = item.rest;
+            document.getElementById('man_val').value = item.val;
+            document.getElementById('man_fee').value = item.fee;
+            document.getElementById('man_ratio').value = item.ratio;
+            document.getElementById('edit_mode_index').value = index;
+            document.getElementById('cancel_edit_btn').style.display = 'block';
+            document.querySelector('.btn-whatsapp span').innerText = "حفظ التعديلات"; 
+        }
+        function cancelEdit() { 
+            document.getElementById('edit_mode_index').value = "-1";
+            document.getElementById('cancel_edit_btn').style.display = 'none';
+            document.querySelector('.btn-whatsapp span').innerText = "إرسال وتوثيق";
+            document.getElementById('man_rest_name').value = '';
+            document.getElementById('man_val').value = '';
+            document.getElementById('man_fee').value = '';
+        }
         function clearDailyArchive() { if(confirm("تصفير؟")) { dailyArchive = []; saveAndRender(); } }
         function saveAndRender() { localStorage.setItem('n1_daily_archive', JSON.stringify(dailyArchive)); renderArchive(); }
     </script>
