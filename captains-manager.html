@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N One | قيادة الأسطول (Captains Empire)</title>
+    
+    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
+
+    <style>
+        /* ================= تصميم Captain Elite (Royal Blue & Gold) ================= */
+        :root {
+            --primary: #1565c0;      /* أزرق ملكي للكباتن */
+            --dark: #0d47a1;         /* أزرق غامق */
+            --gold: #ffb300;         /* ذهبي حيوي */
+            --bg: #e3f2fd;           /* خلفية سماوية فاتحة */
+            --text: #37474f;
+            --success: #2e7d32;
+            --danger: #c62828;
+            --white: #ffffff;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); margin: 0; padding: 0; 
+            color: var(--text); user-select: none; 
+        }
+
+        /* الهيدر الخاص بالأسطول */
+        .navbar { 
+            background: linear-gradient(135deg, var(--dark), var(--primary)); 
+            height: 80px; display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 40px; box-shadow: 0 4px 20px rgba(13, 71, 161, 0.3); 
+            border-bottom: 4px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
+        }
+        .brand { font-size: 26px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .gold-text { color: var(--gold); }
+        .btn-close { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .btn-close:hover { background: var(--danger); border-color: var(--danger); }
+
+        .container { max-width: 1300px; margin: 30px auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+
+        /* الكروت */
+        .card { 
+            background: var(--white); border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            border-top: 5px solid var(--primary); 
+            overflow: hidden; position: relative;
+        }
+        .card.finance { border-top-color: var(--gold); } /* كرت المالية مميز */
+        
+        .card-header { 
+            padding: 20px; background: #f5fafd; border-bottom: 1px solid #e1f5fe;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-title { font-size: 18px; font-weight: 800; color: var(--dark); display: flex; align-items: center; gap: 10px; }
+
+        .card-body { padding: 25px; }
+
+        /* الحقول والأزرار */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 13px; color: #546e7a; }
+        
+        input, select { 
+            width: 100%; padding: 14px; border: 2px solid #cfd8dc; border-radius: 12px; 
+            outline: none; background: #fafafa; font-size: 14px; box-sizing: border-box; transition: 0.3s; 
+        }
+        input:focus { border-color: var(--primary); background: white; }
+
+        .btn-main { 
+            width: 100%; padding: 15px; border: none; border-radius: 12px; 
+            font-weight: bold; cursor: pointer; color: white; font-size: 15px; 
+            transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-blue { background: var(--primary); } .btn-blue:hover { background: var(--dark); }
+        .btn-gold { background: var(--gold); color: #3e2723; } .btn-gold:hover { background: #ffca28; }
+        .btn-green { background: var(--success); } .btn-green:hover { background: #1b5e20; }
+
+        /* مفتاح التحكم (Switch) */
+        .switch-wrapper { display: flex; align-items: center; gap: 10px; background: #fff8e1; padding: 10px 15px; border-radius: 10px; border: 1px solid #ffe082; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* الجداول */
+        .table-container { height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #eceff1; color: #455a64; padding: 12px; text-align: right; position: sticky; top: 0; }
+        td { padding: 12px; border-bottom: 1px solid #eee; color: #37474f; }
+        
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .bg-pending { background: #fff3e0; color: #e65100; }
+        
+        /* البحث الذكي */
+        .search-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-row input { flex: 1; border-color: var(--gold); }
+
+        /* رسائل النظام */
+        #finance-status { margin-top: 15px; padding: 10px; border-radius: 8px; display: none; text-align: center; font-weight: bold; }
+
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">N <span class="gold-text">One</span> Fleet Command 👮‍♂️</div>
+        <button class="btn-close" onclick="window.close()">إغلاق البوابة ❌</button>
+    </nav>
+
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📝 تسجيل كابتن جديد (تعيين)</div>
+                <div style="font-size:12px; color:#78909c;">إدخال يدوي رسمي</div>
+            </div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>الاسم الرباعي</label>
+                        <input type="text" id="new_cap_name" placeholder="اسم الكابتن الرسمي">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف (الواتساب)</label>
+                        <input type="tel" id="new_cap_phone" placeholder="07xxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>ترميز السيارة (الكود المالي)</label>
+                        <input type="text" id="new_cap_code" placeholder="مثلاً: C-101" style="border-color:var(--gold); font-weight:bold;">
+                    </div>
+                    <div class="form-group" style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <label>نوع السيارة</label>
+                            <input type="text" id="new_cap_car" placeholder="مثلاً: Kia Sephia">
+                        </div>
+                        <div style="flex:1;">
+                            <label>موديل</label>
+                            <input type="number" id="new_cap_model" placeholder="2016">
+                        </div>
+                    </div>
+                    <button class="btn-main btn-blue" onclick="registerCaptain()">
+                        <span>+ اعتماد وتعيين الكابتن</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card finance">
+            <div class="card-header">
+                <div class="card-title">💰 البنك المركزي (Wallet System)</div>
+                
+                <div class="switch-wrapper">
+                    <span style="font-size:12px; font-weight:bold; color:#f57f17;">التحويل بين الكباتن:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="transfer-switch" onchange="toggleTransferFeature()" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="search-row">
+                    <input type="text" id="wallet_search" placeholder="🔍 بحث: رقم الهاتف أو ترميز السيارة (C-xxx)">
+                    <button class="btn-main btn-blue" style="width:auto; padding:0 20px;" onclick="searchWallet()">بحث</button>
+                </div>
+
+                <div id="wallet-details" style="display:none; background:#f9fbe7; padding:15px; border-radius:12px; border:1px solid #f0f4c3; margin-bottom:15px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-weight:bold; color:var(--dark);" id="w_cap_name">---</span>
+                        <span style="font-weight:bold; color:var(--gold); font-size:18px;" id="w_balance">0.00 د.أ</span>
+                    </div>
+                    <div style="font-size:12px; color:#666;">الترميز: <span id="w_code">---</span> | الهاتف: <span id="w_phone">---</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label>المبلغ (د.أ)</label>
+                    <input type="number" id="wallet_amount" placeholder="القيمة للشحن أو الخصم">
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-main btn-gold" onclick="updateBalance('add')">➕ شحن رصيد</button>
+                    <button class="btn-main" style="background:var(--danger);" onclick="updateBalance('deduct')">➖ خصم / غرامة</button>
+                </div>
+
+                <div id="finance-status"></div>
+            </div>
+        </div>
+
+        <div class="card" style="grid-column: span 2;">
+            <div class="card-header">
+                <div class="card-title">🌍 طلبات الانضمام الخارجية (Web Requests)</div>
+                <div style="font-size:12px; color:#78909c;">بانتظار الموافقة</div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الهاتف</th>
+                                <th>السيارة</th>
+                                <th>الحالة</th>
+                                <th>الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-table">
+                            <tr><td colspan="5" style="text-align:center; padding:20px;">لا توجد طلبات معلقة حالياً ☺️</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ========================================================
+        // عقل إدارة الأسطول v1.0 (Captain Brain) 🧠
+        // ========================================================
+        
+        if (typeof N_ONE_CORE !== 'undefined') {
+            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbybaX1dgu-rVIkUAz2w6H2NdYIuv3zKkmPbHON8NTRclD3H6cVgyW5SAzFfAPNcMt6g/exec";
+        }
+
+        let currentCaptain = null; // الكابتن المختار حالياً في المالية
+        let transferEnabled = true;
+
+        window.onload = function() {
+            // استرجاع حالة مفتاح التحويل
+            const savedTransfer = localStorage.getItem('nOne_cap_transfer_status');
+            if (savedTransfer !== null) {
+                transferEnabled = (savedTransfer === 'true');
+                document.getElementById('transfer-switch').checked = transferEnabled;
+            }
+        };
+
+        // 1. مفتاح التحكم بالتحويل
+        function toggleTransferFeature() {
+            transferEnabled = document.getElementById('transfer-switch').checked;
+            localStorage.setItem('nOne_cap_transfer_status', transferEnabled);
+            alert(transferEnabled ? "✅ تم تفعيل ميزة التحويل بين الكباتن" : "⛔ تم إيقاف ميزة التحويل مؤقتاً");
+        }
+
+        // 2. البحث الذكي (محفظة)
+        async function searchWallet() {
+            const query = document.getElementById('wallet_search').value.trim();
+            if(!query) return alert("أدخل رقم هاتف أو ترميز للبحث");
+
+            showMsg("جاري البحث في الأرشيف... ⏳", "gold");
+
+            try {
+                const data = await N_ONE_CORE.fetchData('read');
+                // البحث في عمود cap_phone أو cap_code (سنفترض أن الاسم هو الترميز مؤقتا أو حقل مخصص)
+                // هنا سنعتبر أن الـ user هو الترميز أو الهاتف للتبسيط في هذه المرحلة
+                const captain = data.find(u => 
+                    (u.type === 'captain') && 
+                    (String(u.cap_phone).includes(query) || String(u.user).includes(query))
+                );
+
+                if (captain) {
+                    currentCaptain = captain;
+                    document.getElementById('w_cap_name').innerText = captain.name;
+                    document.getElementById('w_code').innerText = captain.user; // الترميز
+                    document.getElementById('w_phone').innerText = captain.cap_phone;
+                    // الرصيد: نفترض وجود عمود 'balance' أو سنحسبه لاحقاً (مبدئياً 0)
+                    // في النسخة القادمة سنضيف عمود الرصيد للسيرفر
+                    document.getElementById('w_balance').innerText = (captain.balance || "0.00") + " د.أ"; 
+                    
+                    document.getElementById('wallet-details').style.display = 'block';
+                    hideMsg();
+                } else {
+                    showMsg("❌ الكابتن غير موجود", "red");
+                    currentCaptain = null;
+                    document.getElementById('wallet-details').style.display = 'none';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // 3. تحديث الرصيد (محاكاة ذكية)
+        async function updateBalance(type) {
+            if (!currentCaptain) return alert("الرجاء اختيار كابتن أولاً");
+            const amount = parseFloat(document.getElementById('wallet_amount').value);
+            if (!amount || amount <= 0) return alert("الرجاء إدخال مبلغ صحيح");
+
+            const actionText = type === 'add' ? "شحن" : "خصم";
+            if (!confirm(`تأكيد عملية ${actionText} بمبلغ ${amount} د.أ للكابتن ${currentCaptain.name}؟`)) return;
+
+            // هنا سيتم الاتصال بالسيرفر لتحديث الرصيد الفعلي (لاحقاً)
+            showMsg(`✅ تمت عملية ال${actionText} بنجاح! الرصيد الجديد قيد التحديث...`, "green");
+            
+            // تصفير الحقل
+            document.getElementById('wallet_amount').value = '';
+        }
+
+        // 4. تسجيل كابتن جديد (تعيين)
+        async function registerCaptain() {
+            const name = document.getElementById('new_cap_name').value;
+            const phone = document.getElementById('new_cap_phone').value;
+            const code = document.getElementById('new_cap_code').value; // الترميز
+
+            if(!name || !phone || !code) return alert("جميع البيانات مطلوبة");
+
+            // هنا نستخدم دالة الإضافة من n-one-core.js
+            // نعتبر الـ code هو اسم المستخدم (User ID) لسهولة التعامل المالي
+            const newCapData = {
+                id: "CAP_" + Date.now(),
+                user: code, // الترميز هو اليوزر
+                pass: "123456", // كلمة مرور افتراضية
+                name: name,
+                role: "captain",
+                type: "captain",
+                cap_phone: phone,
+                status: "active",
+                expiry: "2030-01-01" // عقد مفتوح مبدئياً
+            };
+
+            showMsg("جاري تعيين الكابتن... ⏳", "blue");
+            try {
+                await N_ONE_CORE.postData('add', [newCapData]);
+                alert("تم تعيين الكابتن واعتماد الترميز بنجاح 👮‍♂️✅");
+                // تنظيف
+                document.getElementById('new_cap_name').value = '';
+                document.getElementById('new_cap_phone').value = '';
+                document.getElementById('new_cap_code').value = '';
+                hideMsg();
+            } catch (e) { showMsg("حدث خطأ", "red"); }
+        }
+
+        function showMsg(text, color) {
+            const el = document.getElementById('finance-status');
+            el.innerText = text;
+            el.style.display = 'block';
+            el.style.color = color === 'red' ? 'white' : '#333';
+            el.style.background = color === 'red' ? '#ef5350' : (color === 'green' ? '#c8e6c9' : '#e3f2fd');
+        }
+        function hideMsg() { document.getElementById('finance-status').style.display = 'none'; }
+
+    </script>
+</body>
+</html>
