@@ -2,263 +2,181 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | قيادة الأسطول والصندوق المركزي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>N One | Business Portal</title>
     <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
     <style>
-        /* تصميم Royal Light الفخم */
-        :root { --primary: #0f172a; --bg: #f1f5f9; --card-bg: #ffffff; --gold: #d4af37; --text-main: #334155; --text-light: #64748b; --success: #10b981; --danger: #ef4444; --border: #e2e8f0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text-main); user-select: none; }
+        /* تصميم المتجر الأنيق */
+        :root { --primary: #0f172a; --gold: #d4af37; --bg: #f8fafc; --card-bg: #ffffff; --text: #334155; --success: #10b981; --danger: #ef4444; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); padding-bottom: 80px; }
         
-        /* الهيدر */
-        .navbar { background: var(--card-bg); height: 75px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 25px rgba(148, 163, 184, 0.15); }
-        .brand { font-size: 26px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
+        .header { background: var(--primary); padding: 20px 25px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2); text-align: center; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .brand { font-size: 22px; font-weight: 900; color: white; letter-spacing: 1px; }
         .gold-text { color: var(--gold); }
-        .btn-close { background: #fff1f2; color: var(--danger); border: 1px solid #fda4af; padding: 10px 20px; border-radius: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        .btn-close:hover { background: var(--danger); color: white; }
-
-        .container { max-width: 1600px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-
-        /* الكروت */
-        .card { background: var(--card-bg); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid var(--border); overflow: hidden; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-3px); }
-        .card-full { grid-column: span 2; } 
-        .card-header { padding: 25px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .card-title { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .card-body { padding: 30px; }
-
-        /* أدوات التحكم */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 13px; color: var(--text-light); }
-        input, select { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 12px; outline: none; background: #fafafa; color: var(--primary); font-weight: 600; font-size: 15px; box-sizing: border-box; transition: 0.3s; }
+        .btn-logout { background: rgba(239, 68, 68, 0.2); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.5); padding: 6px 15px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        
+        .shop-info { color: var(--gold); font-size: 14px; font-weight: bold; margin-bottom: 10px; }
+        
+        /* التبويبات */
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-top: 15px; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 20px; }
+        .nav-tab { flex: 1; padding: 10px; border: none; border-radius: 15px; font-weight: bold; font-size: 13px; cursor: pointer; background: transparent; color: #94a3b8; transition: 0.3s; }
+        .nav-tab.active { background: var(--gold); color: var(--primary); }
+        
+        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; }
+        .section { display: none; animation: fadeIn 0.3s ease-out; } .section.active { display: block; } @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 15px; background: #f8fafc; outline: none; margin-bottom: 15px; font-weight: 600; color: var(--primary); }
         input:focus { border-color: var(--primary); background: white; }
         
-        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-blue { background: var(--primary); } 
-        .btn-green { background: var(--success); } 
-        .btn-danger { background: var(--danger); }
-        .btn-gold { background: var(--gold); color: white; }
-
-        /* الجداول */
-        .table-wrapper { overflow-x: auto; max-height: 500px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { padding: 18px; text-align: right; color: var(--text-light); border-bottom: 2px solid var(--border); background: #f8fafc; position: sticky; top: 0; z-index: 10; }
-        td { padding: 18px; border-bottom: 1px solid #f1f5f9; color: var(--primary); font-weight: 600; }
-        .badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-block; }
-        .bg-active { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
-        .bg-paused { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
-        .bg-pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-
-        .action-btn { background: none; border: none; cursor: pointer; font-size: 20px; padding: 5px; opacity: 0.6; transition: 0.2s; margin-left: 8px; }
-        .action-btn:hover { opacity: 1; transform: scale(1.2); }
-
-        /* الصندوق المركزي (Treasury Modal) */
-        #treasury-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .treasury-box { background: white; padding: 40px; border-radius: 20px; width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: 4px solid var(--gold); position: relative; }
+        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; color: white; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-send { background: var(--primary); } .btn-charge { background: var(--success); }
         
-        /* التقرير */
-        #report-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 2100; justify-content: center; align-items: center; }
-        .report-paper { background: white; color: black; width: 210mm; height: 90vh; padding: 50px; overflow-y: auto; position: relative; border-radius: 15px; }
-        @media print { body * { visibility: hidden; } #report-modal, #report-modal * { visibility: visible; } #report-modal { position: absolute; left: 0; top: 0; background: white; width: 100%; height: 100%; } .report-paper { width: 100%; height: auto; box-shadow: none; padding: 0; } .no-print { display: none !important; } }
-        
-        #loading-bar { height: 4px; background: var(--gold); width: 0%; position: fixed; top: 75px; left: 0; z-index: 1001; transition: width 0.3s; }
+        .history-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 12px 25px; border-radius: 30px; font-size: 13px; font-weight: bold; display: none; z-index: 100; }
+        #loader { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: var(--gold); z-index: 2000; transition: width 0.3s; }
     </style>
 </head>
 <body>
-
-    <div id="loading-bar"></div>
-
-    <nav class="navbar">
-        <div class="brand">N <span class="gold-text">One</span> Fleet & Treasury</div>
-        <div>
-            <button onclick="toggleTreasury()" style="background:var(--primary); color:var(--gold); border:2px solid var(--gold); padding:10px 20px; border-radius:12px; font-weight:bold; cursor:pointer; margin-left:15px; box-shadow:0 4px 10px rgba(212, 175, 55, 0.2);">🏦 الصندوق المركزي (إيداع)</button>
-            <button class="btn-close" onclick="window.close()">إغلاق ❌</button>
+    <div id="loader"></div>
+    <header class="header">
+        <div class="header-top"><div class="brand">N <span class="gold-text">One</span></div><button class="btn-logout" onclick="logout()">خروج</button></div>
+        <div class="shop-info" id="shop-name-display">جاري التحميل...</div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('orders')">📦 إرسال طلب</button>
+            <button class="nav-tab" onclick="switchTab('charging')">⚡ شحن كابتن</button>
         </div>
-    </nav>
-
+    </header>
     <div class="container">
-
-        <div class="card">
-            <div class="card-header"><div class="card-title">📝 تسجيل كابتن جديد</div></div>
-            <div class="card-body">
-                <div class="form-group"><label>الاسم</label><input type="text" id="new_cap_name"></div>
-                <div class="form-group"><label>الهاتف</label><input type="tel" id="new_cap_phone"></div>
-                <div class="form-group"><label>الترميز (Code)</label><input type="text" id="new_cap_code" placeholder="C-xxx"></div>
-                <div style="display:flex; gap:15px;">
-                    <div class="form-group" style="flex:1;"><label>السيارة</label><input type="text" id="new_cap_car"></div>
-                    <div class="form-group" style="flex:1;"><label>موديل</label><input type="number" id="new_cap_model"></div>
-                </div>
-                <button class="btn-main btn-blue" onclick="registerCaptain()">+ اعتماد (فحص ذكي)</button>
+        <div id="orders" class="section active">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                <div style="background:white; padding:15px; border-radius:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.03);"><div style="font-size:11px; color:#94a3b8;">اليوم</div><div style="font-size:20px; font-weight:900; color:var(--gold);" id="orders-today">0</div></div>
+                <div style="background:white; padding:15px; border-radius:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.03);"><div style="font-size:11px; color:#94a3b8;">الكلي</div><div style="font-size:20px; font-weight:900; color:var(--primary);" id="orders-total">0</div></div>
             </div>
+            <div class="card">
+                <input type="text" id="destination" list="areas-list" placeholder="الوجهة..." onchange="calculateFee()">
+                <datalist id="areas-list"></datalist>
+                <input type="number" id="order_val" placeholder="قيمة التحصيل (د.أ)">
+                <input type="text" id="delivery_fee" placeholder="سعر التوصيل" readonly style="background:#f1f5f9;">
+                <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">إرسال الطلب 🚀</button>
+            </div>
+            <div class="card" style="padding:15px;"><div style="font-size:13px; font-weight:bold; color:#64748b; margin-bottom:10px;">آخر الطلبات</div><div id="history-list"></div></div>
         </div>
-
-        <div class="card" style="border-top: 5px solid var(--gold);">
-            <div class="card-header">
-                <div class="card-title">💰 محفظة الكباتن (Live)</div>
-                <label style="display:flex; align-items:center; gap:8px; font-weight:bold; font-size:13px; cursor:pointer;"><input type="checkbox" id="transfer-toggle" onchange="toggleTransfer()" checked> تفعيل التحويل</label>
-            </div>
-            <div class="card-body">
-                <div style="display:flex; gap:15px; margin-bottom:20px;">
-                    <input type="text" id="wallet_search" placeholder="🔍 بحث (هاتف/كود)">
-                    <button class="btn-main btn-blue" style="width:auto; padding:0 30px;" onclick="searchWallet()">بحث</button>
+        <div id="charging" class="section">
+            <div class="card" style="border-top: 4px solid var(--success);">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <h3 style="margin:0; color:var(--primary);">شحن كابتن ⚡</h3>
+                    <p style="font-size:12px; color:#64748b;">رصيدك الحالي: <b style="color:var(--success); font-size:16px;" id="my-shop-balance">...</b> د.أ</p>
                 </div>
-                <div id="wallet-info" style="display:none; background:#fffbeb; padding:20px; border-radius:15px; margin-bottom:20px; border:1px solid #fde68a;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span id="w_name" style="font-weight:900; color:var(--primary); font-size:18px;">---</span>
-                        <span id="w_balance" style="font-size:28px; font-weight:900; color:#b45309;">0.00 د.أ</span>
-                    </div>
-                    <div style="font-size:13px; color:#92400e; margin-top:5px;">Code: <span id="w_code">--</span></div>
-                </div>
-                <div class="form-group"><input type="number" id="wallet_amount" placeholder="القيمة"></div>
-                <div style="display:flex; gap:15px;">
-                    <button class="btn-main btn-green" onclick="updateBalance('add')">➕ شحن</button>
-                    <button class="btn-main btn-danger" onclick="updateBalance('deduct')">➖ خصم</button>
-                </div>
+                <input type="text" id="cap_id" placeholder="كود الكابتن (C-xxx)">
+                <input type="number" id="charge_amount" placeholder="المبلغ (د.أ)">
+                <button class="btn-main btn-charge" id="btn-charge" onclick="chargeCaptainClosedLoop()">تأكيد الشحن ✅</button>
             </div>
-        </div>
-
-        <div class="card card-full">
-            <div class="card-header"><div class="card-title">🌍 طلبات الانضمام الخارجية</div><button class="action-btn" onclick="refreshData()">🔄</button></div>
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>الاسم</th><th>الهاتف</th><th>السيارة</th><th>الحالة</th><th>إجراء</th></tr></thead>
-                    <tbody id="requests-body"><tr><td colspan="5" style="text-align:center; padding:30px;">جاري البحث...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card card-full">
-            <div class="card-header">
-                <div class="card-title">👮‍♂️ الأسطول النشط</div>
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <span style="font-size:12px; font-weight:bold;">السيولة: <b style="color:var(--success); font-size:16px;" id="total-fleet-bal">0.00</b> د.أ</span>
-                    <input type="text" id="search-active" placeholder="بحث..." oninput="renderFleet()" style="width:250px;">
-                </div>
-            </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>الكابتن</th><th>البيانات</th><th>الرصيد</th><th>الحالة</th><th>تحكم</th></tr></thead>
-                    <tbody id="fleet-body"><tr><td colspan="5" style="text-align:center; padding:50px;">تحميل...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <div id="treasury-modal">
-        <div class="treasury-box">
-            <h2 style="color:var(--primary); text-align:center; margin-top:0;">🏦 الصندوق المركزي</h2>
-            <p style="text-align:center; color:#64748b; margin-bottom:20px;">شحن رصيد للمنشآت التجارية (لتمكينها من شحن الكباتن) أو للكباتن مباشرة.</p>
-            
-            <label>المستفيد (كود المنشأة أو الكابتن)</label>
-            <input type="text" id="treasury-id" placeholder="مثلاً: SH_123 أو C-101" style="background:#f1f5f9; margin-bottom:15px;">
-            
-            <label>المبلغ (د.أ)</label>
-            <input type="number" id="treasury-amount" placeholder="0.00" style="background:#f1f5f9; margin-bottom:25px;">
-            
-            <button class="btn-main btn-gold" onclick="treasuryDeposit()">تأكيد الإيداع 💰</button>
-            <button class="btn-main" onclick="toggleTreasury()" style="background:transparent; color:var(--danger); margin-top:10px;">إلغاء</button>
         </div>
     </div>
-
-    <div id="report-modal">
-        <div class="report-paper">
-            <div style="text-align:center; border-bottom:4px solid var(--primary); padding-bottom:30px; margin-bottom:40px;">
-                <h1 style="margin:0; font-size:36px; color:var(--primary);">N One Global</h1>
-                <h3>تقرير شامل للكابتن</h3>
-                <p>Date: <span id="rep-date"></span></p>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:40px; background:#f8fafc; padding:30px; border-radius:15px;">
-                <div><strong>الاسم:</strong> <span id="rep-name">---</span><br><strong>الكود:</strong> <span id="rep-code">---</span></div>
-                <div><strong>الرصيد:</strong> <span id="rep-balance" style="font-size:24px; font-weight:bold; color:var(--success);">0.00</span> د.أ</div>
-            </div>
-            <table style="width:100%; border:1px solid #e2e8f0; color:black;">
-                <thead style="background:#f1f5f9;"><tr><th style="padding:15px; border:1px solid #cbd5e1;">التاريخ</th><th style="padding:15px; border:1px solid #cbd5e1;">النوع</th><th style="padding:15px; border:1px solid #cbd5e1;">القيمة</th></tr></thead>
-                <tbody id="rep-body"></tbody>
-            </table>
-            <button class="no-print btn-main btn-blue" onclick="window.print()" style="position:absolute; top:30px; right:30px; width:auto;">🖨️ طباعة</button>
-            <button class="no-print btn-main btn-danger" onclick="closeReport()" style="position:absolute; top:30px; right:150px; width:auto;">إغلاق</button>
-        </div>
-    </div>
+    <div id="toast" class="toast">تم بنجاح</div>
 
     <script>
-        // === المنطق البرمجي للكباتن والصندوق المركزي ===
-        if (typeof N_ONE_CORE !== 'undefined') N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbybaX1dgu-rVIkUAz2w6H2NdYIuv3zKkmPbHON8NTRclD3H6cVgyW5SAzFfAPNcMt6g/exec";
-        
-        let allData=[], captains=[], requests=[], orders=[], currentWalletCap=null;
+        const API_URL = "https://script.google.com/macros/s/AKfycbybaX1dgu-rVIkUAz2w6H2NdYIuv3zKkmPbHON8NTRclD3H6cVgyW5SAzFfAPNcMt6g/exec";
+        let shopData = JSON.parse(localStorage.getItem('nOne_shop_data_v12')) || { ordersToday: 0, ordersTotal: 0, lastActiveDate: new Date().toDateString(), history: [] };
+        let pricingMatrix = {}, currentUser = null, myBalance = 0;
 
-        window.onload = async function() { await refreshData(); setInterval(refreshDataSilent, 30000); };
-        async function refreshData() { showLoading(true); try{allData=await N_ONE_CORE.fetchData('read'); processData();}catch(e){} showLoading(false); }
-        async function refreshDataSilent() { try{allData=await N_ONE_CORE.fetchData('read'); processData();}catch(e){} }
-        
-        function processData() {
-            captains=allData.filter(i=>i.type==='captain'&&i.status!=='pending').reverse();
-            requests=allData.filter(i=>i.type==='captain'&&i.status==='pending');
-            orders=allData.filter(i=>i.type==='order');
-            renderRequests(); renderFleet(); updateTotalBalance();
+        if (typeof N_ONE_CORE !== 'undefined') currentUser = N_ONE_CORE.checkSession('shop');
+        else currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        window.onload = async function() {
+            if (!currentUser) { window.location.href = 'index.html'; return; }
+            document.getElementById('shop-name-display').innerText = currentUser.name;
+            loadMatrix(); checkDailyReset(); updateUI();
+            await fetchMyBalance(); 
+        };
+
+        // --- جلب رصيد المنشأة الفعلي من السيرفر ---
+        async function fetchMyBalance() {
+            try {
+                const response = await fetch(API_URL + "?action=read");
+                const data = await response.json();
+                const me = data.find(u => u.user === currentUser.user);
+                if (me) {
+                    myBalance = parseFloat(me.balance || 0);
+                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                }
+            } catch (e) { console.error("Balance Error"); }
         }
 
-        async function registerCaptain() {
-            const n=document.getElementById('new_cap_name').value, p=document.getElementById('new_cap_phone').value, c=document.getElementById('new_cap_code').value;
-            if(!n||!p||!c)return alert("بيانات ناقصة");
-            if(captains.some(x=>x.user===c||x.cap_phone===p))return alert("⛔ مسجل مسبقاً");
-            showLoading(true);
-            await N_ONE_CORE.postData('add', [{id:"CAP_"+Date.now(), user:c, pass:"123456", name:n, role:"captain", type:"captain", cap_phone:p, status:"active", pickup:document.getElementById('new_cap_car').value, balance:"0"}]);
-            alert("تم التعيين ✅"); await refreshData(); showLoading(false);
-        }
+        // --- شحن الكابتن (الدورة المغلقة) ---
+        async function chargeCaptainClosedLoop() {
+            const capId = document.getElementById('cap_id').value.trim();
+            const amount = parseFloat(document.getElementById('charge_amount').value);
 
-        function searchWallet() {
-            const q=document.getElementById('wallet_search').value.toLowerCase();
-            const c=captains.find(x=>x.user.toLowerCase()===q||x.cap_phone.includes(q));
-            if(c){currentWalletCap=c; document.getElementById('wallet-info').style.display='block'; document.getElementById('w_name').innerText=c.name; document.getElementById('w_balance').innerText=parseFloat(c.balance||0).toFixed(2)+" د.أ"; document.getElementById('w_code').innerText=c.user;}
-            else{alert("غير موجود"); document.getElementById('wallet-info').style.display='none';}
-        }
-
-        async function updateBalance(act) {
-            if(!currentWalletCap)return; const v=parseFloat(document.getElementById('wallet_amount').value); if(!v)return;
-            const nb = act==='add' ? parseFloat(currentWalletCap.balance||0)+v : parseFloat(currentWalletCap.balance||0)-v;
-            if(confirm(`الرصيد الجديد: ${nb.toFixed(2)} د.أ ؟`)){
-                showLoading(true); currentWalletCap.balance=nb; document.getElementById('w_balance').innerText=nb.toFixed(2)+" د.أ"; renderFleet();
-                await N_ONE_CORE.postData('update', {user:currentWalletCap.user, data:{balance:nb}});
-                alert("تم التحديث 💰"); showLoading(false);
-            }
-        }
-
-        // --- Treasury Logic (الصندوق المركزي) ---
-        function toggleTreasury() { const el=document.getElementById('treasury-modal'); el.style.display=el.style.display==='none'?'flex':'none'; }
-        
-        async function treasuryDeposit() {
-            const tid=document.getElementById('treasury-id').value.trim(), amt=parseFloat(document.getElementById('treasury-amount').value);
-            if(!tid||!amt) return alert("أدخل الكود والمبلغ");
+            if (!capId || !amount) { showToast("⚠️ البيانات ناقصة"); return; }
+            if (amount <= 0) { showToast("⚠️ المبلغ غير صحيح"); return; }
             
-            showLoading(true);
-            const target = allData.find(u => u.user === tid || u.cap_phone === tid); // يبحث في كل الداتا (شامل المحلات)
-            
-            if(!target) { alert("❌ المستفيد غير موجود (تأكد من الكود)"); showLoading(false); return; }
-            const typeName = target.type === 'shop' ? 'المنشأة' : 'الكابتن';
-            
-            if(!confirm(`إيداع ${amt} د.أ في حساب ${typeName}: ${target.name} ؟`)) { showLoading(false); return; }
+            // 1. فحص محلي
+            if (myBalance < amount) { alert("⛔ رصيدك الحالي غير كافٍ!"); return; }
 
-            const newBal = parseFloat(target.balance || 0) + amt;
-            await N_ONE_CORE.postData('update', { user: target.user, data: { balance: newBal } });
-            
-            alert(`✅ تم الإيداع بنجاح!\nالرصيد الجديد لـ ${target.name}: ${newBal.toFixed(2)} د.أ`);
-            document.getElementById('treasury-id').value = ''; document.getElementById('treasury-amount').value = '';
-            toggleTreasury(); showLoading(false);
-            if(target.type === 'captain') refreshData(); // تحديث الجدول اذا كان كابتن
+            if (!confirm(`خصم ${amount} د.أ من رصيدك وشحنها للكابتن ${capId}؟`)) return;
+            setLoading('btn-charge', true);
+
+            try {
+                // 2. التحقق النهائي من السيرفر
+                const response = await fetch(API_URL + "?action=read");
+                const data = await response.json();
+                
+                const cap = data.find(c => c.user === capId || c.cap_phone === capId);
+                if (!cap) { alert("❌ الكابتن غير موجود"); setLoading('btn-charge', false); return; }
+
+                const me = data.find(u => u.user === currentUser.user);
+                const currentShopBal = parseFloat(me.balance || 0);
+                
+                if (currentShopBal < amount) { alert("⛔ رصيدك في السيرفر غير كافٍ!"); setLoading('btn-charge', false); return; }
+
+                // 3. التنفيذ المزدوج
+                const newCapBal = parseFloat(cap.balance || 0) + amount;
+                const newShopBal = currentShopBal - amount;
+
+                // تحديث الكابتن (+Amount)
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ action: 'update', user: cap.user, data: { balance: newCapBal } }) });
+                
+                // تحديث المنشأة (-Amount)
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ action: 'update', user: currentUser.user, data: { balance: newShopBal } }) });
+
+                myBalance = newShopBal;
+                document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                document.getElementById('cap_id').value = '';
+                document.getElementById('charge_amount').value = '';
+                
+                alert(`✅ تم الشحن بنجاح!\n- رصيد الكابتن زاد: +${amount}\n- رصيدك المتبقي: ${newShopBal}`);
+
+            } catch (e) { alert("خطأ في الاتصال"); }
+            finally { setLoading('btn-charge', false, "تأكيد الشحن ✅"); }
         }
 
-        // Functions for Requests, Fleet, Report (Simplified for brevity but fully functional)
-        function renderRequests(){ const b=document.getElementById('requests-body'); b.innerHTML=''; if(requests.length===0)b.innerHTML='<tr><td colspan="5" style="text-align:center;">لا يوجد</td></tr>'; requests.forEach(r=>{b.innerHTML+=`<tr><td>${r.name}</td><td>${r.cap_phone}</td><td>${r.pickup}</td><td><span class="badge bg-pending">انتظار</span></td><td><button class="action-btn" style="color:green" onclick="approveReq('${r.user}')">✅</button><button class="action-btn" style="color:red" onclick="deleteCaptain('${r.user}')">❌</button></td></tr>`}); }
-        async function approveReq(u){ if(confirm("قبول؟")){showLoading(true); await N_ONE_CORE.postData('update',{user:u,data:{status:'active',balance:'0'}}); await refreshData(); showLoading(false);} }
-        function renderFleet(){ const b=document.getElementById('fleet-body'); b.innerHTML=''; const q=document.getElementById('search-active').value.toLowerCase(); captains.forEach(c=>{ if(q&&!c.name.toLowerCase().includes(q))return; b.innerHTML+=`<tr><td>${c.name}</td><td>${c.user}<br>${c.cap_phone}</td><td style="color:var(--success);font-weight:bold;">${parseFloat(c.balance||0).toFixed(2)}</td><td><span class="badge ${c.status==='active'?'bg-active':'bg-paused'}">${c.status==='active'?'نشط':'مجمد'}</span></td><td><button class="action-btn" onclick="openReport('${c.user}')">🖨️</button><button class="action-btn" onclick="freezeCap('${c.user}')">❄️</button><button class="action-btn" style="color:red" onclick="deleteCaptain('${c.user}')">🗑️</button></td></tr>`; }); }
-        function updateTotalBalance(){ document.getElementById('total-fleet-bal').innerText=captains.reduce((s,c)=>s+parseFloat(c.balance||0),0).toFixed(2); }
-        async function freezeCap(u){ const c=captains.find(i=>i.user===u); const ns=c.status==='active'?'paused':'active'; if(confirm("تغيير الحالة؟")){c.status=ns; renderFleet(); await N_ONE_CORE.postData('update',{user:u,data:{status:ns}});} }
-        async function deleteCaptain(u){ if(confirm("حذف؟")){showLoading(true); captains=captains.filter(c=>c.user!==u); renderFleet(); await N_ONE_CORE.fetchData('delete',{user:u}); showLoading(false);} }
-        function openReport(u){ const c=captains.find(i=>i.user===u); if(!c)return; document.getElementById('rep-name').innerText=c.name; document.getElementById('rep-code').innerText=c.user; document.getElementById('rep-balance').innerText=c.balance||"0"; document.getElementById('rep-date').innerText=new Date().toLocaleDateString(); document.getElementById('report-modal').style.display='flex'; }
-        function closeReport(){ document.getElementById('report-modal').style.display='none'; }
-        function showLoading(s){ document.getElementById('loading-bar').style.width=s?'100%':'0%'; }
-        function toggleTransfer(){ alert(document.getElementById('transfer-toggle').checked?"تم التفعيل":"تم الإيقاف"); }
+        // --- باقي الوظائف ---
+        function switchTab(id) { document.querySelectorAll('.section').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active')); document.getElementById(id).classList.add('active'); event.target.classList.add('active'); }
+        function checkDailyReset() { const t = new Date().toDateString(); if(shopData.lastActiveDate!==t){shopData.ordersToday=0;shopData.lastActiveDate=t;localStorage.setItem('nOne_shop_data_v12', JSON.stringify(shopData));} }
+        function loadMatrix() { const d = localStorage.getItem('nOne_global_prices'); if(d){ const j=JSON.parse(d); const l=document.getElementById('areas-list'); l.innerHTML=''; Object.keys(j).forEach(k=>j[k].forEach(i=>{pricingMatrix[i.area]=parseFloat(i.price);const o=document.createElement('option');o.value=i.area;l.appendChild(o);})); } }
+        function calculateFee() { const d=document.getElementById('destination').value; if(pricingMatrix[d]) document.getElementById('delivery_fee').value=pricingMatrix[d].toFixed(2); }
+        async function sendOrder() {
+            checkDailyReset(); const d=document.getElementById('destination').value, v=document.getElementById('order_val').value, f=document.getElementById('delivery_fee').value;
+            if(!d||!v||!f){showToast("بيانات ناقصة");return;}
+            setLoading('btn-send', true);
+            const ord={id:"ORD_"+Date.now(), type:"order", client_user:currentUser.user, cl_name:currentUser.name, pickup:d, val:v, fee:f, date:new Date().toISOString(), status:"new"};
+            try{ await fetch(API_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'add', data:ord})});
+            shopData.ordersToday++; shopData.ordersTotal++; shopData.history.unshift({dest:d, val:v, time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}); if(shopData.history.length>5)shopData.history.pop();
+            localStorage.setItem('nOne_shop_data_v12', JSON.stringify(shopData)); updateUI(); showToast("تم الإرسال ✅");
+            document.getElementById('destination').value=''; document.getElementById('order_val').value=''; document.getElementById('delivery_fee').value='';
+            } catch(e){showToast("خطأ");} finally{setLoading('btn-send',false,"إرسال الطلب 🚀");}
+        }
+        function updateUI() {
+            document.getElementById('orders-today').innerText=shopData.ordersToday; document.getElementById('orders-total').innerText=shopData.ordersTotal;
+            const l=document.getElementById('history-list'); l.innerHTML='';
+            shopData.history.forEach(i=>{l.innerHTML+=`<div class="history-item"><div><div style="font-weight:bold;color:var(--primary);">${i.dest}</div><div style="font-size:11px;color:#94a3b8;">${i.time}</div></div><div style="font-weight:bold;color:var(--gold);">${i.val} د.أ</div></div>`;});
+        }
+        function logout(){ if(confirm("خروج؟")){localStorage.removeItem('currentUser'); window.location.href='index.html';} }
+        function showToast(m){ const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+        function setLoading(id,s,txt){ const b=document.getElementById(id); const l=document.getElementById('loader'); if(s){b.dataset.txt=b.innerText;b.innerText="...";b.disabled=true;b.style.opacity=0.7;l.style.width="100%";}else{b.innerText=txt||b.dataset.txt;b.disabled=false;b.style.opacity=1;l.style.width="0%";} }
     </script>
 </body>
 </html>
