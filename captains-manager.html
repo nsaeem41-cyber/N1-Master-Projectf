@@ -133,12 +133,12 @@
         }
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        #Ops_LoadingLine { height: 3px; background: var(--gold); width: 0%; position: fixed; top: 50px; left: 0; z-index: 2001; transition: width 0.3s; }
+        #loading-line { height: 3px; background: var(--gold); width: 0%; position: fixed; top: 50px; left: 0; z-index: 2001; transition: width 0.3s; }
     </style>
 </head>
 <body>
 
-    <div id="Ops_LoadingLine"></div>
+    <div id="loading-line"></div>
 
     <nav class="navbar">
         <div class="brand">
@@ -146,16 +146,16 @@
         </div>
         
         <div style="display:flex; gap:15px; align-items:center;">
-            <div class="live-stat">👥 كباتن <b id="Ops_StatCapsCount">0</b></div>
-            <div class="live-stat">🏪 منشآت <b id="Ops_StatShopsCount">0</b></div>
-            <div class="live-stat">💰 سيولة <b id="Ops_StatLiquidity">0.00</b></div>
+            <div class="live-stat">👥 كباتن: <b id="stat-caps-count">0</b></div>
+            <div class="live-stat">🏪 منشآت: <b id="stat-shops-count">0</b></div>
+            <div class="live-stat">💰 سيولة: <b id="stat-liquidity">0.00</b></div>
             
             <div style="width:1px; height:20px; background:rgba(255,255,255,0.2);"></div>
 
-            <button class="btn-header" onclick="Ops_OpenTreasury()">
+            <button class="btn-header" onclick="openTreasury()">
                 <span>🏦</span> الصندوق المركزي
             </button>
-            <button class="btn-header" onclick="Ops_RefreshData()">
+            <button class="btn-header" onclick="refreshData()">
                 <span>🔄</span> تحديث
             </button>
             <button class="btn-header btn-close" onclick="window.close()">
@@ -173,58 +173,58 @@
                 <div class="card-body">
                     <div class="form-group" style="margin-bottom:8px;">
                         <label>الاسم الكامل (بصمة الهوية)</label>
-                        <input type="text" id="Ops_RegName" placeholder="الاسم الرسمي">
+                        <input type="text" id="reg_name" placeholder="الاسم الرسمي">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>رقم الهاتف (المفتاح الرئيسي)</label>
-                            <input type="tel" id="Ops_RegPhone" placeholder="07xxxxxxxx">
+                            <input type="tel" id="reg_phone" placeholder="07xxxxxxxx">
                         </div>
                         <div class="form-group">
                             <label>ترميز السيارة (User Code)</label>
-                            <input type="text" id="Ops_RegCode" placeholder="C-101" style="border-color:var(--gold);">
+                            <input type="text" id="reg_code" placeholder="C-101" style="border-color:var(--gold);">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>نوع السيارة</label>
-                            <input type="text" id="Ops_RegCar" placeholder="مثلا تويوتا">
+                            <input type="text" id="reg_car" placeholder="مثلاً: تويوتا">
                         </div>
                         <div class="form-group">
                             <label>موديل السيارة (السنة)</label>
-                            <input type="number" id="Ops_RegModel" placeholder="2024">
+                            <input type="number" id="reg_model" placeholder="2024">
                         </div>
                     </div>
-                    <button class="btn-main btn-blue" onclick="Ops_RegisterCaptain()">+ اعتماد في الأسطول (ربط فوري)</button>
+                    <button class="btn-main btn-blue" onclick="registerCaptain()">+ اعتماد في الأسطول (ربط فوري)</button>
                 </div>
             </div>
 
             <div class="card" style="flex-grow:1;">
-                <div class="card-header"><div class="card-title">💸 المحفظة السريعة (للكباتن حصرا)</div></div>
+                <div class="card-header"><div class="card-title">💸 المحفظة السريعة (للكباتن حصراً)</div></div>
                 <div class="card-body">
                     <div class="form-group" style="margin-bottom:8px;">
                         <label>البحث بالبصمة (هاتف الكابتن / الترميز)</label>
                         <div style="display:flex; gap:5px;">
-                            <input type="text" id="Ops_WalletQ" placeholder="ادخل رقم الهاتف أو الترميز">
-                            <button class="btn-main btn-blue" style="width:auto;" onclick="Ops_SearchWallet()">🔎 بحث</button>
+                            <input type="text" id="wallet_q" placeholder="ادخل رقم الهاتف أو الترميز...">
+                            <button class="btn-main btn-blue" style="width:auto;" onclick="searchWallet()">🔎 بحث</button>
                         </div>
                     </div>
                     
-                    <div id="Ops_WalletResult" style="display:none; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:10px;">
+                    <div id="wallet-result" style="display:none; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span id="Ops_WrName" style="font-weight:800; color:var(--primary);">---</span>
-                            <span id="Ops_WrBal" style="font-weight:900; color:var(--success); font-size:14px;">0.00</span>
+                            <span id="wr_name" style="font-weight:800; color:var(--primary);">---</span>
+                            <span id="wr_bal" style="font-weight:900; color:var(--success); font-size:14px;">0.00</span>
                         </div>
-                        <div style="font-size:10px; color:#64748b;">Code <span id="Ops_WrCode">--</span> | Tel <span id="Ops_WrPhone">--</span></div>
+                        <div style="font-size:10px; color:#64748b;">Code: <span id="wr_code">--</span> | Tel: <span id="wr_phone">--</span></div>
                     </div>
 
                     <div class="form-group" style="margin-bottom:8px;">
                         <label>المبلغ (د.أ)</label>
-                        <input type="number" id="Ops_WalletAmt" placeholder="0.00">
+                        <input type="number" id="wallet_amt" placeholder="0.00">
                     </div>
                     <div class="form-row">
-                        <button class="btn-main btn-green" onclick="Ops_UpdateBalance('add')">+ إيداع للكابتن</button>
-                        <button class="btn-main btn-red" onclick="Ops_UpdateBalance('deduct')">- خصم من الكابتن</button>
+                        <button class="btn-main btn-green" onclick="updateBalance('add')">+ إيداع للكابتن</button>
+                        <button class="btn-main btn-red" onclick="updateBalance('deduct')">- خصم من الكابتن</button>
                     </div>
                 </div>
             </div>
@@ -243,7 +243,7 @@
                         <thead>
                             <tr><th>الاسم</th><th>الهاتف</th><th>السيارة</th><th>التاريخ</th><th>القرار</th></tr>
                         </thead>
-                        <tbody id="Ops_ReqBody">
+                        <tbody id="req-body">
                             <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">لا توجد طلبات معلقة</td></tr>
                         </tbody>
                     </table>
@@ -253,7 +253,7 @@
             <div class="card" style="flex-grow:1;">
                 <div class="card-header">
                     <div class="card-title">👮‍♂️ الأسطول النشط (Active Fleet Monitor)</div>
-                    <input type="text" id="Ops_FleetSearch" placeholder="بحث شامل..." oninput="Ops_RenderFleet()" 
+                    <input type="text" id="fleet-search" placeholder="بحث شامل..." oninput="renderFleet()" 
                            style="width:200px; padding:4px 8px; font-size:11px;">
                 </div>
                 <div class="table-container">
@@ -270,8 +270,8 @@
                                 <th>تحكم</th>
                             </tr>
                         </thead>
-                        <tbody id="Ops_FleetBody">
-                            <tr><td colspan="8" style="text-align:center; padding:50px;">جاري تحميل بيانات الأسطول</td></tr>
+                        <tbody id="fleet-body">
+                            <tr><td colspan="8" style="text-align:center; padding:50px;">جاري تحميل بيانات الأسطول...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -280,266 +280,266 @@
         </div>
     </div>
 
-    <div id="Ops_ModalTreasury" class="modal-overlay">
+    <div id="modal-treasury" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin:0 0 15px 0; text-align:center; color:var(--primary); border-bottom:2px solid var(--gold); padding-bottom:10px;">🏦 الصندوق المركزي (للمنشآت فقط)</h3>
             <p style="font-size:12px; color:#64748b; text-align:center; margin-bottom:15px;">
-                نظام الارتباط الخارجي شحن رصيد المنشآت حصرا عبر رقم الهاتف المسجل
+                نظام الارتباط الخارجي: شحن رصيد المنشآت حصراً عبر رقم الهاتف المسجل.
             </p>
 
             <label>رقم هاتف المنشأة (المفتاح)</label>
-            <input type="text" id="Ops_TrTarget" placeholder="مثلا 079xxxxxxx" style="background:#f8fafc; margin-bottom:10px;">
+            <input type="text" id="tr-target" placeholder="مثلاً: 079xxxxxxx" style="background:#f8fafc; margin-bottom:10px;">
             
             <label>المبلغ (د.أ)</label>
-            <input type="number" id="Ops_TrAmount" placeholder="0.00" style="background:#f8fafc; margin-bottom:20px;">
+            <input type="number" id="tr-amount" placeholder="0.00" style="background:#f8fafc; margin-bottom:20px;">
 
-            <button class="btn-main btn-gold" onclick="Ops_ExecuteTreasury()">✅ شحن رصيد المنشأة</button>
-            <button class="btn-main" onclick="Ops_CloseModal('Ops_ModalTreasury')" style="background:transparent; color:#ef4444; margin-top:5px;">إلغاء</button>
+            <button class="btn-main btn-gold" onclick="executeTreasury()">✅ شحن رصيد المنشأة</button>
+            <button class="btn-main" onclick="closeModal('modal-treasury')" style="background:transparent; color:#ef4444; margin-top:5px;">إلغاء</button>
         </div>
     </div>
 
     <script>
         // ========================================================
-        // العقل المدبر لغرفة العمليات (Ops Brain v20.0 - Steel Edition) المشفر 🧠
+        // العقل المدبر لغرفة العمليات (Ops Brain v20.0 - Steel Edition) 🧠
         // ========================================================
         
         if (typeof N_ONE_CORE !== 'undefined') {
-            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbxFVz0QTi_7TgWQEMImtMGYRBzlD1CwM5X4DbprUvVJkURs_75aD5n5IcpbS87d8Q5j/exec";
+            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbzKQKytFxtHRh1J6tG2GHJjJVl5I2Iz0eYomc963sqn-V8M4Vd3t3Hmm6daykMWUjHj/exec";
         }
 
-        let Ops_AllData = [];
-        let Ops_Captains = [];
-        let Ops_Shops = [];
-        let Ops_Requests = [];
-        let Ops_CurrentWalletCaptain = null; // للمحفظة السريعة كباتن فقط
+        let allData = [];
+        let captains = [];
+        let shops = [];
+        let requests = [];
+        let currentWalletCaptain = null; // للمحفظة السريعة (كباتن فقط)
 
         // --- عند الإقلاع ---
         window.onload = async function() {
-            // تثبيت الجلسة Session Check
+            // تثبيت الجلسة (Session Check)
             if (typeof N_ONE_CORE !== 'undefined') {
                 N_ONE_CORE.checkSession(); 
             }
-            await Ops_RefreshData();
-            // الخيط الاستقبالي Listener
-            setInterval(Ops_RefreshDataSilent, 15000); 
+            await refreshData();
+            // الخيط الاستقبالي (Listener)
+            setInterval(refreshDataSilent, 15000); 
         };
 
         // --- جلب البيانات ---
-        async function Ops_RefreshData() {
-            Ops_ShowLoader(true);
+        async function refreshData() {
+            showLoader(true);
             try {
-                Ops_AllData = await N_ONE_CORE.fetchData('read');
-                Ops_ProcessData();
-            } catch (Ops_E) { console.error("Error fetching data", Ops_E); }
-            Ops_ShowLoader(false);
+                allData = await N_ONE_CORE.fetchData('read');
+                processData();
+            } catch (e) { console.error("Error fetching data", e); }
+            showLoader(false);
         }
 
-        async function Ops_RefreshDataSilent() {
+        async function refreshDataSilent() {
             try {
-                Ops_AllData = await N_ONE_CORE.fetchData('read');
-                Ops_ProcessData();
-            } catch (Ops_E) {}
+                allData = await N_ONE_CORE.fetchData('read');
+                processData();
+            } catch (e) {}
         }
 
-        function Ops_ProcessData() {
-            // 1. فصل البيانات Segregation Protocol
-            Ops_Captains = Ops_AllData.filter(i => i.type === 'captain' && i.status !== 'pending').reverse();
-            Ops_Requests = Ops_AllData.filter(i => i.type === 'captain' && i.status === 'pending');
-            Ops_Shops = Ops_AllData.filter(i => i.type === 'shop'); // المنشآت لها مسار مستقل
+        function processData() {
+            // 1. فصل البيانات (Segregation Protocol)
+            captains = allData.filter(i => i.type === 'captain' && i.status !== 'pending').reverse();
+            requests = allData.filter(i => i.type === 'captain' && i.status === 'pending');
+            shops = allData.filter(i => i.type === 'shop'); // المنشآت لها مسار مستقل
 
             // تحديث المؤشرات الحية
-            document.getElementById('Ops_StatCapsCount').innerText = Ops_Captains.length;
-            document.getElementById('Ops_StatShopsCount').innerText = Ops_Shops.length;
+            document.getElementById('stat-caps-count').innerText = captains.length;
+            document.getElementById('stat-shops-count').innerText = shops.length;
             
-            const Ops_TotalLiquidity = Ops_Captains.reduce((sum, c) => sum + parseFloat(c.balance || 0), 0) + 
-                                   Ops_Shops.reduce((sum, s) => sum + parseFloat(s.balance || 0), 0);
-            document.getElementById('Ops_StatLiquidity').innerText = Ops_TotalLiquidity.toFixed(2);
+            const totalLiquidity = captains.reduce((sum, c) => sum + parseFloat(c.balance || 0), 0) + 
+                                   shops.reduce((sum, s) => sum + parseFloat(s.balance || 0), 0);
+            document.getElementById('stat-liquidity').innerText = totalLiquidity.toFixed(2);
 
             // رسم الجداول
-            Ops_RenderRequests();
-            Ops_RenderFleet();
+            renderRequests();
+            renderFleet();
         }
 
-        // --- 1. تسجيل كابتن مع الأعمدة الجديدة ---
-        async function Ops_RegisterCaptain() {
-            const Ops_Name = document.getElementById('Ops_RegName').value;
-            const Ops_Phone = document.getElementById('Ops_RegPhone').value;
-            const Ops_Code = document.getElementById('Ops_RegCode').value; // ترميز السيارة
-            const Ops_CarType = document.getElementById('Ops_RegCar').value;
-            const Ops_CarModel = document.getElementById('Ops_RegModel').value;
+        // --- 1. تسجيل كابتن (مع الأعمدة الجديدة) ---
+        async function registerCaptain() {
+            const name = document.getElementById('reg_name').value;
+            const phone = document.getElementById('reg_phone').value;
+            const code = document.getElementById('reg_code').value; // ترميز السيارة
+            const carType = document.getElementById('reg_car').value;
+            const carModel = document.getElementById('reg_model').value;
 
-            if(!Ops_Name || !Ops_Phone || !Ops_Code || !Ops_CarType) return alert("البيانات ناقصة يرجى تعبئة كافة الحقول");
+            if(!name || !phone || !code || !carType) return alert("البيانات ناقصة! يرجى تعبئة كافة الحقول.");
 
             // فحص التكرار
-            if(Ops_Captains.some(c => c.user === Ops_Code || c.cap_phone === Ops_Phone)) {
-                return alert("⛔ الكابتن مسجل مسبقا الهاتف أو الترميز مكرر");
+            if(captains.some(c => c.user === code || c.cap_phone === phone)) {
+                return alert("⛔ الكابتن مسجل مسبقاً (الهاتف أو الترميز مكرر)!");
             }
 
-            Ops_ShowLoader(true);
-            const Ops_NewCap = {
+            showLoader(true);
+            const newCap = {
                 id: "CAP_" + Date.now(),
-                user: Ops_Code, // ترميز السيارة
+                user: code, // ترميز السيارة
                 pass: "123456", 
-                name: Ops_Name, // الاسم الكامل
+                name: name, // الاسم الكامل
                 role: "captain", type: "captain",
-                cap_phone: Ops_Phone, // رقم الهاتف المفتاح
+                cap_phone: phone, // رقم الهاتف (المفتاح)
                 status: "active", 
-                pickup: `${Ops_CarType} | ${Ops_CarModel}`, // دمج النوع والموديل في خانة واحدة
+                pickup: `${carType} | ${carModel}`, // دمج النوع والموديل في خانة واحدة
                 balance: "0", 
                 emergency_used: "false"
             };
 
-            await N_ONE_CORE.postData('add', [Ops_NewCap]);
+            await N_ONE_CORE.postData('add', [newCap]);
             alert("تم اعتماد الكابتن في الأسطول بنجاح ✅");
             
             // مسح الحقول
-            document.getElementById('Ops_RegName').value = '';
-            document.getElementById('Ops_RegPhone').value = '';
-            document.getElementById('Ops_RegCode').value = '';
-            document.getElementById('Ops_RegCar').value = '';
-            document.getElementById('Ops_RegModel').value = '';
+            document.getElementById('reg_name').value = '';
+            document.getElementById('reg_phone').value = '';
+            document.getElementById('reg_code').value = '';
+            document.getElementById('reg_car').value = '';
+            document.getElementById('reg_model').value = '';
             
-            await Ops_RefreshData();
-            Ops_ShowLoader(false);
+            await refreshData();
+            showLoader(false);
         }
 
-        // --- 2. المحفظة السريعة بحث فولاذي + كبسات فعالة ---
-        function Ops_SearchWallet() {
+        // --- 2. المحفظة السريعة (بحث فولاذي + كبسات فعالة) ---
+        function searchWallet() {
             // تحويل المدخل لنص صافي ومسح المسافات
-            const Ops_Q = String(document.getElementById('Ops_WalletQ').value).trim();
-            if(!Ops_Q) return;
+            const q = String(document.getElementById('wallet_q').value).trim();
+            if(!q) return;
 
-            // البحث مقارنة الرقم بالرقم كنص OR مقارنة الكود بالكود
-            const Ops_Target = Ops_Captains.find(c => 
-                String(c.cap_phone).trim() == Ops_Q || 
-                String(c.user).trim() == Ops_Q
+            // البحث: (مقارنة الرقم بالرقم كنص) OR (مقارنة الكود بالكود)
+            const target = captains.find(c => 
+                String(c.cap_phone).trim() == q || 
+                String(c.user).trim() == q
             );
 
-            if(Ops_Target) {
-                Ops_CurrentWalletCaptain = Ops_Target;
-                document.getElementById('Ops_WalletResult').style.display = 'block';
-                document.getElementById('Ops_WrName').innerText = Ops_Target.name;
-                document.getElementById('Ops_WrBal').innerText = parseFloat(Ops_Target.balance||0).toFixed(2);
-                document.getElementById('Ops_WrCode').innerText = Ops_Target.user;
-                document.getElementById('Ops_WrPhone').innerText = Ops_Target.cap_phone;
+            if(target) {
+                currentWalletCaptain = target;
+                document.getElementById('wallet-result').style.display = 'block';
+                document.getElementById('wr_name').innerText = target.name;
+                document.getElementById('wr_bal').innerText = parseFloat(target.balance||0).toFixed(2);
+                document.getElementById('wr_code').innerText = target.user;
+                document.getElementById('wr_phone').innerText = target.cap_phone;
             } else {
-                alert("❌ كابتن غير موجود تأكد من الرقم أو الترميز");
-                document.getElementById('Ops_WalletResult').style.display = 'none';
-                Ops_CurrentWalletCaptain = null;
+                alert("❌ كابتن غير موجود (تأكد من الرقم أو الترميز)");
+                document.getElementById('wallet-result').style.display = 'none';
+                currentWalletCaptain = null;
             }
         }
 
-        // دالة العمليات الفولاذية Update & Live Sync
-        async function Ops_UpdateBalance(Ops_Action) {
-            if(!Ops_CurrentWalletCaptain) return alert("⚠️ يرجى البحث عن كابتن أولا");
+        // دالة العمليات الفولاذية (Update & Live Sync)
+        async function updateBalance(action) {
+            if(!currentWalletCaptain) return alert("⚠️ يرجى البحث عن كابتن أولاً!");
             
-            const Ops_Amt = parseFloat(document.getElementById('Ops_WalletAmt').value);
-            if(!Ops_Amt || Ops_Amt <= 0) return alert("⚠️ المبلغ غير صحيح");
+            const amt = parseFloat(document.getElementById('wallet_amt').value);
+            if(!amt || amt <= 0) return alert("⚠️ المبلغ غير صحيح!");
 
-            const Ops_OldBal = parseFloat(Ops_CurrentWalletCaptain.balance || 0);
-            const Ops_NewBal = Ops_Action === 'add' ? Ops_OldBal + Ops_Amt : Ops_OldBal - Ops_Amt;
+            const oldBal = parseFloat(currentWalletCaptain.balance || 0);
+            const newBal = action === 'add' ? oldBal + amt : oldBal - amt;
 
             // رسالة تأكيد فخمة
-            const Ops_ActionText = Ops_Action === 'add' ? 'إيداع' : 'خصم';
-            if(!confirm(`هل أنت متأكد من ${Ops_ActionText} مبلغ ${Ops_Amt} د.أ \n👤 الكابتن ${Ops_CurrentWalletCaptain.name}\n💰 الرصيد الجديد سيصبح ${Ops_NewBal.toFixed(2)}`)) return;
+            const actionText = action === 'add' ? 'إيداع' : 'خصم';
+            if(!confirm(`هل أنت متأكد من ${actionText} مبلغ ${amt} د.أ ؟\n👤 الكابتن: ${currentWalletCaptain.name}\n💰 الرصيد الجديد سيصبح: ${newBal.toFixed(2)}`)) return;
 
-            Ops_ShowLoader(true);
+            showLoader(true);
             
-            // 1. تحديث محلي فوري للمحفظة
-            Ops_CurrentWalletCaptain.balance = Ops_NewBal;
-            document.getElementById('Ops_WrBal').innerText = Ops_NewBal.toFixed(2);
+            // 1. تحديث محلي فوري (للمحفظة)
+            currentWalletCaptain.balance = newBal;
+            document.getElementById('wr_bal').innerText = newBal.toFixed(2);
 
-            // 2. تحديث السيرفر باستخدام المفتاح الصحيح
-            // نرسل user الترميز أو cap_phone الهاتف كلاهما يعمل مع v8.0
-            const Ops_KeyToSend = Ops_CurrentWalletCaptain.user ? Ops_CurrentWalletCaptain.user : Ops_CurrentWalletCaptain.cap_phone;
+            // 2. تحديث السيرفر (باستخدام المفتاح الصحيح)
+            // نرسل user (الترميز) أو cap_phone (الهاتف) كلاهما يعمل مع v8.0
+            const keyToSend = currentWalletCaptain.user ? currentWalletCaptain.user : currentWalletCaptain.cap_phone;
             
-            await N_ONE_CORE.postData('update', { user: Ops_KeyToSend, data: { balance: Ops_NewBal } });
+            await N_ONE_CORE.postData('update', { user: keyToSend, data: { balance: newBal } });
             
-            // 3. تحديث الجدول الأسطول فورا
-            Ops_RenderFleet(); 
+            // 3. تحديث الجدول (الأسطول) فوراً
+            renderFleet(); 
             
-            alert(`✅ تمت عملية ال${Ops_ActionText} بنجاح\nالرصيد المحدث ${Ops_NewBal.toFixed(2)} د.أ`);
-            Ops_ShowLoader(false);
+            alert(`✅ تمت عملية ال${actionText} بنجاح!\nالرصيد المحدث: ${newBal.toFixed(2)} د.أ`);
+            showLoader(false);
         }
 
-        // --- 3. الصندوق المركزي للمنشآت فقط ---
-        function Ops_OpenTreasury() { document.getElementById('Ops_ModalTreasury').style.display = 'flex'; }
-        function Ops_CloseModal(Ops_Id) { document.getElementById(Ops_Id).style.display = 'none'; }
+        // --- 3. الصندوق المركزي (للمنشآت فقط) ---
+        function openTreasury() { document.getElementById('modal-treasury').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        async function Ops_ExecuteTreasury() {
-            const Ops_TargetInput = String(document.getElementById('Ops_TrTarget').value).trim();
-            const Ops_Amount = parseFloat(document.getElementById('Ops_TrAmount').value);
+        async function executeTreasury() {
+            const targetInput = String(document.getElementById('tr-target').value).trim();
+            const amount = parseFloat(document.getElementById('tr-amount').value);
 
-            if(!Ops_TargetInput || !Ops_Amount) return alert("البيانات ناقصة يرجى إدخال الرقم والمبلغ ☺️");
+            if(!targetInput || !amount) return alert("البيانات ناقصة! يرجى إدخال الرقم والمبلغ ☺️");
 
-            Ops_ShowLoader(true);
+            showLoader(true);
 
-            // بحث ذكي يقارن النصوص User OR Phone
-            // يبحث في المنشآت فقط Shops
-            const Ops_Target = Ops_Shops.find(u => 
-                String(u.user).trim() === Ops_TargetInput || 
-                String(u.cap_phone).trim() === Ops_TargetInput
+            // بحث ذكي يقارن النصوص (User OR Phone)
+            // يبحث في المنشآت فقط (Shops)
+            const target = shops.find(u => 
+                String(u.user).trim() === targetInput || 
+                String(u.cap_phone).trim() === targetInput
             );
 
-            if(!Ops_Target) {
-                alert("❌ منشأة غير موجودة تأكد أن الرقم صحيح ومسجل كمنشأة");
-                Ops_ShowLoader(false);
+            if(!target) {
+                alert("❌ منشأة غير موجودة! (تأكد أن الرقم صحيح ومسجل كمنشأة)");
+                showLoader(false);
                 return;
             }
 
-            if(!confirm(`هل أنت متأكد من شحن رصيد\n👤 المنشأة ${Ops_Target.name}\n💰 المبلغ ${Ops_Amount} د.أ `)) {
-                Ops_ShowLoader(false); return;
+            if(!confirm(`هل أنت متأكد من شحن رصيد:\n👤 المنشأة: ${target.name}\n💰 المبلغ: ${amount} د.أ ؟`)) {
+                showLoader(false); return;
             }
 
-            const Ops_KeyToSend = Ops_Target.user ? Ops_Target.user : Ops_Target.cap_phone;
-            const Ops_NewBal = parseFloat(Ops_Target.balance || 0) + Ops_Amount;
+            const keyToSend = target.user ? target.user : target.cap_phone;
+            const newBal = parseFloat(target.balance || 0) + amount;
             
-            await N_ONE_CORE.postData('update', { user: Ops_KeyToSend, data: { balance: Ops_NewBal } });
+            await N_ONE_CORE.postData('update', { user: keyToSend, data: { balance: newBal } });
             
-            Ops_Target.balance = Ops_NewBal;
+            target.balance = newBal;
             
-            alert(`✅ تم شحن المنشأة بنجاح\nالرصيد الجديد ${Ops_NewBal.toFixed(2)} د.أ`);
+            alert(`✅ تم شحن المنشأة بنجاح!\nالرصيد الجديد: ${newBal.toFixed(2)} د.أ`);
             
-            document.getElementById('Ops_TrTarget').value = '';
-            document.getElementById('Ops_TrAmount').value = '';
-            Ops_CloseModal('Ops_ModalTreasury');
+            document.getElementById('tr-target').value = '';
+            document.getElementById('tr-amount').value = '';
+            closeModal('modal-treasury');
             
-            Ops_ProcessData(); 
-            Ops_ShowLoader(false);
+            processData(); 
+            showLoader(false);
         }
 
         // --- 4. الأسطول النشط ---
-        function Ops_RenderFleet() {
-            const Ops_Tbody = document.getElementById('Ops_FleetBody');
-            const Ops_Q = String(document.getElementById('Ops_FleetSearch').value).toLowerCase().trim();
-            Ops_Tbody.innerHTML = '';
+        function renderFleet() {
+            const tbody = document.getElementById('fleet-body');
+            const q = String(document.getElementById('fleet-search').value).toLowerCase().trim();
+            tbody.innerHTML = '';
 
-            Ops_Captains.forEach(c => {
+            captains.forEach(c => {
                 // بحث شامل آمن
-                const Ops_CName = String(c.name).toLowerCase();
-                const Ops_CUser = String(c.user).toLowerCase();
-                const Ops_CPhone = String(c.cap_phone).toLowerCase();
+                const cName = String(c.name).toLowerCase();
+                const cUser = String(c.user).toLowerCase();
+                const cPhone = String(c.cap_phone).toLowerCase();
 
-                if(Ops_Q && !Ops_CName.includes(Ops_Q) && !Ops_CUser.includes(Ops_Q) && !Ops_CPhone.includes(Ops_Q)) return;
+                if(q && !cName.includes(q) && !cUser.includes(q) && !cPhone.includes(q)) return;
 
-                const Ops_StatusClass = c.status === 'active' ? 'dot-active' : 'dot-paused';
-                const Ops_EmergIcon = c.emergency_used === 'true' ? '⚠️ طوارئ' : '✅ آمن';
-                const Ops_FreezeIcon = c.status === 'active' ? '⏸ تجميد' : '▶ تفعيل';
-                const Ops_CarInfo = c.pickup || 'غير محدد';
+                const statusClass = c.status === 'active' ? 'dot-active' : 'dot-paused';
+                const emergIcon = c.emergency_used === 'true' ? '⚠️ طوارئ' : '✅ آمن';
+                const freezeIcon = c.status === 'active' ? '⏸ تجميد' : '▶ تفعيل';
+                const carInfo = c.pickup || 'غير محدد';
 
-                Ops_Tbody.innerHTML += `
+                tbody.innerHTML += `
                     <tr>
-                        <td style="text-align:center;"><span class="status-dot ${Ops_StatusClass}"></span></td>
+                        <td style="text-align:center;"><span class="status-dot ${statusClass}"></span></td>
                         <td><strong>${c.name}</strong></td>
                         <td style="font-family:monospace; color:var(--primary); font-weight:bold;">${c.user}</td>
                         <td style="font-family:monospace; color:var(--text-muted);">${c.cap_phone}</td>
-                        <td style="font-size:11px;">${Ops_CarInfo}</td>
+                        <td style="font-size:11px;">${carInfo}</td>
                         <td style="font-weight:900; color:var(--success); font-size:14px;">${parseFloat(c.balance||0).toFixed(2)}</td>
-                        <td style="text-align:center; font-size:11px;">${Ops_EmergIcon}</td>
+                        <td style="text-align:center; font-size:11px;">${emergIcon}</td>
                         <td>
-                            <button class="action-icon" onclick="Ops_EditUser('${c.user}', '${c.name}', '${c.cap_phone}')" title="تعديل">✏️</button>
-                            <button class="action-icon" onclick="Ops_FreezeUser('${c.user}')" title="حالة">${Ops_FreezeIcon}</button>
-                            <button class="action-icon" style="color:var(--danger);" onclick="Ops_DeleteUser('${c.user}')" title="حذف">🗑</button>
+                            <button class="action-icon" onclick="editUser('${c.user}', '${c.name}', '${c.cap_phone}')" title="تعديل">✏️</button>
+                            <button class="action-icon" onclick="freezeUser('${c.user}')" title="حالة">${freezeIcon}</button>
+                            <button class="action-icon" style="color:var(--danger);" onclick="deleteUser('${c.user}')" title="حذف">🗑</button>
                         </td>
                     </tr>
                 `;
@@ -547,70 +547,70 @@
         }
 
         // --- 5. أدوات التحكم ---
-        async function Ops_FreezeUser(u) {
-            const c = Ops_Captains.find(i => i.user === u);
+        async function freezeUser(u) {
+            const c = captains.find(i => i.user === u);
             const ns = c.status === 'active' ? 'paused' : 'active';
-            if(confirm("تغيير حالة الكابتن")) {
-                c.status = ns; Ops_RenderFleet(); 
+            if(confirm("تغيير حالة الكابتن؟")) {
+                c.status = ns; renderFleet(); 
                 await N_ONE_CORE.postData('update', { user: u, data: { status: ns } });
             }
         }
 
-        async function Ops_EditUser(u, oldName, oldPhone) {
-            const newName = prompt("تعديل الاسم", oldName);
+        async function editUser(u, oldName, oldPhone) {
+            const newName = prompt("تعديل الاسم:", oldName);
             if(!newName) return;
-            const newPhone = prompt("تعديل الهاتف", oldPhone);
+            const newPhone = prompt("تعديل الهاتف:", oldPhone);
             if(!newPhone) return;
 
-            document.getElementById('Ops_LoadingLine').style.width = '100%';
+            document.getElementById('loading-line').style.width = '100%';
             await N_ONE_CORE.postData('update', { user: u, data: { name: newName, cap_phone: newPhone } });
-            await Ops_RefreshData();
-            document.getElementById('Ops_LoadingLine').style.width = '0%';
+            await refreshData();
+            document.getElementById('loading-line').style.width = '0%';
         }
 
-        async function Ops_DeleteUser(u) {
-            if(confirm("⚠️ تحذير هل أنت متأكد من حذف الكابتن نهائيا")) {
-                Ops_ShowLoader(true);
-                Ops_Captains = Ops_Captains.filter(i => i.user !== u); Ops_RenderFleet();
+        async function deleteUser(u) {
+            if(confirm("⚠️ تحذير: هل أنت متأكد من حذف الكابتن نهائياً؟")) {
+                showLoader(true);
+                captains = captains.filter(i => i.user !== u); renderFleet();
                 await N_ONE_CORE.fetchData('delete', { user: u });
-                Ops_ShowLoader(false);
+                showLoader(false);
             }
         }
 
         // --- 6. غرفة الانتظار ---
-        function Ops_RenderRequests() {
-            const Ops_Tbody = document.getElementById('Ops_ReqBody');
-            Ops_Tbody.innerHTML = '';
-            if(Ops_Requests.length === 0) {
-                Ops_Tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">لا توجد طلبات معلقة</td></tr>';
+        function renderRequests() {
+            const tbody = document.getElementById('req-body');
+            tbody.innerHTML = '';
+            if(requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">لا توجد طلبات معلقة</td></tr>';
                 return;
             }
-            Ops_Requests.forEach(r => {
-                Ops_Tbody.innerHTML += `
+            requests.forEach(r => {
+                tbody.innerHTML += `
                     <tr>
                         <td>${r.name}</td>
                         <td>${r.cap_phone}</td>
                         <td>${r.pickup || '-'}</td>
                         <td style="font-size:10px; color:#64748b;">${new Date().toLocaleDateString()}</td>
                         <td>
-                            <button class="action-icon" style="color:var(--success);" onclick="Ops_ApproveReq('${r.user}')" title="قبول">✔</button>
-                            <button class="action-icon" style="color:var(--danger);" onclick="Ops_DeleteUser('${r.user}')" title="رفض">✖</button>
+                            <button class="action-icon" style="color:var(--success);" onclick="approveReq('${r.user}')" title="قبول">✔</button>
+                            <button class="action-icon" style="color:var(--danger);" onclick="deleteUser('${r.user}')" title="رفض">✖</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        async function Ops_ApproveReq(u) {
-            if(confirm("قبول الكابتن في الأسطول")) {
-                Ops_ShowLoader(true);
+        async function approveReq(u) {
+            if(confirm("قبول الكابتن في الأسطول؟")) {
+                showLoader(true);
                 await N_ONE_CORE.postData('update', { user: u, data: { status: 'active', balance: '0' } });
-                await Ops_RefreshData();
-                Ops_ShowLoader(false);
+                await refreshData();
+                showLoader(false);
             }
         }
 
-        function Ops_ShowLoader(show) { document.getElementById('Ops_LoadingLine').style.width = show ? '100%' : '0%'; }
+        function showLoader(show) { document.getElementById('loading-line').style.width = show ? '100%' : '0%'; }
 
     </script>
 </body>
