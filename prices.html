@@ -157,7 +157,7 @@
 </head>
 <body>
 
-    <nav class="navbar" id="main-nav">
+    <nav class="navbar" id="Prc_MainNav">
         <div class="brand">N <span class="gold-text">One</span> Smart Matrix</div>
         <a href="client.html" class="btn-back">⬅️ عودة للإدارة</a>
     </nav>
@@ -169,11 +169,11 @@
                 <span style="font-size:24px;">🌙</span>
                 <div>
                     <div style="font-weight:bold; font-size:14px; color:#37474f;">الحارس الليلي (التسعير التلقائي)</div>
-                    <div style="font-size:11px; color:#777;">عند التفعيل: زيادة 0.50 د.أ بعد الساعة 11:00 م</div>
+                    <div style="font-size:11px; color:#777;">عند التفعيل زيادة 0.50 د.أ بعد الساعة 11:00 م</div>
                 </div>
             </div>
             <label class="switch">
-                <input type="checkbox" id="night-toggle" onchange="toggleNightModeOverride()" checked>
+                <input type="checkbox" id="Prc_NightToggle" onchange="Prc_ToggleNightModeOverride()" checked>
                 <span class="slider"></span>
             </label>
         </div>
@@ -181,46 +181,46 @@
         <div class="controls-panel">
             <div class="controls-row">
                 <div class="source-group">
-                    <label style="font-weight:bold; font-size:12px;">المصدر:</label>
-                    <select id="source-select" class="source-select" onchange="renderMatrix()">
+                    <label style="font-weight:bold; font-size:12px;">المصدر</label>
+                    <select id="Prc_SourceSelect" class="source-select" onchange="Prc_RenderMatrix()">
                         </select>
-                    <button class="btn-icon" onclick="addSource()" title="إضافة مصدر جديد">➕</button>
-                    <button class="btn-icon" onclick="duplicateSource()" title="نسخ القائمة (Quick Duplicate)" style="background:#e3f2fd; color:#1565c0;">📑</button>
-                    <button class="btn-icon" onclick="deleteSource()" title="حذف المصدر" style="background:#ffebee; color:var(--danger);">🗑️</button>
+                    <button class="btn-icon" onclick="Prc_AddSource()" title="إضافة مصدر جديد">➕</button>
+                    <button class="btn-icon" onclick="Prc_DuplicateSource()" title="نسخ القائمة (Quick Duplicate)" style="background:#e3f2fd; color:#1565c0;">📑</button>
+                    <button class="btn-icon" onclick="Prc_DeleteSource()" title="حذف المصدر" style="background:#ffebee; color:var(--danger);">🗑️</button>
                 </div>
 
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" class="search-input" placeholder="بحث ذكي عن منطقة..." oninput="renderMatrix()">
+                    <input type="text" id="Prc_SearchInput" class="search-input" placeholder="بحث ذكي عن منطقة" oninput="Prc_RenderMatrix()">
                 </div>
             </div>
 
             <div class="controls-row" style="justify-content: flex-end; margin-bottom:0;">
                 <div class="action-btns">
-                    <button class="btn-main" style="background:#37474f;" onclick="addArea()">+ منطقة</button>
+                    <button class="btn-main" style="background:#37474f;" onclick="Prc_AddArea()">+ منطقة</button>
                     <button class="btn-main" style="background:var(--primary);" onclick="window.print()">🖨️ طباعة</button>
-                    <button class="btn-main btn-save" onclick="saveData()">💾 حفظ واعتماد الأسعار</button>
+                    <button class="btn-main btn-save" onclick="Prc_SaveData()">💾 حفظ واعتماد الأسعار</button>
                 </div>
             </div>
         </div>
 
         <div class="print-header">
             <h1 style="color:#1a237e; margin:0;">N <span style="color:#d4af37">One</span> Delivery</h1>
-            <p style="margin:5px 0; color:#555; font-size:14px;">قائمة الأسعار المعتمدة - <span id="print-source-name"></span></p>
+            <p style="margin:5px 0; color:#555; font-size:14px;">قائمة الأسعار المعتمدة - <span id="Prc_PrintSourceName"></span></p>
         </div>
 
-        <div id="matrix-grid" class="matrix-container">
+        <div id="Prc_MatrixGrid" class="matrix-container">
             </div>
 
     </div>
 
     <script>
         // ========================================================
-        // كود المصفوفة الماسية - v5.0 (Full Manual Control)
+        // كود المصفوفة الماسية المشفر - v5.0 (Full Manual Control)
         // ========================================================
         
         // البيانات الافتراضية
-        const defaultData = {
+        const Prc_DefaultData = {
             "الجبيهة": [
                 { area: "حي الريان / الزوتنية", price: 1.50, isOffer: false, lastMod: Date.now() },
                 { area: "ضاحية الرشيد", price: 2.00, isOffer: true, lastMod: Date.now() },
@@ -232,163 +232,163 @@
         };
 
         // استرجاع البيانات
-        let pricingData = JSON.parse(localStorage.getItem('nOne_global_prices')) || defaultData;
-        let isNightActive = false; // هل التسعير الليلي مفعل حالياً؟
+        let Prc_PricingData = JSON.parse(localStorage.getItem('Prc_GlobalPricesDB')) || Prc_DefaultData;
+        let Prc_IsNightActive = false; // هل التسعير الليلي مفعل حالياً
 
         window.onload = function() {
             // استرجاع حالة مفتاح الأمان الليلي
-            const savedToggle = localStorage.getItem('nOne_night_toggle');
-            if (savedToggle !== null) {
-                document.getElementById('night-toggle').checked = (savedToggle === 'true');
+            const Prc_SavedToggle = localStorage.getItem('Prc_NightToggleDB');
+            if (Prc_SavedToggle !== null) {
+                document.getElementById('Prc_NightToggle').checked = (Prc_SavedToggle === 'true');
             }
             
-            checkNightMode();
-            populateSources();
-            renderMatrix();
+            Prc_CheckNightMode();
+            Prc_PopulateSources();
+            Prc_RenderMatrix();
             
             // فحص الوقت كل دقيقة
-            setInterval(checkNightMode, 60000);
+            setInterval(Prc_CheckNightMode, 60000);
         };
 
         // 1. منطق الحارس الليلي (يدوي + أوتوماتيك)
-        function checkNightMode() {
-            const hour = new Date().getHours();
-            // الوقت: من 11 م (23) إلى 6 ص (6)
-            const isNightTime = (hour >= 23 || hour < 6);
-            // المفتاح اليدوي: هل سمح المستخدم بالتسعير الليلي؟
-            const isToggleOn = document.getElementById('night-toggle').checked;
+        function Prc_CheckNightMode() {
+            const Prc_Hour = new Date().getHours();
+            // الوقت من 11 م (23) إلى 6 ص (6)
+            const Prc_IsNightTime = (Prc_Hour >= 23 || Prc_Hour < 6);
+            // المفتاح اليدوي هل سمح المستخدم بالتسعير الليلي
+            const Prc_IsToggleOn = document.getElementById('Prc_NightToggle').checked;
             
-            // النتيجة النهائية: الوقت ليل + المفتاح شغال
-            const shouldBeNight = isNightTime && isToggleOn;
+            // النتيجة النهائية الوقت ليل + المفتاح شغال
+            const Prc_ShouldBeNight = Prc_IsNightTime && Prc_IsToggleOn;
 
-            if (shouldBeNight !== isNightActive) {
-                isNightActive = shouldBeNight;
-                renderMatrix(); // إعادة رسم الأسعار
+            if (Prc_ShouldBeNight !== Prc_IsNightActive) {
+                Prc_IsNightActive = Prc_ShouldBeNight;
+                Prc_RenderMatrix(); // إعادة رسم الأسعار
             }
 
             // تحديث ستايل الهيدر فقط
-            const nav = document.getElementById('main-nav');
-            if (isNightActive) nav.classList.add('night-mode');
-            else nav.classList.remove('night-mode');
+            const Prc_Nav = document.getElementById('Prc_MainNav');
+            if (Prc_IsNightActive) Prc_Nav.classList.add('night-mode');
+            else Prc_Nav.classList.remove('night-mode');
         }
 
-        function toggleNightModeOverride() {
+        function Prc_ToggleNightModeOverride() {
             // حفظ تفضيل المستخدم
-            const isChecked = document.getElementById('night-toggle').checked;
-            localStorage.setItem('nOne_night_toggle', isChecked);
+            const Prc_IsChecked = document.getElementById('Prc_NightToggle').checked;
+            localStorage.setItem('Prc_NightToggleDB', Prc_IsChecked);
             
             // إعادة الفحص الفوري
-            checkNightMode();
+            Prc_CheckNightMode();
         }
 
         // 2. إدارة المصادر
-        function populateSources() {
-            const select = document.getElementById('source-select');
-            const currentVal = select.value;
-            select.innerHTML = '';
-            Object.keys(pricingData).forEach(source => {
-                const option = document.createElement('option');
-                option.value = source;
-                option.innerText = source;
-                select.appendChild(option);
+        function Prc_PopulateSources() {
+            const Prc_Select = document.getElementById('Prc_SourceSelect');
+            const Prc_CurrentVal = Prc_Select.value;
+            Prc_Select.innerHTML = '';
+            Object.keys(Prc_PricingData).forEach(Prc_Source => {
+                const Prc_Option = document.createElement('option');
+                Prc_Option.value = Prc_Source;
+                Prc_Option.innerText = Prc_Source;
+                Prc_Select.appendChild(Prc_Option);
             });
-            if (currentVal && pricingData[currentVal]) select.value = currentVal;
+            if (Prc_CurrentVal && Prc_PricingData[Prc_CurrentVal]) Prc_Select.value = Prc_CurrentVal;
         }
 
-        function addSource() {
-            const name = prompt("اسم المصدر الجديد:");
-            if (name && !pricingData[name]) {
-                pricingData[name] = [];
-                populateSources();
-                document.getElementById('source-select').value = name;
-                renderMatrix();
-                saveData(true);
+        function Prc_AddSource() {
+            const Prc_Name = prompt("اسم المصدر الجديد");
+            if (Prc_Name && !Prc_PricingData[Prc_Name]) {
+                Prc_PricingData[Prc_Name] = [];
+                Prc_PopulateSources();
+                document.getElementById('Prc_SourceSelect').value = Prc_Name;
+                Prc_RenderMatrix();
+                Prc_SaveData(true);
             }
         }
 
-        function duplicateSource() {
-            const current = document.getElementById('source-select').value;
-            const newName = prompt(`نسخ قائمة (${current}) إلى مدينة جديدة باسم:`);
-            if (newName && !pricingData[newName]) {
-                pricingData[newName] = JSON.parse(JSON.stringify(pricingData[current]));
-                populateSources();
-                document.getElementById('source-select').value = newName;
-                renderMatrix();
-                saveData(true);
+        function Prc_DuplicateSource() {
+            const Prc_Current = document.getElementById('Prc_SourceSelect').value;
+            const Prc_NewName = prompt(`نسخ قائمة ${Prc_Current} إلى مدينة جديدة باسم`);
+            if (Prc_NewName && !Prc_PricingData[Prc_NewName]) {
+                Prc_PricingData[Prc_NewName] = JSON.parse(JSON.stringify(Prc_PricingData[Prc_Current]));
+                Prc_PopulateSources();
+                document.getElementById('Prc_SourceSelect').value = Prc_NewName;
+                Prc_RenderMatrix();
+                Prc_SaveData(true);
             }
         }
 
-        function deleteSource() {
-            const current = document.getElementById('source-select').value;
-            if (confirm(`حذف قائمة (${current}) نهائياً؟`)) {
-                delete pricingData[current];
-                if (Object.keys(pricingData).length === 0) pricingData["Default"] = [];
-                populateSources();
-                renderMatrix();
-                saveData(true);
+        function Prc_DeleteSource() {
+            const Prc_Current = document.getElementById('Prc_SourceSelect').value;
+            if (confirm(`حذف قائمة ${Prc_Current} نهائيا`)) {
+                delete Prc_PricingData[Prc_Current];
+                if (Object.keys(Prc_PricingData).length === 0) Prc_PricingData["Default"] = [];
+                Prc_PopulateSources();
+                Prc_RenderMatrix();
+                Prc_SaveData(true);
             }
         }
 
         // 3. رسم المصفوفة (Smart Render)
-        function renderMatrix() {
-            const source = document.getElementById('source-select').value;
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const container = document.getElementById('matrix-grid');
+        function Prc_RenderMatrix() {
+            const Prc_Source = document.getElementById('Prc_SourceSelect').value;
+            const Prc_SearchTerm = document.getElementById('Prc_SearchInput').value.toLowerCase();
+            const Prc_Container = document.getElementById('Prc_MatrixGrid');
             
-            document.getElementById('print-source-name').innerText = source;
-            container.innerHTML = '';
+            document.getElementById('Prc_PrintSourceName').innerText = Prc_Source;
+            Prc_Container.innerHTML = '';
 
-            const areas = pricingData[source] || [];
+            const Prc_Areas = Prc_PricingData[Prc_Source] || [];
 
-            areas.forEach((item, index) => {
-                if (searchTerm && !item.area.toLowerCase().includes(searchTerm)) return;
+            Prc_Areas.forEach((Prc_Item, Prc_Index) => {
+                if (Prc_SearchTerm && !Prc_Item.area.toLowerCase().includes(Prc_SearchTerm)) return;
 
-                // السعر الأساسي (للتعديل)
-                const basePrice = parseFloat(item.price);
+                // السعر الأساسي للتعديل
+                const Prc_BasePrice = parseFloat(Prc_Item.price);
                 
-                // السعر المعروض (مع الزيادة إذا كان الوضع الليلي نشطاً)
-                let displayPrice = basePrice;
-                let nightBadgeHtml = '';
+                // السعر المعروض مع الزيادة إذا كان الوضع الليلي نشطا
+                let Prc_DisplayPrice = Prc_BasePrice;
+                let Prc_NightBadgeHtml = '';
                 
-                if (isNightActive) {
-                    displayPrice += 0.50;
-                    nightBadgeHtml = `<span class="night-badge">+0.50 ليلي 🌙</span>`;
+                if (Prc_IsNightActive) {
+                    Prc_DisplayPrice += 0.50;
+                    Prc_NightBadgeHtml = `<span class="night-badge">+0.50 ليلي 🌙</span>`;
                 }
 
                 // الألوان والترند
-                let colorClass = 'med-price';
-                if (basePrice < 3) colorClass = 'low-price';
-                if (basePrice >= 5) colorClass = 'high-price';
+                let Prc_ColorClass = 'med-price';
+                if (Prc_BasePrice < 3) Prc_ColorClass = 'low-price';
+                if (Prc_BasePrice >= 5) Prc_ColorClass = 'high-price';
 
-                const offerClass = item.isOffer ? 'gold-offer' : '';
-                const starClass = item.isOffer ? 'active' : '';
+                const Prc_OfferClass = Prc_Item.isOffer ? 'gold-offer' : '';
+                const Prc_StarClass = Prc_Item.isOffer ? 'active' : '';
 
-                let trendHtml = '';
-                const oneDay = 24 * 60 * 60 * 1000;
-                if (item.lastMod && (Date.now() - item.lastMod < oneDay)) {
-                    trendHtml = '<span class="trend-icon">📈 محدث</span>';
+                let Prc_TrendHtml = '';
+                const Prc_OneDay = 24 * 60 * 60 * 1000;
+                if (Prc_Item.lastMod && (Date.now() - Prc_Item.lastMod < Prc_OneDay)) {
+                    Prc_TrendHtml = '<span class="trend-icon">📈 محدث</span>';
                 }
 
-                container.innerHTML += `
-                    <div class="price-card ${offerClass}">
-                        <div class="color-indicator ${colorClass}"></div>
-                        ${trendHtml}
+                Prc_Container.innerHTML += `
+                    <div class="price-card ${Prc_OfferClass}">
+                        <div class="color-indicator ${Prc_ColorClass}"></div>
+                        ${Prc_TrendHtml}
                         
-                        <input type="text" class="area-name-input" value="${item.area}" onchange="updateItem('${source}', ${index}, 'area', this.value)">
+                        <input type="text" class="area-name-input" value="${Prc_Item.area}" onchange="Prc_UpdateItem('${Prc_Source}', ${Prc_Index}, 'area', this.value)">
                         
                         <div class="price-wrapper">
-                            ${nightBadgeHtml}
-                            <input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" onchange="updateItem('${source}', ${index}, 'price', this.value)">
+                            ${Prc_NightBadgeHtml}
+                            <input type="number" class="price-val-input" value="${Prc_DisplayPrice.toFixed(2)}" step="0.25" onchange="Prc_UpdateItem('${Prc_Source}', ${Prc_Index}, 'price', this.value)">
                         </div>
                         
                         <div class="card-tools">
                             <span style="font-size:10px; color:#777;">د.أ</span>
                             
-                            <button class="mini-btn btn-map" onclick="openMap('${item.area}', '${source}')" title="موقع المنطقة">📍</button>
+                            <button class="mini-btn btn-map" onclick="Prc_OpenMap('${Prc_Item.area}', '${Prc_Source}')" title="موقع المنطقة">📍</button>
                             
-                            <button class="mini-btn btn-offer ${starClass}" onclick="toggleOffer('${source}', ${index})" title="تمييز كعرض خاص">⭐</button>
+                            <button class="mini-btn btn-offer ${Prc_StarClass}" onclick="Prc_ToggleOffer('${Prc_Source}', ${Prc_Index})" title="تمييز كعرض خاص">⭐</button>
                             
-                            <button class="mini-btn" onclick="deleteItem('${source}', ${index})" style="color:#ff5252;">×</button>
+                            <button class="mini-btn" onclick="Prc_DeleteItem('${Prc_Source}', ${Prc_Index})" style="color:#ff5252;">×</button>
                         </div>
                     </div>
                 `;
@@ -396,65 +396,65 @@
         }
 
         // 4. التعديل الذكي (Manual Edit)
-        function updateItem(source, index, field, value) {
-            // إذا عدل المستخدم السعر، بدنا نحفظ "السعر الأساسي"
-            if (field === 'price') {
-                let newVal = parseFloat(value);
-                // إذا كان الوضع الليلي شغال، المستخدم شايف (السعر + 0.50)
-                // لما يعدل، هو بيعدل القيمة النهائية، فلازم نخصم الزيادة عشان نحفظ الأساس
-                if (isNightActive) {
-                    newVal -= 0.50; 
+        function Prc_UpdateItem(Prc_Source, Prc_Index, Prc_Field, Prc_Value) {
+            // إذا عدل المستخدم السعر بدنا نحفظ السعر الأساسي
+            if (Prc_Field === 'price') {
+                let Prc_NewVal = parseFloat(Prc_Value);
+                // إذا كان الوضع الليلي شغال المستخدم شايف السعر زائد نصف
+                // لما يعدل هو بيعدل القيمة النهائية فلازم نخصم الزيادة عشان نحفظ الأساس
+                if (Prc_IsNightActive) {
+                    Prc_NewVal -= 0.50; 
                 }
                 // منع القيم السالبة
-                if (newVal < 0) newVal = 0;
+                if (Prc_NewVal < 0) Prc_NewVal = 0;
                 
-                pricingData[source][index].price = newVal;
-                pricingData[source][index].lastMod = Date.now();
+                Prc_PricingData[Prc_Source][Prc_Index].price = Prc_NewVal;
+                Prc_PricingData[Prc_Source][Prc_Index].lastMod = Date.now();
             } else {
-                pricingData[source][index][field] = value;
+                Prc_PricingData[Prc_Source][Prc_Index][Prc_Field] = Prc_Value;
             }
-            renderMatrix();
+            Prc_RenderMatrix();
         }
 
-        function addArea() {
-            const source = document.getElementById('source-select').value;
-            const name = prompt("اسم المنطقة الجديدة:");
-            if (name) {
-                pricingData[source].push({ area: name, price: 0, isOffer: false, lastMod: Date.now() });
-                renderMatrix();
-            }
-        }
-
-        function deleteItem(source, index) {
-            if(confirm("حذف المنطقة؟")) {
-                pricingData[source].splice(index, 1);
-                renderMatrix();
+        function Prc_AddArea() {
+            const Prc_Source = document.getElementById('Prc_SourceSelect').value;
+            const Prc_Name = prompt("اسم المنطقة الجديدة");
+            if (Prc_Name) {
+                Prc_PricingData[Prc_Source].push({ area: Prc_Name, price: 0, isOffer: false, lastMod: Date.now() });
+                Prc_RenderMatrix();
             }
         }
 
-        function toggleOffer(source, index) {
-            pricingData[source][index].isOffer = !pricingData[source][index].isOffer;
-            renderMatrix();
+        function Prc_DeleteItem(Prc_Source, Prc_Index) {
+            if(confirm("حذف المنطقة")) {
+                Prc_PricingData[Prc_Source].splice(Prc_Index, 1);
+                Prc_RenderMatrix();
+            }
         }
 
-        function openMap(area, source) {
-            const query = encodeURIComponent(`${area} ${source} Jordan`);
-            window.open(`http://googleusercontent.com/maps.google.com/search?q=${query}`, '_blank');
+        function Prc_ToggleOffer(Prc_Source, Prc_Index) {
+            Prc_PricingData[Prc_Source][Prc_Index].isOffer = !Prc_PricingData[Prc_Source][Prc_Index].isOffer;
+            Prc_RenderMatrix();
+        }
+
+        function Prc_OpenMap(Prc_Area, Prc_Source) {
+            const Prc_Query = encodeURIComponent(`${Prc_Area} ${Prc_Source} Jordan`);
+            window.open(`http://googleusercontent.com/maps.google.com/search?q=${Prc_Query}`, '_blank');
         }
 
         // 5. الحفظ (The Bridge)
-        function saveData(silent = false) {
-            localStorage.setItem('nOne_global_prices', JSON.stringify(pricingData));
+        function Prc_SaveData(Prc_Silent = false) {
+            localStorage.setItem('Prc_GlobalPricesDB', JSON.stringify(Prc_PricingData));
             
-            if (!silent) {
-                const btn = document.querySelector('.btn-save');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = "تم التعميم 📡";
-                btn.style.background = "#004d40";
+            if (!Prc_Silent) {
+                const Prc_Btn = document.querySelector('.btn-save');
+                const Prc_OriginalHtml = Prc_Btn.innerHTML;
+                Prc_Btn.innerHTML = "تم التعميم 📡";
+                Prc_Btn.style.background = "#004d40";
                 setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                    btn.style.background = "var(--success)";
-                    alert("✅ تم حفظ المصفوفة!\n- التسعير الليلي: " + (isNightActive ? "نشط (+0.50)" : "متوقف") + "\n- تم تحديث الأسعار لدى جميع المنشآت.");
+                    Prc_Btn.innerHTML = Prc_OriginalHtml;
+                    Prc_Btn.style.background = "var(--success)";
+                    alert("تم حفظ المصفوفة التسعير الليلي " + (Prc_IsNightActive ? "نشط" : "متوقف") + " وتم تحديث الأسعار لدى جميع المنشآت");
                 }, 1000);
             }
         }
