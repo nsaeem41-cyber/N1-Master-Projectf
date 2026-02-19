@@ -282,25 +282,25 @@
 
     <div id="modal-treasury" class="modal-overlay">
         <div class="modal-box">
-            <h3 style="margin:0 0 15px 0; text-align:center; color:var(--primary); border-bottom:2px solid var(--gold); padding-bottom:10px;">🏦 الصندوق المركزي</h3>
+            <h3 style="margin:0 0 15px 0; text-align:center; color:var(--primary); border-bottom:2px solid var(--gold); padding-bottom:10px;">🏦 الصندوق المركزي (للمنشآت فقط)</h3>
             <p style="font-size:12px; color:#64748b; text-align:center; margin-bottom:15px;">
-                نظام الارتباط الخارجي: شحن رصيد المنشآت والكباتن عبر رقم الهاتف.
+                نظام الارتباط الخارجي: شحن رصيد المنشآت حصراً عبر رقم الهاتف المسجل.
             </p>
 
-            <label>رقم الهاتف أو الكود (المفتاح)</label>
-            <input type="text" id="tr-target" placeholder="مثلاً: 079xxxxxxx أو C-101" style="background:#f8fafc; margin-bottom:10px;">
+            <label>رقم هاتف المنشأة (المفتاح)</label>
+            <input type="text" id="tr-target" placeholder="مثلاً: 079xxxxxxx" style="background:#f8fafc; margin-bottom:10px;">
             
             <label>المبلغ (د.أ)</label>
             <input type="number" id="tr-amount" placeholder="0.00" style="background:#f8fafc; margin-bottom:20px;">
 
-            <button class="btn-main btn-gold" onclick="executeTreasury()">✅ تنفيذ الإيداع</button>
+            <button class="btn-main btn-gold" onclick="executeTreasury()">✅ شحن رصيد المنشأة</button>
             <button class="btn-main" onclick="closeModal('modal-treasury')" style="background:transparent; color:#ef4444; margin-top:5px;">إلغاء</button>
         </div>
     </div>
 
     <script>
         // ========================================================
-        // العقل المدبر لغرفة العمليات (Ops Brain v19.0 - Diamond Edition) 🧠
+        // العقل المدبر لغرفة العمليات (Ops Brain v20.0 - Steel Edition) 🧠
         // ========================================================
         
         if (typeof N_ONE_CORE !== 'undefined') {
@@ -315,6 +315,10 @@
 
         // --- عند الإقلاع ---
         window.onload = async function() {
+            // تثبيت الجلسة (Session Check)
+            if (typeof N_ONE_CORE !== 'undefined') {
+                N_ONE_CORE.checkSession(); 
+            }
             await refreshData();
             // الخيط الاستقبالي (Listener)
             setInterval(refreshDataSilent, 15000); 
@@ -338,10 +342,12 @@
         }
 
         function processData() {
+            // 1. فصل البيانات (Segregation Protocol)
             captains = allData.filter(i => i.type === 'captain' && i.status !== 'pending').reverse();
             requests = allData.filter(i => i.type === 'captain' && i.status === 'pending');
-            shops = allData.filter(i => i.type === 'shop');
+            shops = allData.filter(i => i.type === 'shop'); // المنشآت لها مسار مستقل
 
+            // تحديث المؤشرات الحية
             document.getElementById('stat-caps-count').innerText = captains.length;
             document.getElementById('stat-shops-count').innerText = shops.length;
             
@@ -349,20 +355,22 @@
                                    shops.reduce((sum, s) => sum + parseFloat(s.balance || 0), 0);
             document.getElementById('stat-liquidity').innerText = totalLiquidity.toFixed(2);
 
+            // رسم الجداول
             renderRequests();
             renderFleet();
         }
 
-        // --- 1. تسجيل كابتن ---
+        // --- 1. تسجيل كابتن (مع الأعمدة الجديدة) ---
         async function registerCaptain() {
             const name = document.getElementById('reg_name').value;
             const phone = document.getElementById('reg_phone').value;
-            const code = document.getElementById('reg_code').value; 
+            const code = document.getElementById('reg_code').value; // ترميز السيارة
             const carType = document.getElementById('reg_car').value;
             const carModel = document.getElementById('reg_model').value;
 
             if(!name || !phone || !code || !carType) return alert("البيانات ناقصة! يرجى تعبئة كافة الحقول.");
 
+            // فحص التكرار
             if(captains.some(c => c.user === code || c.cap_phone === phone)) {
                 return alert("⛔ الكابتن مسجل مسبقاً (الهاتف أو الترميز مكرر)!");
             }
@@ -370,13 +378,13 @@
             showLoader(true);
             const newCap = {
                 id: "CAP_" + Date.now(),
-                user: code, 
+                user: code, // ترميز السيارة
                 pass: "123456", 
-                name: name, 
+                name: name, // الاسم الكامل
                 role: "captain", type: "captain",
-                cap_phone: phone, 
+                cap_phone: phone, // رقم الهاتف (المفتاح)
                 status: "active", 
-                pickup: `${carType} | ${carModel}`,
+                pickup: `${carType} | ${carModel}`, // دمج النوع والموديل في خانة واحدة
                 balance: "0", 
                 emergency_used: "false"
             };
@@ -384,6 +392,7 @@
             await N_ONE_CORE.postData('add', [newCap]);
             alert("تم اعتماد الكابتن في الأسطول بنجاح ✅");
             
+            // مسح الحقول
             document.getElementById('reg_name').value = '';
             document.getElementById('reg_phone').value = '';
             document.getElementById('reg_code').value = '';
@@ -394,12 +403,17 @@
             showLoader(false);
         }
 
-        // --- 2. المحفظة السريعة (للكباتن فقط) ---
+        // --- 2. المحفظة السريعة (بحث فولاذي + كبسات فعالة) ---
         function searchWallet() {
-            const q = document.getElementById('wallet_q').value.trim();
+            // تحويل المدخل لنص صافي ومسح المسافات
+            const q = String(document.getElementById('wallet_q').value).trim();
             if(!q) return;
 
-            const target = captains.find(c => c.cap_phone === q || c.user === q);
+            // البحث: (مقارنة الرقم بالرقم كنص) OR (مقارنة الكود بالكود)
+            const target = captains.find(c => 
+                String(c.cap_phone).trim() == q || 
+                String(c.user).trim() == q
+            );
 
             if(target) {
                 currentWalletCaptain = target;
@@ -409,34 +423,46 @@
                 document.getElementById('wr_code').innerText = target.user;
                 document.getElementById('wr_phone').innerText = target.cap_phone;
             } else {
-                alert("❌ كابتن غير موجود (هذا البحث للكباتن فقط)");
+                alert("❌ كابتن غير موجود (تأكد من الرقم أو الترميز)");
                 document.getElementById('wallet-result').style.display = 'none';
                 currentWalletCaptain = null;
             }
         }
 
+        // دالة العمليات الفولاذية (Update & Live Sync)
         async function updateBalance(action) {
-            if(!currentWalletCaptain) return;
+            if(!currentWalletCaptain) return alert("⚠️ يرجى البحث عن كابتن أولاً!");
+            
             const amt = parseFloat(document.getElementById('wallet_amt').value);
-            if(!amt) return;
+            if(!amt || amt <= 0) return alert("⚠️ المبلغ غير صحيح!");
 
             const oldBal = parseFloat(currentWalletCaptain.balance || 0);
             const newBal = action === 'add' ? oldBal + amt : oldBal - amt;
 
-            if(confirm(`تحديث رصيد الكابتن ${currentWalletCaptain.name} إلى ${newBal.toFixed(2)} ؟`)) {
-                showLoader(true);
-                currentWalletCaptain.balance = newBal; 
-                document.getElementById('wr_bal').innerText = newBal.toFixed(2);
-                
-                await N_ONE_CORE.postData('update', { user: currentWalletCaptain.user, data: { balance: newBal } });
-                
-                renderFleet(); 
-                alert("تم تحديث الرصيد بنجاح 💰");
-                showLoader(false);
-            }
+            // رسالة تأكيد فخمة
+            const actionText = action === 'add' ? 'إيداع' : 'خصم';
+            if(!confirm(`هل أنت متأكد من ${actionText} مبلغ ${amt} د.أ ؟\n👤 الكابتن: ${currentWalletCaptain.name}\n💰 الرصيد الجديد سيصبح: ${newBal.toFixed(2)}`)) return;
+
+            showLoader(true);
+            
+            // 1. تحديث محلي فوري (للمحفظة)
+            currentWalletCaptain.balance = newBal;
+            document.getElementById('wr_bal').innerText = newBal.toFixed(2);
+
+            // 2. تحديث السيرفر (باستخدام المفتاح الصحيح)
+            // نرسل user (الترميز) أو cap_phone (الهاتف) كلاهما يعمل مع v8.0
+            const keyToSend = currentWalletCaptain.user ? currentWalletCaptain.user : currentWalletCaptain.cap_phone;
+            
+            await N_ONE_CORE.postData('update', { user: keyToSend, data: { balance: newBal } });
+            
+            // 3. تحديث الجدول (الأسطول) فوراً
+            renderFleet(); 
+            
+            alert(`✅ تمت عملية ال${actionText} بنجاح!\nالرصيد المحدث: ${newBal.toFixed(2)} د.أ`);
+            showLoader(false);
         }
 
-        // --- 3. الصندوق المركزي (حل مشكلة الإكسل) ---
+        // --- 3. الصندوق المركزي (للمنشآت فقط) ---
         function openTreasury() { document.getElementById('modal-treasury').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -449,37 +475,30 @@
             showLoader(true);
 
             // بحث ذكي يقارن النصوص (User OR Phone)
-            const target = allData.find(u => 
+            // يبحث في المنشآت فقط (Shops)
+            const target = shops.find(u => 
                 String(u.user).trim() === targetInput || 
                 String(u.cap_phone).trim() === targetInput
             );
 
             if(!target) {
-                alert("❌ المستفيد غير موجود! تأكد أن الرقم مسجل في ملف الإكسل.");
+                alert("❌ منشأة غير موجودة! (تأكد أن الرقم صحيح ومسجل كمنشأة)");
                 showLoader(false);
                 return;
             }
 
-            if(!confirm(`هل أنت متأكد من شحن رصيد:\n👤 الاسم: ${target.name}\n💰 المبلغ: ${amount} د.أ ؟`)) {
+            if(!confirm(`هل أنت متأكد من شحن رصيد:\n👤 المنشأة: ${target.name}\n💰 المبلغ: ${amount} د.أ ؟`)) {
                 showLoader(false); return;
             }
 
-            // *** السر هنا: تحديد المفتاح الصحيح ***
-            // إذا كان User ID موجود نستخدمه، إذا فاضي نستخدم الهاتف
             const keyToSend = target.user ? target.user : target.cap_phone;
-
             const newBal = parseFloat(target.balance || 0) + amount;
             
-            // تحديث السيرفر
             await N_ONE_CORE.postData('update', { user: keyToSend, data: { balance: newBal } });
             
-            // التحديث المحلي الفوري
             target.balance = newBal;
             
-            // إذا كان كابتن، نحدث جدوله فوراً
-            if (target.type === 'captain') renderFleet();
-
-            alert(`✅ تم الإيداع بنجاح!\nالرصيد الجديد: ${newBal.toFixed(2)} د.أ`);
+            alert(`✅ تم شحن المنشأة بنجاح!\nالرصيد الجديد: ${newBal.toFixed(2)} د.أ`);
             
             document.getElementById('tr-target').value = '';
             document.getElementById('tr-amount').value = '';
@@ -492,11 +511,16 @@
         // --- 4. الأسطول النشط ---
         function renderFleet() {
             const tbody = document.getElementById('fleet-body');
-            const q = document.getElementById('fleet-search').value.toLowerCase();
+            const q = String(document.getElementById('fleet-search').value).toLowerCase().trim();
             tbody.innerHTML = '';
 
             captains.forEach(c => {
-                if(q && !c.name.toLowerCase().includes(q) && !c.user.toLowerCase().includes(q) && !c.cap_phone.includes(q)) return;
+                // بحث شامل آمن
+                const cName = String(c.name).toLowerCase();
+                const cUser = String(c.user).toLowerCase();
+                const cPhone = String(c.cap_phone).toLowerCase();
+
+                if(q && !cName.includes(q) && !cUser.includes(q) && !cPhone.includes(q)) return;
 
                 const statusClass = c.status === 'active' ? 'dot-active' : 'dot-paused';
                 const emergIcon = c.emergency_used === 'true' ? '⚠️ طوارئ' : '✅ آمن';
