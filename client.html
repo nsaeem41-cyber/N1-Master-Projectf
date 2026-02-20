@@ -202,7 +202,7 @@
 
     <script>
         // ========================================================
-        // المحرك الخارق v7.2 - إمبراطورية N One (HQ Edition)
+        // المحرك الخارق v7.2 - إمبراطورية N One (HQ Edition - Encrypted)
         // ========================================================
         
         // الرابط الملكي المعتمد
@@ -214,12 +214,13 @@
         let allData = [];
 
         window.onload = async function() {
-            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
+            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ المصلح المركزي غير متصل"); return; }
             
             // التحقق من الجلسة
             currentUser = N_ONE_CORE.checkSession('client');
             if (currentUser) {
-                document.getElementById('welcome-msg').innerText = `أهلاً، ${currentUser.name}`;
+                // دعم الاسم القديم أو المشفر
+                document.getElementById('welcome-msg').innerText = `أهلا ${currentUser.Client_Name || currentUser.name}`;
                 await fetchData();
             }
         };
@@ -259,10 +260,10 @@
             const btn = document.querySelector('.btn-check');
             btn.innerText = "فحص...";
             
-            // فحص سريع من البيانات المحلية
-            const exists = allData.some(u => String(u.user).toLowerCase() === user.toLowerCase());
+            // فحص سريع من البيانات المحلية للمشفر والقديم
+            const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
             
-            if (exists) alert("❌ هذا الاسم مستخدم، اختر غيره ☺️");
+            if (exists) alert("❌ هذا الاسم مستخدم اختر غيره ☺️");
             else alert("✅ الاسم متاح ويمكن استخدامه");
             
             btn.innerText = "فحص 🔍";
@@ -292,21 +293,21 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             const newShop = {
-                id: "SH_" + Date.now(),
-                user: user, 
-                pass: pass, 
-                name: name,
-                role: "shop", 
-                type: "shop", 
-                client_user: currentUser.user,
-                status: "active",
+                Client_ID: "SH_" + Date.now(),
+                Client_User: user, 
+                Client_Pass: pass, 
+                Client_Name: name,
+                Client_Role: "shop", 
+                Client_Type: "shop", 
+                Client_Master: currentUser.Client_User || currentUser.user,
+                Client_Status: "active",
                 
-                // === تنفيذ بروتوكول سحب الخيوط الذهبية ===
-                cap_phone: phone, // الخيط الأول: الهاتف (المفتاح) - العمود O
-                pickup: locLink,  // الخيط الثاني: الموقع (التوجيه) - العمود P
-                company_share: commission, // الخيط المالي: العمولة - العمود S
-                expiry: expDate.toISOString().split('T')[0], // العمود I
-                plan_days: days // العمود J
+                // === تنفيذ بروتوكول سحب الخيوط الذهبية المشفرة ===
+                Client_Phone: phone, 
+                Client_Location: locLink,  
+                Client_Comm: commission, 
+                Client_Expiry: expDate.toISOString().split('T')[0], 
+                Client_PlanDays: days 
             };
 
             await N_ONE_CORE.postData('add', [newShop]);
@@ -325,56 +326,56 @@
 
         function renderShops() {
             const tbody = document.getElementById('shops-table-body');
-            const myShops = allData.filter(i => (i.type == 'shop' || i.role == 'shop') && String(i.client_user) === String(currentUser.user)).reverse();
+            const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && String(i.Client_Master || i.client_user) === String(currentUser.Client_User || currentUser.user)).reverse();
             
             // تحديث العدادات الذكية في لوحة المعلومات (بدون كباتن)
             document.getElementById('total-shops').innerText = myShops.length;
-            document.getElementById('count-paid').innerText = myShops.filter(s => Number(s.company_share) > 0).length;
-            document.getElementById('count-free').innerText = myShops.filter(s => Number(s.company_share) <= 0).length;
+            document.getElementById('count-paid').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
+            document.getElementById('count-free').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
 
             if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
             tbody.innerHTML = '';
             
             myShops.forEach(shop => {
                 // منطق الاشتراك والعمولة
-                const commVal = Number(shop.company_share || 0);
+                const commVal = Number(shop.Client_Comm || shop.company_share || 0);
                 const subBadge = commVal > 0 
                     ? `<span class="badge" style="background:#e8f5e9; color:#1b5e20;">مدفوع (${commVal} د.أ)</span>` 
                     : `<span class="badge" style="background:#eee; color:#777;">مجاني</span>`;
 
                 // منطق التجميد الصحيح (عكس الحالة للزر)
-                const isPaused = shop.status === 'paused';
+                const isPaused = (shop.Client_Status || shop.status) === 'paused';
                 const statusBadge = isPaused 
                     ? '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ❄️</span>' 
                     : '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>';
                 
                 const toggleBtn = isPaused 
-                    ? `<button class="btn-active" title="إعادة تفعيل" onclick="toggleStatus('${shop.user}', 'paused')">▶️</button>` 
-                    : `<button class="btn-freeze" title="تجميد مؤقت" onclick="toggleStatus('${shop.user}', 'active')">❄️</button>`;
+                    ? `<button class="btn-active" title="إعادة تفعيل" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>` 
+                    : `<button class="btn-freeze" title="تجميد مؤقت" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">❄️</button>`;
                 
                 // حساب الأيام المتبقية
                 let daysLeft = "غير محدد";
-                if (shop.expiry) {
-                    const diff = new Date(shop.expiry) - new Date();
+                if (shop.Client_Expiry || shop.expiry) {
+                    const diff = new Date(shop.Client_Expiry || shop.expiry) - new Date();
                     const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
                     daysLeft = d > 0 ? d + " يوم" : "منتهي";
                 }
                 
                 // عرض الموقع إن وجد (الخيط المرئي)
-                let locDisplay = shop.pickup ? `<br><a href="${shop.pickup}" target="_blank" style="font-size:11px; text-decoration:none;">📍 الموقع</a>` : '';
+                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; text-decoration:none;">📍 الموقع</a>` : '';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><b>${shop.name}</b></td>
-                        <td style="font-size:12px;">${shop.user}<br>Pwd: ${shop.pass}</td>
-                        <td style="font-size:12px; direction:ltr;">${shop.cap_phone || '-'}${locDisplay}</td>
+                        <td><b>${shop.Client_Name || shop.name}</b></td>
+                        <td style="font-size:12px;">${shop.Client_User || shop.user}<br>Pwd: ${shop.Client_Pass || shop.pass}</td>
+                        <td style="font-size:12px; direction:ltr;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
                         <td>${subBadge}</td>
                         <td style="font-size:12px;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
-                            <button class="btn-edit" onclick="editShop('${shop.user}', '${shop.name}', '${shop.pass}')">✏️</button>
+                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shop.Client_Pass || shop.pass}')">✏️</button>
                             ${toggleBtn}
-                            <button class="btn-delete" onclick="deleteShop('${shop.user}')">❌</button>
+                            <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">❌</button>
                         </td>
                     </tr>
                 `;
@@ -386,28 +387,28 @@
         async function toggleStatus(u, currentStatus) {
             // نرسل عكس الحالة الحالية
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            const confirmMsg = nextStatus === 'paused' ? "تجميد الحساب؟ لن يتمكن من إرسال طلبات." : "إعادة التفعيل؟";
+            const confirmMsg = nextStatus === 'paused' ? "تجميد الحساب لن يتمكن من إرسال طلبات" : "إعادة التفعيل";
             
             if(!confirm(confirmMsg)) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: u, data: { status: nextStatus } });
+            await N_ONE_CORE.postData('update', { user: u, data: { Client_Status: nextStatus } });
             await fetchData(); 
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
         async function editShop(u, n, p) {
-            const newN = prompt("تعديل اسم المنشأة:", n); if (!newN) return;
-            const newP = prompt("تعديل كلمة المرور:", p);
+            const newN = prompt("تعديل اسم المنشأة", n); if (!newN) return;
+            const newP = prompt("تعديل كلمة المرور", p);
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: u, data: { name: newN, pass: newP } });
+            await N_ONE_CORE.postData('update', { user: u, data: { Client_Name: newN, Client_Pass: newP } });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
         async function deleteShop(u) {
-            if(!confirm("حذف نهائي؟ (سيتم قطع الخيوط)")) return;
+            if(!confirm("حذف نهائي سيتم قطع الخيوط")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await N_ONE_CORE.fetchData('delete', { user: u });
             await fetchData();
