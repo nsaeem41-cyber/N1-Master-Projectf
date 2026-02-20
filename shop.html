@@ -133,7 +133,7 @@
         .btn-confirm { background: var(--success); display: none; }
 
         /* --- تفاصيل التحقق من الكابتن --- */
-        #Shop_CapCheckResult {
+        #cap-check-result {
             display: none; background: #ecfdf5; padding: 15px; border-radius: 15px;
             border: 1px solid #a7f3d0; margin-bottom: 15px; text-align: center;
             animation: slideUp 0.3s;
@@ -159,7 +159,7 @@
             font-size: 14px; font-weight: bold; display: none; z-index: 2000;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        #Shop_Loader { 
+        #loader { 
             position: fixed; top: 0; left: 0; width: 0%; height: 5px; 
             background: var(--gold); z-index: 3000; transition: width 0.3s; 
             box-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
@@ -168,103 +168,103 @@
 </head>
 <body>
 
-    <div id="Shop_Loader"></div>
+    <div id="loader"></div>
 
     <header class="header">
         <div class="header-top">
             <div class="brand">N <span class="gold-text">One</span></div>
-            <button class="btn-logout" onclick="Shop_Logout()">
+            <button class="btn-logout" onclick="logout()">
                 <span>🏃‍♂️</span> مغادرة
             </button>
         </div>
         
         <div class="shop-info-badge">
-            🏪 <span id="Shop_NameDisplay">جاري التحميل...</span>
+            🏪 <span id="shop-name-display">جاري التحميل...</span>
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="Shop_SwitchTab('Shop_OrdersSec', event)">📦 إرسال طلب</button>
-            <button class="nav-tab" onclick="Shop_SwitchTab('Shop_ChargingSec', event)">⚡ شحن كابتن</button>
+            <button class="nav-tab active" onclick="switchTab('orders')">📦 إرسال طلب</button>
+            <button class="nav-tab" onclick="switchTab('charging')">⚡ شحن كابتن</button>
         </div>
     </header>
 
     <div class="container">
         
-        <div id="Shop_OrdersSec" class="section active">
+        <div id="orders" class="section active">
             
             <div class="stats-grid">
                 <div class="stat-box gold-top">
                     <span class="stat-label">إنجاز اليوم 🏆</span>
-                    <span class="stat-val gold" id="Shop_OrdersToday">0</span>
+                    <span class="stat-val gold" id="orders-today">0</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-label">الإجمالي العام 🚀</span>
-                    <span class="stat-val" id="Shop_OrdersTotal">0</span>
+                    <span class="stat-val" id="orders-total">0</span>
                 </div>
             </div>
 
             <div class="card">
                 <div class="input-group">
                     <label>📍 وجهة الطلب (اختر من القائمة)</label>
-                    <input type="text" id="Shop_Destination" list="Shop_AreasList" placeholder="ابحث عن المنطقة..." onchange="Shop_CalculateFee()">
-                    <datalist id="Shop_AreasList"></datalist>
+                    <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة..." onchange="calculateFee()">
+                    <datalist id="areas-list"></datalist>
                 </div>
 
                 <div class="input-group">
                     <label>💰 قيمة التحصيل (دينار)</label>
-                    <input type="number" id="Shop_OrderVal" placeholder="سعر الطلب (مثلا 20 50)">
+                    <input type="number" id="order_val" placeholder="سعر الطلب (مثلاً 20, 50)">
                 </div>
 
                 <div class="input-group">
                     <label>🛵 سعر التوصيل (تلقائي)</label>
-                    <input type="text" id="Shop_DeliveryFee" placeholder="---" readonly>
+                    <input type="text" id="delivery_fee" placeholder="---" readonly>
                 </div>
 
-                <button class="btn-main btn-send" id="Shop_BtnSend" onclick="Shop_SendOrder()">
-                    🚀 إرسال للرادار فورا
+                <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">
+                    🚀 إرسال للرادار فوراً
                 </button>
             </div>
 
             <div class="card" style="padding: 20px;">
                 <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 آخر الطلبات (Operations Trace)</div>
-                <div id="Shop_HistoryList" class="history-list">
+                <div id="history-list" class="history-list">
                     </div>
             </div>
         </div>
 
-        <div id="Shop_ChargingSec" class="section">
+        <div id="charging" class="section">
             <div class="card" style="border-top: 4px solid var(--success);">
                 <div style="text-align:center; margin-bottom:25px;">
                     <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
                     <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
-                        رصيدك الحالي <b style="color:var(--success); font-size:18px;" id="Shop_MyShopBalance">...</b> د.أ
+                        رصيدك الحالي: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
                     </p>
                 </div>
 
                 <div class="input-group">
                     <label>🔍 كود الكابتن أو رقم الهاتف</label>
-                    <input type="text" id="Shop_CapId" placeholder="مثلا C-101 أو 07xxxxxxxx">
+                    <input type="text" id="cap_id" placeholder="مثلاً: C-101 أو 07xxxxxxxx">
                 </div>
 
                 <div class="input-group">
                     <label>💵 المبلغ المراد شحنه</label>
-                    <input type="number" id="Shop_ChargeAmount" placeholder="0.00">
+                    <input type="number" id="charge_amount" placeholder="0.00">
                 </div>
 
-                <button class="btn-main btn-check" id="Shop_BtnCheck" onclick="Shop_VerifyCaptain()">
-                    🔍 فحص الكابتن أولا
+                <button class="btn-main btn-check" id="btn-check" onclick="verifyCaptain()">
+                    🔍 فحص الكابتن أولاً
                 </button>
 
-                <div id="Shop_CapCheckResult">
-                    <div class="check-info">تم العثور على الكابتن <b id="Shop_FoundCapName">---</b></div>
-                    <div class="check-info">رصيده الحالي <b id="Shop_FoundCapBalance">---</b> د.أ</div>
+                <div id="cap-check-result">
+                    <div class="check-info">تم العثور على الكابتن: <b id="found-cap-name">---</b></div>
+                    <div class="check-info">رصيده الحالي: <b id="found-cap-balance">---</b> د.أ</div>
                     <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
                     <div style="font-size:12px; font-weight:bold; color:var(--primary);">
-                        سيصبح رصيده <span id="Shop_FutureCapBalance" style="color:var(--success);">---</span>
+                        سيصبح رصيده: <span id="future-cap-balance" style="color:var(--success);">---</span>
                     </div>
                 </div>
 
-                <button class="btn-main btn-confirm" id="Shop_BtnCharge" onclick="Shop_ExecuteTransfer()">
+                <button class="btn-main btn-confirm" id="btn-charge" onclick="executeTransfer()">
                     ✅ تأكيد وتحويل الرصيد
                 </button>
             </div>
@@ -272,305 +272,304 @@
 
     </div>
 
-    <div id="Shop_Toast" class="toast">تمت العملية بنجاح</div>
+    <div id="toast" class="toast">تمت العملية بنجاح!</div>
 
     <script>
         // ========================================================
-        // N ONE - SHOP SYSTEM (ULTIMATE EDITION v19.0) المشفر 💎
+        // N ONE - SHOP SYSTEM (ULTIMATE EDITION v19.0) 💎
         // ========================================================
 
-        const Shop_API_URL = "https://script.google.com/macros/s/AKfycbxFVz0QTi_7TgWQEMImtMGYRBzlD1CwM5X4DbprUvVJkURs_75aD5n5IcpbS87d8Q5j/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzKQKytFxtHRh1J6tG2GHJjJVl5I2Iz0eYomc963sqn-V8M4Vd3t3Hmm6daykMWUjHj/exec";
         
-        let Shop_LocalData = JSON.parse(localStorage.getItem('Shop_LegacyDB')) || { 
+        let shopData = JSON.parse(localStorage.getItem('nOne_shop_legacy_v1')) || { 
             ordersToday: 0, 
             ordersTotal: 0, 
             lastActiveDate: new Date().toDateString(), 
             history: [] 
         };
         
-        let Shop_PricingMatrix = {}; 
-        let Shop_CurrentUser = null;
-        let Shop_MyBalance = 0;
-        let Shop_VerifiedCaptain = null;
+        let pricingMatrix = {}; 
+        let currentUser = null;
+        let myBalance = 0;
+        let verifiedCaptain = null;
 
         if (typeof N_ONE_CORE !== 'undefined') {
-            Shop_CurrentUser = N_ONE_CORE.checkSession('shop');
+            currentUser = N_ONE_CORE.checkSession('shop');
         } else {
-            Shop_CurrentUser = JSON.parse(localStorage.getItem('Auth_CurrentUser'));
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
         }
 
         window.onload = async function() {
-            if (!Shop_CurrentUser) { window.location.href = 'index.html'; return; }
+            if (!currentUser) { window.location.href = 'index.html'; return; }
             
-            document.getElementById('Shop_NameDisplay').innerText = Shop_CurrentUser.name;
+            document.getElementById('shop-name-display').innerText = currentUser.name;
             
-            Shop_LoadMatrix();
-            Shop_CheckDailyReset(); 
-            Shop_UpdateUI();
+            loadMatrix();
+            checkDailyReset(); 
+            updateUI();
             
-            await Shop_FetchMyBalance(); 
+            await fetchMyBalance(); 
             
             // شريان الضخ التلقائي لجلب الرصيد الحي من العقل المدبر بدون عوائق
-            setInterval(Shop_FetchMyBalanceSilent, 15000);
+            setInterval(fetchMyBalanceSilent, 15000);
         };
 
-        function Shop_CheckDailyReset() {
-            const Shop_TodayStr = new Date().toDateString(); 
+        function checkDailyReset() {
+            const todayStr = new Date().toDateString(); 
             
-            if (Shop_LocalData.lastActiveDate !== Shop_TodayStr) {
-                Shop_LocalData.ordersToday = 0; 
-                Shop_LocalData.lastActiveDate = Shop_TodayStr;
-                localStorage.setItem('Shop_LegacyDB', JSON.stringify(Shop_LocalData));
+            if (shopData.lastActiveDate !== todayStr) {
+                shopData.ordersToday = 0; 
+                shopData.lastActiveDate = todayStr;
+                localStorage.setItem('nOne_shop_legacy_v1', JSON.stringify(shopData));
             }
         }
 
         // قراءة الرصيد الحي فور فتح الصفحة
-        async function Shop_FetchMyBalance() {
+        async function fetchMyBalance() {
             try {
-                const Shop_Data = await N_ONE_CORE.fetchData('read');
+                const data = await N_ONE_CORE.fetchData('read');
                 // القنص الجراحي برقم الهاتف أو الكود لضمان المطابقة الفولاذية
-                const Shop_Me = Shop_Data.find(u => String(u.user).trim() === String(Shop_CurrentUser.user).trim() || (Shop_CurrentUser.cap_phone && String(u.cap_phone).trim() === String(Shop_CurrentUser.cap_phone).trim()));
-                if (Shop_Me) {
-                    Shop_MyBalance = parseFloat(Shop_Me.balance || 0);
-                    document.getElementById('Shop_MyShopBalance').innerText = Shop_MyBalance.toFixed(2);
+                const me = data.find(u => String(u.user).trim() === String(currentUser.user).trim() || (currentUser.cap_phone && String(u.cap_phone).trim() === String(currentUser.cap_phone).trim()));
+                if (me) {
+                    myBalance = parseFloat(me.balance || 0);
+                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 }
-            } catch (Shop_E) {
-                console.error("Balance Fetch Error", Shop_E);
+            } catch (e) {
+                console.error("Balance Fetch Error", e);
             }
         }
 
-        // شريان الاستقبال الصامت اللي بيخلي الرصيد يرتفع تلقائيا
-        async function Shop_FetchMyBalanceSilent() {
+        // شريان الاستقبال الصامت اللي بيخلي الرصيد يرتفع تلقائياً
+        async function fetchMyBalanceSilent() {
             try {
-                const Shop_Data = await N_ONE_CORE.fetchData('read');
-                const Shop_Me = Shop_Data.find(u => String(u.user).trim() === String(Shop_CurrentUser.user).trim() || (Shop_CurrentUser.cap_phone && String(u.cap_phone).trim() === String(Shop_CurrentUser.cap_phone).trim()));
-                if (Shop_Me) {
-                    Shop_MyBalance = parseFloat(Shop_Me.balance || 0);
-                    document.getElementById('Shop_MyShopBalance').innerText = Shop_MyBalance.toFixed(2);
+                const data = await N_ONE_CORE.fetchData('read');
+                const me = data.find(u => String(u.user).trim() === String(currentUser.user).trim() || (currentUser.cap_phone && String(u.cap_phone).trim() === String(currentUser.cap_phone).trim()));
+                if (me) {
+                    myBalance = parseFloat(me.balance || 0);
+                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 }
-            } catch (Shop_E) {}
+            } catch (e) {}
         }
 
-        function Shop_LoadMatrix() {
-            // الربط الذكي مع مصفوفة الأسعار المشفرة
-            const Shop_RawData = localStorage.getItem('Prc_GlobalPricesDB');
-            if (Shop_RawData) {
-                const Shop_AllData = JSON.parse(Shop_RawData);
-                const Shop_Datalist = document.getElementById('Shop_AreasList');
-                Shop_Datalist.innerHTML = '';
+        function loadMatrix() {
+            const rawData = localStorage.getItem('nOne_global_prices');
+            if (rawData) {
+                const allData = JSON.parse(rawData);
+                const datalist = document.getElementById('areas-list');
+                datalist.innerHTML = '';
                 
-                Object.keys(Shop_AllData).forEach(Shop_Source => {
-                    Shop_AllData[Shop_Source].forEach(Shop_Item => {
-                        Shop_PricingMatrix[Shop_Item.area] = parseFloat(Shop_Item.price);
-                        const Shop_Opt = document.createElement('option');
-                        Shop_Opt.value = Shop_Item.area;
-                        Shop_Datalist.appendChild(Shop_Opt);
+                Object.keys(allData).forEach(source => {
+                    allData[source].forEach(item => {
+                        pricingMatrix[item.area] = parseFloat(item.price);
+                        const opt = document.createElement('option');
+                        opt.value = item.area;
+                        datalist.appendChild(opt);
                     });
                 });
             }
         }
 
-        function Shop_CalculateFee() {
-            const Shop_Dest = document.getElementById('Shop_Destination').value;
-            if (Shop_PricingMatrix[Shop_Dest]) {
-                document.getElementById('Shop_DeliveryFee').value = Shop_PricingMatrix[Shop_Dest].toFixed(2);
+        function calculateFee() {
+            const dest = document.getElementById('destination').value;
+            if (pricingMatrix[dest]) {
+                document.getElementById('delivery_fee').value = pricingMatrix[dest].toFixed(2);
             }
         }
 
-        async function Shop_SendOrder() {
-            Shop_CheckDailyReset(); 
+        async function sendOrder() {
+            checkDailyReset(); 
             
-            const Shop_Dest = document.getElementById('Shop_Destination').value;
-            const Shop_Val = document.getElementById('Shop_OrderVal').value;
-            const Shop_Fee = document.getElementById('Shop_DeliveryFee').value;
+            const dest = document.getElementById('destination').value;
+            const val = document.getElementById('order_val').value;
+            const fee = document.getElementById('delivery_fee').value;
 
-            if (!Shop_Dest || !Shop_Val || !Shop_Fee) { Shop_ShowToast("يرجى تعبئة جميع الحقول 😊"); return; }
+            if (!dest || !val || !fee) { showToast("⚠️ يرجى تعبئة جميع الحقول 😊"); return; }
             
-            Shop_SetLoading('Shop_BtnSend', true);
+            setLoading('btn-send', true);
 
-            const Shop_OrderData = {
+            const orderData = {
                 id: "ORD_" + Date.now(),
                 type: "order",
-                client_user: Shop_CurrentUser.user,
-                cl_name: Shop_CurrentUser.name,
-                pickup: Shop_Dest,
-                val: Shop_Val,
-                fee: Shop_Fee,
+                client_user: currentUser.user,
+                cl_name: currentUser.name,
+                pickup: dest,
+                val: val,
+                fee: fee,
                 date: new Date().toISOString(),
                 is_emergency: "false", 
                 status: "new"
             };
 
             try {
-                await fetch(Shop_API_URL, {
+                await fetch(API_URL, {
                     method: 'POST', mode: 'no-cors',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action: 'add', data: Shop_OrderData })
+                    body: JSON.stringify({ action: 'add', data: orderData })
                 });
 
-                Shop_LocalData.ordersToday++;
-                Shop_LocalData.ordersTotal++; 
+                shopData.ordersToday++;
+                shopData.ordersTotal++; 
                 
-                Shop_LocalData.history.unshift({
-                    dest: Shop_Dest, val: Shop_Val, 
+                shopData.history.unshift({
+                    dest: dest, val: val, 
                     time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                 });
-                if (Shop_LocalData.history.length > 5) Shop_LocalData.history.pop(); 
+                if (shopData.history.length > 5) shopData.history.pop(); 
 
-                localStorage.setItem('Shop_LegacyDB', JSON.stringify(Shop_LocalData));
+                localStorage.setItem('nOne_shop_legacy_v1', JSON.stringify(shopData));
                 
-                Shop_UpdateUI();
-                Shop_ShowToast("تم إرسال الطلب للرادار بنجاح 😊");
+                updateUI();
+                showToast("✅ تم إرسال الطلب للرادار بنجاح 😊");
                 
-                document.getElementById('Shop_Destination').value = '';
-                document.getElementById('Shop_OrderVal').value = '';
-                document.getElementById('Shop_DeliveryFee').value = '';
+                document.getElementById('destination').value = '';
+                document.getElementById('order_val').value = '';
+                document.getElementById('delivery_fee').value = '';
 
-            } catch (Shop_E) {
-                Shop_ShowToast("خطأ في الاتصال");
+            } catch (e) {
+                showToast("❌ خطأ في الاتصال");
             } finally {
-                Shop_SetLoading('Shop_BtnSend', false, "🚀 إرسال للرادار فورا");
+                setLoading('btn-send', false, "🚀 إرسال للرادار فوراً");
             }
         }
 
         // فك عقدة البحث الحرفي بالتحويل الرقمي الصارم
-        async function Shop_VerifyCaptain() {
-            const Shop_CapId = String(document.getElementById('Shop_CapId').value).trim();
-            const Shop_Amount = parseFloat(document.getElementById('Shop_ChargeAmount').value);
+        async function verifyCaptain() {
+            const capId = String(document.getElementById('cap_id').value).trim();
+            const amount = parseFloat(document.getElementById('charge_amount').value);
 
-            if (!Shop_CapId || !Shop_Amount) { Shop_ShowToast("أدخل الكود أو الهاتف والمبلغ 😊"); return; }
-            if (Shop_Amount <= 0) { Shop_ShowToast("المبلغ غير صحيح 😊"); return; }
+            if (!capId || !amount) { showToast("⚠️ أدخل الكود أو الهاتف والمبلغ 😊"); return; }
+            if (amount <= 0) { showToast("⚠️ المبلغ غير صحيح 😊"); return; }
             
-            if (Shop_MyBalance < Shop_Amount) { 
-                alert(`رصيدك الحالي ${Shop_MyBalance} غير كاف لإتمام العملية 😊`); 
+            if (myBalance < amount) { 
+                alert(`⛔ رصيدك الحالي (${myBalance}) غير كافٍ لإتمام العملية 😊`); 
                 return; 
             }
 
-            Shop_SetLoading('Shop_BtnCheck', true);
+            setLoading('btn-check', true);
 
             try {
-                const Shop_Data = await N_ONE_CORE.fetchData('read');
+                const data = await N_ONE_CORE.fetchData('read');
                 // اللمسة الجراحية لربط الرقم والنص بذكاء نفاث
-                const Shop_Cap = Shop_Data.find(c => String(c.user).trim() === Shop_CapId || String(c.cap_phone).trim() === Shop_CapId);
+                const cap = data.find(c => String(c.user).trim() === capId || String(c.cap_phone).trim() === capId);
                 
-                if (!Shop_Cap) {
-                    alert("الكابتن غير موجود تأكد من الكود أو الهاتف 😊");
-                    Shop_VerifiedCaptain = null;
-                    document.getElementById('Shop_CapCheckResult').style.display = 'none';
-                    document.getElementById('Shop_BtnCharge').style.display = 'none';
+                if (!cap) {
+                    alert("❌ الكابتن غير موجود تأكد من الكود أو الهاتف 😊");
+                    verifiedCaptain = null;
+                    document.getElementById('cap-check-result').style.display = 'none';
+                    document.getElementById('btn-charge').style.display = 'none';
                 } else {
-                    Shop_VerifiedCaptain = Shop_Cap;
-                    document.getElementById('Shop_FoundCapName').innerText = Shop_Cap.name;
-                    document.getElementById('Shop_FoundCapBalance').innerText = parseFloat(Shop_Cap.balance||0).toFixed(2);
-                    document.getElementById('Shop_FutureCapBalance').innerText = (parseFloat(Shop_Cap.balance||0) + Shop_Amount).toFixed(2);
+                    verifiedCaptain = cap;
+                    document.getElementById('found-cap-name').innerText = cap.name;
+                    document.getElementById('found-cap-balance').innerText = parseFloat(cap.balance||0).toFixed(2);
+                    document.getElementById('future-cap-balance').innerText = (parseFloat(cap.balance||0) + amount).toFixed(2);
                     
-                    document.getElementById('Shop_CapCheckResult').style.display = 'block';
-                    document.getElementById('Shop_BtnCharge').style.display = 'block';
+                    document.getElementById('cap-check-result').style.display = 'block';
+                    document.getElementById('btn-charge').style.display = 'block';
                 }
-            } catch (Shop_E) {
-                Shop_ShowToast("خطأ في الاتصال");
+            } catch (e) {
+                showToast("❌ خطأ في الاتصال");
             } finally {
-                Shop_SetLoading('Shop_BtnCheck', false, "🔍 فحص الكابتن أولا");
+                setLoading('btn-check', false, "🔍 فحص الكابتن أولاً");
             }
         }
 
-        async function Shop_ExecuteTransfer() {
-            if (!Shop_VerifiedCaptain) return;
-            const Shop_Amount = parseFloat(document.getElementById('Shop_ChargeAmount').value);
-            if (Shop_MyBalance < Shop_Amount) { alert("رصيدك نفذ 😊"); return; }
+        async function executeTransfer() {
+            if (!verifiedCaptain) return;
+            const amount = parseFloat(document.getElementById('charge_amount').value);
+            if (myBalance < amount) { alert("⛔ رصيدك نفذ 😊"); return; }
 
-            if (!confirm(`تأكيد نهائي خصم ${Shop_Amount} د.أ من رصيدك وشحنها للكابتن ${Shop_VerifiedCaptain.name} 😊`)) return;
+            if (!confirm(`تأكيد نهائي\nخصم ${amount} د.أ من رصيدك\nوشحنها للكابتن ${verifiedCaptain.name} 😊`)) return;
 
-            Shop_SetLoading('Shop_BtnCharge', true);
+            setLoading('btn-charge', true);
 
             try {
-                const Shop_NewCapBal = parseFloat(Shop_VerifiedCaptain.balance || 0) + Shop_Amount;
-                const Shop_NewShopBal = Shop_MyBalance - Shop_Amount;
+                const newCapBal = parseFloat(verifiedCaptain.balance || 0) + amount;
+                const newShopBal = myBalance - amount;
 
                 // تحديث الكابتن بإستخدام المفتاح الفولاذي
-                const Shop_CapKey = Shop_VerifiedCaptain.user ? Shop_VerifiedCaptain.user : Shop_VerifiedCaptain.cap_phone;
-                await N_ONE_CORE.postData('update', { user: Shop_CapKey, data: { balance: Shop_NewCapBal } });
+                const capKey = verifiedCaptain.user ? verifiedCaptain.user : verifiedCaptain.cap_phone;
+                await N_ONE_CORE.postData('update', { user: capKey, data: { balance: newCapBal } });
                 
                 // تحديث المنشأة بإستخدام المفتاح الفولاذي عشان الإكسل ما يعاندنا
-                const Shop_ShopKey = Shop_CurrentUser.user ? Shop_CurrentUser.user : Shop_CurrentUser.cap_phone;
-                await N_ONE_CORE.postData('update', { user: Shop_ShopKey, data: { balance: Shop_NewShopBal } });
+                const shopKey = currentUser.user ? currentUser.user : currentUser.cap_phone;
+                await N_ONE_CORE.postData('update', { user: shopKey, data: { balance: newShopBal } });
 
-                Shop_MyBalance = Shop_NewShopBal;
-                document.getElementById('Shop_MyShopBalance').innerText = Shop_MyBalance.toFixed(2);
+                myBalance = newShopBal;
+                document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 
-                alert(`تمت العملية بنجاح الرصيد وصل للكابتن ${Shop_VerifiedCaptain.name} 😊`);
+                alert(`✅ تمت العملية بنجاح\nالرصيد وصل للكابتن ${verifiedCaptain.name} 😊`);
                 
-                document.getElementById('Shop_CapId').value = '';
-                document.getElementById('Shop_ChargeAmount').value = '';
-                document.getElementById('Shop_CapCheckResult').style.display = 'none';
-                document.getElementById('Shop_BtnCharge').style.display = 'none';
-                Shop_VerifiedCaptain = null;
+                document.getElementById('cap_id').value = '';
+                document.getElementById('charge_amount').value = '';
+                document.getElementById('cap-check-result').style.display = 'none';
+                document.getElementById('btn-charge').style.display = 'none';
+                verifiedCaptain = null;
 
-            } catch (Shop_E) {
-                Shop_ShowToast("حدث خطأ أثناء التحويل");
+            } catch (e) {
+                showToast("❌ حدث خطأ أثناء التحويل");
             } finally {
-                Shop_SetLoading('Shop_BtnCharge', false, "✅ تأكيد وتحويل الرصيد");
+                setLoading('btn-charge', false, "✅ تأكيد وتحويل الرصيد");
             }
         }
 
-        function Shop_SwitchTab(Shop_TabId, Shop_Event) {
+        function switchTab(tabId) {
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(Shop_TabId).classList.add('active');
-            if(Shop_Event) Shop_Event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
         }
 
-        function Shop_UpdateUI() {
-            document.getElementById('Shop_OrdersToday').innerText = Shop_LocalData.ordersToday;
-            document.getElementById('Shop_OrdersTotal').innerText = Shop_LocalData.ordersTotal;
+        function updateUI() {
+            document.getElementById('orders-today').innerText = shopData.ordersToday;
+            document.getElementById('orders-total').innerText = shopData.ordersTotal;
 
-            const Shop_List = document.getElementById('Shop_HistoryList');
-            Shop_List.innerHTML = '';
-            if (Shop_LocalData.history.length === 0) {
-                Shop_List.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد طلبات حديثة</div>';
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            if (shopData.history.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد طلبات حديثة</div>';
             } else {
-                Shop_LocalData.history.forEach(Shop_Item => {
-                    Shop_List.innerHTML += `
+                shopData.history.forEach(item => {
+                    list.innerHTML += `
                         <div class="history-item">
                             <div>
-                                <div class="h-dest">📍 ${Shop_Item.dest}</div>
-                                <div class="h-time">🕐 ${Shop_Item.time}</div>
+                                <div class="h-dest">📍 ${item.dest}</div>
+                                <div class="h-time">🕐 ${item.time}</div>
                             </div>
-                            <div class="h-price">${Shop_Item.val} د.أ</div>
+                            <div class="h-price">${item.val} د.أ</div>
                         </div>
                     `;
                 });
             }
         }
 
-        function Shop_Logout() {
+        function logout() {
             if(confirm("هل تريد مغادرة النظام 😊")) {
-                localStorage.removeItem('Auth_CurrentUser');
+                localStorage.removeItem('currentUser');
                 window.location.replace('index.html'); 
             }
         }
 
-        function Shop_ShowToast(Shop_Msg) {
-            const Shop_ToastEl = document.getElementById('Shop_Toast');
-            Shop_ToastEl.innerText = Shop_Msg;
-            Shop_ToastEl.style.display = 'block';
-            setTimeout(() => Shop_ToastEl.style.display = 'none', 3000);
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
         }
 
-        function Shop_SetLoading(Shop_BtnId, Shop_IsLoading, Shop_OriginalText) {
-            const Shop_Btn = document.getElementById(Shop_BtnId);
-            const Shop_Loader = document.getElementById('Shop_Loader');
-            if (Shop_IsLoading) {
-                Shop_Btn.dataset.text = Shop_Btn.innerText;
-                Shop_Btn.innerText = "جاري التنفيذ";
-                Shop_Btn.style.opacity = 0.7;
-                Shop_Btn.disabled = true;
-                Shop_Loader.style.width = "100%";
+        function setLoading(btnId, isLoading, originalText) {
+            const btn = document.getElementById(btnId);
+            const loader = document.getElementById('loader');
+            if (isLoading) {
+                btn.dataset.text = btn.innerText;
+                btn.innerText = "جاري التنفيذ...";
+                btn.style.opacity = 0.7;
+                btn.disabled = true;
+                loader.style.width = "100%";
             } else {
-                Shop_Btn.innerText = Shop_OriginalText || Shop_Btn.dataset.text;
-                Shop_Btn.style.opacity = 1;
-                Shop_Btn.disabled = false;
-                Shop_Loader.style.width = "0%";
+                btn.innerText = originalText || btn.dataset.text;
+                btn.style.opacity = 1;
+                btn.disabled = false;
+                loader.style.width = "0%";
             }
         }
 
