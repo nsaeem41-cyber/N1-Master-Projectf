@@ -108,3 +108,4 @@ const N_ONE_CORE = {
 
 console.log("%c N One Core Loaded 🚀 | V1.0 Amber Needle", "color: #d4af37; background: #1a237e; font-size: 14px; padding: 5px;");
 
+
