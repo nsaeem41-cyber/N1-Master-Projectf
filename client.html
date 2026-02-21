@@ -164,6 +164,11 @@
                         <label style="font-size:11px; font-weight:bold; color:var(--money);">💰 قيمة العمولة الثابتة (لكل طلب)</label>
                         <input type="number" id="fixed_commission" placeholder="مثلاً 0.50" step="0.01">
                     </div>
+                    
+                    <div id="balance-field">
+                        <label style="font-size:11px; font-weight:bold; color:var(--success);">💳 رصيد المحفظة الافتتاحي (للكباتن)</label>
+                        <input type="number" id="initial_balance" placeholder="مثلاً 50.00" step="0.01">
+                    </div>
 
                     <select id="sub_duration">
                         <option value="30">30 يوم</option>
@@ -176,7 +181,10 @@
             </div>
 
             <div class="card">
-                <div class="card-header">سجل المنشآت والتحكم الشامل</div>
+                <div class="card-header">
+                    <span>سجل المنشآت والتحكم الشامل</span>
+                    <input type="text" id="shop-search" placeholder="🔍 بحث بالرقم أو الاسم..." oninput="renderShops()" style="width: 250px; padding: 8px; font-size: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none;">
+                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -184,7 +192,7 @@
                                 <th>المنشأة (الاسم)</th>
                                 <th>بيانات الدخول</th>
                                 <th>الهاتف / الموقع (الخيوط)</th>
-                                <th>النوع / العمولة</th>
+                                <th>النوع / العمولة / الرصيد</th>
                                 <th>الصلاحية</th>
                                 <th>الحالة</th>
                                 <th>التحكم</th>
@@ -277,6 +285,7 @@
             const phone = document.getElementById('shop_phone').value; 
             const locLink = document.getElementById('shop_location_link').value;
             const days = document.getElementById('sub_duration').value;
+            const initialBal = document.getElementById('initial_balance').value || "0";
             
             let commission = "0";
             if (subType === 'paid') {
@@ -301,6 +310,7 @@
                 Client_Type: "shop", 
                 Client_Master: currentUser.Client_User || currentUser.user,
                 Client_Status: "active",
+                Client_Balance: initialBal,
                 
                 // === تنفيذ بروتوكول سحب الخيوط الذهبية المشفرة ===
                 Client_Phone: phone, 
@@ -311,37 +321,59 @@
             };
 
             await N_ONE_CORE.postData('add', [newShop]);
-            await fetchData();
             
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم إضافة المنشأة وحفظ الخيوط بنجاح للربط ☺️✅");
+            alert("تمت الولادة بنجاح جاري التوجيه لواجهة المنشأة ☺️✅");
             
-            // تنظيف الحقول
-            document.getElementById('shop_name').value = '';
-            document.getElementById('shop_user').value = '';
-            document.getElementById('shop_pass').value = '';
-            document.getElementById('shop_phone').value = '';
-            document.getElementById('shop_location_link').value = '';
+            // بروتوكول التوجيه والربط بدون كلمة سر
+            const secureSession = {
+                ...newShop,
+                user: newShop.Client_User,
+                pass: newShop.Client_Pass,
+                name: newShop.Client_Name,
+                role: "shop",
+                type: "shop",
+                status: "active",
+                loginTime: Date.now()
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(secureSession));
+            window.location.replace('shop.html');
         }
 
         function renderShops() {
             const tbody = document.getElementById('shops-table-body');
             const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && String(i.Client_Master || i.client_user) === String(currentUser.Client_User || currentUser.user)).reverse();
             
+            // رادار البحث السريع
+            const q = document.getElementById('shop-search') ? document.getElementById('shop-search').value.trim().toLowerCase() : "";
+            let filteredShops = myShops;
+            
+            if (q) {
+                filteredShops = myShops.filter(s => 
+                    String(s.Client_Name || s.name || "").toLowerCase().includes(q) ||
+                    String(s.Client_Phone || s.cap_phone || "").toLowerCase().includes(q) ||
+                    String(s.Client_User || s.user || "").toLowerCase().includes(q)
+                );
+            }
+            
             // تحديث العدادات الذكية في لوحة المعلومات (بدون كباتن)
             document.getElementById('total-shops').innerText = myShops.length;
             document.getElementById('count-paid').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
             document.getElementById('count-free').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
 
-            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
+            if (filteredShops.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا توجد منشآت مطابقة للبحث</td></tr>'; return; }
             tbody.innerHTML = '';
             
-            myShops.forEach(shop => {
+            filteredShops.forEach(shop => {
                 // منطق الاشتراك والعمولة
                 const commVal = Number(shop.Client_Comm || shop.company_share || 0);
                 const subBadge = commVal > 0 
                     ? `<span class="badge" style="background:#e8f5e9; color:#1b5e20;">مدفوع (${commVal} د.أ)</span>` 
                     : `<span class="badge" style="background:#eee; color:#777;">مجاني</span>`;
+                    
+                const shopBal = Number(shop.Client_Balance || shop.balance || 0).toFixed(2);
+                const balanceHtml = `<br><span style="color:var(--success); font-weight:bold; font-size:11px;">رصيد: ${shopBal} د.أ</span>`;
 
                 // منطق التجميد الصحيح (عكس الحالة للزر)
                 const isPaused = (shop.Client_Status || shop.status) === 'paused';
@@ -369,11 +401,11 @@
                         <td><b>${shop.Client_Name || shop.name}</b></td>
                         <td style="font-size:12px;">${shop.Client_User || shop.user}<br>Pwd: ${shop.Client_Pass || shop.pass}</td>
                         <td style="font-size:12px; direction:ltr;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
-                        <td>${subBadge}</td>
+                        <td>${subBadge}${balanceHtml}</td>
                         <td style="font-size:12px;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
-                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shop.Client_Pass || shop.pass}')">✏️</button>
+                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shop.Client_Pass || shop.pass}', '${shopBal}')">✏️</button>
                             ${toggleBtn}
                             <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">❌</button>
                         </td>
@@ -397,12 +429,13 @@
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
-        async function editShop(u, n, p) {
+        async function editShop(u, n, p, b) {
             const newN = prompt("تعديل اسم المنشأة", n); if (!newN) return;
-            const newP = prompt("تعديل كلمة المرور", p);
+            const newP = prompt("تعديل كلمة المرور", p); if (!newP) return;
+            const newB = prompt("تعديل رصيد المحفظة", b); if (!newB) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: u, data: { Client_Name: newN, Client_Pass: newP } });
+            await N_ONE_CORE.postData('update', { user: u, data: { Client_Name: newN, Client_Pass: newP, Client_Balance: newB } });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
