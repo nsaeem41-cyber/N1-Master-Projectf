@@ -1,7 +1,7 @@
 /**
  * ========================================================
- * N One Core Engine (v2.0) - The Amber Needle 💉💎
- * المحرك السيادي المطيع للقائد المطور V18.5 CC
+ * N One Core Engine (v1.0) - The Amber Needle 💉💎
+ * العقل المدبر والمصلح المركزي لإمبراطورية N One
  * ========================================================
  */
 
@@ -20,19 +20,23 @@ const N_ONE_CORE = {
     },
 
     // 3. نظام "إبرة العنبر" لإصلاح الجلسات والتحقق (Auth Guard)
+    // هذه الدالة ستعمل في كل صفحة للتأكد من هوية المستخدم بصمت
     checkSession: function(requiredRole = null) {
         const userStr = localStorage.getItem('currentUser');
         
+        // إذا لم يجد مستخدم، يطرد فوراً للصفحة الرئيسية
         if (!userStr) {
-            console.warn("⛔ خالتو ميمي تتدخل: لا يوجد تصريح دخول جاري الطرد برقي");
+            console.warn("⛔ No session found. Redirecting...");
             this.logout();
             return null;
         }
 
         const user = JSON.parse(userStr);
 
+        // إذا كان هناك دور مطلوب (مثلا admin) والمستخدم ليس كذلك، يطرده
         if (requiredRole && user.role !== requiredRole) {
-            console.warn(`⛔ صلاحيات غير مطابقة المطلوب: ${requiredRole}`);
+            console.warn(`⛔ Role Mismatch. Required: ${requiredRole}, Found: ${user.role}`);
+            // استثناء: إذا كان الأدمن بيحاول يدخل صفحات عامة نسمح له
             if (user.role === 'admin') return user; 
             
             this.logout();
@@ -48,64 +52,58 @@ const N_ONE_CORE = {
     logout: function() {
         localStorage.removeItem('currentUser');
         sessionStorage.clear();
+        // التوجيه لصفحة الدخول (يفترض أنها في نفس المجلد)
         window.location.replace('index.html');
     },
 
     // 5. نظام التوصيات الذكي (Brain 555) 🧠
+    // هذه الدالة تحلل أداء الكابتن وتقرر هل يستحق التوصية بالمكافأة
     analyzeCaptainPerformance: function(captainData) {
-        const MIN_ORDERS = 50; 
-        const MIN_RATING = 4.8; 
+        // معايير الفكرة 555
+        const MIN_ORDERS = 50; // أقل عدد طلبات للمكافأة
+        const MIN_RATING = 4.8; // أقل تقييم
 
         if (captainData.totalOrders >= MIN_ORDERS && captainData.rating >= MIN_RATING) {
             return {
                 status: true,
-                message: `🌟 توصية ملوكية: الكابتن ${captainData.name} أبدع اليوم يستحق "يوم الإجازة المُهدى" (Idea 555) خاوة القرار لك يا مدير`
+                message: `🌟 توصية ذكية: الكابتن ${captainData.name} حقق أداءً استثنائياً! نقترح منحه "يوم الإجازة المُهدى" (Idea 555). القرار لك يا مدير.`
             };
         }
         return { status: false, message: "" };
     },
 
-    // 6. دوال الاتصال بالسيرفر السيادي (Fetch Helper)
+    // 6. دوال مساعدة للاتصال بالسيرفر (Fetch Helper)
     fetchData: async function(action, params = {}) {
         try {
             let url = this.API_URL + "?action=" + action;
+            // دمج الباراميترات في الرابط
             for (const key in params) {
                 url += `&${key}=${encodeURIComponent(params[key])}`;
             }
             const response = await fetch(url);
             return await response.json();
         } catch (error) {
-            console.error("N One Core Error: شريان القراءة مسدود", error);
+            console.error("N One Core Error:", error);
             throw error;
         }
     },
 
-    // اللحام الأبدي: تم تعديل هذه الدالة لتفكيك البيانات وتسليمها للعقل المايسترو يدا بيد
-    postData: async function(action, payload) {
+    postData: async function(action, dataObj) {
         try {
-            let bodyData = { action: action };
-            
-            // تكتيك ملوكي لفصل المفتاح عن البيانات عشان المايسترو يفهمها
-            if ((action === 'update' || action === 'delete') && payload.user) {
-                bodyData.user = payload.user;
-                bodyData.data = payload.data || {};
-            } else {
-                bodyData.data = payload;
-            }
-
             await fetch(this.API_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bodyData)
+                body: JSON.stringify({ action: action, data: dataObj })
             });
             return true;
         } catch (error) {
-            console.error("N One Core Post Error: جلطة في الإرسال", error);
+            console.error("N One Core Post Error:", error);
             return false;
         }
     }
 };
 
-// تفعيل فوري مع رسالة سيادية
-console.log("%c N One Core Loaded 🚀 | V2.0 Amber Needle Active | خالتو ميمي تسيطر", "color: #d4af37; background: #1a237e; font-weight: bold; font-size: 14px; padding: 5px;");
+// تفعيل فوري: طباعة رسالة في الكونسول للتأكد أن النواة تعمل
+
+console.log("%c N One Core Loaded 🚀 | V1.0 Amber Needle", "color: #d4af37; background: #1a237e; font-size: 14px; padding: 5px;");
