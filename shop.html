@@ -325,7 +325,7 @@
 
     <script>
         // ========================================================
-        // N ONE - SHOP SYSTEM (ULTIMATE EDITION v20.0) 💎
+        // N ONE - SHOP SYSTEM (ULTIMATE EDITION v21.5) 💎
         // نسخة اللحام الأبدي للذاكرة الحديدية الشاملة
         // ========================================================
 
@@ -364,7 +364,6 @@
             setInterval(fetchMyBalanceSilent, 15000);
         };
 
-        // الدالة الشاملة لجلب البيانات والاعتماد الكلي على الخزنة الحديدية
         async function fetchAllData() {
             try {
                 const data = await N_ONE_CORE.fetchData('read');
@@ -375,11 +374,9 @@
                 dbPrices = data.filter(d => d.Price_ID);
 
                 if (me) {
-                    // سحب الرصيد من أي عمود متاح لضمان الوصول
-                    myBalance = parseFloat(me.Shop_Balance || me.balance || me.Client_Balance || 0);
+                    myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                     
-                    // سحب الموقع من أي عمود متاح لضمان قفل النافذة
                     const savedLocation = me.Shop_Location || me.Client_Location || "";
                     
                     if (savedLocation && String(savedLocation).trim() !== "") {
@@ -428,7 +425,6 @@
             try {
                 const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user).trim();
                 
-                // تحديث الموقع في عمود Shop_Location وعمود Client_Location عشان الخزنة تكون مسطرة مية بالمية
                 await N_ONE_CORE.postData('update', { 
                     user: shopKey, 
                     data: { 
@@ -495,7 +491,7 @@
                 const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim();
                 const me = data.find(u => String(u.Shop_User || u.Client_User || u.user || "").trim() === shopKey);
                 if (me) {
-                    myBalance = parseFloat(me.Shop_Balance || me.balance || me.Client_Balance || 0);
+                    myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 }
             } catch (e) {}
@@ -629,13 +625,14 @@
                 const newShopBal = myBalance - amount;
 
                 const capKey = verifiedCaptain.Cap_User ? verifiedCaptain.Cap_User : (verifiedCaptain.user || verifiedCaptain.cap_phone);
-                await N_ONE_CORE.postData('update', { user: capKey, data: { Cap_Balance: newCapBal } });
+                await N_ONE_CORE.postData('update', { user: capKey, data: { Cap_Balance: newCapBal, balance: newCapBal } });
                 
                 const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user).trim();
                 await N_ONE_CORE.postData('update', { 
                     user: shopKey, 
                     data: { 
                         Shop_Balance: newShopBal,
+                        Client_Balance: newShopBal,
                         balance: newShopBal
                     } 
                 });
