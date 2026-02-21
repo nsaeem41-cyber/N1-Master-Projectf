@@ -1,7 +1,7 @@
 /**
  * ========================================================
- * N One Core Engine (v2.0) - The Amber Needle 💉💎
- * المحرك السيادي المطيع للقائد المطور V18.5 CC
+ * N One Core Engine (v3.0 CC) - The Amber Needle 💉💎
+ * المحرك المندمج كلياً مع المايسترو v18.6 السيادي
  * ========================================================
  */
 
@@ -80,7 +80,7 @@ const N_ONE_CORE = {
         }
     },
 
-    // اللحام الأبدي: تم تعديل هذه الدالة لتفكيك البيانات وتسليمها للعقل المايسترو يدا بيد
+    // اللحام الأبدي والتغليف الملكي المعتمد للـ 10 أكواد
     postData: async function(action, payload) {
         try {
             let bodyData = { action: action };
@@ -108,4 +108,4 @@ const N_ONE_CORE = {
 };
 
 // تفعيل فوري مع رسالة سيادية
-console.log("%c N One Core Loaded 🚀 | V2.0 Amber Needle Active | خالتو ميمي تسيطر", "color: #d4af37; background: #1a237e; font-weight: bold; font-size: 14px; padding: 5px;");
+console.log("%c N One Core Loaded 🚀 | V3.0 CC Fusion Active | خالتو ميمي تسيطر", "color: #d4af37; background: #1a237e; font-weight: bold; font-size: 14px; padding: 5px;");
