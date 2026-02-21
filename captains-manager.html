@@ -300,6 +300,7 @@
         let shops = [];
         let requests = [];
         let currentWalletCaptain = null;
+        let currentWalletQuery = ""; 
 
         window.onload = async function() {
             if (typeof N_ONE_CORE !== 'undefined') {
@@ -356,6 +357,16 @@
 
             showLoader(true);
             const newCap = {
+                id: "CAP_" + Date.now(),
+                date: new Date().toISOString(),
+                type: "captain",
+                status: "active",
+                user: code,
+                pass: "123456",
+                name: name,
+                role: "captain",
+                phone: phone,
+                balance: "0",
                 Cap_ID: "CAP_" + Date.now(),
                 Cap_User: code, 
                 Cap_Pass: "123456", 
@@ -388,12 +399,13 @@
             if(!q) return;
 
             const target = captains.find(c => 
-                String(c.Cap_Phone || c.cap_phone || c.phone).trim() === q || 
-                String(c.Cap_User || c.user).trim() === q
+                String(c.Cap_Phone || c.phone || c.cap_phone || "").trim() === q || 
+                String(c.Cap_User || c.user || "").trim() === q
             );
 
             if(target) {
                 currentWalletCaptain = target;
+                currentWalletQuery = q; 
                 document.getElementById('wallet-result').style.display = 'block';
                 document.getElementById('wr_name').innerText = target.Cap_Name || target.name || "كابتن";
                 document.getElementById('wr_bal').innerText = parseFloat(target.Cap_Balance || target.balance || 0).toFixed(2);
@@ -403,11 +415,12 @@
                 alert("كابتن غير موجود تأكد من الرقم أو الترميز");
                 document.getElementById('wallet-result').style.display = 'none';
                 currentWalletCaptain = null;
+                currentWalletQuery = "";
             }
         }
 
         async function updateBalance(action) {
-            if(!currentWalletCaptain) return alert("يرجى البحث عن كابتن أولا");
+            if(!currentWalletCaptain || !currentWalletQuery) return alert("يرجى البحث عن كابتن أولا");
             
             const amt = parseFloat(document.getElementById('wallet_amt').value);
             if(!amt || amt <= 0) return alert("المبلغ غير صحيح");
@@ -421,12 +434,11 @@
             showLoader(true);
             
             currentWalletCaptain.Cap_Balance = newBal;
+            currentWalletCaptain.balance = newBal;
             document.getElementById('wr_bal').innerText = newBal.toFixed(2);
-
-            const keyToSend = currentWalletCaptain.Cap_User || currentWalletCaptain.user || currentWalletCaptain.Cap_Phone || currentWalletCaptain.cap_phone;
             
             await N_ONE_CORE.postData('update', { 
-                user: keyToSend, 
+                user: currentWalletQuery, 
                 data: { 
                     Cap_Balance: newBal,
                     balance: newBal 
@@ -451,8 +463,8 @@
             showLoader(true);
 
             const target = shops.find(u => 
-                String(u.Shop_User || u.Client_User || u.user).trim() === targetInput || 
-                String(u.Shop_Phone || u.Client_Phone || u.phone).trim() === targetInput
+                String(u.Shop_User || u.Client_User || u.user || "").trim() === targetInput || 
+                String(u.Shop_Phone || u.Client_Phone || u.phone || "").trim() === targetInput
             );
 
             if(!target) {
@@ -467,12 +479,11 @@
                 showLoader(false); return;
             }
 
-            const keyToSend = target.Shop_User || target.Client_User || target.user || target.Shop_Phone || target.Client_Phone;
             const currentShopBal = parseFloat(target.Shop_Balance || target.Client_Balance || target.balance || 0);
             const newBal = currentShopBal + amount;
             
             await N_ONE_CORE.postData('update', { 
-                user: keyToSend, 
+                user: targetInput, 
                 data: { 
                     Shop_Balance: newBal,
                     Client_Balance: newBal,
@@ -482,6 +493,7 @@
             
             target.Shop_Balance = newBal;
             target.Client_Balance = newBal;
+            target.balance = newBal;
             
             alert(`تم شحن المنشأة بنجاح الرصيد الجديد ${newBal.toFixed(2)}`);
             
