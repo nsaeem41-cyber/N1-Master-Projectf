@@ -198,12 +198,12 @@
         <div class="modal-content">
             <div class="modal-title">أهلاً بكِ في N One 👑</div>
             <div class="modal-desc">
-                عذراً الموقع غير معروف.<br>
-                يرجى اختيار منطقتك الصحيحة (لمرة واحدة فقط) لضمان استقرار الأسعار والتسعير التلقائي:
+                عذراً الموقع غير معروف<br>
+                يرجى اختيار منطقتك الصحيحة (لمرة واحدة فقط) لضمان استقرار الأسعار والتسعير التلقائي
             </div>
             
             <div class="input-group" style="text-align: right;">
-                <label>📍 اختر المنطقة (المصدر المعتمد):</label>
+                <label>📍 اختر المنطقة (المصدر المعتمد)</label>
                 <select id="modal-location-select">
                     <option value="">جاري تحميل المناطق...</option>
                 </select>
@@ -326,7 +326,7 @@
     <script>
         // ========================================================
         // N ONE - SHOP SYSTEM (ULTIMATE EDITION v19.5) 💎
-        // نسخة اللحام الأبدي والتشفير العكسي للأسعار
+        // نسخة اللحام الأبدي والتشفير العكسي للأسعار والاعتماد على الخزنة
         // ========================================================
 
         const API_URL = "https://script.google.com/macros/s/AKfycbxFVz0QTi_7TgWQEMImtMGYRBzlD1CwM5X4DbprUvVJkURs_75aD5n5IcpbS87d8Q5j/exec";
@@ -363,29 +363,29 @@
             setInterval(fetchMyBalanceSilent, 15000);
         };
 
-        // الدالة الشاملة لجلب البيانات (الدم المالي والأسعار)
+        // الدالة الشاملة لجلب البيانات والاعتماد الكلي على الخزنة الحديدية
         async function fetchAllData() {
             try {
                 const data = await N_ONE_CORE.fetchData('read');
                 
-                // 1. تحديث بيانات المنشأة من الخزنة
                 const shopKey = String(currentUser.Shop_User || currentUser.user).trim();
                 const me = data.find(u => String(u.Shop_User || u.user || "").trim() === shopKey || (currentUser.cap_phone && String(u.Shop_Phone || "").trim() === String(currentUser.cap_phone).trim()));
                 
+                dbPrices = data.filter(d => d.Price_ID);
+
                 if (me) {
                     myBalance = parseFloat(me.Shop_Balance || 0);
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
-                    currentUser.Shop_Location = me.Shop_Location; // تحديث الموقع من الخزنة
-                }
-
-                // 2. فلترة الأسعار من العقل 18
-                dbPrices = data.filter(d => d.Price_ID);
-
-                // 3. بوابة الدخول الأول (فحص الموقع)
-                if (!currentUser.Shop_Location || String(currentUser.Shop_Location).trim() === "") {
-                    showLocationModal();
-                } else {
-                    loadShopPrices();
+                    
+                    // الاعتماد الكلي على العقل والإكسل مش المتصفح
+                    if (me.Shop_Location && String(me.Shop_Location).trim() !== "") {
+                        currentUser.Shop_Location = me.Shop_Location;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        document.getElementById('location-modal').style.display = 'none';
+                        loadShopPrices();
+                    } else {
+                        showLocationModal();
+                    }
                 }
 
             } catch (e) {
@@ -393,12 +393,10 @@
             }
         }
 
-        // نافذة الخيارات الملكية
         function showLocationModal() {
             const select = document.getElementById('modal-location-select');
             select.innerHTML = '<option value="">-- اختر منطقتك المعتمدة --</option>';
             
-            // سحب المصادر المعتمدة من قائمة الأسعار بدون تكرار
             const uniqueSources = [...new Set(dbPrices.map(p => p.Price_Source))].filter(Boolean);
             
             uniqueSources.forEach(source => {
@@ -411,7 +409,6 @@
             document.getElementById('location-modal').style.display = 'flex';
         }
 
-        // اللحام الأبدي للموقع
         async function saveShopLocation() {
             const selectedLocation = document.getElementById('modal-location-select').value;
             if (!selectedLocation) {
@@ -426,7 +423,7 @@
 
             try {
                 const shopKey = currentUser.Shop_User ? currentUser.Shop_User : currentUser.user;
-                // حفر المنطقة في الإكسل للأبد
+                
                 await N_ONE_CORE.postData('update', { user: shopKey, data: { Shop_Location: selectedLocation } });
                 
                 currentUser.Shop_Location = selectedLocation;
@@ -435,17 +432,16 @@
                 document.getElementById('location-modal').style.display = 'none';
                 showToast("✅ تم تثبيت منطقتك بنجاح للأبد 😊");
                 
-                loadShopPrices(); // تحميل الأسعار الخاصة بالمنطقة
+                loadShopPrices();
 
             } catch(e) {
-                alert("❌ حدث خطأ، يرجى المحاولة مرة أخرى.");
+                alert("❌ حدث خطأ يرجى المحاولة مرة أخرى");
             } finally {
                 btn.innerText = originalText;
                 btn.style.opacity = 1;
             }
         }
 
-        // التشفير العكسي (قراءة الأسعار الديناميكية مع الحارس الليلي)
         function loadShopPrices() {
             pricingMatrix = {};
             const datalist = document.getElementById('areas-list');
@@ -453,11 +449,9 @@
             
             if (!currentUser.Shop_Location) return;
 
-            // فلترة الأسعار لتعرض فقط مناطق (الوجهات) التابعة لمصدر المنشأة
             const myPrices = dbPrices.filter(p => p.Price_Source === currentUser.Shop_Location);
             
             myPrices.forEach(p => {
-                // العقل 18 بيعطينا Price_Current اللي بيشمل الزيادة الليلية إذا تفعلت
                 const currentPrice = parseFloat(p.Price_Current || p.Price_Base || 0);
                 pricingMatrix[p.Price_Area] = currentPrice;
                 
@@ -465,11 +459,8 @@
                 opt.value = p.Price_Area;
                 datalist.appendChild(opt);
             });
-            
-            console.log("تم تحديث الأسعار الديناميكية لمنطقة:", currentUser.Shop_Location);
         }
 
-        // التكتيك السري لتعديل المنطقة
         function checkSecretPin(val) {
             if (val === '12345') {
                 document.getElementById('secret-pin').value = '';
@@ -572,7 +563,7 @@
             if (amount <= 0) { showToast("⚠️ المبلغ غير صحيح 😊"); return; }
             
             if (myBalance < amount) { 
-                alert(`⛔ رصيدك الحالي (${myBalance}) غير كافٍ لإتمام العملية 😊`); 
+                alert(`⛔ رصيدك الحالي (${myBalance}) غير كاف لإتمام العملية 😊`); 
                 return; 
             }
 
@@ -589,7 +580,6 @@
                     document.getElementById('btn-charge').style.display = 'none';
                 } else {
                     verifiedCaptain = cap;
-                    // دعم المسميات الجديدة Cap_
                     const capName = cap.Cap_Name || cap.name || "كابتن";
                     const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0);
 
@@ -603,7 +593,7 @@
             } catch (e) {
                 showToast("❌ خطأ في الاتصال");
             } finally {
-                setLoading('btn-check', false, "🔍 فحص الكابتن أولاً");
+                setLoading('btn-check', false, "🔍 فحص الكابتن أولا");
             }
         }
 
@@ -614,7 +604,7 @@
 
             const capName = verifiedCaptain.Cap_Name || verifiedCaptain.name || "الكابتن";
 
-            if (!confirm(`تأكيد نهائي\nخصم ${amount} د.أ من رصيدك\nوشحنها للكابتن ${capName} 😊`)) return;
+            if (!confirm(`تأكيد نهائي خصم ${amount} د.أ من رصيدك وشحنها للكابتن ${capName} 😊`)) return;
 
             setLoading('btn-charge', true);
 
@@ -623,7 +613,6 @@
                 const newCapBal = currentCapBal + amount;
                 const newShopBal = myBalance - amount;
 
-                // اللحام المالي الدقيق باستخدام مفاتيح Cap_ و Shop_
                 const capKey = verifiedCaptain.Cap_User ? verifiedCaptain.Cap_User : (verifiedCaptain.user || verifiedCaptain.cap_phone);
                 await N_ONE_CORE.postData('update', { user: capKey, data: { Cap_Balance: newCapBal } });
                 
@@ -633,7 +622,7 @@
                 myBalance = newShopBal;
                 document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 
-                alert(`✅ تمت العملية بنجاح\nالرصيد وصل للكابتن ${capName} 😊`);
+                alert(`✅ تمت العملية بنجاح الرصيد وصل للكابتن ${capName} 😊`);
                 
                 document.getElementById('cap_id').value = '';
                 document.getElementById('charge_amount').value = '';
