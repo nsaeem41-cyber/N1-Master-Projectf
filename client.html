@@ -130,6 +130,21 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card" style="text-align:center; border-top-color:var(--money);">
+                    <h3 style="margin:0; color:#555;">الخزنة الماسية (المردود المالي)</h3>
+                    <div style="margin-top:15px; display:flex; justify-content:space-around;">
+                        <div>
+                            <span style="font-size:20px; font-weight:bold; color:var(--money);" id="total-balance">0 د.أ</span><br>
+                            <span style="font-size:12px;">مجموع شحن الكباتن</span>
+                        </div>
+                        <div>
+                            <span style="font-size:20px; font-weight:bold; color:var(--gold);" id="total-comm">0 د.أ</span><br>
+                            <span style="font-size:12px;">مجموع الاشتراكات</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -155,6 +170,8 @@
 
                     <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps) (خيط التوجيه)">
 
+                    <input type="number" id="shop_balance" placeholder="شحن رصيد الكابتن الفوري (اختياري)" step="0.5" style="border-color:var(--money);">
+
                     <select id="sub_type" onchange="toggleCommissionField()">
                         <option value="free">اشتراك مجاني (بدون عمولة)</option>
                         <option value="paid">اشتراك مدفوع (Premium)</option>
@@ -176,7 +193,12 @@
             </div>
 
             <div class="card">
-                <div class="card-header">سجل المنشآت والتحكم الشامل</div>
+                <div class="card-header" style="display:flex; flex-direction:column; gap:15px; align-items:stretch;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>سجل المنشآت والتحكم الشامل</span>
+                    </div>
+                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم المنشأة بلمحة بصر..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
+                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -185,13 +207,14 @@
                                 <th>بيانات الدخول</th>
                                 <th>الهاتف / الموقع (الخيوط)</th>
                                 <th>النوع / العمولة</th>
+                                <th>الرصيد المشحون</th>
                                 <th>الصلاحية</th>
                                 <th>الحالة</th>
                                 <th>التحكم</th>
                             </tr>
                         </thead>
                         <tbody id="shops-table-body">
-                            <tr><td colspan="7" style="text-align:center;">جاري سحب البيانات... ⏳</td></tr>
+                            <tr><td colspan="8" style="text-align:center;">جاري سحب البيانات... ⏳</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -202,7 +225,7 @@
 
     <script>
         // ========================================================
-        // المحرك الخارق v7.2 - إمبراطورية N One (HQ Edition - Encrypted)
+        // المحرك الخارق v7.3 - إمبراطورية N One (HQ Edition - Encrypted)
         // ========================================================
         
         // الرابط الملكي المعتمد
@@ -277,6 +300,7 @@
             const phone = document.getElementById('shop_phone').value; 
             const locLink = document.getElementById('shop_location_link').value;
             const days = document.getElementById('sub_duration').value;
+            const balance = document.getElementById('shop_balance').value || "0";
             
             let commission = "0";
             if (subType === 'paid') {
@@ -307,14 +331,16 @@
                 Client_Location: locLink,  
                 Client_Comm: commission, 
                 Client_Expiry: expDate.toISOString().split('T')[0], 
-                Client_PlanDays: days 
+                Client_PlanDays: days,
+                Client_Balance: balance,
+                Shop_Balance: balance
             };
 
             await N_ONE_CORE.postData('add', [newShop]);
             await fetchData();
             
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم إضافة المنشأة وحفظ الخيوط بنجاح للربط ☺️✅");
+            alert("تم إضافة المنشأة وحفظ الخيوط وشحن الرصيد بنجاح ☺️✅");
             
             // تنظيف الحقول
             document.getElementById('shop_name').value = '';
@@ -322,18 +348,29 @@
             document.getElementById('shop_pass').value = '';
             document.getElementById('shop_phone').value = '';
             document.getElementById('shop_location_link').value = '';
+            document.getElementById('shop_balance').value = '';
         }
 
         function renderShops() {
             const tbody = document.getElementById('shops-table-body');
             const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && String(i.Client_Master || i.client_user) === String(currentUser.Client_User || currentUser.user)).reverse();
             
-            // تحديث العدادات الذكية في لوحة المعلومات (بدون كباتن)
+            // تحديث العدادات الذكية والمردود المالي في لوحة المعلومات
+            let totalBalance = 0;
+            let totalComm = 0;
+            
+            myShops.forEach(s => {
+                totalBalance += Number(s.Client_Balance || s.Shop_Balance || 0);
+                totalComm += Number(s.Client_Comm || s.company_share || 0);
+            });
+
             document.getElementById('total-shops').innerText = myShops.length;
             document.getElementById('count-paid').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
             document.getElementById('count-free').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
+            document.getElementById('total-balance').innerText = totalBalance.toFixed(2) + " د.أ";
+            document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
 
-            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
+            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
             tbody.innerHTML = '';
             
             myShops.forEach(shop => {
@@ -364,21 +401,36 @@
                 // عرض الموقع إن وجد (الخيط المرئي)
                 let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; text-decoration:none;">📍 الموقع</a>` : '';
 
+                const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
+
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${shop.Client_Name || shop.name}</b></td>
                         <td style="font-size:12px;">${shop.Client_User || shop.user}<br>Pwd: ${shop.Client_Pass || shop.pass}</td>
                         <td style="font-size:12px; direction:ltr;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
                         <td>${subBadge}</td>
+                        <td style="font-weight:bold; color:var(--money);">${currentBalance} د.أ</td>
                         <td style="font-size:12px;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
-                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shop.Client_Pass || shop.pass}')">✏️</button>
+                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shop.Client_Pass || shop.pass}', '${currentBalance}')">✏️</button>
                             ${toggleBtn}
                             <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">❌</button>
                         </td>
                     </tr>
                 `;
+            });
+        }
+
+        // دالة الفلترة والبحث السريع
+        function filterTable() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#shops-table-body tr');
+            rows.forEach(row => {
+                if (row.cells.length > 1) {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                }
             });
         }
 
@@ -397,12 +449,13 @@
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
-        async function editShop(u, n, p) {
-            const newN = prompt("تعديل اسم المنشأة", n); if (!newN) return;
-            const newP = prompt("تعديل كلمة المرور", p);
+        async function editShop(u, n, p, b) {
+            const newN = prompt("تعديل اسم المنشأة", n); if (newN === null) return;
+            const newP = prompt("تعديل كلمة المرور", p); if (newP === null) return;
+            const newB = prompt("تعديل رصيد الكابتن (الرقم الجديد سيلغي القديم خاوة)", b); if (newB === null) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: u, data: { Client_Name: newN, Client_Pass: newP } });
+            await N_ONE_CORE.postData('update', { user: u, data: { Client_Name: newN, Client_Pass: newP, Client_Balance: newB, Shop_Balance: newB } });
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
