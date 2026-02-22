@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | بوابة الإمبراطورية (HQ Console)</title>
     
-    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
-
     <style>
         /* ================= تصميم Client Pro (Teal Theme) - النسخة الإمبراطورية ================= */
         :root {
@@ -225,23 +223,20 @@
 
     <script>
         // ========================================================
-        // المحرك الخارق v9.0 - إمبراطورية N One (النسخة السريعة الشاملة والمستقلة)
+        // المحرك الخارق v8.0 - إمبراطورية N One (نسخة التجربة الخالصة لـ SheetDB)
         // ========================================================
         
         const SHEETDB_URL = "https://sheetdb.io/api/v1/2boq9voghqasw";
-        let currentUser = null;
+
+        let currentUser = { Client_User: "admin_test", Client_Name: "حبة السكر" };
         let allData = [];
 
         window.onload = async function() {
-            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ المصلح المركزي غير متصل"); return; }
-            
-            currentUser = N_ONE_CORE.checkSession('client');
-            if (currentUser) {
-                document.getElementById('welcome-msg').innerText = `أهلا ${currentUser.Client_Name || currentUser.name}`;
-                await fetchData();
-            }
+            document.getElementById('welcome-msg').innerText = `أهلا ${currentUser.Client_Name}`;
+            await fetchData();
         };
 
+        // دالة التبديل بين التبويبات الداخلية فقط
         function switchTab(tabId, event) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => {
@@ -264,6 +259,8 @@
                 document.getElementById('loader-overlay').style.display = 'none';
             }
         }
+
+        // ================= ميزات إدارة المنشآت الذكية =================
 
         function toggleCommissionField() {
             const type = document.getElementById('sub_type').value;
@@ -316,7 +313,7 @@
                 Client_Name: name,
                 Client_Role: "shop", 
                 Client_Type: "shop", 
-                Client_Master: currentUser.Client_User || currentUser.user,
+                Client_Master: currentUser.Client_User,
                 Client_Status: "active",
                 Client_Phone: phone, 
                 Client_Location: locLink,  
@@ -350,13 +347,8 @@
         function renderShops() {
             const tbody = document.getElementById('shops-table-body');
             
-            const myShops = allData.filter(i => 
-                (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && 
-                String(i.Client_Master || i.client_user) === String(currentUser.Client_User || currentUser.user) &&
-                String(i.Client_User || i.user) !== String(currentUser.Client_User || currentUser.user) &&
-                String(i.Client_Role || i.role).toLowerCase() !== 'admin' &&
-                String(i.Client_Type || i.type).toLowerCase() !== 'admin'
-            ).reverse();
+            // في هاد المختبر بنعرض كل المنشآت عشان التجربة تكون شاملة وواضحة
+            const myShops = allData.reverse();
             
             let totalBalance = 0;
             let totalComm = 0;
@@ -420,6 +412,7 @@
             });
         }
 
+        // دالة الفلترة والبحث السريع
         function filterTable() {
             const query = document.getElementById('search-input').value.toLowerCase();
             const rows = document.querySelectorAll('#shops-table-body tr');
@@ -430,6 +423,8 @@
                 }
             });
         }
+
+        // ================= عمليات التحكم (كلها عبر SheetDB مباشرة بلمسة ملوك) =================
 
         async function toggleStatus(u, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
@@ -489,7 +484,7 @@
             await fetchData();
         }
 
-        function logout() { N_ONE_CORE.logout(); }
+        function logout() { alert("تسجيل الخروج معطل في المختبر يا حبة السكر ☺️"); }
     </script>
 </body>
 </html>
