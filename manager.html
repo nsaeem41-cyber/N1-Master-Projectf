@@ -87,14 +87,13 @@
             <button onclick="loadData()" style="background:none; border:none; color:#d4af37; cursor:pointer;">🔄 تحديث يدوي</button>
         </div>
         
-        <div id="loader">جاري الاتصال بالأقمار الصناعية 🛰️</div>
+        <div id="loader">جاري الاتصال بالأقمار الصناعية... 🛰️</div>
         
         <table id="feed-table" style="display:none;">
             <thead>
                 <tr>
                     <th>التاريخ</th>
                     <th>الشركة (المصدر)</th>
-                    <th>الكابتن (المنفذ)</th>
                     <th>الموقع</th>
                     <th>القيمة</th>
                 </tr>
@@ -104,7 +103,6 @@
     </div>
 
     <script>
-        // 💎 الرابط الملكي 💎
         const API_URL = "https://script.google.com/macros/s/AKfycbzKQKytFxtHRh1J6tG2GHJjJVl5I2Iz0eYomc963sqn-V8M4Vd3t3Hmm6daykMWUjHj/exec";
 
         window.onload = function() {
@@ -147,39 +145,32 @@
         }
 
         function processData(data) {
-            const orders = data.filter(i => i.type === 'order' || i.Shop_Type === 'shop_order' || i.Client_Type === 'order').reverse(); 
-            const merchants = data.filter(i => i.Client_Role === 'shop' || i.type === 'shop' || i.Shop_Type === 'shop');
+            const orders = data.filter(i => i.type === 'order').reverse(); 
+            const merchants = data.filter(i => i.type === 'merchant' || i.type === 'shop' || i.Shop_ID);
 
             document.getElementById('total-orders').innerText = orders.length;
             document.getElementById('total-merchants').innerText = merchants.length;
             
             let money = 0;
-            orders.forEach(o => money += (Number(o.val || o.Shop_Val) || 0) + (Number(o.fee || o.Shop_Fee) || 0));
+            orders.forEach(o => money += (Number(o.val) || 0) + (Number(o.fee) || 0));
             document.getElementById('total-money').innerText = money.toLocaleString() + " د.أ";
 
             const tbody = document.getElementById('feed-body');
             let htmlContent = '';
 
             if (orders.length === 0) {
-                htmlContent = '<tr><td colspan="5" style="text-align:center; padding:30px;">لا يوجد عمليات حتى الآن</td></tr>';
+                htmlContent = '<tr><td colspan="4" style="text-align:center; padding:30px;">لا يوجد عمليات حتى الآن</td></tr>';
             } else {
                 orders.forEach(ord => {
-                    const shopUser = ord.client_user || ord.Shop_User;
-                    const company = data.find(u => u.user === shopUser || u.Shop_User === shopUser || u.Client_User === shopUser);
-                    const compName = company ? (company.name || company.Shop_Name || company.Client_Name) : shopUser;
-
-                    const ordDate = ord.date || ord.Shop_Date || new Date().toISOString();
-                    const capName = ord.cap_name || ord.Cap_Name || "---";
-                    const pickup = ord.pickup || ord.Shop_Pickup || "---";
-                    const totalVal = (Number(ord.val || ord.Shop_Val || 0) + Number(ord.fee || ord.Shop_Fee || 0)).toFixed(2);
+                    const company = data.find(u => u.user === ord.client_user);
+                    const compName = company ? company.name : ord.client_user;
 
                     htmlContent += `
                         <tr>
-                            <td><span class="tag">${ordDate.split('T')[0]}</span></td>
-                            <td style="font-weight:bold; color:#d4af37;">${compName}</td>
-                            <td>${capName}</td>
-                            <td>${pickup}</td>
-                            <td>${totalVal}</td>
+                            <td><span class="tag">${ord.date ? ord.date.split('T')[0] : ''}</span></td>
+                            <td style="font-weight:bold; color:#d4af37;">${compName || ''}</td>
+                            <td>${ord.pickup || ''}</td>
+                            <td>${(Number(ord.val) + Number(ord.fee)).toFixed(2)}</td>
                         </tr>
                     `;
                 });
