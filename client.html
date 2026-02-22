@@ -225,7 +225,7 @@
 
     <script>
         // ========================================================
-        // المحرك الخارق v7.5 - إمبراطورية N One (HQ Edition - Instant Update)
+        // المحرك الخارق v7.3 - إمبراطورية N One (HQ Edition - Encrypted)
         // ========================================================
         
         // الرابط الملكي المعتمد
@@ -336,12 +336,8 @@
                 Shop_Balance: balance
             };
 
-            // ارسال الطلب لجوجل للإضافة
             await N_ONE_CORE.postData('add', [newShop]);
-            
-            // تحديث محلي فوري عشان تشوفي النتيجة بلمحة بصر خاوة
-            allData.push(newShop);
-            renderShops();
+            await fetchData();
             
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم إضافة المنشأة وحفظ الخيوط وشحن الرصيد بنجاح ☺️✅");
@@ -446,7 +442,7 @@
             });
         }
 
-        // ================= عمليات التحكم (مفصولة بذكاء نفاث مع التحديث الفوري) =================
+        // ================= عمليات التحكم (مفصولة بذكاء نفاث) =================
 
         async function toggleStatus(u, currentStatus) {
             // نرسل عكس الحالة الحالية
@@ -466,14 +462,7 @@
                 });
             } catch(e) { console.error(e); }
 
-            // التحديث المحلي الفوري عشان الشاشة تستجيب بلمحة بصر
-            const shopIndex = allData.findIndex(s => String(s.Client_User || s.user) === String(u));
-            if (shopIndex !== -1) {
-                allData[shopIndex].Client_Status = nextStatus;
-                allData[shopIndex].status = nextStatus;
-            }
-            renderShops();
-            
+            await fetchData(); 
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
@@ -500,18 +489,7 @@
                 });
             } catch(e) { console.error(e); }
 
-            // التحديث المحلي الفوري
-            const shopIndex = allData.findIndex(s => String(s.Client_User || s.user) === String(u));
-            if (shopIndex !== -1) {
-                allData[shopIndex].Client_Name = newN;
-                allData[shopIndex].name = newN;
-                allData[shopIndex].Client_Pass = newP;
-                allData[shopIndex].pass = newP;
-                allData[shopIndex].Client_Balance = newB;
-                allData[shopIndex].Shop_Balance = newB;
-            }
-            renderShops();
-            
+            await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
@@ -522,10 +500,7 @@
             // الحذف بيضل عن طريق جوجل عشان المساحة
             await N_ONE_CORE.fetchData('delete', { user: u });
             
-            // التحديث المحلي الفوري
-            allData = allData.filter(s => String(s.Client_User || s.user) !== String(u));
-            renderShops();
-            
+            await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
