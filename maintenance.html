@@ -84,7 +84,7 @@
 
     <div id="loader-overlay">
         <div style="font-size: 50px;">⚙️</div>
-        <div class="loader-text" id="loader-msg">جاري فحص السيرفر</div>
+        <div class="loader-text" id="loader-msg">جاري فحص السيرفر...</div>
     </div>
 
     <div class="header">
@@ -95,13 +95,13 @@
     <div class="container">
         
         <div class="health-dashboard">
-            <div class="health-title">📊 مؤشر صحة السيرفر المركزي (جميع القلاع)</div>
+            <div class="health-title">📊 مؤشر صحة السيرفر المركزي</div>
             <div class="progress-wrapper">
                 <div class="progress-bar" id="server-load-bar"></div>
             </div>
             <div class="health-stats">
                 <span id="load-text">استهلاك قاعدة البيانات 0%</span>
-                <span id="rows-count">الأسطر المستخدمة 0 / 30000</span>
+                <span id="rows-count">الأسطر المستخدمة 0 / 10000</span>
             </div>
             <div style="margin-top:15px; font-size:12px; color:#666;">
                 النظام يعمل بكفاءة عالية طالما المؤشر باللون الأخضر ☺️
@@ -113,7 +113,7 @@
             <div class="tool-card">
                 <div class="tool-icon">💾</div>
                 <div class="tool-title">النسخ الاحتياطي الشامل</div>
-                <div class="tool-desc">تنزيل نسخة آمنة ومفرغة من جميع بيانات الإمبراطورية كملف JSON مشفر</div>
+                <div class="tool-desc">تنزيل نسخة آمنة ومفرغة من جميع بيانات الإمبراطورية والشركات والطلبات كملف JSON مشفر</div>
                 <button class="btn-action btn-backup" onclick="backupData()">سحب نسخة احتياطية 🚀</button>
                 <div id="backup-msg" class="status-msg" style="color:#64b5f6;"></div>
             </div>
@@ -121,7 +121,7 @@
             <div class="tool-card">
                 <div class="tool-icon">📦</div>
                 <div class="tool-title">الأرشفة التلقائية الذكية</div>
-                <div class="tool-desc">تنزيل الطلبات المكتملة وحذفها من قلعة الطلبات لتخفيف الضغط وتسريع استجابة النظام</div>
+                <div class="tool-desc">تنزيل الطلبات المكتملة وحذفها من السيرفر المركزي لتخفيف الضغط وتسريع استجابة النظام</div>
                 <button class="btn-action btn-archive" onclick="autoArchive()">بدء الأرشفة والتفريغ 🚀</button>
                 <div id="archive-msg" class="status-msg" style="color:#ffb74d;"></div>
             </div>
@@ -164,7 +164,7 @@
                 systemData = await res.json();
                 
                 const totalRows = systemData.length;
-                const maxRows = 30000; 
+                const maxRows = 10000; 
                 let percentage = (totalRows / maxRows) * 100;
                 if(percentage > 100) percentage = 100;
 
@@ -191,13 +191,13 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(systemData, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "N_One_Empire_Backup_" + new Date().toISOString().split('T')[0] + ".json");
+            downloadAnchorNode.setAttribute("download", "N_One_Backup_" + new Date().toISOString().split('T')[0] + ".json");
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
 
             const msg = document.getElementById('backup-msg');
-            msg.innerText = "تم حفظ النسخة الاحتياطية للإمبراطورية بنجاح ☺️✅";
+            msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ☺️✅";
             msg.style.display = "block";
             setTimeout(() => msg.style.display = "none", 4000);
         }
@@ -205,10 +205,10 @@
         async function autoArchive() {
             if(!confirm("هل أنت متأكد من بدء عملية الأرشفة سيتم تفريغ الطلبات لتخفيف السيرفر ☺️")) return;
             
-            const ordersToArchive = systemData.filter(item => item.Shop_Type === 'shop_order' || item.type === 'order' || item.Client_Type === 'order');
+            const ordersToArchive = systemData.filter(item => item.type === 'order');
             
             if(ordersToArchive.length === 0) {
-                alert("قلعة الطلبات نظيفة ولا يوجد شيء للأرشفة ☺️");
+                alert("السيرفر نظيف ولا يوجد طلبات للأرشفة ☺️");
                 return;
             }
 
@@ -220,18 +220,16 @@
             dlNode.click();
             dlNode.remove();
 
-            showLoader("جاري تنظيف قلعة الطلبات الرجاء عدم إغلاق الصفحة ⏳");
+            showLoader("جاري تنظيف السيرفر من الطلبات المؤرشفة الرجاء عدم إغلاق الصفحة ⏳");
 
             try {
                 for(let i = 0; i < ordersToArchive.length; i++) {
-                    const orderId = ordersToArchive[i].Shop_Ord_ID || ordersToArchive[i].id;
-                    if(orderId) {
-                        await fetch(API_URL + "?action=delete&user=" + orderId, { method: 'POST', mode: 'no-cors' });
-                    }
+                    const orderId = ordersToArchive[i].id;
+                    await fetch(API_URL + "?action=delete&user=" + orderId, { method: 'POST', mode: 'no-cors' });
                 }
                 
                 const msg = document.getElementById('archive-msg');
-                msg.innerText = "تمت الأرشفة وتفريغ الطلبات بنجاح ☺️✅";
+                msg.innerText = "تمت الأرشفة وتفريغ السيرفر بنجاح ☺️✅";
                 msg.style.display = "block";
                 setTimeout(() => msg.style.display = "none", 4000);
                 
