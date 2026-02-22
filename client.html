@@ -225,7 +225,7 @@
 
     <script>
         // ========================================================
-        // المحرك الخارق v7.3 - إمبراطورية N One (HQ Edition - Encrypted)
+        // المحرك الخارق v8.0 - إمبراطورية N One (HQ Edition - Robust Sync)
         // ========================================================
         
         // الرابط الملكي المعتمد
@@ -442,10 +442,9 @@
             });
         }
 
-        // ================= عمليات التحكم (مفصولة بذكاء نفاث) =================
+        // ================= عمليات التحكم المربوطة بالجسر السريع =================
 
         async function toggleStatus(u, currentStatus) {
-            // نرسل عكس الحالة الحالية
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
             const confirmMsg = nextStatus === 'paused' ? "تجميد الحساب لن يتمكن من إرسال طلبات" : "إعادة التفعيل";
             
@@ -453,15 +452,24 @@
             
             document.getElementById('loader-overlay').style.display = 'flex';
             
-            // التعديل الملوكي عبر الجسر السريع (SheetDB)
             try {
-                await fetch('https://sheetdb.io/api/v1/2boq9voghqasw/Client_User/' + u, {
+                let res = await fetch('https://sheetdb.io/api/v1/2boq9voghqasw/Client_User/' + u, {
                     method: 'PATCH',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: { "Client_Status": nextStatus, "status": nextStatus } })
                 });
+                let json = await res.json();
+                
+                if (json.updated === 0) {
+                    await fetch('https://sheetdb.io/api/v1/2boq9voghqasw/user/' + u, {
+                        method: 'PATCH',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: { "Client_Status": nextStatus, "status": nextStatus } })
+                    });
+                }
             } catch(e) { console.error(e); }
 
+            await new Promise(r => setTimeout(r, 1500));
             await fetchData(); 
             document.getElementById('loader-overlay').style.display = 'none';
         }
@@ -473,22 +481,32 @@
             
             document.getElementById('loader-overlay').style.display = 'flex';
             
-            // التعديل الملوكي عبر الجسر السريع (SheetDB)
             try {
-                await fetch('https://sheetdb.io/api/v1/2boq9voghqasw/Client_User/' + u, {
+                let res = await fetch('https://sheetdb.io/api/v1/2boq9voghqasw/Client_User/' + u, {
                     method: 'PATCH',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: { 
-                        "Client_Name": newN, 
-                        "Client_Pass": newP, 
-                        "Client_Balance": newB, 
-                        "Shop_Balance": newB,
-                        "name": newN,
-                        "pass": newP 
+                        "Client_Name": newN, "name": newN,
+                        "Client_Pass": newP, "pass": newP,
+                        "Client_Balance": newB, "Shop_Balance": newB
                     } })
                 });
+                let json = await res.json();
+                
+                if (json.updated === 0) {
+                    await fetch('https://sheetdb.io/api/v1/2boq9voghqasw/user/' + u, {
+                        method: 'PATCH',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: { 
+                            "Client_Name": newN, "name": newN,
+                            "Client_Pass": newP, "pass": newP,
+                            "Client_Balance": newB, "Shop_Balance": newB
+                        } })
+                    });
+                }
             } catch(e) { console.error(e); }
 
+            await new Promise(r => setTimeout(r, 1500));
             await fetchData();
             document.getElementById('loader-overlay').style.display = 'none';
         }
@@ -497,7 +515,6 @@
             if(!confirm("حذف نهائي سيتم قطع الخيوط")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             
-            // الحذف بيضل عن طريق جوجل عشان المساحة
             await N_ONE_CORE.fetchData('delete', { user: u });
             
             await fetchData();
