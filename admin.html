@@ -6,8 +6,6 @@
     <title>N One | غرفة قيادة الشركات (Secure Isolation)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
-
     <style>
         /* ================= أساسيات التصميم (Pro Theme) ================= */
         :root {
@@ -67,7 +65,7 @@
 
     <div id="loader-overlay">
         <div style="font-size:30px; margin-bottom:10px;">📡</div>
-        <div>جاري الاتصال بالنواة المركزية...</div>
+        <div>جاري الاتصال بالنواة المركزية المباشرة...</div>
     </div>
 
     <nav class="navbar">
@@ -137,24 +135,42 @@
 
     </div>
 
-    <script>
-        // رابط السيرفر المحدث
-        if (typeof N_ONE_CORE !== 'undefined') {
-            N_ONE_CORE.API_URL ="https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         let allData = [];
         let globalServerTime = new Date(); 
 
         window.onload = async function() {
-            if (typeof N_ONE_CORE === 'undefined') { alert("خطأ: المصلح المركزي غير متصل!"); return; }
-            if (N_ONE_CORE.checkSession('admin')) {
-                await fetchServerTime();
-                await fetchData();
+            const sessionData = localStorage.getItem('currentUser');
+            if (!sessionData) {
+                window.location.replace('index.html');
+                return;
             }
+            const currentUser = JSON.parse(sessionData);
+            if (currentUser.role !== 'admin') {
+                window.location.replace('index.html');
+                return;
+            }
+            await fetchServerTime();
+            fetchData();
         };
 
-        async function fetchServerTime() {
+        window.fetchServerTime = async function() {
             try {
                 const res = await fetch("http://worldtimeapi.org/api/timezone/Asia/Amman");
                 const timeData = await res.json();
@@ -162,17 +178,21 @@
             } catch (e) { globalServerTime = new Date(); }
         }
 
-        async function fetchData() {
-            try {
-                allData = await N_ONE_CORE.fetchData('read');
+        window.fetchData = function() {
+            const usersRef = ref(db, 'users');
+            onValue(usersRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    allData = Object.values(snapshot.val());
+                } else {
+                    allData = [];
+                }
                 renderTables();
-            } catch (e) { console.error(e); }
+            });
         }
 
-        function renderTables() {
+        window.renderTables = function() {
             const clientTbody = document.getElementById('clients-table');
             
-            // عرض الشركات فقط
             const clients = allData.filter(u => u.role === 'client' || u.type === 'client').reverse();
 
             document.getElementById('count-clients').innerText = clients.length;
@@ -185,7 +205,7 @@
             renderRows(clientTbody, clients);
         }
 
-        function renderRows(tbody, data) {
+        window.renderRows = function(tbody, data) {
             if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة</td></tr>'; return; }
             tbody.innerHTML = '';
             
@@ -236,22 +256,19 @@
             });
         }
 
-        // ================= العمليات =================
-
-        async function addUser() {
+        window.addUser = async function() {
             const role = 'client';
             const name = document.getElementById('new_name').value;
-            const user = document.getElementById('new_user').value.trim(); // تنظيف المسافات
+            const user = document.getElementById('new_user').value.trim();
             const pass = document.getElementById('new_pass').value;
             const days = document.getElementById('sub_duration').value;
             const price = document.getElementById('sub_price').value;
 
             if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول ☺️"); return; }
 
-            // ⛔ ميزة العزل: التحقق من عدم تكرار اسم المستخدم ⛔
             const exists = allData.some(u => String(u.user).toLowerCase() === user.toLowerCase());
             if (exists) {
-                alert("⛔ تنبيه: اسم المستخدم هذا موجود بالفعل! يرجى اختيار اسم آخر لضمان عزل البيانات.");
+                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل يرجى اختيار اسم آخر لضمان عزل البيانات");
                 return;
             }
 
@@ -265,17 +282,21 @@
                 expiry: expDate.toISOString().split('T')[0], price: price, plan_days: days
             };
 
-            await N_ONE_CORE.postData('add', [newItem]);
-            await fetchData();
-            document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة ☺️✅");
-            
-            document.getElementById('new_name').value = '';
-            document.getElementById('new_user').value = '';
-            document.getElementById('new_pass').value = '';
+            try {
+                await set(ref(db, 'users/' + user), newItem);
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة ☺️✅");
+                
+                document.getElementById('new_name').value = '';
+                document.getElementById('new_user').value = '';
+                document.getElementById('new_pass').value = '';
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ في الربط ☺️");
+            }
         }
 
-        async function editUser(username, oldName, oldPass) {
+        window.editUser = async function(username, oldName, oldPass) {
             const newName = prompt("تعديل الاسم التجاري:", oldName);
             if (newName === null) return;
             const newPass = prompt("تعديل كلمة المرور:", oldPass);
@@ -284,27 +305,25 @@
             if (newName === oldName && newPass === oldPass) return;
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: username, data: { name: newName, pass: newPass } });
-            await fetchData();
+            await update(ref(db, 'users/' + username), { name: newName, pass: newPass });
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم تحديث البيانات ☺️");
         }
 
-        async function setStatus(username, currentStatus) {
+        window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تجميد الحساب؟" : "إعادة التفعيل؟")) return;
+            if (!confirm(nextStatus === 'paused' ? "تجميد الحساب" : "إعادة التفعيل")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: username, data: { status: nextStatus } });
-            await fetchData();
+            await update(ref(db, 'users/' + username), { status: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
-        async function setStatusSilent(username, newStatus) {
-            await N_ONE_CORE.postData('update', { user: username, data: { status: newStatus } });
+        window.setStatusSilent = async function(username, newStatus) {
+            await update(ref(db, 'users/' + username), { status: newStatus });
         }
 
-        async function renewUser(username) {
+        window.renewUser = async function(username) {
             const days = prompt("عدد أيام التجديد الإضافية:", "30");
             if (!days) return;
             const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
@@ -313,22 +332,23 @@
             newDate.setDate(newDate.getDate() + parseInt(days));
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.postData('update', { user: username, data: { expiry: newDate.toISOString().split('T')[0], status: 'active', price: newPrice } });
-            await fetchData();
+            await update(ref(db, 'users/' + username), { expiry: newDate.toISOString().split('T')[0], status: 'active', price: newPrice });
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم تجديد الاشتراك ☺️📅");
         }
 
-        async function deleteUser(username) {
-            if (!confirm("تحذير: حذف نهائي لا يمكن التراجع عنه! هل أنت متأكد؟")) return;
+        window.deleteUser = async function(username) {
+            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
-            await N_ONE_CORE.fetchData('delete', { user: username });
-            await fetchData();
+            await remove(ref(db, 'users/' + username));
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم حذف الحساب 🗑️");
         }
 
-        function logout() { N_ONE_CORE.logout(); }
+        window.logout = function() { 
+            localStorage.removeItem('currentUser');
+            window.location.replace('index.html');
+        }
     </script>
 
 </body>
