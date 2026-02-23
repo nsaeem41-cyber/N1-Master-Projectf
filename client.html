@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | بوابة الإمبراطورية (HQ Console)</title>
+    <title>N One | بوابة إدارة الشركات</title>
     
     <style>
-        /* ================= تصميم Client Pro (Teal Theme) - النسخة الإمبراطورية ================= */
+        /* ================= تصميم Client Pro (Teal Theme) - النسخة الرسمية ================= */
         :root {
             --primary: #00695c; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
             --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --money: #1b5e20;
@@ -28,11 +28,9 @@
         .tab-btn:hover { background: #e0e0e0; }
         .tab-btn.active { background: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 105, 92, 0.3); }
         
-        /* تصميم الروابط الخارجية (الغرف المستقلة) */
         .tab-link { background: #e3f2fd; color: #0277bd; border: 1px solid #b3e5fc; display: flex; align-items: center; gap: 5px; }
         .tab-link:hover { background: #b3e5fc; }
         
-        /* زر إدارة الكباتن المميز */
         .tab-captain { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
         .tab-captain:hover { background: #ffe082; }
 
@@ -60,13 +58,11 @@
         
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
         
-        /* خانة الهاتف */
         .phone-wrapper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; overflow: hidden; transition: 0.3s; }
         .phone-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
         .phone-prefix { background: #e0e0e0; padding: 12px 15px; font-weight: bold; color: #555; border-left: 1px solid #ccc; direction: ltr; }
         input[type="tel"] { border: none; box-shadow: none; background: transparent; margin: 0; direction: ltr; text-align: left; width: 100%; }
 
-        /* التحكم */
         .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; margin-left:5px; }
         .btn-edit { background: var(--warning); }
         .btn-freeze { background: #78909c; }
@@ -75,22 +71,29 @@
         
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
         
-        /* حقل العمولة المخفي */
         #commission-field { display: none; background: #e8f5e9; padding: 10px; border-radius: 8px; border: 1px solid #a5d6a7; grid-column: span 1; }
+        
+        /* تصميم معلومات المستخدم والاشتراك */
+        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; }
+        .sub-countdown { font-size: 11px; background: #e3f2fd; color: #0277bd; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid #b3e5fc; }
+        .sub-expired { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
     </style>
 </head>
 <body> 
 
     <div id="loader-overlay">
         <div style="font-size:35px; margin-bottom:10px;">🏢</div>
-        <div>جاري الاتصال بالنواة المركزية المباشرة...</div>
+        <div>جاري معالجة البيانات...</div>
     </div>
 
     <nav class="navbar">
-        <div class="brand">N <span class="gold-text">One</span> Empire</div>
+        <div class="brand">N <span class="gold-text">One</span> System</div>
         <div style="display:flex; gap:15px; align-items:center;">
-            <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#555;">مرحباً</span>
-            <button class="btn-logout" onclick="logout()">خروج 🔒</button>
+            <div class="user-info-area">
+                <div id="sub-timer" class="sub-countdown">جاري حساب الاشتراك...</div>
+                <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#555;">مرحباً</span>
+            </div>
+            <button class="btn-logout" onclick="logout()">تسجيل خروج 🔒</button>
         </div>
     </nav>
 
@@ -100,9 +103,8 @@
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
             
-            <button class="tab-btn tab-link tab-captain" onclick="window.open('captains-manager.html', '_blank')">👮‍♂️ إدارة الكباتن (System) ↗️</button>
-            
-            <button class="tab-btn tab-link" onclick="window.open('ops-room.html', '_blank')">📡 غرفة العمليات (Live) ↗️</button>
+            <button class="tab-btn tab-link tab-captain" onclick="window.open('captains-manager.html', '_blank')">👮‍♂️ إدارة الكباتن ↗️</button>
+            <button class="tab-btn tab-link" onclick="window.open('ops-room.html', '_blank')">📡 غرفة العمليات ↗️</button>
             <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار ↗️</button>
         </div>
 
@@ -110,13 +112,13 @@
             <div class="form-grid">
                 
                 <div class="card" style="text-align:center;">
-                    <h3 style="margin:0; color:#555;">إجمالي المنشآت (الخيوط المسحوبة)</h3>
+                    <h3 style="margin:0; color:#555;">إجمالي المنشآت التابعة</h3>
                     <h1 id="total-shops" style="color:var(--primary); font-size:40px; margin:10px 0;">0</h1>
-                    <small style="color:#777;">منشأة نشطة جاهزة للربط</small>
+                    <small style="color:#777;">منشأة نشطة ومسجلة</small>
                 </div>
                 
                 <div class="card" style="text-align:center; border-top-color:var(--gold);">
-                    <h3 style="margin:0; color:#555;">نوع الاشتراكات</h3>
+                    <h3 style="margin:0; color:#555;">حالة الاشتراكات للمنشآت</h3>
                     <div style="margin-top:15px; display:flex; justify-content:space-around;">
                         <div>
                             <span style="font-size:20px; font-weight:bold; color:#1b5e20;" id="count-paid">0</span><br>
@@ -130,15 +132,15 @@
                 </div>
 
                 <div class="card" style="text-align:center; border-top-color:var(--money);">
-                    <h3 style="margin:0; color:#555;">الخزنة الماسية (المردود المالي)</h3>
+                    <h3 style="margin:0; color:#555;">الملخص المالي</h3>
                     <div style="margin-top:15px; display:flex; justify-content:space-around;">
                         <div>
                             <span style="font-size:20px; font-weight:bold; color:var(--money);" id="total-balance">0 د.أ</span><br>
-                            <span style="font-size:12px;">مجموع شحن الكباتن</span>
+                            <span style="font-size:12px;">مجموع رصيد المنشآت</span>
                         </div>
                         <div>
                             <span style="font-size:20px; font-weight:bold; color:var(--gold);" id="total-comm">0 د.أ</span><br>
-                            <span style="font-size:12px;">مجموع الاشتراكات</span>
+                            <span style="font-size:12px;">مجموع العمولات المحصلة</span>
                         </div>
                     </div>
                 </div>
@@ -149,30 +151,30 @@
         <div id="shops" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <span> إضافة منشأة جديدة (تجهيز خيوط الربط)</span>
+                    <span> إضافة منشأة جديدة</span>
                 </div>
                 <div class="form-grid">
-                    <input type="text" id="shop_name" placeholder="اسم المنشأة التجاري (خيط الاسم)">
+                    <input type="text" id="shop_name" placeholder="اسم المنشأة التجاري">
                     
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="shop_user" placeholder="اسم المستخدم (English)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
                         <button class="btn-check" onclick="checkAvailability()">فحص 🔍</button>
                     </div>
 
-                    <input type="password" id="shop_pass" placeholder="كلمة المرور">
+                    <input type="password" id="shop_pass" placeholder="كلمة المرور الخاصة بالمنشأة">
                     
                     <div class="phone-wrapper">
                         <div class="phone-prefix">+962</div>
-                        <input type="tel" id="shop_phone" placeholder="7xxxxxxxx (خيط الهاتف - المفتاح)" maxlength="9">
+                        <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
                     </div>
 
-                    <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps) (خيط التوجيه)">
+                    <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps)">
 
-                    <input type="number" id="shop_balance" placeholder="شحن رصيد الكابتن الفوري (اختياري)" step="0.5" style="border-color:var(--money);">
+                    <input type="number" id="shop_balance" placeholder="رصيد مبدئي للطلبات (اختياري)" step="0.5" style="border-color:var(--money);">
 
                     <select id="sub_type" onchange="toggleCommissionField()">
                         <option value="free">اشتراك مجاني (بدون عمولة)</option>
-                        <option value="paid">اشتراك مدفوع (Premium)</option>
+                        <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
                     </select>
 
                     <div id="commission-field">
@@ -183,36 +185,37 @@
                     <select id="sub_duration">
                         <option value="30">30 يوم</option>
                         <option value="90">3 أشهر</option>
+                        <option value="180">6 أشهر</option>
                         <option value="365">سنة كاملة</option>
                     </select>
 
-                    <button class="btn-action btn-add" onclick="addShop()">+ إضافة وتفعيل (ربط الخيوط) 🚀</button>
+                    <button class="btn-action btn-add" onclick="addShop()">إضافة وتفعيل المنشأة 🚀</button>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header" style="display:flex; flex-direction:column; gap:15px; align-items:stretch;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>سجل المنشآت والتحكم الشامل</span>
+                        <span>سجل المنشآت التابعة</span>
                     </div>
-                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم المنشأة بلمحة بصر..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
+                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم المنشأة..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>المنشأة (الاسم)</th>
+                                <th>اسم المنشأة</th>
                                 <th>بيانات الدخول</th>
-                                <th>الهاتف / الموقع (الخيوط)</th>
+                                <th>الهاتف / الموقع</th>
                                 <th>النوع / العمولة</th>
-                                <th>الرصيد المشحون</th>
+                                <th>الرصيد المتاح</th>
                                 <th>الصلاحية</th>
                                 <th>الحالة</th>
                                 <th>التحكم</th>
                             </tr>
                         </thead>
                         <tbody id="shops-table-body">
-                            <tr><td colspan="8" style="text-align:center;">جاري سحب البيانات... ⏳</td></tr>
+                            <tr><td colspan="8" style="text-align:center;">جاري تحميل البيانات... ⏳</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -222,14 +225,9 @@
     </div>
 
     <script type="module">
-        // ========================================================
-        // المحرك الخارق v8.0 - إمبراطورية N One (Firebase Edition)
-        // ========================================================
-        
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, get, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // مفاتيح السيادة اللي جبناها من قلب الفايربيس
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
             authDomain: "n-one-global.firebaseapp.com",
@@ -243,13 +241,64 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // حساب الإدارة الوهمي المؤقت عشان الواجهة تفتح معك خاوة
-        let currentUser = { Client_User: "admin_naseem", Client_Name: "نسيم" };
+        let currentUser = null;
         let allData = [];
 
         window.onload = function() {
-            document.getElementById('welcome-msg').innerText = `أهلا ${currentUser.Client_Name}`;
+            // التحقق من تسجيل الدخول
+            const savedUser = localStorage.getItem('current_company_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+            } else {
+                // للتجربة المباشرة في حال لم يتم تسجيل الدخول مسبقاً
+                currentUser = { Client_User: "admin_test", Client_Name: "الشركة الرئيسية", Client_Expiry: "2026-12-31" };
+            }
+
+            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name}`;
+            updateCountdownTimer();
+            setupRealtimeFreezeListener();
             fetchData();
+        };
+
+        function updateCountdownTimer() {
+            const timerEl = document.getElementById('sub-timer');
+            if (!currentUser.Client_Expiry) {
+                timerEl.innerText = "صلاحية غير محددة";
+                return;
+            }
+
+            const expiryDate = new Date(currentUser.Client_Expiry);
+            const now = new Date();
+            const diffTime = expiryDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 0) {
+                timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
+                timerEl.classList.remove('sub-expired');
+            } else {
+                timerEl.innerText = `الاشتراك منتهي`;
+                timerEl.classList.add('sub-expired');
+            }
+        }
+
+        // مراقبة تجميد الحساب الرئيسي للشركة لحظياً
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || !currentUser.Client_User) return;
+            const myRef = ref(db, `companies/${currentUser.Client_User}`);
+            onValue(myRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.Client_Status === 'paused' || data.status === 'paused') {
+                        alert("⚠️ تم تجميد حساب الشركة من قبل الإدارة المركزية. سيتم تسجيل الخروج فوراً.");
+                        logout();
+                    }
+                }
+            });
+        }
+
+        window.logout = function() {
+            localStorage.removeItem('current_company_user');
+            window.location.replace('index.html'); // إعادة التوجيه لصفحة تسجيل الدخول
         };
 
         window.switchTab = function(tabId, event) {
@@ -263,7 +312,6 @@
 
         window.fetchData = function() {
             const shopsRef = ref(db, 'shops');
-            // هاد الرادار اللحظي اللي بيشوف كل نبضة بالفايربيس
             onValue(shopsRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -291,9 +339,9 @@
             const dbRef = ref(db);
             get(child(dbRef, `shops/${user}`)).then((snapshot) => {
                 if (snapshot.exists()) {
-                    alert("❌ هذا الاسم مستخدم اختر غيره ☺️");
+                    alert("❌ هذا الاسم مستخدم. يرجى اختيار اسم آخر.");
                 } else {
-                    alert("✅ الاسم متاح ويمكن استخدامه");
+                    alert("✅ الاسم متاح ويمكن استخدامه.");
                 }
                 btn.innerText = "فحص 🔍";
             }).catch((error) => {
@@ -315,10 +363,10 @@
             let commission = "0";
             if (subType === 'paid') {
                 commission = document.getElementById('fixed_commission').value;
-                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع ☺️"); return; }
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع."); return; }
             }
 
-            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية والهاتف ☺️"); return; }
+            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية (الاسم، المستخدم، كلمة المرور، الهاتف)."); return; }
 
             const expDate = new Date();
             expDate.setDate(expDate.getDate() + parseInt(days));
@@ -332,7 +380,7 @@
                 Client_Name: name,
                 Client_Role: "shop", 
                 Client_Type: "shop", 
-                Client_Master: currentUser.Client_User,
+                Client_Master: currentUser.Client_User, // ربط حصري بالشركة الأم
                 Client_Status: "active",
                 Client_Phone: phone, 
                 Client_Location: locLink,  
@@ -344,10 +392,9 @@
             };
 
             try {
-                // أمر الحفظ المباشر للفايربيس
                 await set(ref(db, 'shops/' + user), newShop);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة المنشأة وحفظ الخيوط وشحن الرصيد بنجاح ☺️✅");
+                alert("تم إضافة المنشأة بنجاح.");
                 
                 document.getElementById('shop_name').value = '';
                 document.getElementById('shop_user').value = '';
@@ -357,13 +404,17 @@
                 document.getElementById('shop_balance').value = '';
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ في الربط ☺️");
+                alert("حدث خطأ أثناء الاتصال بالنظام.");
             }
         };
 
         window.renderShops = function() {
             const tbody = document.getElementById('shops-table-body');
-            const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop')).reverse();
+            // فلترة حازمة: تظهر فقط المنشآت التي تتبع هذه الشركة حصراً
+            const myShops = allData.filter(i => 
+                (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && 
+                (i.Client_Master === currentUser.Client_User)
+            ).reverse();
             
             let totalBalance = 0;
             let totalComm = 0;
@@ -379,7 +430,7 @@
             document.getElementById('total-balance').innerText = totalBalance.toFixed(2) + " د.أ";
             document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
 
-            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا توجد منشآت</td></tr>'; return; }
+            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">لا توجد منشآت تابعة حالياً</td></tr>'; return; }
             tbody.innerHTML = '';
             
             myShops.forEach(shop => {
@@ -407,18 +458,21 @@
                 let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; text-decoration:none;">📍 الموقع</a>` : '';
 
                 const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
+                
+                // عرض كلمة السر المحفوظة للمنشأة
+                const shopPassDisplay = shop.Client_Pass || shop.pass || 'غير متوفرة';
 
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${shop.Client_Name || shop.name}</b></td>
-                        <td style="font-size:12px;">${shop.Client_User || shop.user}<br>Pwd: ${shop.Client_Pass || shop.pass}</td>
-                        <td style="font-size:12px; direction:ltr;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
+                        <td style="font-size:12px; direction:ltr; text-align:right;">User: ${shop.Client_User || shop.user}<br>Pass: ${shopPassDisplay}</td>
+                        <td style="font-size:12px; direction:ltr; text-align:right;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
                         <td>${subBadge}</td>
                         <td style="font-weight:bold; color:var(--money);">${currentBalance} د.أ</td>
                         <td style="font-size:12px;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
-                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shop.Client_Pass || shop.pass}', '${currentBalance}')">✏️</button>
+                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shopPassDisplay}', '${currentBalance}')">✏️</button>
                             ${toggleBtn}
                             <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">❌</button>
                         </td>
@@ -438,10 +492,9 @@
             });
         };
 
-        // أوامر التعديل المباشرة للفايربيس خاوة
         window.toggleStatus = async function(u, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            const confirmMsg = nextStatus === 'paused' ? "تجميد الحساب لن يتمكن من إرسال طلبات" : "إعادة التفعيل";
+            const confirmMsg = nextStatus === 'paused' ? "تأكيد تجميد حساب المنشأة؟ لن يتمكنوا من إرسال طلبات." : "تأكيد إعادة تفعيل حساب المنشأة؟";
             
             if(!confirm(confirmMsg)) return;
             
@@ -453,7 +506,7 @@
         window.editShop = async function(u, n, p, b) {
             const newN = prompt("تعديل اسم المنشأة", n); if (newN === null) return;
             const newP = prompt("تعديل كلمة المرور", p); if (newP === null) return;
-            const newB = prompt("تعديل رصيد الكابتن (الرقم الجديد سيلغي القديم خاوة)", b); if (newB === null) return;
+            const newB = prompt("تعديل الرصيد المتاح:", b); if (newB === null) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'shops/' + u), { Client_Name: newN, Client_Pass: newP, Client_Balance: newB, Shop_Balance: newB });
@@ -461,13 +514,12 @@
         };
 
         window.deleteShop = async function(u) {
-            if(!confirm("حذف نهائي سيتم قطع الخيوط")) return;
+            if(!confirm("تحذير: هل أنت متأكد من الحذف النهائي لهذه المنشأة؟ لا يمكن التراجع عن هذا الإجراء.")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'shops/' + u));
             document.getElementById('loader-overlay').style.display = 'none';
         };
 
-        window.logout = function() { alert("تم تسجيل الخروج من النواة المركزية ☺️"); };
     </script>
 </body>
 </html>
