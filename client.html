@@ -251,10 +251,11 @@
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
             } else {
-                currentUser = { Client_User: "admin_test", Client_Name: "الشركة الرئيسية", Client_Expiry: "2026-12-31" };
+                window.location.replace('index.html');
+                return;
             }
 
-            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name}`;
+            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name || currentUser.name || 'الشركة'}`;
             updateCountdownTimer();
             setupRealtimeFreezeListener();
             fetchData();
@@ -268,6 +269,7 @@
                 return;
             }
 
+            // سحب الأيام الحقيقية من الأدمن
             const expiryDate = new Date(currentUser.Client_Expiry || currentUser.expiry);
             expiryDate.setHours(23, 59, 59, 999);
             const now = new Date();
@@ -288,26 +290,33 @@
             }
         }
 
+        // سحب حالة الحساب والطرد اللحظي فوراً
         function setupRealtimeFreezeListener() {
-            if(!currentUser || !currentUser.Client_User) return;
-            const myRef = ref(db, `users/${currentUser.Client_User}`);
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const myRef = ref(db, `users/${username}`);
+            
             onValue(myRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     
+                    // سحب اسم الشركة الفعلي
                     if(data.Client_Name || data.name) {
                         currentUser.Client_Name = data.Client_Name || data.name;
                         document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name}`;
                     }
 
+                    // تحديث الأيام اللحظي
                     if(data.Client_Expiry || data.expiry) {
                         currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
                         updateCountdownTimer();
                     }
 
+                    // الطرد الفوري إذا تم التجميد من الأدمن
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("⚠️ تم تجميد حساب الشركة من قبل الإدارة المركزية سيتم تسجيل الخروج فوراً");
-                        logout();
+                        alert("⚠️ تم إيقاف الحساب يرجى مراجعة الإدارة");
+                        localStorage.removeItem('current_company_user');
+                        window.location.replace('index.html');
                     }
                 }
             });
@@ -390,6 +399,7 @@
 
             document.getElementById('loader-overlay').style.display = 'flex';
             
+            // خيوط إنشاء المنشأة والربط المباشر مع حساب الكستمر
             const newShop = {
                 Client_ID: "SH_" + Date.now(),
                 Client_User: user, 
@@ -397,7 +407,7 @@
                 Client_Name: name,
                 Client_Role: "shop", 
                 Client_Type: "shop", 
-                Client_Master: currentUser.Client_User, 
+                Client_Master: currentUser.Client_User || currentUser.user, 
                 Client_Status: "active",
                 Client_Phone: phone, 
                 Client_Location: locLink,  
@@ -427,9 +437,11 @@
 
         window.renderShops = function() {
             const tbody = document.getElementById('shops-table-body');
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+            
             const myShops = allData.filter(i => 
                 (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && 
-                (i.Client_Master === currentUser.Client_User)
+                (i.Client_Master === currentUserRef)
             ).reverse();
             
             let totalBalance = 0;
@@ -516,7 +528,7 @@
             if(!confirm(confirmMsg)) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'shops/' + u), { Client_Status: nextStatus });
+            await update(ref(db, 'shops/' + u), { Client_Status: nextStatus, status: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
         };
 
@@ -526,7 +538,7 @@
             const newB = prompt("تعديل الرصيد المتاح", b); if (newB === null) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'shops/' + u), { Client_Name: newN, Client_Pass: newP, Client_Balance: newB, Shop_Balance: newB });
+            await update(ref(db, 'shops/' + u), { Client_Name: newN, name: newN, Client_Pass: newP, pass: newP, Client_Balance: newB, Shop_Balance: newB });
             document.getElementById('loader-overlay').style.display = 'none';
         };
 
