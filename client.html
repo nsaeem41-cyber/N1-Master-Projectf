@@ -10,6 +10,7 @@
         :root {
             --primary: #00695c; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
             --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --money: #1b5e20;
+            --info: #0288d1;
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
@@ -77,9 +78,54 @@
         .sub-warning { background: #fff3e0; color: #ef6c00; border-color: #ffe0b2; }
         .sub-expired { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
 
-        /* شريط الإعلانات الذكي */
-        #smart-ad-container { display: none; flex: 1; margin: 0 20px; overflow: hidden; background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 5px 15px; align-items: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); }
-        #smart-ad-text { color: #f57f17; font-weight: bold; font-size: 14px; letter-spacing: 0.5px; }
+        /* تصميم الإعلانات الذكيةแบบ App-like */
+        .app-ad-container { 
+            display: none; align-items: center; background: white; 
+            margin: 20px auto 0; max-width: 1400px; padding: 15px 20px; 
+            border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+            border-right: 5px solid var(--primary); animation: slideDown 0.5s ease; 
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .ad-n-one-badge { 
+            background: var(--gold); color: white; padding: 5px 12px; 
+            border-radius: 8px; font-size: 12px; font-weight: bold; 
+            margin-left: 15px; white-space: nowrap; letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
+        }
+        
+        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
+        .ad-text-scroll { white-space: nowrap; animation: scrollText 20s linear infinite; font-weight: bold; font-size: 15px; }
+        @keyframes scrollText { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        /* تلوين الإعلانات حسب النوع */
+        .ad-type-normal { border-right-color: #555; }
+        .ad-type-news { border-right-color: var(--info); }
+        .ad-type-news .ad-text-scroll { color: var(--info); }
+        .ad-type-warning { border-right-color: var(--danger); background-color: #ffebee; }
+        .ad-type-warning .ad-text-scroll { color: var(--danger); }
+        .ad-type-offer { border-right-color: var(--success); }
+        .ad-type-offer .ad-text-scroll { color: var(--success); }
+
+        /* تصميم التنبيه الطارئ Pop-up */
+        .app-popup-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; 
+            backdrop-filter: blur(5px); 
+        }
+        .app-popup-box { 
+            background: white; padding: 30px; border-radius: 20px; text-align: center; 
+            max-width: 450px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+            border-top: 6px solid var(--danger); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        .app-popup-icon { font-size: 50px; margin-bottom: 15px; }
+        .app-popup-msg { font-size: 18px; font-weight: bold; color: var(--text); line-height: 1.5; margin-bottom: 25px; }
+        .app-popup-btn { 
+            background: var(--danger); color: white; border: none; padding: 12px 30px; 
+            border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.3s;
+        }
+        .app-popup-btn:hover { background: #b71c1c; }
     </style>
 </head>
 <body> 
@@ -89,14 +135,17 @@
         <div>جاري معالجة البيانات...</div>
     </div>
 
+    <div id="app-popup-overlay" class="app-popup-overlay">
+        <div class="app-popup-box">
+            <div class="app-popup-icon">🚨</div>
+            <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
+            <button class="app-popup-btn" onclick="closeAppPopup()">حسناً، فهمت</button>
+        </div>
+    </div>
+
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> System</div>
         
-        <div id="smart-ad-container">
-            <span style="font-size:18px; margin-left:10px;">📢</span>
-            <marquee id="smart-ad-text" direction="right" scrollamount="5"></marquee>
-        </div>
-
         <div style="display:flex; gap:15px; align-items:center;">
             <div class="user-info-area">
                 <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
@@ -108,6 +157,15 @@
             </div>
         </div>
     </nav>
+
+    <div style="padding: 0 20px;">
+        <div id="smart-ad-container" class="app-ad-container">
+            <div class="ad-n-one-badge">إشعار من N One 👑</div>
+            <div class="ad-content-wrapper">
+                <div id="smart-ad-text" class="ad-text-scroll"></div>
+            </div>
+        </div>
+    </div>
 
     <div class="container">
         
@@ -299,10 +357,11 @@
             updateCountdownTimer();
             setupRealtimeFreezeListener();
             setupSmartAdsListener();
+            setupAlertsListener(); // تشغيل رادار التنبيهات الطارئة
             fetchData();
         };
 
-        // نظام سحب الإعلانات الذكية اللحظية
+        // نظام سحب الإعلانات الذكية بتصميم التطبيق
         function setupSmartAdsListener() {
             if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
             const username = currentUser.Client_User || currentUser.user;
@@ -310,20 +369,68 @@
             
             onValue(adsRef, (snapshot) => {
                 const ads = snapshot.val() || {};
-                const specificAd = ads.users && ads.users[username];
-                const globalAd = ads.global_ad;
+                const now = Date.now();
+                let activeAd = null;
                 
-                const finalAdText = specificAd || globalAd || "";
+                // البحث في الإعلانات المخصصة للشركة أولاً
+                if (ads.users && ads.users[username]) {
+                    const specificAd = ads.users[username];
+                    if (!specificAd.expireAt || specificAd.expireAt > now) {
+                        activeAd = specificAd;
+                    }
+                }
+                
+                // إذا لم يوجد مخصص، نبحث في العام
+                if (!activeAd && ads.global) {
+                    const globalAd = ads.global;
+                    if (!globalAd.expireAt || globalAd.expireAt > now) {
+                        activeAd = globalAd;
+                    }
+                }
+                
                 const adContainer = document.getElementById('smart-ad-container');
                 const adMarquee = document.getElementById('smart-ad-text');
                 
-                if (finalAdText.trim() !== "") {
-                    adMarquee.innerText = finalAdText;
+                if (activeAd && activeAd.text) {
+                    adMarquee.innerText = activeAd.text;
+                    adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal');
                     adContainer.style.display = 'flex';
                 } else {
                     adContainer.style.display = 'none';
                 }
             });
+        }
+
+        // نظام التنبيهات المنبثقة الطارئة (Pop-up)
+        function setupAlertsListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const alertsRef = ref(db, 'alerts');
+            
+            onValue(alertsRef, (snapshot) => {
+                const alerts = snapshot.val() || {};
+                let activeAlert = null;
+                
+                if (alerts.users && alerts.users[username]) {
+                    activeAlert = alerts.users[username];
+                } else if (alerts.global) {
+                    activeAlert = alerts.global;
+                }
+                
+                if (activeAlert && activeAlert.message) {
+                    // التحقق من أننا لم نعرض هذا التنبيه من قبل لتجنب الإزعاج المتكرر
+                    const lastSeen = localStorage.getItem('last_seen_alert_' + username) || 0;
+                    if (activeAlert.timestamp > lastSeen) {
+                        document.getElementById('app-popup-msg').innerText = activeAlert.message;
+                        document.getElementById('app-popup-overlay').style.display = 'flex';
+                        localStorage.setItem('last_seen_alert_' + username, activeAlert.timestamp);
+                    }
+                }
+            });
+        }
+
+        window.closeAppPopup = function() {
+            document.getElementById('app-popup-overlay').style.display = 'none';
         }
 
         function updateCountdownTimer() {
@@ -383,7 +490,6 @@
             });
         }
 
-        // دالة تغيير بيانات الحساب واليوزر نيم بمرونة
         window.updateProfileData = async function() {
             const oldUser = currentUser.Client_User || currentUser.user;
             const newName = document.getElementById('profile_name').value.trim();
@@ -399,7 +505,6 @@
 
             try {
                 if (newUser !== oldUser) {
-                    // فحص إذا كان اليوزر الجديد محجوز لشركة ثانية
                     const checkSnap = await get(child(ref(db), `users/${newUser}`));
                     if (checkSnap.exists()) {
                         alert("عذراً، اسم المستخدم الجديد محجوز لشركة أخرى يرجى اختيار اسم مختلف 😊");
@@ -407,7 +512,6 @@
                         return;
                     }
 
-                    // نقل البيانات للاسم الجديد
                     const oldDataSnap = await get(child(ref(db), `users/${oldUser}`));
                     const userData = oldDataSnap.val();
                     
@@ -422,7 +526,6 @@
                     updates[`users/${newUser}`] = userData;
                     updates[`users/${oldUser}`] = null; 
 
-                    // تحديث كافة المنشآت المربوطة باليوزر القديم لليوزر الجديد عشان ما تضيع
                     const shopsSnap = await get(child(ref(db), 'shops'));
                     if (shopsSnap.exists()) {
                         const allShops = shopsSnap.val();
@@ -443,7 +546,6 @@
                     window.location.reload();
 
                 } else {
-                    // تحديث الاسم والباسورد فقط
                     const updates = {
                         [`users/${oldUser}/Client_Name`]: newName,
                         [`users/${oldUser}/name`]: newName,
