@@ -262,15 +262,16 @@
 
         function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
-            if (!currentUser.Client_Expiry) {
+            if (!currentUser.Client_Expiry && !currentUser.expiry) {
                 timerEl.innerText = "صلاحية غير محددة";
                 timerEl.className = "sub-countdown sub-active";
                 return;
             }
 
-            const expiryDate = new Date(currentUser.Client_Expiry);
+            const expiryDate = new Date(currentUser.Client_Expiry || currentUser.expiry);
+            expiryDate.setHours(23, 59, 59, 999);
             const now = new Date();
-            const diffTime = expiryDate - now;
+            const diffTime = expiryDate.getTime() - now.getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             if (diffDays > 0) {
@@ -287,7 +288,6 @@
             }
         }
 
-        // مراقبة تجميد الحساب الرئيسي للشركة لحظياً ومزامنة الاسم والأيام
         function setupRealtimeFreezeListener() {
             if(!currentUser || !currentUser.Client_User) return;
             const myRef = ref(db, `users/${currentUser.Client_User}`);
@@ -466,7 +466,9 @@
                 
                 let daysLeft = "غير محدد";
                 if (shop.Client_Expiry || shop.expiry) {
-                    const diff = new Date(shop.Client_Expiry || shop.expiry) - new Date();
+                    const exp = new Date(shop.Client_Expiry || shop.expiry);
+                    exp.setHours(23, 59, 59, 999);
+                    const diff = exp.getTime() - new Date().getTime();
                     const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
                     daysLeft = d > 0 ? d + " يوم" : "منتهي";
                 }
