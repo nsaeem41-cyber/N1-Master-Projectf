@@ -137,10 +137,24 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
         
-        let systemData = [];
+        let systemData = {};
 
         window.onload = async function() {
             window.history.pushState(null, "", window.location.href);
@@ -149,7 +163,7 @@
             };
 
             const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user || user.role !== 'admin' || !user.sessionToken || !user.sessionToken.includes('N1_SECURE')) {
+            if (!user || user.role !== 'admin') {
                 window.location.replace('index.html');
                 return;
             }
@@ -157,27 +171,35 @@
             await fetchHealthStatus();
         };
 
-        async function fetchHealthStatus() {
+        window.fetchHealthStatus = async function() {
             showLoader("جاري فحص نبض السيرفر ⏳");
             try {
-                const res = await fetch(API_URL + "?action=read");
-                systemData = await res.json();
-                
-                const totalRows = systemData.length;
-                const maxRows = 10000; 
-                let percentage = (totalRows / maxRows) * 100;
-                if(percentage > 100) percentage = 100;
+                const snapshot = await get(ref(db));
+                if (snapshot.exists()) {
+                    systemData = snapshot.val();
+                    
+                    // حساب عدد الأسطر التقريبي بناءً على كل الفئات
+                    let totalRows = 0;
+                    if(systemData.users) totalRows += Object.keys(systemData.users).length;
+                    if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
+                    if(systemData.orders) totalRows += Object.keys(systemData.orders).length;
+                    if(systemData.prices) totalRows += Object.keys(systemData.prices).length;
+                    if(systemData.radar_history) totalRows += Object.keys(systemData.radar_history).length;
 
-                const bar = document.getElementById('server-load-bar');
-                bar.style.width = percentage + '%';
-                
-                if(percentage < 50) bar.style.background = "#2e7d32"; 
-                else if(percentage < 80) bar.style.background = "#f57f17"; 
-                else bar.style.background = "#c62828"; 
+                    const maxRows = 10000; 
+                    let percentage = (totalRows / maxRows) * 100;
+                    if(percentage > 100) percentage = 100;
 
-                document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
-                document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
-                
+                    const bar = document.getElementById('server-load-bar');
+                    bar.style.width = percentage + '%';
+                    
+                    if(percentage < 50) bar.style.background = "#2e7d32"; 
+                    else if(percentage < 80) bar.style.background = "#f57f17"; 
+                    else bar.style.background = "#c62828"; 
+
+                    document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
+                    document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
+                }
             } catch (e) {
                 console.error(e);
             } finally {
@@ -185,13 +207,13 @@
             }
         }
 
-        function backupData() {
-            if(systemData.length === 0) return alert("لا توجد بيانات للسحب ☺️");
+        window.backupData = function() {
+            if(!systemData || Object.keys(systemData).length === 0) return alert("لا توجد بيانات للسحب ☺️");
             
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(systemData, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "N_One_Backup_" + new Date().toISOString().split('T')[0] + ".json");
+            downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
@@ -202,16 +224,15 @@
             setTimeout(() => msg.style.display = "none", 4000);
         }
 
-        async function autoArchive() {
+        window.autoArchive = async function() {
             if(!confirm("هل أنت متأكد من بدء عملية الأرشفة سيتم تفريغ الطلبات لتخفيف السيرفر ☺️")) return;
             
-            const ordersToArchive = systemData.filter(item => item.type === 'order');
-            
-            if(ordersToArchive.length === 0) {
+            if(!systemData.orders || Object.keys(systemData.orders).length === 0) {
                 alert("السيرفر نظيف ولا يوجد طلبات للأرشفة ☺️");
                 return;
             }
 
+            const ordersToArchive = systemData.orders;
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ordersToArchive, null, 2));
             const dlNode = document.createElement('a');
             dlNode.setAttribute("href", dataStr);
@@ -223,10 +244,8 @@
             showLoader("جاري تنظيف السيرفر من الطلبات المؤرشفة الرجاء عدم إغلاق الصفحة ⏳");
 
             try {
-                for(let i = 0; i < ordersToArchive.length; i++) {
-                    const orderId = ordersToArchive[i].id;
-                    await fetch(API_URL + "?action=delete&user=" + orderId, { method: 'POST', mode: 'no-cors' });
-                }
+                // حذف نود الطلبات بالكامل لتسريع العملية
+                await remove(ref(db, 'orders'));
                 
                 const msg = document.getElementById('archive-msg');
                 msg.innerText = "تمت الأرشفة وتفريغ السيرفر بنجاح ☺️✅";
@@ -242,7 +261,7 @@
             }
         }
 
-        function cleanMemory() {
+        window.cleanMemory = function() {
             const current = localStorage.getItem('currentUser');
             localStorage.clear();
             sessionStorage.clear();
