@@ -42,8 +42,8 @@
         .card-header { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: #fafafa; transition: 0.3s; box-sizing: border-box; }
-        input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: #fafafa; transition: 0.3s; box-sizing: border-box; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1); }
         
         .btn-action { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
         .btn-add { background: var(--primary); } .btn-add:hover { background: #004d40; }
@@ -78,7 +78,7 @@
         .sub-warning { background: #fff3e0; color: #ef6c00; border-color: #ffe0b2; }
         .sub-expired { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
 
-        /* تصميم الإعلانات الذكيةแบบ App-like */
+        /* تصميم الإعلانات الذكيةແບບ App-like */
         .app-ad-container { 
             display: none; align-items: center; background: white; 
             margin: 20px auto 0; max-width: 1400px; padding: 15px 20px; 
@@ -94,9 +94,9 @@
             box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
         }
         
-        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
-        .ad-text-scroll { white-space: nowrap; animation: scrollText 20s linear infinite; font-weight: bold; font-size: 15px; }
-        @keyframes scrollText { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; direction: ltr; }
+        .ad-text-scroll { white-space: nowrap; animation: scrollText 20s linear infinite; font-weight: bold; font-size: 15px; direction: rtl; }
+        @keyframes scrollText { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
         /* تلوين الإعلانات حسب النوع */
         .ad-type-normal { border-right-color: #555; }
@@ -152,7 +152,7 @@
                 <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#555;">مرحباً</span>
             </div>
             <div style="display:flex; flex-direction:column; gap:5px;">
-                <button style="background:var(--gold); color:white; border:none; padding:6px 15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.3s; width: 100%;" onclick="switchTab('settings', null)">⚙️ إعدادات الحساب</button>
+                <button style="background:var(--gold); color:white; border:none; padding:6px 15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.3s; width: 100%;" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
                 <button class="btn-logout" style="padding:6px 15px; font-size:12px; width: 100%;" onclick="logout()">تسجيل خروج 🔒</button>
             </div>
         </div>
@@ -313,6 +313,46 @@
                     <button class="btn-action" style="background-color:var(--gold); margin-top:10px; color:#fff;" onclick="updateProfileData()">حفظ التعديلات اللحظية 💾</button>
                 </div>
             </div>
+
+            <div class="card" style="max-width: 600px; margin: 25px auto 0; border-top-color: var(--info);">
+                <div class="card-header" style="color: var(--info);">
+                    <span>📢 مركز إرسال الإعلانات (المنشآت والكباتن والزبائن)</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <textarea id="client_ad_text" rows="3" placeholder="اكتب إعلانك أو رسالتك هنا..." style="resize: none; font-weight: bold;"></textarea>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <select id="client_ad_group" onchange="updateClientAdTargets()" style="flex: 1;">
+                            <option value="shops">المنشآت التجارية</option>
+                            <option value="captains">الكباتن</option>
+                            <option value="customers">الزبائن</option>
+                        </select>
+                        <select id="client_ad_target" style="flex: 1;">
+                            <option value="all">إرسال للجميع</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <select id="client_ad_type" style="flex: 1;">
+                            <option value="normal">إعلان عادي</option>
+                            <option value="news">أخبار عامة 🔵</option>
+                            <option value="warning">تحذير / تنبيه 🔴</option>
+                            <option value="offer">عروض / هدايا 🟢</option>
+                        </select>
+                        <select id="client_ad_expire" style="flex: 1;">
+                            <option value="1">لمدة ساعة</option>
+                            <option value="24" selected>لمدة 24 ساعة</option>
+                            <option value="168">لمدة أسبوع</option>
+                            <option value="permanent">دائم</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button class="btn-action" style="background-color: var(--info);" onclick="sendClientAd()">بث الإعلان اللحظي 🚀</button>
+                        <button class="btn-action" style="background-color: var(--danger);" onclick="sendClientPopup()">إرسال تنبيه طارئ 🚨</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -336,6 +376,8 @@
 
         let currentUser = null;
         let allData = [];
+        let allCaptains = [];
+        let allCustomers = [];
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
@@ -349,7 +391,6 @@
 
             document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name || currentUser.name || 'الشركة'}`;
             
-            // تعبئة بيانات الإعدادات تلقائياً
             document.getElementById('profile_name').value = currentUser.Client_Name || currentUser.name || '';
             document.getElementById('profile_user').value = currentUser.Client_User || currentUser.user || '';
             document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
@@ -357,11 +398,10 @@
             updateCountdownTimer();
             setupRealtimeFreezeListener();
             setupSmartAdsListener();
-            setupAlertsListener(); // تشغيل رادار التنبيهات الطارئة
+            setupAlertsListener(); 
             fetchData();
         };
 
-        // نظام سحب الإعلانات الذكية بتصميم التطبيق
         function setupSmartAdsListener() {
             if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
             const username = currentUser.Client_User || currentUser.user;
@@ -372,7 +412,6 @@
                 const now = Date.now();
                 let activeAd = null;
                 
-                // البحث في الإعلانات المخصصة للشركة أولاً
                 if (ads.users && ads.users[username]) {
                     const specificAd = ads.users[username];
                     if (!specificAd.expireAt || specificAd.expireAt > now) {
@@ -380,7 +419,6 @@
                     }
                 }
                 
-                // إذا لم يوجد مخصص، نبحث في العام
                 if (!activeAd && ads.global) {
                     const globalAd = ads.global;
                     if (!globalAd.expireAt || globalAd.expireAt > now) {
@@ -401,7 +439,6 @@
             });
         }
 
-        // نظام التنبيهات المنبثقة الطارئة (Pop-up)
         function setupAlertsListener() {
             if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
             const username = currentUser.Client_User || currentUser.user;
@@ -418,7 +455,6 @@
                 }
                 
                 if (activeAlert && activeAlert.message) {
-                    // التحقق من أننا لم نعرض هذا التنبيه من قبل لتجنب الإزعاج المتكرر
                     const lastSeen = localStorage.getItem('last_seen_alert_' + username) || 0;
                     if (activeAlert.timestamp > lastSeen) {
                         document.getElementById('app-popup-msg').innerText = activeAlert.message;
@@ -592,14 +628,130 @@
         window.fetchData = function() {
             const shopsRef = ref(db, 'shops');
             onValue(shopsRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    allData = Object.values(data);
-                } else {
-                    allData = [];
-                }
+                allData = snapshot.exists() ? Object.values(snapshot.val()) : [];
                 renderShops();
+                updateClientAdTargets(); 
             });
+
+            const captainsRef = ref(db, 'captains');
+            onValue(captainsRef, (snapshot) => {
+                allCaptains = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                updateClientAdTargets();
+            });
+
+            const customersRef = ref(db, 'customers');
+            onValue(customersRef, (snapshot) => {
+                allCustomers = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                updateClientAdTargets();
+            });
+        };
+
+        window.updateClientAdTargets = function() {
+            const group = document.getElementById('client_ad_group').value;
+            const targetSelect = document.getElementById('client_ad_target');
+            
+            if (!targetSelect) return;
+            
+            targetSelect.innerHTML = '<option value="all">إرسال للجميع</option>';
+            
+            if (!currentUser) return;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+            
+            if (group === 'shops') {
+                const myShops = allData.filter(i => (i.Client_Master === currentUserRef));
+                myShops.forEach(s => {
+                    targetSelect.innerHTML += `<option value="${s.Client_User || s.user}">${s.Client_Name || s.name}</option>`;
+                });
+            } else if (group === 'captains') {
+                const myCaps = allCaptains.filter(i => (i.Client_Master === currentUserRef || i.company === currentUserRef));
+                myCaps.forEach(c => {
+                    targetSelect.innerHTML += `<option value="${c.cap_user || c.user}">${c.cap_name || c.name}</option>`;
+                });
+            } else if (group === 'customers') {
+                const myCusts = allCustomers.filter(i => (i.Client_Master === currentUserRef || i.company === currentUserRef));
+                myCusts.forEach(c => {
+                    targetSelect.innerHTML += `<option value="${c.cust_user || c.user}">${c.cust_name || c.name}</option>`;
+                });
+            }
+        };
+
+        window.sendClientAd = async function() {
+            const text = document.getElementById('client_ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً 😊"); return; }
+            
+            const group = document.getElementById('client_ad_group').value;
+            const target = document.getElementById('client_ad_target').value;
+            const type = document.getElementById('client_ad_type').value;
+            const expireHours = document.getElementById('client_ad_expire').value;
+            
+            let expireTimestamp = null;
+            if(expireHours !== 'permanent') {
+                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
+            }
+            
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+            const senderName = currentUser.Client_Name || currentUser.name || 'الشركة';
+
+            const adData = {
+                text: text,
+                type: type,
+                expireAt: expireTimestamp,
+                timestamp: Date.now(),
+                sender: senderName,
+                senderId: currentUserRef
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                const basePath = `client_announcements/${currentUserRef}/${group}`;
+                if(target === 'all') {
+                    await update(ref(db, `${basePath}/global`), adData);
+                } else {
+                    await update(ref(db, `${basePath}/users/${target}`), adData);
+                }
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('client_ad_text').value = '';
+                alert("تم بث الإعلان بنجاح 🚀");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال الإعلان");
+            }
+        };
+
+        window.sendClientPopup = async function() {
+            const text = document.getElementById('client_ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً 😊"); return; }
+            
+            if(!confirm("سيظهر هذا التنبيه فوراً في منتصف الشاشة هل أنت متأكد")) return;
+
+            const group = document.getElementById('client_ad_group').value;
+            const target = document.getElementById('client_ad_target').value;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+            const senderName = currentUser.Client_Name || currentUser.name || 'الشركة';
+
+            const alertData = {
+                message: text,
+                timestamp: Date.now(),
+                sender: senderName
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                const basePath = `client_alerts/${currentUserRef}/${group}`;
+                if(target === 'all') {
+                    await update(ref(db, `${basePath}/global`), alertData);
+                } else {
+                    await update(ref(db, `${basePath}/users/${target}`), alertData);
+                }
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('client_ad_text').value = '';
+                alert("تم إرسال التنبيه الطارئ بنجاح 🚨");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال التنبيه");
+            }
         };
 
         window.toggleCommissionField = function() {
