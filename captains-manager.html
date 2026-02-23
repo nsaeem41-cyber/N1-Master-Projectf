@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | غرفة العمليات المركزية (Ops Command)</title>
     
-    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
-
     <style>
         /* ============================================================
            تصميم OPS ROOM COMPACT - عملي، مضغوط، وفخم
@@ -298,63 +296,82 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
         // ========================================================
-        // العقل المدبر لغرفة العمليات (Ops Brain v21.5 - Sovereign Encryption) 💎
-        // التحديث: حل لغز البحث الشامل للمنشآت والمحفظة اللحظية
+        // العقل المدبر لغرفة العمليات (Ops Brain v22.0 - Firebase Edition) 💎
         // ========================================================
         
-        if (typeof N_ONE_CORE !== 'undefined') {
-            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbxFVz0QTi_7TgWQEMImtMGYRBzlD1CwM5X4DbprUvVJkURs_75aD5n5IcpbS87d8Q5j/exec";
-        }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        let allData = [];
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         let captains = [];
         let shops = [];
         let requests = [];
         let currentWalletCaptain = null;
 
-        window.onload = async function() {
-            if (typeof N_ONE_CORE !== 'undefined') {
-                N_ONE_CORE.checkSession(); 
-            }
-            await refreshData();
-            setInterval(refreshDataSilent, 15000); 
+        window.onload = function() {
+            refreshData();
         };
 
-        async function refreshData() {
+        window.refreshData = function() {
             showLoader(true);
-            try {
-                allData = await N_ONE_CORE.fetchData('read');
-                processData();
-            } catch (e) { console.error("Error fetching data", e); }
-            showLoader(false);
+            const rootRef = ref(db);
+            onValue(rootRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    processData(data);
+                } else {
+                    processData({});
+                }
+                showLoader(false);
+            });
         }
 
-        async function refreshDataSilent() {
-            try {
-                allData = await N_ONE_CORE.fetchData('read');
-                processData();
-            } catch (e) {}
-        }
+        window.processData = function(data) {
+            // تجميع الكباتن من نود captains أو البحث في users
+            let capsList = data.captains ? Object.values(data.captains) : [];
+            if(data.users) {
+                const userCaps = Object.values(data.users).filter(u => u.role === 'captain' || u.type === 'captain');
+                capsList = [...capsList, ...userCaps];
+            }
+            
+            // فلترة الأسطول النشط مقابل الطلبات المعلقة
+            captains = capsList.filter(i => (i.Cap_Status === 'active' || i.status === 'active')).reverse();
+            requests = capsList.filter(i => (i.Cap_Status === 'pending' || i.status === 'pending' || !i.Cap_Status));
 
-        function processData() {
-            captains = allData.filter(i => (i.Cap_Type === 'captain' || i.role === 'captain' || i.type === 'captain') && (i.Cap_Status !== 'pending' && i.status !== 'pending')).reverse();
-            requests = allData.filter(i => (i.Cap_Type === 'captain' || i.role === 'captain' || i.type === 'captain') && (i.Cap_Status === 'pending' || i.status === 'pending'));
-            shops = allData.filter(i => i.Shop_Type === 'shop' || i.Shop_Type === 'shop_order' || i.role === 'client' || i.type === 'shop' || i.Client_User);
+            // تجميع المنشآت
+            let shopList = data.shops ? Object.values(data.shops) : [];
+            if(data.users) {
+                const userShops = Object.values(data.users).filter(u => u.role === 'shop' || u.type === 'shop' || u.role === 'client');
+                shopList = [...shopList, ...userShops];
+            }
+            shops = shopList;
 
             document.getElementById('stat-caps-count').innerText = captains.length;
             document.getElementById('stat-shops-count').innerText = shops.length;
             
             const totalLiquidity = captains.reduce((sum, c) => sum + parseFloat(c.Cap_Balance || c.balance || 0), 0) + 
-                                   shops.reduce((sum, s) => sum + parseFloat(s.Shop_Balance || s.Client_Balance || s.balance || 0), 0);
+                                 shops.reduce((sum, s) => sum + parseFloat(s.Shop_Balance || s.Client_Balance || s.balance || 0), 0);
             document.getElementById('stat-liquidity').innerText = totalLiquidity.toFixed(2);
 
             renderRequests();
             renderFleet();
         }
 
-        async function registerCaptain() {
+        window.registerCaptain = async function() {
             const name = document.getElementById('reg_name').value;
             const phone = document.getElementById('reg_phone').value;
             const code = document.getElementById('reg_code').value; 
@@ -363,27 +380,33 @@
 
             if(!name || !phone || !code || !carType) return alert("البيانات ناقصة يرجى تعبئة كافة الحقول");
 
-            if(captains.some(c => c.Cap_User === code || c.Cap_Phone === phone || c.user === code || c.phone === phone)) {
-                return alert("الكابتن مسجل مسبقا الهاتف أو الترميز مكرر");
-            }
+            const existing = captains.find(c => (c.Cap_User === code || c.user === code || c.Cap_Phone === phone || c.phone === phone));
+            if(existing) return alert("الكابتن مسجل مسبقا الهاتف أو الترميز مكرر");
 
             showLoader(true);
             const newCap = {
                 Cap_ID: "CAP_" + Date.now(),
                 Cap_User: code, 
+                user: code,
                 Cap_Pass: "123456", 
+                pass: "123456",
                 Cap_Name: name, 
-                Cap_Role: "captain", 
+                name: name,
+                role: "captain", 
                 Cap_Type: "captain",
                 Cap_Phone: phone, 
+                phone: phone,
                 Cap_Status: "active", 
+                status: "active",
                 Cap_Vehicle: `${carType} | ${carModel}`, 
-                Cap_Balance: "0", 
+                vehicle: `${carType} | ${carModel}`,
+                Cap_Balance: 0, 
+                balance: 0,
                 Cap_Emergency: "false",
                 Cap_Date: new Date().toISOString()
             };
 
-            await N_ONE_CORE.postData('add', [newCap]);
+            await set(ref(db, `captains/${code}`), newCap);
             alert("تم اعتماد الكابتن في الأسطول بنجاح");
             
             document.getElementById('reg_name').value = '';
@@ -391,18 +414,16 @@
             document.getElementById('reg_code').value = '';
             document.getElementById('reg_car').value = '';
             document.getElementById('reg_model').value = '';
-            
-            await refreshData();
             showLoader(false);
         }
 
-        function searchWallet() {
+        window.searchWallet = function() {
             const q = String(document.getElementById('wallet_q').value).trim();
             if(!q) return;
 
             const target = captains.find(c => 
-                String(c.Cap_Phone || c.cap_phone || c.phone).trim() === q || 
-                String(c.Cap_User || c.user).trim() === q
+                String(c.Cap_Phone || c.phone || "").trim() === q || 
+                String(c.Cap_User || c.user || "").trim() === q
             );
 
             if(target) {
@@ -411,7 +432,7 @@
                 document.getElementById('wr_name').innerText = target.Cap_Name || target.name || "كابتن";
                 document.getElementById('wr_bal').innerText = parseFloat(target.Cap_Balance || target.balance || 0).toFixed(2);
                 document.getElementById('wr_code').innerText = target.Cap_User || target.user || "--";
-                document.getElementById('wr_phone').innerText = target.Cap_Phone || target.cap_phone || target.phone || "--";
+                document.getElementById('wr_phone').innerText = target.Cap_Phone || target.phone || "--";
             } else {
                 alert("كابتن غير موجود تأكد من الرقم أو الترميز");
                 document.getElementById('wallet-result').style.display = 'none';
@@ -419,7 +440,7 @@
             }
         }
 
-        async function updateBalance(action) {
+        window.updateBalance = async function(action) {
             if(!currentWalletCaptain) return alert("يرجى البحث عن كابتن أولا");
             
             const amt = parseFloat(document.getElementById('wallet_amt').value);
@@ -432,41 +453,35 @@
             if(!confirm(`تأكيد عملية ${actionText} مبلغ ${amt} للكابتن والرصيد سيصبح ${newBal.toFixed(2)}`)) return;
 
             showLoader(true);
+            const key = currentWalletCaptain.Cap_User || currentWalletCaptain.user;
             
-            currentWalletCaptain.Cap_Balance = newBal;
-            document.getElementById('wr_bal').innerText = newBal.toFixed(2);
+            const updates = {};
+            updates[`captains/${key}/Cap_Balance`] = newBal;
+            updates[`captains/${key}/balance`] = newBal;
+            // تحديث في نود users أيضاً للاحتياط
+            updates[`users/${key}/Cap_Balance`] = newBal;
+            updates[`users/${key}/balance`] = newBal;
 
-            const keyToSend = currentWalletCaptain.Cap_User || currentWalletCaptain.user || currentWalletCaptain.Cap_Phone || currentWalletCaptain.cap_phone;
+            await update(ref(db), updates);
             
-            await N_ONE_CORE.postData('update', { 
-                user: keyToSend, 
-                data: { 
-                    Cap_Balance: newBal,
-                    balance: newBal 
-                } 
-            });
-            
-            renderFleet(); 
-            
+            document.getElementById('wr_bal').innerText = newBal.toFixed(2);
             alert(`تمت العملية بنجاح الرصيد المحدث ${newBal.toFixed(2)}`);
             showLoader(false);
         }
 
-        function openTreasury() { document.getElementById('modal-treasury').style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        window.openTreasury = function() { document.getElementById('modal-treasury').style.display = 'flex'; }
+        window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
 
-        async function executeTreasury() {
+        window.executeTreasury = async function() {
             const targetInput = String(document.getElementById('tr-target').value).trim();
             const amount = parseFloat(document.getElementById('tr-amount').value);
 
             if(!targetInput || !amount) return alert("البيانات ناقصة يرجى إدخال الرقم والمبلغ");
 
             showLoader(true);
-
-            // توسعة البحث لتشمل Client_Phone و Client_User لحل اللغز
             const target = shops.find(u => 
-                String(u.Shop_User || u.Client_User || u.user).trim() === targetInput || 
-                String(u.Shop_Phone || u.Client_Phone || u.phone).trim() === targetInput
+                String(u.Shop_User || u.Client_User || u.user || "").trim() === targetInput || 
+                String(u.Shop_Phone || u.Client_Phone || u.phone || "").trim() === targetInput
             );
 
             if(!target) {
@@ -476,38 +491,32 @@
             }
 
             const shopNameStr = target.Shop_Name || target.Client_Name || target.name || "منشأة";
-
             if(!confirm(`تأكيد شحن رصيد المنشأة ${shopNameStr} بقيمة ${amount}`)) {
                 showLoader(false); return;
             }
 
-            const keyToSend = target.Shop_User || target.Client_User || target.user || target.Shop_Phone || target.Client_Phone;
+            const key = target.Shop_User || target.Client_User || target.user;
             const currentShopBal = parseFloat(target.Shop_Balance || target.Client_Balance || target.balance || 0);
             const newBal = currentShopBal + amount;
             
-            await N_ONE_CORE.postData('update', { 
-                user: keyToSend, 
-                data: { 
-                    Shop_Balance: newBal,
-                    Client_Balance: newBal,
-                    balance: newBal
-                } 
-            });
-            
-            target.Shop_Balance = newBal;
-            target.Client_Balance = newBal;
+            const updates = {};
+            // تحديث عبر كل الاحتمالات لضمان المزامنة
+            updates[`shops/${key}/Shop_Balance`] = newBal;
+            updates[`shops/${key}/balance`] = newBal;
+            updates[`users/${key}/Shop_Balance`] = newBal;
+            updates[`users/${key}/Client_Balance`] = newBal;
+            updates[`users/${key}/balance`] = newBal;
+
+            await update(ref(db), updates);
             
             alert(`تم شحن المنشأة بنجاح الرصيد الجديد ${newBal.toFixed(2)}`);
-            
             document.getElementById('tr-target').value = '';
             document.getElementById('tr-amount').value = '';
             closeModal('modal-treasury');
-            
-            processData(); 
             showLoader(false);
         }
 
-        function renderFleet() {
+        window.renderFleet = function() {
             const tbody = document.getElementById('fleet-body');
             const q = String(document.getElementById('fleet-search').value).toLowerCase().trim();
             tbody.innerHTML = '';
@@ -515,7 +524,7 @@
             captains.forEach(c => {
                 const cName = String(c.Cap_Name || c.name || "").toLowerCase();
                 const cUser = String(c.Cap_User || c.user || "").toLowerCase();
-                const cPhone = String(c.Cap_Phone || c.phone || c.cap_phone || "").toLowerCase();
+                const cPhone = String(c.Cap_Phone || c.phone || "").toLowerCase();
 
                 if(q && !cName.includes(q) && !cUser.includes(q) && !cPhone.includes(q)) return;
 
@@ -532,7 +541,7 @@
                         <td style="text-align:center;"><span class="status-dot ${statusClass}"></span></td>
                         <td><strong>${c.Cap_Name || c.name || "كابتن"}</strong></td>
                         <td style="font-family:monospace; color:var(--primary); font-weight:bold;">${displayUser}</td>
-                        <td style="font-family:monospace; color:var(--text-muted);">${c.Cap_Phone || c.phone || c.cap_phone || "--"}</td>
+                        <td style="font-family:monospace; color:var(--text-muted);">${c.Cap_Phone || c.phone || "--"}</td>
                         <td style="font-size:11px;">${carInfo}</td>
                         <td style="font-weight:900; color:var(--success); font-size:14px;">${currentBal}</td>
                         <td style="text-align:center; font-size:11px;">${emergIcon}</td>
@@ -546,42 +555,52 @@
             });
         }
 
-        async function freezeUser(u) {
-            const c = captains.find(i => i.Cap_User === u || i.user === u);
+        window.freezeUser = async function(u) {
+            const c = captains.find(i => (i.Cap_User === u || i.user === u));
             if(!c) return;
             const currentStatus = c.Cap_Status || c.status;
             const ns = currentStatus === 'active' ? 'paused' : 'active';
             if(confirm("تأكيد تغيير حالة الكابتن")) {
-                c.Cap_Status = ns;
-                c.status = ns;
-                renderFleet(); 
-                await N_ONE_CORE.postData('update', { user: u, data: { Cap_Status: ns, status: ns } });
+                const updates = {};
+                updates[`captains/${u}/Cap_Status`] = ns;
+                updates[`captains/${u}/status`] = ns;
+                updates[`users/${u}/Cap_Status`] = ns;
+                updates[`users/${u}/status`] = ns;
+                await update(ref(db), updates);
             }
         }
 
-        async function editUser(u, oldName, oldPhone) {
+        window.editUser = async function(u, oldName, oldPhone) {
             const newName = prompt("تعديل الاسم", oldName);
             if(!newName) return;
             const newPhone = prompt("تعديل الهاتف", oldPhone);
             if(!newPhone) return;
 
-            document.getElementById('loading-line').style.width = '100%';
-            await N_ONE_CORE.postData('update', { user: u, data: { Cap_Name: newName, name: newName, Cap_Phone: newPhone, phone: newPhone } });
-            await refreshData();
-            document.getElementById('loading-line').style.width = '0%';
+            showLoader(true);
+            const updates = {};
+            updates[`captains/${u}/Cap_Name`] = newName;
+            updates[`captains/${u}/name`] = newName;
+            updates[`captains/${u}/Cap_Phone`] = newPhone;
+            updates[`captains/${u}/phone`] = newPhone;
+            updates[`users/${u}/Cap_Name`] = newName;
+            updates[`users/${u}/name`] = newName;
+            updates[`users/${u}/Cap_Phone`] = newPhone;
+            updates[`users/${u}/phone`] = newPhone;
+            
+            await update(ref(db), updates);
+            showLoader(false);
         }
 
-        async function deleteUser(u) {
+        window.deleteUser = async function(u) {
             if(confirm("تحذير هل أنت متأكد من حذف الكابتن نهائيا")) {
                 showLoader(true);
-                captains = captains.filter(i => i.Cap_User !== u && i.user !== u); 
-                renderFleet();
-                await N_ONE_CORE.postData('delete', { user: u });
+                await remove(ref(db, `captains/${u}`));
+                await remove(ref(db, `users/${u}`));
                 showLoader(false);
             }
         }
 
-        function renderRequests() {
+        window.renderRequests = function() {
             const tbody = document.getElementById('req-body');
             tbody.innerHTML = '';
             if(requests.length === 0) {
@@ -593,9 +612,9 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>${r.Cap_Name || r.name || "--"}</td>
-                        <td>${r.Cap_Phone || r.phone || r.cap_phone || "--"}</td>
+                        <td>${r.Cap_Phone || r.phone || "--"}</td>
                         <td>${r.Cap_Vehicle || r.vehicle || '-'}</td>
-                        <td style="font-size:10px; color:#64748b;">${new Date(r.Cap_Date || r.date || Date.now()).toLocaleDateString() || '-'}</td>
+                        <td style="font-size:10px; color:#64748b;">${new Date(r.Cap_Date || r.date || Date.now()).toLocaleDateString()}</td>
                         <td>
                             <button class="action-icon" style="color:var(--success);" onclick="approveReq('${reqUser}')" title="قبول">✔</button>
                             <button class="action-icon" style="color:var(--danger);" onclick="deleteUser('${reqUser}')" title="رفض">✖</button>
@@ -605,11 +624,18 @@
             });
         }
 
-        async function approveReq(u) {
+        window.approveReq = async function(u) {
             if(confirm("تأكيد قبول الكابتن في الأسطول")) {
                 showLoader(true);
-                await N_ONE_CORE.postData('update', { user: u, data: { Cap_Status: 'active', status: 'active', Cap_Balance: '0', balance: '0' } });
-                await refreshData();
+                const updates = {};
+                updates[`captains/${u}/Cap_Status`] = 'active';
+                updates[`captains/${u}/status`] = 'active';
+                updates[`captains/${u}/Cap_Balance`] = 0;
+                updates[`captains/${u}/balance`] = 0;
+                updates[`users/${u}/Cap_Status`] = 'active';
+                updates[`users/${u}/status`] = 'active';
+                
+                await update(ref(db), updates);
                 showLoader(false);
             }
         }
