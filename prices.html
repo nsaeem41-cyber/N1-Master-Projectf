@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | مصفوفة الأسعار الماسية (Final Edition)</title>
     
-    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
-
     <style>
         /* ================= تصميم Diamond Matrix (Navy & Gold) ================= */
         :root {
@@ -214,14 +212,26 @@
 
     </div>
 
-    <script>
+    <script type="module">
         // ========================================================
-        // كود المصفوفة الماسية - v6.0 (Cloud Sync & Auto-Guard)
+        // كود المصفوفة الماسية - v7.0 (Firebase Live Matrix)
         // ========================================================
         
-        if (typeof N_ONE_CORE !== 'undefined') {
-            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
-        }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         const defaultData = {
             "الجبيهة": [
@@ -240,24 +250,25 @@
             }
             
             checkNightMode();
-            await fetchPricesFromCloud();
+            fetchPricesFromCloud();
             
             setInterval(checkNightMode, 60000);
         };
 
-        async function fetchPricesFromCloud() {
-            try {
-                const data = await N_ONE_CORE.fetchData('read');
-                const priceRows = data.filter(d => d.Price_ID);
-                
-                if (priceRows.length > 0) {
+        window.fetchPricesFromCloud = function() {
+            const pricesRef = ref(db, 'prices');
+            
+            // رادار الأسعار المباشر
+            onValue(pricesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = Object.values(snapshot.val());
                     pricingData = {};
-                    priceRows.forEach(r => {
+                    data.forEach(r => {
                         if (!pricingData[r.Price_Source]) pricingData[r.Price_Source] = [];
                         pricingData[r.Price_Source].push({
                             id: r.Price_ID,
                             area: r.Price_Area,
-                            price: parseFloat(r.Price_Base),
+                            price: parseFloat(r.Price_Base || 0),
                             isOffer: r.Price_Offer === 'true',
                             lastMod: r.Price_Date ? new Date(r.Price_Date).getTime() : Date.now()
                         });
@@ -268,10 +279,10 @@
                 
                 populateSources();
                 renderMatrix();
-            } catch(e) { console.error(e); }
+            });
         }
 
-        function checkNightMode() {
+        window.checkNightMode = function() {
             const hour = new Date().getHours();
             const isNightTime = (hour >= 23 || hour < 6);
             const isToggleOn = document.getElementById('night-toggle').checked;
@@ -288,13 +299,13 @@
             else nav.classList.remove('night-mode');
         }
 
-        function toggleNightModeOverride() {
+        window.toggleNightModeOverride = function() {
             const isChecked = document.getElementById('night-toggle').checked;
             localStorage.setItem('nOne_night_toggle', isChecked);
             checkNightMode();
         }
 
-        function populateSources() {
+        window.populateSources = function() {
             const select = document.getElementById('source-select');
             const currentVal = select.value;
             select.innerHTML = '';
@@ -307,7 +318,7 @@
             if (currentVal && pricingData[currentVal]) select.value = currentVal;
         }
 
-        function addSource() {
+        window.addSource = function() {
             const name = prompt("اسم المصدر الجديد:");
             if (name && !pricingData[name]) {
                 pricingData[name] = [];
@@ -317,7 +328,7 @@
             }
         }
 
-        function duplicateSource() {
+        window.duplicateSource = function() {
             const current = document.getElementById('source-select').value;
             const newName = prompt(`نسخ قائمة (${current}) إلى مدينة جديدة باسم:`);
             if (newName && !pricingData[newName]) {
@@ -329,9 +340,15 @@
             }
         }
 
-        function deleteSource() {
+        window.deleteSource = function() {
             const current = document.getElementById('source-select').value;
             if (confirm(`حذف قائمة (${current}) نهائياً`)) {
+                
+                const idsToDelete = pricingData[current].map(i => i.id);
+                idsToDelete.forEach(async (id) => {
+                    await remove(ref(db, `prices/${id}`));
+                });
+
                 delete pricingData[current];
                 if (Object.keys(pricingData).length === 0) pricingData["Default"] = [];
                 populateSources();
@@ -339,7 +356,7 @@
             }
         }
 
-        function renderMatrix() {
+        window.renderMatrix = function() {
             const source = document.getElementById('source-select').value;
             if(!source) return;
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
@@ -402,7 +419,7 @@
             });
         }
 
-        function updateItem(source, index, field, value) {
+        window.updateItem = function(source, index, field, value) {
             if (field === 'price') {
                 let newVal = parseFloat(value);
                 if (isNightActive) {
@@ -418,7 +435,7 @@
             renderMatrix();
         }
 
-        function addArea() {
+        window.addArea = function() {
             const source = document.getElementById('source-select').value;
             const name = prompt("اسم المنطقة الجديدة:");
             if (name) {
@@ -427,42 +444,42 @@
             }
         }
 
-        function deleteItem(source, index) {
+        window.deleteItem = async function(source, index) {
             if(confirm("حذف المنطقة")) {
+                const item = pricingData[source][index];
+                if (item.id) {
+                    await remove(ref(db, `prices/${item.id}`));
+                }
                 pricingData[source].splice(index, 1);
                 renderMatrix();
             }
         }
 
-        function toggleOffer(source, index) {
+        window.toggleOffer = function(source, index) {
             pricingData[source][index].isOffer = !pricingData[source][index].isOffer;
             renderMatrix();
         }
 
-        function openMap(area, source) {
+        window.openMap = function(area, source) {
             const query = encodeURIComponent(`${area} ${source} Jordan`);
             window.open(`http://googleusercontent.com/maps.google.com/search?q=${query}`, '_blank');
         }
 
-        async function saveData() {
+        window.saveData = async function() {
             const btn = document.getElementById('save-btn');
             btn.innerHTML = "جاري اللحام ⏳";
             btn.style.background = "#f59e0b";
             
             try {
-                const dbData = await N_ONE_CORE.fetchData('read');
-                const dbPrices = dbData.filter(d => d.Price_ID);
+                const snapshot = await get(ref(db, 'prices'));
+                const dbPrices = snapshot.exists() ? Object.values(snapshot.val()) : [];
                 
-                let toAdd = [];
                 let currentIds = [];
                 
                 for (const source in pricingData) {
-                    pricingData[source].forEach(item => {
+                    const promises = pricingData[source].map(item => {
                         if (!item.id) item.id = "PRC_" + Date.now() + Math.floor(Math.random()*1000);
-                        
                         currentIds.push(item.id);
-                        
-                        const exists = dbPrices.some(p => p.Price_ID === item.id);
                         
                         const payload = {
                             Price_ID: item.id,
@@ -473,24 +490,17 @@
                             Price_Date: new Date().toISOString()
                         };
 
-                        if (!exists) {
-                            toAdd.push(payload);
-                        } else {
-                            N_ONE_CORE.postData('update', { user: item.id, data: payload }); 
-                        }
+                        return set(ref(db, `prices/${item.id}`), payload);
                     });
+                    
+                    await Promise.all(promises);
                 }
                 
                 const dbIds = dbPrices.map(p => p.Price_ID);
                 const deletedIds = dbIds.filter(id => !currentIds.includes(id));
                 
-                deletedIds.forEach(id => {
-                    N_ONE_CORE.postData('delete', { user: id });
-                });
-                
-                if (toAdd.length > 0) {
-                    await N_ONE_CORE.postData('add', toAdd);
-                }
+                const deletePromises = deletedIds.map(id => remove(ref(db, `prices/${id}`)));
+                await Promise.all(deletePromises);
                 
                 btn.innerHTML = "تم التعميم 📡";
                 btn.style.background = "#004d40";
@@ -501,6 +511,9 @@
                 }, 1500);
             } catch(e) {
                 alert("حدث خطأ أثناء الحفظ يا بطة");
+                console.error(e);
+                btn.innerHTML = "💾 حفظ واعتماد الأسعار";
+                btn.style.background = "var(--success)";
             }
         }
 
