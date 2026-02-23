@@ -99,97 +99,123 @@
 
         <div class="footer">
             &copy; 2026 N One Global Systems<br>
-            Secure Access v3.0 Ultimate
+            Secure Access v4.0 Ultimate (Firebase)
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         window.onload = function() {
-            localStorage.removeItem('currentUser')
-            console.log("Session Cleared Ready for secure login")
+            localStorage.removeItem('currentUser');
+            console.log("Session Cleared Ready for secure login");
         }
 
-        async function loginNow() {
-            const u = document.getElementById('username').value.trim()
-            const p = document.getElementById('password').value.trim()
-            const isShop = document.getElementById('is_shop').checked 
-            const btn = document.getElementById('loginBtn')
-            const msgBox = document.getElementById('msg')
+        window.loginNow = async function() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            const isShop = document.getElementById('is_shop').checked; 
+            const btn = document.getElementById('loginBtn');
+            const msgBox = document.getElementById('msg');
 
-            msgBox.style.display = 'none'
+            msgBox.style.display = 'none';
 
             if (!u || !p) {
-                showError("يرجى إدخال اسم المستخدم وكلمة المرور يا حبة السكر ☺️")
-                return
+                showError("يرجى إدخال اسم المستخدم وكلمة المرور يا حبة السكر ☺️");
+                return;
             }
 
-            btn.innerHTML = "جاري التحقق الآمن ⏳"
-            btn.disabled = true
+            btn.innerHTML = "جاري التحقق الآمن ⏳";
+            btn.disabled = true;
 
             try {
-                const response = await fetch(API_URL + "?action=read")
-                const data = await response.json()
-
-                const user = data.find(item => {
-                    const oldMatch = String(item.user || "").trim().toLowerCase() === u.toLowerCase() && String(item.pass || "") === p
-                    const newMatch = String(item.Client_User || "").trim().toLowerCase() === u.toLowerCase() && String(item.Client_Pass || "") === p
-                    return oldMatch || newMatch
-                })
-
-                if (user) {
-                    const status = user.Client_Status || user.status
-                    if (status !== 'active') {
-                        showError("عذرا هذا الحساب موقوف راجع الإدارة ☺️")
-                        resetBtn()
-                        return
-                    }
-
-                    // 💎 بروتوكول مرآة الهوية الملكي 💎
-                    const secureSession = {
-                        ...user,
-                        user: user.Client_User || user.user,
-                        pass: user.Client_Pass || user.pass,
-                        name: user.Client_Name || user.name,
-                        role: user.Client_Role || user.role,
-                        type: user.Client_Type || user.type,
-                        status: status,
-                        loginTime: Date.now()
-                    }
-                    
-                    localStorage.setItem('currentUser', JSON.stringify(secureSession))
-                    
-                    if (isShop) {
-                        window.location.replace('shop.html')
-                    } else if (secureSession.role === 'admin') {
-                        window.location.replace('admin.html')
-                    } else {
-                        window.location.replace('client.html')
-                    }
-
+                const dbRef = ref(db);
+                let userRecord = null;
+                
+                let snapshot = await get(child(dbRef, `users/${u}`));
+                if(snapshot.exists()) {
+                    userRecord = snapshot.val();
                 } else {
-                    showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة ☺️")
-                    resetBtn()
+                    snapshot = await get(child(dbRef, `shops/${u}`));
+                    if(snapshot.exists()) {
+                        userRecord = snapshot.val();
+                    }
+                }
+
+                if (userRecord) {
+                    const dbPass = userRecord.Client_Pass || userRecord.pass || "";
+                    
+                    let encodedP = "";
+                    try { encodedP = btoa(p); } catch(e) {}
+
+                    if (dbPass === p || dbPass === encodedP) {
+                        const status = userRecord.Client_Status || userRecord.status;
+                        if (status !== 'active') {
+                            showError("عذرا هذا الحساب موقوف راجع الإدارة ☺️");
+                            resetBtn();
+                            return;
+                        }
+
+                        const secureSession = {
+                            ...userRecord,
+                            user: userRecord.Client_User || userRecord.user,
+                            pass: userRecord.Client_Pass || userRecord.pass,
+                            name: userRecord.Client_Name || userRecord.name,
+                            role: userRecord.Client_Role || userRecord.role,
+                            type: userRecord.Client_Type || userRecord.type,
+                            status: status,
+                            loginTime: Date.now()
+                        };
+                        
+                        localStorage.setItem('currentUser', JSON.stringify(secureSession));
+                        
+                        if (isShop || secureSession.role === 'shop' || secureSession.type === 'shop') {
+                            window.location.replace('shop.html');
+                        } else if (secureSession.role === 'admin') {
+                            window.location.replace('admin.html');
+                        } else {
+                            window.location.replace('client.html');
+                        }
+                    } else {
+                        showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة ☺️");
+                        resetBtn();
+                    }
+                } else {
+                    showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة ☺️");
+                    resetBtn();
                 }
 
             } catch (err) {
-                console.error(err)
-                showError("تعذر الاتصال بالسيرفر المركزي تأكد من الإنترنت ☺️")
-                resetBtn()
+                console.error(err);
+                showError("تعذر الاتصال بالخزنة المركزية تأكد من الإنترنت ☺️");
+                resetBtn();
             }
         }
 
-        function showError(text) {
-            const msg = document.getElementById('msg')
-            msg.innerText = text
-            msg.style.display = 'block'
+        window.showError = function(text) {
+            const msg = document.getElementById('msg');
+            msg.innerText = text;
+            msg.style.display = 'block';
         }
 
-        function resetBtn() {
-            const btn = document.getElementById('loginBtn')
-            btn.innerHTML = "تسجيل الدخول 🚀"
-            btn.disabled = false
+        window.resetBtn = function() {
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = "تسجيل الدخول 🚀";
+            btn.disabled = false;
         }
     </script>
 </body>
