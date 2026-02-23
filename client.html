@@ -15,9 +15,9 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
 
         .navbar { background: white; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary); position: sticky; top: 0; z-index: 1000; }
-        .brand { font-size: 22px; font-weight: 900; color: var(--primary); }
+        .brand { font-size: 22px; font-weight: 900; color: var(--primary); white-space: nowrap; }
         .gold-text { color: var(--gold); }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; }
         .btn-logout:hover { background: #b71c1c; }
 
         .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
@@ -74,11 +74,15 @@
         #commission-field { display: none; background: #e8f5e9; padding: 10px; border-radius: 8px; border: 1px solid #a5d6a7; grid-column: span 1; }
         
         /* تصميم معلومات المستخدم والاشتراك */
-        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; }
+        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
         .sub-countdown { font-size: 11px; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid transparent; transition: 0.3s; }
         .sub-active { background: #e3f2fd; color: #0277bd; border-color: #b3e5fc; }
         .sub-warning { background: #fff3e0; color: #ef6c00; border-color: #ffe0b2; }
         .sub-expired { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
+
+        /* شريط الإعلانات الذكي */
+        #smart-ad-container { display: none; flex: 1; margin: 0 20px; overflow: hidden; background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 5px 15px; align-items: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); }
+        #smart-ad-text { color: #f57f17; font-weight: bold; font-size: 14px; letter-spacing: 0.5px; }
     </style>
 </head>
 <body> 
@@ -90,6 +94,12 @@
 
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> System</div>
+        
+        <div id="smart-ad-container">
+            <span style="font-size:18px; margin-left:10px;">📢</span>
+            <marquee id="smart-ad-text" direction="right" scrollamount="5"></marquee>
+        </div>
+
         <div style="display:flex; gap:15px; align-items:center;">
             <div class="user-info-area">
                 <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
@@ -104,6 +114,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
+            <button class="tab-btn" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
             
             <button class="tab-btn tab-link tab-captain" onclick="window.open('captains-manager.html', '_blank')">👮‍♂️ إدارة الكباتن ↗️</button>
             <button class="tab-btn tab-link" onclick="window.open('ops-room.html', '_blank')">📡 غرفة العمليات ↗️</button>
@@ -224,6 +235,30 @@
             </div>
         </div>
 
+        <div id="settings" class="tab-content">
+            <div class="card" style="max-width: 600px; margin: 0 auto; border-top-color: var(--gold);">
+                <div class="card-header" style="color: var(--gold);">
+                    <span>⚙️ تعديل بيانات الحساب السيادية</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div>
+                        <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">الاسم التجاري للشركة</label>
+                        <input type="text" id="profile_name" placeholder="اسم الشركة الذي يظهر في الواجهات">
+                    </div>
+                    <div>
+                        <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">اسم المستخدم (User ID)</label>
+                        <input type="text" id="profile_user" placeholder="اسم الدخول (باللغة الإنجليزية)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
+                        <small style="color:var(--danger); font-size:11px; display:block; margin-top:5px;">⚠️ تغيير اسم المستخدم سيقوم بتحديث هويتك في السيرفر وقد يطلب منك تسجيل الدخول مجدداً</small>
+                    </div>
+                    <div>
+                        <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">كلمة المرور الجديدة</label>
+                        <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور الجديدة أو اتركها كما هي">
+                    </div>
+                    <button class="btn-action" style="background-color:var(--gold); margin-top:10px; color:#fff;" onclick="updateProfileData()">حفظ التعديلات اللحظية 💾</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script type="module">
@@ -247,7 +282,6 @@
         let allData = [];
 
         window.onload = function() {
-            // توحيد مفاتيح الذاكرة لتجنب الطرد الخاطئ
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             
             if (savedUser) {
@@ -258,10 +292,41 @@
             }
 
             document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name || currentUser.name || 'الشركة'}`;
+            
+            // تعبئة بيانات الإعدادات تلقائياً
+            document.getElementById('profile_name').value = currentUser.Client_Name || currentUser.name || '';
+            document.getElementById('profile_user').value = currentUser.Client_User || currentUser.user || '';
+            document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
+
             updateCountdownTimer();
             setupRealtimeFreezeListener();
+            setupSmartAdsListener();
             fetchData();
         };
+
+        // نظام سحب الإعلانات الذكية اللحظية
+        function setupSmartAdsListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const adsRef = ref(db, 'announcements');
+            
+            onValue(adsRef, (snapshot) => {
+                const ads = snapshot.val() || {};
+                const specificAd = ads.users && ads.users[username];
+                const globalAd = ads.global_ad;
+                
+                const finalAdText = specificAd || globalAd || "";
+                const adContainer = document.getElementById('smart-ad-container');
+                const adMarquee = document.getElementById('smart-ad-text');
+                
+                if (finalAdText.trim() !== "") {
+                    adMarquee.innerText = finalAdText;
+                    adContainer.style.display = 'flex';
+                } else {
+                    adContainer.style.display = 'none';
+                }
+            });
+        }
 
         function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
@@ -271,7 +336,6 @@
                 return;
             }
 
-            // سحب الأيام الحقيقية من الأدمن
             const expiryDate = new Date(currentUser.Client_Expiry || currentUser.expiry);
             expiryDate.setHours(23, 59, 59, 999);
             const now = new Date();
@@ -292,7 +356,6 @@
             }
         }
 
-        // سحب حالة الحساب والطرد اللحظي فوراً
         function setupRealtimeFreezeListener() {
             if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
             const username = currentUser.Client_User || currentUser.user;
@@ -302,19 +365,16 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     
-                    // سحب اسم الشركة الفعلي
                     if(data.Client_Name || data.name) {
                         currentUser.Client_Name = data.Client_Name || data.name;
                         document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name}`;
                     }
 
-                    // تحديث الأيام اللحظي
                     if(data.Client_Expiry || data.expiry) {
                         currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
                         updateCountdownTimer();
                     }
 
-                    // الطرد الفوري إذا تم التجميد من الأدمن
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
                         alert("⚠️ تم إيقاف الحساب يرجى مراجعة الإدارة");
                         localStorage.removeItem('current_company_user');
@@ -324,6 +384,93 @@
                 }
             });
         }
+
+        // دالة تغيير بيانات الحساب واليوزر نيم بمرونة
+        window.updateProfileData = async function() {
+            const oldUser = currentUser.Client_User || currentUser.user;
+            const newName = document.getElementById('profile_name').value.trim();
+            const newUser = document.getElementById('profile_user').value.trim();
+            const newPass = document.getElementById('profile_pass').value;
+
+            if (!newName || !newUser || !newPass) {
+                alert("يرجى تعبئة كافة الحقول المطلوبة 😊");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+
+            try {
+                if (newUser !== oldUser) {
+                    // فحص إذا كان اليوزر الجديد محجوز لشركة ثانية
+                    const checkSnap = await get(child(ref(db), `users/${newUser}`));
+                    if (checkSnap.exists()) {
+                        alert("عذراً، اسم المستخدم الجديد محجوز لشركة أخرى يرجى اختيار اسم مختلف 😊");
+                        document.getElementById('loader-overlay').style.display = 'none';
+                        return;
+                    }
+
+                    // نقل البيانات للاسم الجديد
+                    const oldDataSnap = await get(child(ref(db), `users/${oldUser}`));
+                    const userData = oldDataSnap.val();
+                    
+                    userData.Client_Name = newName;
+                    userData.name = newName;
+                    userData.Client_User = newUser;
+                    userData.user = newUser;
+                    userData.Client_Pass = newPass;
+                    userData.pass = newPass;
+
+                    const updates = {};
+                    updates[`users/${newUser}`] = userData;
+                    updates[`users/${oldUser}`] = null; 
+
+                    // تحديث كافة المنشآت المربوطة باليوزر القديم لليوزر الجديد عشان ما تضيع
+                    const shopsSnap = await get(child(ref(db), 'shops'));
+                    if (shopsSnap.exists()) {
+                        const allShops = shopsSnap.val();
+                        Object.keys(allShops).forEach(shopKey => {
+                            if (allShops[shopKey].Client_Master === oldUser || allShops[shopKey].master === oldUser) {
+                                updates[`shops/${shopKey}/Client_Master`] = newUser;
+                            }
+                        });
+                    }
+
+                    await update(ref(db), updates);
+                    
+                    currentUser = userData;
+                    localStorage.setItem('current_company_user', JSON.stringify(currentUser));
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    alert("تم تحديث بياناتك بنجاح وتغيير هويتك 😊 سيتم إعادة تحميل الصفحة لحفظ التعديلات");
+                    window.location.reload();
+
+                } else {
+                    // تحديث الاسم والباسورد فقط
+                    const updates = {
+                        [`users/${oldUser}/Client_Name`]: newName,
+                        [`users/${oldUser}/name`]: newName,
+                        [`users/${oldUser}/Client_Pass`]: newPass,
+                        [`users/${oldUser}/pass`]: newPass
+                    };
+                    await update(ref(db), updates);
+                    
+                    currentUser.Client_Name = newName;
+                    currentUser.name = newName;
+                    currentUser.Client_Pass = newPass;
+                    currentUser.pass = newPass;
+                    localStorage.setItem('current_company_user', JSON.stringify(currentUser));
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    document.getElementById('welcome-msg').innerText = `أهلاً بك، ${newName}`;
+                    alert("تم حفظ التعديلات بنجاح 😊");
+                    document.getElementById('loader-overlay').style.display = 'none';
+                }
+            } catch (error) {
+                console.error(error);
+                alert("حدث خطأ أثناء التحديث يرجى المحاولة لاحقاً 😊");
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
+        };
 
         window.logout = function() {
             localStorage.removeItem('current_company_user');
@@ -403,7 +550,6 @@
 
             document.getElementById('loader-overlay').style.display = 'flex';
             
-            // خيوط إنشاء المنشأة والربط المباشر مع حساب الكستمر
             const newShop = {
                 Client_ID: "SH_" + Date.now(),
                 Client_User: user, 
