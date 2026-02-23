@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | Royal Ops Room</title>
     
-    <script src="https://cdn.jsdelivr.net/gh/nsaeem41-cyber/N1-Master-Project@main/n-one-core.js"></script>
-
     <style>
         /* ================= تصميم Ops Royal (Navy & Gold) ================= */
         :root {
@@ -258,16 +256,29 @@
 
     </div>
 
-    <script>
+    <script type="module">
         // ========================================================
-        // كود الرادار الماسي - v11.0 (Diamond Edition with Brain v17)
+        // كود الرادار الماسي - v12.0 (Firebase Realtime Edition)
         // ========================================================
         
-        if (typeof N_ONE_CORE !== 'undefined') {
-            N_ONE_CORE.API_URL = "https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
-        }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         let allData = [];
+        let globalUsersData = [];
         let acknowledgedSet = new Set(JSON.parse(localStorage.getItem('nOne_acked_orders') || '[]'));
         
         let soundEnabled = false;
@@ -275,14 +286,14 @@
         let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
         let dailyArchive = JSON.parse(localStorage.getItem('n1_daily_archive') || '[]');
 
-        window.onload = async function() {
-            await fetchData();
+        window.onload = function() {
+            fetchData();
+            fetchUsersForRadar();
             renderArchive();
-            setInterval(fetchDataSilent, 5000);
             setInterval(updateTimersAndColors, 1000);
         };
 
-        function enableSound() {
+        window.enableSound = function() {
             if (!soundEnabled) {
                 const audio = document.getElementById('notif-sound');
                 audio.play().then(() => { 
@@ -291,30 +302,43 @@
             }
         }
 
-        function playAlarm() {
+        window.playAlarm = function() {
             const audio = document.getElementById('notif-sound');
             if (soundEnabled && !isAlarmPlaying) {
                 audio.loop = true; audio.play().catch(()=>{}); isAlarmPlaying = true;
             }
         }
 
-        function stopAlarm() {
+        window.stopAlarm = function() {
             const audio = document.getElementById('notif-sound');
             audio.pause(); audio.currentTime = 0; isAlarmPlaying = false;
         }
 
-        async function fetchData() {
-            try { allData = await N_ONE_CORE.fetchData('read'); renderLiveTable(); } catch (e) {}
+        window.fetchData = function() {
+            const ordersRef = ref(db, 'orders');
+            onValue(ordersRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    allData = Object.values(snapshot.val());
+                } else {
+                    allData = [];
+                }
+                renderLiveTable();
+            });
         }
 
-        async function fetchDataSilent() {
-            try {
-                const newData = await N_ONE_CORE.fetchData('read');
-                if (newData.length > 0) { allData = newData; renderLiveTable(); }
-            } catch (e) {}
+        window.fetchUsersForRadar = function() {
+            onValue(ref(db), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    globalUsersData = [];
+                    if(data.users) Object.values(data.users).forEach(item => { item._node = 'users'; globalUsersData.push(item); });
+                    if(data.shops) Object.values(data.shops).forEach(item => { item._node = 'shops'; globalUsersData.push(item); });
+                    if(data.captains) Object.values(data.captains).forEach(item => { item._node = 'captains'; globalUsersData.push(item); });
+                }
+            });
         }
 
-        function renderLiveTable() {
+        window.renderLiveTable = function() {
             const tbody = document.getElementById('live-table-body');
             const orders = allData.filter(i => i.Shop_Type === 'shop_order').reverse();
             
@@ -348,8 +372,8 @@
                 
                 let shopPhone = ord.Shop_Phone;
                 if (!shopPhone || shopPhone === "غير مسجل") {
-                    const userRecord = allData.find(u => u.Shop_User === ord.Shop_User && u.Shop_Type === 'shop');
-                    if (userRecord && userRecord.Shop_Phone) shopPhone = userRecord.Shop_Phone;
+                    const userRecord = globalUsersData.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User) && (u.role === 'shop' || u.type === 'shop' || u.Shop_Type === 'shop'));
+                    if (userRecord && (userRecord.Shop_Phone || userRecord.Client_Phone)) shopPhone = userRecord.Shop_Phone || userRecord.Client_Phone;
                     else shopPhone = "---";
                 }
                 
@@ -382,13 +406,13 @@
             updateTimersAndColors();
         }
 
-        function acknowledgeOrder(id) {
+        window.acknowledgeOrder = function(id) {
             acknowledgedSet.add(id);
             localStorage.setItem('nOne_acked_orders', JSON.stringify(Array.from(acknowledgedSet)));
             renderLiveTable(); 
         }
 
-        function updateTimersAndColors() {
+        window.updateTimersAndColors = function() {
             const rows = document.querySelectorAll('tbody tr');
             rows.forEach(row => {
                 const time = row.getAttribute('data-time');
@@ -410,7 +434,7 @@
             });
         }
 
-        function checkCaptainMemory() {
+        window.checkCaptainMemory = function() {
             const phone = document.getElementById('man_phone').value;
             const hint = document.getElementById('mem_hint');
             if (captainMemory[phone]) {
@@ -420,7 +444,7 @@
             } else hint.style.display = 'none';
         }
 
-        async function sendManualOrder() {
+        window.sendManualOrder = async function() {
             const phone = document.getElementById('man_phone').value;
             const capName = document.getElementById('man_cap_name').value;
             const restName = document.getElementById('man_rest_name').value;
@@ -463,18 +487,22 @@
             const commission = (parseFloat(fee || 0) * (parseFloat(ratio) / 100)).toFixed(2);
             const entry = { cap: capName, phone: phone, rest: restName, val: val, fee: fee, ratio: ratio, comm: commission };
 
-            // اللحام المالي مع العقل 17 وخصم العمولة من الكابتن
             try {
-                const targetCap = allData.find(c => c.Cap_Phone === phone || c.Cap_User === phone);
+                const targetCap = globalUsersData.find(c => c.Cap_Phone === phone || c.Cap_User === phone || c.user === phone || c.phone === phone);
                 if(targetCap) {
-                    const newBal = parseFloat(targetCap.Cap_Balance || 0) - parseFloat(commission);
-                    const capKey = targetCap.Cap_User ? targetCap.Cap_User : targetCap.Cap_Phone;
-                    N_ONE_CORE.postData('update', { user: capKey, data: { Cap_Balance: newBal } });
+                    const newBal = parseFloat(targetCap.Cap_Balance || targetCap.balance || 0) - parseFloat(commission);
+                    const capKey = targetCap.Cap_User || targetCap.user || targetCap.Cap_Phone || targetCap.phone;
+                    const capNode = targetCap._node || 'users';
+                    
+                    const updates = {};
+                    updates[`${capNode}/${capKey}/Cap_Balance`] = newBal;
+                    updates[`${capNode}/${capKey}/balance`] = newBal;
+                    await update(ref(db), updates);
                 }
 
-                // تسجيل حركة الرادار في الأعمدة الجديدة
+                const radarId = "RAD_" + Date.now();
                 const radarDbEntry = {
-                    Radar_ID: "RAD_" + Date.now(),
+                    Radar_ID: radarId,
                     Radar_CapPhone: phone,
                     Radar_CapName: capName,
                     Radar_ShopName: restName,
@@ -484,7 +512,7 @@
                     Radar_CommValue: commission,
                     Radar_Date: new Date().toISOString()
                 };
-                N_ONE_CORE.postData('add', [radarDbEntry]);
+                await set(ref(db, `radar_history/${radarId}`), radarDbEntry);
             } catch(e) { console.error(e); }
 
             if (editIndex > -1) { dailyArchive[editIndex] = entry; cancelEdit(); } 
@@ -498,7 +526,7 @@
             renderArchive();
         }
 
-        function renderArchive() {
+        window.renderArchive = function() {
             const tbody = document.getElementById('archive-body');
             let totalComm = 0;
             if (dailyArchive.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">فارغ</td></tr>'; } 
@@ -511,15 +539,19 @@
                             <td>${item.cap}</td>
                             <td>${item.rest}</td>
                             <td style="color:var(--success); font-weight:bold;">${item.comm}</td>
-                            <td><button class="mini-btn" onclick="deleteItem(${index})" style="color:var(--danger);">×</button></td>
+                            <td>
+                                <button class="mini-btn" onclick="editItem(${index})" style="color:var(--primary); margin-left:5px;">✏️</button>
+                                <button class="mini-btn" onclick="deleteItem(${index})" style="color:var(--danger);">×</button>
+                            </td>
                         </tr>`;
                 });
             }
             document.getElementById('stat-comm').innerText = totalComm.toFixed(2);
         }
 
-        function deleteItem(index) { if(confirm("حذف العملية")) { dailyArchive.splice(index, 1); saveAndRender(); } }
-        function editItem(index) { 
+        window.deleteItem = function(index) { if(confirm("حذف العملية")) { dailyArchive.splice(index, 1); saveAndRender(); } }
+        
+        window.editItem = function(index) { 
             const item = dailyArchive[index];
             document.getElementById('man_phone').value = item.phone;
             document.getElementById('man_cap_name').value = item.cap;
@@ -531,7 +563,8 @@
             document.getElementById('cancel_edit_btn').style.display = 'block';
             document.querySelector('.btn-whatsapp span').innerText = "حفظ التعديلات"; 
         }
-        function cancelEdit() { 
+        
+        window.cancelEdit = function() { 
             document.getElementById('edit_mode_index').value = "-1";
             document.getElementById('cancel_edit_btn').style.display = 'none';
             document.querySelector('.btn-whatsapp span').innerText = "إرسال وتوثيق";
@@ -539,8 +572,10 @@
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
         }
-        function clearDailyArchive() { if(confirm("تصفير الأرشيف اليومي")) { dailyArchive = []; saveAndRender(); } }
-        function saveAndRender() { localStorage.setItem('n1_daily_archive', JSON.stringify(dailyArchive)); renderArchive(); }
+        
+        window.clearDailyArchive = function() { if(confirm("تصفير الأرشيف اليومي")) { dailyArchive = []; saveAndRender(); } }
+        
+        window.saveAndRender = function() { localStorage.setItem('n1_daily_archive', JSON.stringify(dailyArchive)); renderArchive(); }
     </script>
 </body>
 </html>
