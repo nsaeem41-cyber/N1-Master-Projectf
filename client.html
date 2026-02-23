@@ -75,7 +75,9 @@
         
         /* تصميم معلومات المستخدم والاشتراك */
         .user-info-area { display: flex; flex-direction: column; align-items: flex-end; }
-        .sub-countdown { font-size: 11px; background: #e3f2fd; color: #0277bd; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid #b3e5fc; }
+        .sub-countdown { font-size: 11px; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid transparent; transition: 0.3s; }
+        .sub-active { background: #e3f2fd; color: #0277bd; border-color: #b3e5fc; }
+        .sub-warning { background: #fff3e0; color: #ef6c00; border-color: #ffe0b2; }
         .sub-expired { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
     </style>
 </head>
@@ -90,7 +92,7 @@
         <div class="brand">N <span class="gold-text">One</span> System</div>
         <div style="display:flex; gap:15px; align-items:center;">
             <div class="user-info-area">
-                <div id="sub-timer" class="sub-countdown">جاري حساب الاشتراك...</div>
+                <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
                 <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#555;">مرحباً</span>
             </div>
             <button class="btn-logout" onclick="logout()">تسجيل خروج 🔒</button>
@@ -245,12 +247,10 @@
         let allData = [];
 
         window.onload = function() {
-            // التحقق من تسجيل الدخول
             const savedUser = localStorage.getItem('current_company_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
             } else {
-                // للتجربة المباشرة في حال لم يتم تسجيل الدخول مسبقاً
                 currentUser = { Client_User: "admin_test", Client_Name: "الشركة الرئيسية", Client_Expiry: "2026-12-31" };
             }
 
@@ -264,6 +264,7 @@
             const timerEl = document.getElementById('sub-timer');
             if (!currentUser.Client_Expiry) {
                 timerEl.innerText = "صلاحية غير محددة";
+                timerEl.className = "sub-countdown sub-active";
                 return;
             }
 
@@ -273,23 +274,39 @@
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             if (diffDays > 0) {
-                timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
-                timerEl.classList.remove('sub-expired');
+                if (diffDays <= 3) {
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم لانتهاء الاشتراك`;
+                    timerEl.className = "sub-countdown sub-warning";
+                } else {
+                    timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-active";
+                }
             } else {
                 timerEl.innerText = `الاشتراك منتهي`;
-                timerEl.classList.add('sub-expired');
+                timerEl.className = "sub-countdown sub-expired";
             }
         }
 
-        // مراقبة تجميد الحساب الرئيسي للشركة لحظياً
+        // مراقبة تجميد الحساب الرئيسي للشركة لحظياً ومزامنة الاسم والأيام
         function setupRealtimeFreezeListener() {
             if(!currentUser || !currentUser.Client_User) return;
-            const myRef = ref(db, `companies/${currentUser.Client_User}`);
+            const myRef = ref(db, `users/${currentUser.Client_User}`);
             onValue(myRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
+                    
+                    if(data.Client_Name || data.name) {
+                        currentUser.Client_Name = data.Client_Name || data.name;
+                        document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name}`;
+                    }
+
+                    if(data.Client_Expiry || data.expiry) {
+                        currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
+                        updateCountdownTimer();
+                    }
+
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("⚠️ تم تجميد حساب الشركة من قبل الإدارة المركزية. سيتم تسجيل الخروج فوراً.");
+                        alert("⚠️ تم تجميد حساب الشركة من قبل الإدارة المركزية سيتم تسجيل الخروج فوراً");
                         logout();
                     }
                 }
@@ -298,7 +315,7 @@
 
         window.logout = function() {
             localStorage.removeItem('current_company_user');
-            window.location.replace('index.html'); // إعادة التوجيه لصفحة تسجيل الدخول
+            window.location.replace('index.html'); 
         };
 
         window.switchTab = function(tabId, event) {
@@ -339,9 +356,9 @@
             const dbRef = ref(db);
             get(child(dbRef, `shops/${user}`)).then((snapshot) => {
                 if (snapshot.exists()) {
-                    alert("❌ هذا الاسم مستخدم. يرجى اختيار اسم آخر.");
+                    alert("❌ هذا الاسم مستخدم يرجى اختيار اسم آخر");
                 } else {
-                    alert("✅ الاسم متاح ويمكن استخدامه.");
+                    alert("✅ الاسم متاح ويمكن استخدامه");
                 }
                 btn.innerText = "فحص 🔍";
             }).catch((error) => {
@@ -363,10 +380,10 @@
             let commission = "0";
             if (subType === 'paid') {
                 commission = document.getElementById('fixed_commission').value;
-                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع."); return; }
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع"); return; }
             }
 
-            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية (الاسم، المستخدم، كلمة المرور، الهاتف)."); return; }
+            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية الاسم المستخدم كلمة المرور الهاتف"); return; }
 
             const expDate = new Date();
             expDate.setDate(expDate.getDate() + parseInt(days));
@@ -380,7 +397,7 @@
                 Client_Name: name,
                 Client_Role: "shop", 
                 Client_Type: "shop", 
-                Client_Master: currentUser.Client_User, // ربط حصري بالشركة الأم
+                Client_Master: currentUser.Client_User, 
                 Client_Status: "active",
                 Client_Phone: phone, 
                 Client_Location: locLink,  
@@ -394,7 +411,7 @@
             try {
                 await set(ref(db, 'shops/' + user), newShop);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة المنشأة بنجاح.");
+                alert("تم إضافة المنشأة بنجاح");
                 
                 document.getElementById('shop_name').value = '';
                 document.getElementById('shop_user').value = '';
@@ -404,13 +421,12 @@
                 document.getElementById('shop_balance').value = '';
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء الاتصال بالنظام.");
+                alert("حدث خطأ أثناء الاتصال بالنظام");
             }
         };
 
         window.renderShops = function() {
             const tbody = document.getElementById('shops-table-body');
-            // فلترة حازمة: تظهر فقط المنشآت التي تتبع هذه الشركة حصراً
             const myShops = allData.filter(i => 
                 (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && 
                 (i.Client_Master === currentUser.Client_User)
@@ -459,7 +475,6 @@
 
                 const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
                 
-                // عرض كلمة السر المحفوظة للمنشأة
                 const shopPassDisplay = shop.Client_Pass || shop.pass || 'غير متوفرة';
 
                 tbody.innerHTML += `
@@ -494,7 +509,7 @@
 
         window.toggleStatus = async function(u, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            const confirmMsg = nextStatus === 'paused' ? "تأكيد تجميد حساب المنشأة؟ لن يتمكنوا من إرسال طلبات." : "تأكيد إعادة تفعيل حساب المنشأة؟";
+            const confirmMsg = nextStatus === 'paused' ? "تأكيد تجميد حساب المنشأة لن يتمكنوا من إرسال طلبات" : "تأكيد إعادة تفعيل حساب المنشأة";
             
             if(!confirm(confirmMsg)) return;
             
@@ -506,7 +521,7 @@
         window.editShop = async function(u, n, p, b) {
             const newN = prompt("تعديل اسم المنشأة", n); if (newN === null) return;
             const newP = prompt("تعديل كلمة المرور", p); if (newP === null) return;
-            const newB = prompt("تعديل الرصيد المتاح:", b); if (newB === null) return;
+            const newB = prompt("تعديل الرصيد المتاح", b); if (newB === null) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'shops/' + u), { Client_Name: newN, Client_Pass: newP, Client_Balance: newB, Shop_Balance: newB });
@@ -514,7 +529,7 @@
         };
 
         window.deleteShop = async function(u) {
-            if(!confirm("تحذير: هل أنت متأكد من الحذف النهائي لهذه المنشأة؟ لا يمكن التراجع عن هذا الإجراء.")) return;
+            if(!confirm("تحذير هل أنت متأكد من الحذف النهائي لهذه المنشأة لا يمكن التراجع عن هذا الإجراء")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'shops/' + u));
             document.getElementById('loader-overlay').style.display = 'none';
