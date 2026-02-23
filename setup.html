@@ -51,90 +51,100 @@
         </div>
     </div>
 
-    <script>
-        // الرابط الملكي الموحد لجميع الأكواد
-        const API_URL = "https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         window.onload = async function() {
             try {
-                const response = await fetch(API_URL + "?action=read")
-                const data = await response.json()
-                const adminExists = Array.isArray(data) && data.some(user => user.role === 'admin')
+                const dbRef = ref(db);
+                const snapshot = await get(child(dbRef, 'users'));
+                let adminExists = false;
+                
+                if (snapshot.exists()) {
+                    const users = snapshot.val();
+                    adminExists = Object.values(users).some(user => user.role === 'admin');
+                }
+                
                 if (adminExists) {
-                    showStatus("error", "النظام منصب ومحمي مسبقا ☺️ لا يمكن إنشاء مدير جديد")
+                    showStatus("error", "النظام منصب ومحمي مسبقا ☺️ لا يمكن إنشاء مدير جديد");
+                    document.getElementById('setup-form').style.display = 'none';
                 } else {
-                    showStatus("success", "السيرفر جاهز للتنصيب ☺️ أدخل بياناتك الملكية")
-                    document.getElementById('setup-form').style.display = 'block'
+                    showStatus("success", "السيرفر جاهز للتنصيب ☺️ أدخل بياناتك الملكية");
+                    document.getElementById('setup-form').style.display = 'block';
                 }
             } catch (error) {
-                showStatus("error", "خطأ في الاتصال بالسيرفر تأكد من الإنترنت ☺️")
+                showStatus("error", "خطأ في الاتصال بالسيرفر تأكد من الإنترنت ☺️");
             }
         }
 
-        async function installSystem() {
-            const btn = document.getElementById('btn')
-            const userVal = document.getElementById('admin_user').value.trim()
-            const passVal = document.getElementById('admin_pass').value.trim()
-            const keyVal = document.getElementById('setup_key').value.trim()
+        window.installSystem = async function() {
+            const btn = document.getElementById('btn');
+            const userVal = document.getElementById('admin_user').value.trim();
+            const passVal = document.getElementById('admin_pass').value.trim();
+            const keyVal = document.getElementById('setup_key').value.trim();
 
             if (!userVal || !passVal || !keyVal) {
-                showStatus("error", "الرجاء تعبئة جميع الحقول ☺️")
-                return
+                showStatus("error", "الرجاء تعبئة جميع الحقول ☺️");
+                return;
             }
             if (keyVal !== "555") {
-                showStatus("error", "مفتاح الأمان السري غير صحيح ☺️")
-                return
+                showStatus("error", "مفتاح الأمان السري غير صحيح ☺️");
+                return;
             }
 
-            btn.innerHTML = "جاري الحفر في جداول جوجل ⏳"
-            btn.disabled = true
+            btn.innerHTML = "جاري الحفر في الخزنة الماسية ⏳";
+            btn.disabled = true;
 
-            const encodedPass = btoa(passVal)
+            const encodedPass = btoa(passVal);
             const adminUser = {
                 id: "ADMIN_" + Date.now(),
                 user: userVal,
                 pass: encodedPass, 
                 name: "مدير النظام (نسيم)",
                 role: "admin",      
-                type: "admin_master", // توجيه ذكي لصفحة الإدارة     
+                type: "admin_master", 
                 status: "active",   
                 expiry: "2099-12-31",
                 date: new Date().toISOString()
-            }
+            };
 
             try {
-                // استخدام POST مع JSON.stringify لضمان وصول البيانات للعقل السيادي
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'add',
-                        data: adminUser
-                    })
-                })
-
-                showStatus("success", "تم إرسال الأوامر بنجاح ☺️ انتظر قليلاً للتوثيق")
-                btn.innerHTML = "تم التثبيت ✔️"
-                document.getElementById('setup-form').style.display = 'none'
+                await set(ref(db, 'users/' + userVal), adminUser);
+                
+                showStatus("success", "تم إرسال الأوامر بنجاح ☺️ انتظر قليلاً للتوثيق");
+                btn.innerHTML = "تم التثبيت ✔️";
+                document.getElementById('setup-form').style.display = 'none';
 
                 setTimeout(() => {
-                    window.location.replace('index.html')
-                }, 3000)
+                    window.location.replace('index.html');
+                }, 3000);
 
             } catch (error) {
-                showStatus("error", "حدث خطأ في التوثيق ☺️ حاول مرة أخرى")
-                btn.innerHTML = "حاول مرة أخرى 🔄"
-                btn.disabled = false
+                showStatus("error", "حدث خطأ في التوثيق ☺️ حاول مرة أخرى");
+                btn.innerHTML = "حاول مرة أخرى 🔄";
+                btn.disabled = false;
             }
         }
 
-        function showStatus(type, msg) {
-            const el = document.getElementById('status')
-            el.className = type
-            el.innerText = msg
-            el.style.display = 'block'
+        window.showStatus = function(type, msg) {
+            const el = document.getElementById('status');
+            el.className = type;
+            el.innerText = msg;
+            el.style.display = 'block';
         }
     </script>
 </body>
