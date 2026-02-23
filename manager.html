@@ -102,8 +102,22 @@
         </table>
     </div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwr6oSlnTRdGKBE2hOjSgfktz0pH6EpQBk0HiGwOj6JhHqOy_44LMo44eI78vjlm03_/exec";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         window.onload = function() {
             window.history.pushState(null, "", window.location.href);
@@ -112,47 +126,61 @@
             };
 
             const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user || user.role !== 'admin' || !user.sessionToken || !user.sessionToken.includes('N1_SECURE')) {
+            // تم تعديل شرط التوكين ليناسب النظام الجديد المباشر
+            if (!user || user.role !== 'admin') {
                 window.location.replace('index.html');
                 return;
             }
             
             loadData();
-            setInterval(loadDataSilent, 8000);
+            // ربط رادار مباشر (Real-time)
+            attachRealtimeListeners();
         };
 
-        async function loadData() {
+        window.loadData = async function() {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('feed-table').style.display = 'none';
 
             try {
-                const res = await fetch(API_URL + "?action=read");
-                const data = await res.json();
-                processData(data);
+                const snapshot = await get(ref(db));
+                if (snapshot.exists()) {
+                    processData(snapshot.val());
+                } else {
+                    processData({});
+                }
             } catch (e) {
                 console.error(e);
             }
-        }
+        };
 
-        async function loadDataSilent() {
-            try {
-                const res = await fetch(API_URL + "?action=read");
-                const data = await res.json();
-                processData(data);
-            } catch (e) {
-                console.error(e);
-            }
-        }
+        window.attachRealtimeListeners = function() {
+            onValue(ref(db), (snapshot) => {
+                if (snapshot.exists()) {
+                    processData(snapshot.val());
+                }
+            });
+        };
 
-        function processData(data) {
-            const orders = data.filter(i => i.type === 'order').reverse(); 
-            const merchants = data.filter(i => i.type === 'merchant' || i.type === 'shop' || i.Shop_ID);
+        window.processData = function(data) {
+            // استخراج الطلبات من نود orders
+            const orders = data.orders ? Object.values(data.orders).reverse() : [];
+            
+            // استخراج المنشآت من نود shops أو البحث عنها في users
+            let merchants = data.shops ? Object.values(data.shops) : [];
+            const shopUsers = data.users ? Object.values(data.users).filter(u => u.role === 'shop' || u.type === 'shop') : [];
+            
+            // دمج القوائم لضمان عد كل المنشآت
+            const uniqueMerchants = [...new Set([...merchants.map(m => m.Shop_User || m.user), ...shopUsers.map(u => u.user)])];
 
             document.getElementById('total-orders').innerText = orders.length;
-            document.getElementById('total-merchants').innerText = merchants.length;
+            document.getElementById('total-merchants').innerText = uniqueMerchants.length;
             
             let money = 0;
-            orders.forEach(o => money += (Number(o.val) || 0) + (Number(o.fee) || 0));
+            orders.forEach(o => {
+                const val = parseFloat(o.Shop_Val || o.val || 0);
+                const fee = parseFloat(o.Shop_Fee || o.fee || 0);
+                money += val + fee;
+            });
             document.getElementById('total-money').innerText = money.toLocaleString() + " د.أ";
 
             const tbody = document.getElementById('feed-body');
@@ -162,22 +190,23 @@
                 htmlContent = '<tr><td colspan="4" style="text-align:center; padding:30px;">لا يوجد عمليات حتى الآن</td></tr>';
             } else {
                 orders.forEach(ord => {
-                    const company = data.find(u => u.user === ord.client_user);
-                    const compName = company ? company.name : ord.client_user;
+                    const shopName = ord.Shop_Name || ord.name || 'غير معروف';
+                    const dateDisplay = ord.Shop_Date ? ord.Shop_Date.split('T')[0] : (ord.date ? ord.date.split('T')[0] : '');
+                    const location = ord.Shop_Pickup || ord.pickup || '---';
+                    const totalVal = (parseFloat(ord.Shop_Val || ord.val || 0) + parseFloat(ord.Shop_Fee || ord.fee || 0)).toFixed(2);
 
                     htmlContent += `
                         <tr>
-                            <td><span class="tag">${ord.date ? ord.date.split('T')[0] : ''}</span></td>
-                            <td style="font-weight:bold; color:#d4af37;">${compName || ''}</td>
-                            <td>${ord.pickup || ''}</td>
-                            <td>${(Number(ord.val) + Number(ord.fee)).toFixed(2)}</td>
+                            <td><span class="tag">${dateDisplay}</span></td>
+                            <td style="font-weight:bold; color:#d4af37;">${shopName}</td>
+                            <td>${location}</td>
+                            <td>${totalVal}</td>
                         </tr>
                     `;
                 });
             }
             
             tbody.innerHTML = htmlContent;
-
             document.getElementById('loader').style.display = 'none';
             document.getElementById('feed-table').style.display = 'table';
         }
