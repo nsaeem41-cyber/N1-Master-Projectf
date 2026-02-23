@@ -17,7 +17,7 @@
         .navbar { background: white; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary); position: sticky; top: 0; z-index: 1000; }
         .brand { font-size: 22px; font-weight: 900; color: var(--primary); white-space: nowrap; }
         .gold-text { color: var(--gold); }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; }
+        .btn-logout { background: var(--danger); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; }
         .btn-logout:hover { background: #b71c1c; }
 
         .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
@@ -30,9 +30,6 @@
         
         .tab-link { background: #e3f2fd; color: #0277bd; border: 1px solid #b3e5fc; display: flex; align-items: center; gap: 5px; }
         .tab-link:hover { background: #b3e5fc; }
-        
-        .tab-captain { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
-        .tab-captain:hover { background: #ffe082; }
 
         /* المحتوى */
         .tab-content { display: none; animation: fadeIn 0.4s; }
@@ -105,7 +102,10 @@
                 <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
                 <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#555;">مرحباً</span>
             </div>
-            <button class="btn-logout" onclick="logout()">تسجيل خروج 🔒</button>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <button style="background:var(--gold); color:white; border:none; padding:6px 15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.3s; width: 100%;" onclick="switchTab('settings', null)">⚙️ إعدادات الحساب</button>
+                <button class="btn-logout" style="padding:6px 15px; font-size:12px; width: 100%;" onclick="logout()">تسجيل خروج 🔒</button>
+            </div>
         </div>
     </nav>
 
@@ -114,9 +114,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
-            <button class="tab-btn" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
             
-            <button class="tab-btn tab-link tab-captain" onclick="window.open('captains-manager.html', '_blank')">👮‍♂️ إدارة الكباتن ↗️</button>
             <button class="tab-btn tab-link" onclick="window.open('ops-room.html', '_blank')">📡 غرفة العمليات ↗️</button>
             <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار ↗️</button>
         </div>
@@ -167,7 +165,7 @@
                     <span> إضافة منشأة جديدة</span>
                 </div>
                 <div class="form-grid">
-                    <input type="text" id="shop_name" placeholder="اسم المنشأة التجاري">
+                    <input type="text" id="shop_name" placeholder="اسم الشركة">
                     
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="shop_user" placeholder="اسم المستخدم (English)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
@@ -211,13 +209,13 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span>سجل المنشآت التابعة</span>
                     </div>
-                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم المنشأة..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
+                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم الشركة..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>اسم المنشأة</th>
+                                <th>اسم الشركة</th>
                                 <th>بيانات الدخول</th>
                                 <th>الهاتف / الموقع</th>
                                 <th>النوع / العمولة</th>
@@ -238,17 +236,17 @@
         <div id="settings" class="tab-content">
             <div class="card" style="max-width: 600px; margin: 0 auto; border-top-color: var(--gold);">
                 <div class="card-header" style="color: var(--gold);">
-                    <span>⚙️ تعديل بيانات الحساب السيادية</span>
+                    <span>⚙️ تعديل بيانات الحساب</span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                     <div>
-                        <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">الاسم التجاري للشركة</label>
+                        <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">اسم الشركة</label>
                         <input type="text" id="profile_name" placeholder="اسم الشركة الذي يظهر في الواجهات">
                     </div>
                     <div>
                         <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">اسم المستخدم (User ID)</label>
                         <input type="text" id="profile_user" placeholder="اسم الدخول (باللغة الإنجليزية)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
-                        <small style="color:var(--danger); font-size:11px; display:block; margin-top:5px;">⚠️ تغيير اسم المستخدم سيقوم بتحديث هويتك في السيرفر وقد يطلب منك تسجيل الدخول مجدداً</small>
+                        <small style="color:var(--danger); font-size:11px; display:block; margin-top:5px;">⚠️ تغيير اسم المستخدم سيقوم بتحديث هويتك وقد يتطلب منك تسجيل الدخول مجدداً</small>
                     </div>
                     <div>
                         <label style="font-size:13px; font-weight:bold; color:#555; margin-bottom:5px; display:block;">كلمة المرور الجديدة</label>
@@ -484,7 +482,9 @@
                 if(!el.classList.contains('tab-link')) el.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            if(event && event.target && event.target.classList.contains('tab-btn')) {
+                event.target.classList.add('active');
+            }
         };
 
         window.fetchData = function() {
@@ -683,7 +683,7 @@
         };
 
         window.editShop = async function(u, n, p, b) {
-            const newN = prompt("تعديل اسم المنشأة", n); if (newN === null) return;
+            const newN = prompt("تعديل اسم الشركة", n); if (newN === null) return;
             const newP = prompt("تعديل كلمة المرور", p); if (newP === null) return;
             const newB = prompt("تعديل الرصيد المتاح", b); if (newB === null) return;
             
