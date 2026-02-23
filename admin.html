@@ -29,13 +29,14 @@
         .stat-number { font-size: 32px; font-weight: bold; color: var(--primary); margin: 10px 0; }
         .stat-label { color: #777; font-size: 13px; }
 
-        /* نموذج الإضافة */
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px; position: relative; }
+        /* الكروت ونموذج الإضافة */
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px; position: relative; border-top: 4px solid var(--primary); }
         .card-header { font-size: 20px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: #fafafa; }
-        input:focus { border-color: var(--primary); background: white; }
-        .btn-add { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; height: 100%; width: 100%; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: #fafafa; box-sizing: border-box; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; }
+        .btn-add { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; height: 100%; width: 100%; transition: 0.3s; }
+        .btn-add:hover { background: #1b5e20; }
 
         /* الجداول */
         .table-wrapper { overflow-x: auto; }
@@ -59,6 +60,20 @@
         .act-edit { background: var(--primary); }
 
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: var(--primary); flex-direction: column; }
+        
+        /* ألوان الإعلانات */
+        .ad-color-normal { color: var(--text); }
+        .ad-color-news { color: var(--info); }
+        .ad-color-warning { color: var(--danger); font-weight: bold; }
+        .ad-color-offer { color: var(--success); }
+        
+        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-broadcast { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.3s; }
+        .btn-broadcast:hover { background: #151b54; }
+        .btn-popup { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-popup:hover { background: #b71c1c; }
+        .btn-clear-ad { background: #757575; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-clear-ad:hover { background: #616161; }
     </style>
 </head>
 <body>
@@ -109,6 +124,41 @@
                 <button class="btn-add" id="btnAddUser" onclick="addUser()">+ إضافة بقاعدة بيانات مستقلة 🚀</button>
             </div>
         </div>
+        
+        <div class="card" style="border-top-color: var(--gold);">
+            <div class="card-header">
+                <span>📢 مركز الإعلانات الذكية (Smart Announcements)</span>
+            </div>
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div style="flex: 2;">
+                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان أو التنبيه هنا..." style="resize: none; font-size: 15px; font-weight: bold;"></textarea>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                    <select id="ad_target" title="الاستهداف">
+                        <option value="all">إرسال للجميع (الكل)</option>
+                        </select>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="ad_type" title="نوع الإعلان" style="flex: 1;">
+                            <option value="normal" class="ad-color-normal">إعلان عادي</option>
+                            <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
+                            <option value="warning" class="ad-color-warning">تحذير / تنبيه 🔴</option>
+                            <option value="offer" class="ad-color-offer">عروض / هدايا 🟢</option>
+                        </select>
+                        <select id="ad_expire" title="مدة العرض" style="flex: 1;">
+                            <option value="1">لمدة ساعة</option>
+                            <option value="24" selected>لمدة 24 ساعة</option>
+                            <option value="168">لمدة أسبوع</option>
+                            <option value="permanent">دائم (حتى الحذف)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="ad-controls">
+                <button class="btn-broadcast" onclick="sendAnnouncement()">بث الإعلان في الشريط العلوي 🚀</button>
+                <button class="btn-popup" onclick="sendPopupAlert()">إرسال تنبيه طارئ (Pop-up) 🚨</button>
+                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح الإعلانات 🧹</button>
+            </div>
+        </div>
 
         <div class="card">
             <div class="card-header">
@@ -138,7 +188,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -154,6 +204,7 @@
         const db = getDatabase(app);
 
         let allData = [];
+        let activeClients = []; // لتعبئة قائمة الإعلانات الموجهة
 
         window.onload = async function() {
             const sessionData = localStorage.getItem('currentUser');
@@ -180,7 +231,102 @@
                     allData = [];
                 }
                 renderTables();
+                populateAdTargets(); // تحديث قائمة الشركات للإعلانات
             });
+        }
+        
+        // تعبئة قائمة الشركات في قسم الإعلانات
+        window.populateAdTargets = function() {
+            const targetSelect = document.getElementById('ad_target');
+            const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+            
+            // الاحتفاظ بالخيار الأول (إرسال للجميع)
+            targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
+            
+            clients.forEach(c => {
+                const username = c.Client_User || c.user;
+                const name = c.Client_Name || c.name;
+                targetSelect.innerHTML += `<option value="${username}">موجه لـ: ${name}</option>`;
+            });
+        }
+
+        // إرسال الإعلان للشريط العلوي
+        window.sendAnnouncement = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً 😊"); return; }
+            
+            const target = document.getElementById('ad_target').value;
+            const type = document.getElementById('ad_type').value;
+            const expireHours = document.getElementById('ad_expire').value;
+            
+            let expireTimestamp = null;
+            if(expireHours !== 'permanent') {
+                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
+            }
+            
+            const adData = {
+                text: text,
+                type: type,
+                expireAt: expireTimestamp,
+                timestamp: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                if(target === 'all') {
+                    // إعلان للجميع
+                    await update(ref(db, 'announcements/global'), adData);
+                } else {
+                    // إعلان موجه لشركة محددة
+                    await update(ref(db, `announcements/users/${target}`), adData);
+                }
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم بث الإعلان بنجاح 🚀");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال الإعلان");
+            }
+        }
+
+        // إرسال تنبيه طارئ Pop-up
+        window.sendPopupAlert = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً 😊"); return; }
+            
+            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند الكستمر، هل أنت متأكد؟")) return;
+
+            const target = document.getElementById('ad_target').value;
+            const alertData = {
+                message: text,
+                timestamp: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                if(target === 'all') {
+                    await update(ref(db, 'alerts/global'), alertData);
+                } else {
+                    await update(ref(db, `alerts/users/${target}`), alertData);
+                }
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم إرسال التنبيه الطارئ بنجاح 🚨");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال التنبيه");
+            }
+        }
+
+        // مسح الإعلانات
+        window.clearAnnouncement = async function() {
+            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات، هل أنت متأكد؟")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await remove(ref(db, 'announcements'));
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تنظيف واجهات الإعلانات 🧹");
         }
 
         window.renderTables = function() {
