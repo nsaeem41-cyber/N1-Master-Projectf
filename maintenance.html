@@ -70,6 +70,9 @@
         .btn-clean { background: #2e7d32; }
         .btn-clean:hover { background: #388e3c; }
 
+        .btn-doctor { background: #0277bd; }
+        .btn-doctor:hover { background: #01579b; }
+
         #loader-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center;
@@ -111,6 +114,14 @@
         <div class="tools-grid">
             
             <div class="tool-card">
+                <div class="tool-icon">👨‍⚕️</div>
+                <div class="tool-title">طبيب النظام الشامل (Data Doctor)</div>
+                <div class="tool-desc">إصلاح عدادات الأيام المصلبة وتحديث مسميات الشركات وتفعيل الطرد اللحظي للحسابات المجمدة وعزلها</div>
+                <button class="btn-action btn-doctor" onclick="runDataDoctor()">بدء الفحص والإصلاح 🚀</button>
+                <div id="doctor-msg" class="status-msg" style="color:#29b6f6;"></div>
+            </div>
+
+            <div class="tool-card">
                 <div class="tool-icon">💾</div>
                 <div class="tool-title">النسخ الاحتياطي الشامل</div>
                 <div class="tool-desc">تنزيل نسخة آمنة ومفرغة من جميع بيانات الإمبراطورية والشركات والطلبات كملف JSON مشفر</div>
@@ -139,7 +150,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -169,7 +180,24 @@
             }
             
             await fetchHealthStatus();
+            setupRealtimeFreezeListener();
         };
+
+        function setupRealtimeFreezeListener() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if(!user || !user.user) return;
+            const myRef = ref(db, `users/${user.user}`);
+            onValue(myRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.status === 'paused' || data.Client_Status === 'paused') {
+                        alert("تم تجميد حسابك مؤقتاً يرجى مراجعة الإدارة");
+                        localStorage.clear();
+                        window.location.replace('index.html');
+                    }
+                }
+            });
+        }
 
         window.fetchHealthStatus = async function() {
             showLoader("جاري فحص نبض السيرفر ⏳");
@@ -178,7 +206,6 @@
                 if (snapshot.exists()) {
                     systemData = snapshot.val();
                     
-                    // حساب عدد الأسطر التقريبي بناءً على كل الفئات
                     let totalRows = 0;
                     if(systemData.users) totalRows += Object.keys(systemData.users).length;
                     if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
@@ -202,6 +229,57 @@
                 }
             } catch (e) {
                 console.error(e);
+            } finally {
+                hideLoader();
+            }
+        }
+
+        window.runDataDoctor = async function() {
+            if(!confirm("سيقوم الطبيب بفحص وصيانة البيانات بالكامل ومزامنة الأيام المصلبة هل تريد الاستمرار ☺️")) return;
+            
+            showLoader("جاري إجراء جراحة للبيانات لإصلاح التواريخ والأسماء ⏳");
+            
+            try {
+                if(systemData.users) {
+                    const updates = {};
+                    Object.keys(systemData.users).forEach(key => {
+                        const u = systemData.users[key];
+                        const nameToSync = u.name || u.Client_Name || 'بدون اسم';
+                        let finalExpiry = u.expiry || u.Client_Expiry;
+                        
+                        if (finalExpiry === "2026-12-31" && u.plan_days) {
+                            const newDate = new Date();
+                            newDate.setDate(newDate.getDate() + parseInt(u.plan_days));
+                            finalExpiry = newDate.toISOString().split('T')[0];
+                        }
+                        
+                        updates[`users/${key}/Client_Name`] = nameToSync;
+                        updates[`users/${key}/name`] = nameToSync;
+                        updates[`users/${key}/expiry`] = finalExpiry;
+                        updates[`users/${key}/Client_Expiry`] = finalExpiry;
+                        
+                        const statusToSync = u.status || u.Client_Status || 'active';
+                        updates[`users/${key}/status`] = statusToSync;
+                        updates[`users/${key}/Client_Status`] = statusToSync;
+                        
+                        if (statusToSync === 'paused') {
+                            updates[`users/${key}/force_logout`] = true;
+                        }
+                    });
+                    
+                    await update(ref(db), updates);
+                }
+
+                const msg = document.getElementById('doctor-msg');
+                msg.innerText = "تمت الصيانة بنجاح العدادات والأسماء أصبحت دقيقة ☺️✅";
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 4000);
+                
+                await fetchHealthStatus(); 
+
+            } catch (error) {
+                alert("حدث خطأ أثناء الفحص والصيانة ☺️");
+                console.error(error);
             } finally {
                 hideLoader();
             }
@@ -244,7 +322,6 @@
             showLoader("جاري تنظيف السيرفر من الطلبات المؤرشفة الرجاء عدم إغلاق الصفحة ⏳");
 
             try {
-                // حذف نود الطلبات بالكامل لتسريع العملية
                 await remove(ref(db, 'orders'));
                 
                 const msg = document.getElementById('archive-msg');
