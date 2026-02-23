@@ -57,13 +57,26 @@
         .tag { padding: 4px 10px; border-radius: 15px; font-size: 11px; background: #333; color: #ccc; }
         
         #loader { text-align: center; padding: 50px; color: #777; }
+        
+        /* تصميم معلومات المستخدم والاشتراك */
+        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; margin-left: 20px; }
+        .sub-countdown { font-size: 11px; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid transparent; transition: 0.3s; }
+        .sub-active { background: rgba(227, 242, 253, 0.2); color: #64b5f6; border-color: #42a5f5; }
+        .sub-warning { background: rgba(255, 243, 224, 0.2); color: #ffb74d; border-color: #ff9800; }
+        .sub-expired { background: rgba(255, 235, 238, 0.2); color: #ef5350; border-color: #f44336; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="brand">N <span class="gold">One</span> Ops Room</div>
-        <a href="admin.html" class="btn-back">⬅️ العودة للإدارة</a>
+        <div style="display:flex; align-items:center;">
+            <div class="user-info-area">
+                <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
+                <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#ddd;">مرحباً</span>
+            </div>
+            <a href="admin.html" class="btn-back">⬅️ العودة للإدارة</a>
+        </div>
     </div>
 
     <div class="dashboard-grid">
@@ -119,23 +132,89 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        let currentUser = null;
+
         window.onload = function() {
             window.history.pushState(null, "", window.location.href);
             window.onpopstate = function() {
                 window.history.pushState(null, "", window.location.href);
             };
 
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            // تم تعديل شرط التوكين ليناسب النظام الجديد المباشر
-            if (!user || user.role !== 'admin') {
+            const sessionData = localStorage.getItem('currentUser');
+            if (!sessionData) {
                 window.location.replace('index.html');
                 return;
             }
             
+            currentUser = JSON.parse(sessionData);
+            
+            if (currentUser.role !== 'admin') {
+                window.location.replace('index.html');
+                return;
+            }
+            
+            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
+            
             loadData();
-            // ربط رادار مباشر (Real-time)
             attachRealtimeListeners();
+            setupRealtimeFreezeListener();
         };
+
+        function updateCountdownTimer() {
+            const timerEl = document.getElementById('sub-timer');
+            if (!currentUser.expiry && !currentUser.Client_Expiry) {
+                timerEl.innerText = "صلاحية غير محددة";
+                timerEl.className = "sub-countdown sub-active";
+                return;
+            }
+
+            const expiryDate = new Date(currentUser.expiry || currentUser.Client_Expiry);
+            expiryDate.setHours(23, 59, 59, 999);
+            const now = new Date();
+            const diffTime = expiryDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 0) {
+                if (diffDays <= 3) {
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم لانتهاء الاشتراك`;
+                    timerEl.className = "sub-countdown sub-warning";
+                } else {
+                    timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-active";
+                }
+            } else {
+                timerEl.innerText = `الاشتراك منتهي`;
+                timerEl.className = "sub-countdown sub-expired";
+            }
+        }
+
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || (!currentUser.user && !currentUser.Client_User)) return;
+            const username = currentUser.user || currentUser.Client_User;
+            const myRef = ref(db, `users/${username}`);
+            
+            onValue(myRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    if(data.name || data.Client_Name) {
+                        currentUser.name = data.name || data.Client_Name;
+                        document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name}`;
+                    }
+
+                    if(data.expiry || data.Client_Expiry) {
+                        currentUser.expiry = data.expiry || data.Client_Expiry;
+                        updateCountdownTimer();
+                    }
+
+                    if (data.status === 'paused' || data.Client_Status === 'paused') {
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة");
+                        localStorage.removeItem('currentUser');
+                        window.location.replace('index.html');
+                    }
+                }
+            });
+        }
 
         window.loadData = async function() {
             document.getElementById('loader').style.display = 'block';
@@ -162,15 +241,12 @@
         };
 
         window.processData = function(data) {
-            // استخراج الطلبات من نود orders
             const orders = data.orders ? Object.values(data.orders).reverse() : [];
             
-            // استخراج المنشآت من نود shops أو البحث عنها في users
             let merchants = data.shops ? Object.values(data.shops) : [];
-            const shopUsers = data.users ? Object.values(data.users).filter(u => u.role === 'shop' || u.type === 'shop') : [];
+            const shopUsers = data.users ? Object.values(data.users).filter(u => u.role === 'shop' || u.type === 'shop' || u.Client_Role === 'shop') : [];
             
-            // دمج القوائم لضمان عد كل المنشآت
-            const uniqueMerchants = [...new Set([...merchants.map(m => m.Shop_User || m.user), ...shopUsers.map(u => u.user)])];
+            const uniqueMerchants = [...new Set([...merchants.map(m => m.Shop_User || m.user || m.Client_User), ...shopUsers.map(u => u.user || u.Client_User)])];
 
             document.getElementById('total-orders').innerText = orders.length;
             document.getElementById('total-merchants').innerText = uniqueMerchants.length;
@@ -190,7 +266,7 @@
                 htmlContent = '<tr><td colspan="4" style="text-align:center; padding:30px;">لا يوجد عمليات حتى الآن</td></tr>';
             } else {
                 orders.forEach(ord => {
-                    const shopName = ord.Shop_Name || ord.name || 'غير معروف';
+                    const shopName = ord.Shop_Name || ord.name || ord.Client_Name || 'غير معروف';
                     const dateDisplay = ord.Shop_Date ? ord.Shop_Date.split('T')[0] : (ord.date ? ord.date.split('T')[0] : '');
                     const location = ord.Shop_Pickup || ord.pickup || '---';
                     const totalVal = (parseFloat(ord.Shop_Val || ord.val || 0) + parseFloat(ord.Shop_Fee || ord.fee || 0)).toFixed(2);
