@@ -247,7 +247,9 @@
         let allData = [];
 
         window.onload = function() {
-            const savedUser = localStorage.getItem('current_company_user');
+            // توحيد مفاتيح الذاكرة لتجنب الطرد الخاطئ
+            const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
+            
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
             } else {
@@ -316,6 +318,7 @@
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
                         alert("⚠️ تم إيقاف الحساب يرجى مراجعة الإدارة");
                         localStorage.removeItem('current_company_user');
+                        localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
                     }
                 }
@@ -324,6 +327,7 @@
 
         window.logout = function() {
             localStorage.removeItem('current_company_user');
+            localStorage.removeItem('currentUser');
             window.location.replace('index.html'); 
         };
 
