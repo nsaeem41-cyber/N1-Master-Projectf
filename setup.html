@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | System Setup (Smart Engine)</title>
+    <title>N One | System Setup</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -47,7 +47,7 @@
             <div class="input-group"><label>اسم المستخدم للإدارة (User ID)</label><input type="text" id="admin_user" placeholder="أدخل اسم المستخدم"></div>
             <div class="input-group"><label>كلمة المرور (Password)</label><input type="password" id="admin_pass" placeholder="أدخل كلمة المرور القوية"></div>
             <div class="input-group"><label>مفتاح الأمان السري (Setup Key)</label><input type="password" id="setup_key" placeholder="أدخل كود التنصيب السري"></div>
-            <button id="btn" class="btn-install" onclick="installSystem()">بدء التثبيت وبناء الهيكلية 🚀</button>
+            <button id="btn" class="btn-install" onclick="installSystem()">بدء التثبيت الآن 🚀</button>
         </div>
     </div>
 
@@ -76,7 +76,7 @@
                 
                 if (snapshot.exists()) {
                     const users = snapshot.val();
-                    adminExists = Object.values(users).some(user => user.role === 'admin' || user.Client_Role === 'admin');
+                    adminExists = Object.values(users).some(user => user.role === 'admin');
                 }
                 
                 if (adminExists) {
@@ -106,59 +106,27 @@
                 return;
             }
 
-            btn.innerHTML = "جاري بناء الهيكلية السيادية ⏳";
+            btn.innerHTML = "جاري الحفر في الخزنة الماسية ⏳";
             btn.disabled = true;
 
             const encodedPass = btoa(passVal);
-            
-            // الهيكلية الجديدة لمدير النظام مع دعم العزل الكامل والتنبيهات
             const adminUser = {
                 id: "ADMIN_" + Date.now(),
-                Client_ID: "ADMIN_" + Date.now(),
                 user: userVal,
-                Client_User: userVal,
                 pass: encodedPass, 
-                Client_Pass: encodedPass,
                 name: "مدير النظام (نسيم)",
-                Client_Name: "مدير النظام (نسيم)",
                 role: "admin",      
-                Client_Role: "admin",
                 type: "admin_master", 
-                Client_Type: "admin_master",
                 status: "active",   
-                Client_Status: "active",
                 expiry: "2099-12-31",
-                Client_Expiry: "2099-12-31",
-                date: new Date().toISOString(),
-                // تجهيز حقول نظام التنبيهات الذكي
-                notifications: {
-                    alert_3_days: true,
-                    instant_freeze_alert: true,
-                    last_alert_sent: ""
-                }
-            };
-
-            // بناء هيكلية قواعد البيانات لضمان العزل التام
-            const initialSetupData = {
-                "system_info": {
-                    "installed_at": new Date().toISOString(),
-                    "version": "8.0",
-                    "smart_notifications_enabled": true
-                },
-                "global_settings": {
-                    "currency": "JOD",
-                    "timezone": "Asia/Amman"
-                }
+                date: new Date().toISOString()
             };
 
             try {
-                // حفظ بيانات المدير
                 await set(ref(db, 'users/' + userVal), adminUser);
-                // حفظ إعدادات النظام والهيكلية
-                await set(ref(db, 'system'), initialSetupData);
                 
                 showStatus("success", "تم إرسال الأوامر بنجاح ☺️ انتظر قليلاً للتوثيق");
-                btn.innerHTML = "تم التثبيت وبناء العزل ✔️";
+                btn.innerHTML = "تم التثبيت ✔️";
                 document.getElementById('setup-form').style.display = 'none';
 
                 setTimeout(() => {
