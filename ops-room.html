@@ -19,7 +19,7 @@
             --danger: #ef4444;     
             --info: #0ea5e9;
             --diamond: #e0f2fe;
-            --app-color: #6366f1; /* لون زر الإرسال عبر التطبيق */
+            --app-color: #6366f1;
         }
 
         body { 
@@ -124,7 +124,7 @@
         }
         .btn-royal:active { transform: scale(0.98); }
         .btn-gold { background: var(--gold); color: var(--primary); }
-        .btn-app { background: var(--app-color); color: white; margin-bottom: 10px; } /* تصميم زر التطبيق الجديد */
+        .btn-app { background: var(--app-color); color: white; margin-bottom: 10px; }
         .btn-print { background: #64748b; color: white; padding: 8px 15px; font-size: 12px; width: auto; }
 
         .action-btns { display: flex; gap: 8px; }
@@ -185,6 +185,14 @@
             <div class="stat-box">
                 <div class="stat-val" id="stat-comm-total">0.00</div>
                 <div class="stat-lbl">عمولة اليوم</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" id="stat-cap-active" style="color: var(--success);">0</div>
+                <div class="stat-lbl">كابتن متاح</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" id="stat-cap-paused" style="color: var(--danger);">0</div>
+                <div class="stat-lbl">غير متاح</div>
             </div>
         </div>
     </nav>
@@ -397,7 +405,7 @@
         let soundEnabled = false;
         let isAlarmPlaying = false;
         let activeSmartCaptain = null;
-        let currentTargetCaptain = null; // للاحتفاظ ببيانات الكابتن المستهدف للطلب الحالي
+        let currentTargetCaptain = null;
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
@@ -405,7 +413,7 @@
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الشركة";
             } else {
-                alert("يرجى تسجيل الدخول أولاً من لوحة التحكم 😊");
+                alert("يرجى تسجيل الدخول أولا 😊");
                 window.history.back();
                 return;
             }
@@ -417,8 +425,13 @@
             setInterval(refreshDynamicElements, 1000);
         };
 
+        // خيط العودة السلس المحسن
         window.goBackToCustomer = function() {
-            window.history.back();
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.replace('index.html'); 
+            }
         };
 
         window.enableSound = function() {
@@ -428,7 +441,6 @@
             }
         };
 
-        // دالة الاندماج والسيطرة المطلقة
         function setupRealtimeFreezeListener() {
             if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
             const username = currentUser.Client_User || currentUser.user;
@@ -438,13 +450,13 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("⚠️ تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
                         localStorage.removeItem('current_company_user');
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
                     }
                 } else {
-                    alert("⚠️ تم حذف الحساب نهائياً من قبل الإدارة المركزية سيتم تسجيل الخروج فوراً 😊");
+                    alert("تم حذف الحساب نهائيا سيتم تسجيل الخروج 😊");
                     localStorage.removeItem('current_company_user');
                     localStorage.removeItem('currentUser');
                     window.location.replace('index.html');
@@ -464,7 +476,6 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     globalUsers = [];
-                    // العزل الفوري: سحب المستخدمين التابعين للشركة الحالية فقط
                     const myMaster = currentUser.Client_User || currentUser.user;
                     
                     if(data.users) Object.values(data.users).forEach(u => { if(u.Client_Master === myMaster || u.master === myMaster || u.user === myMaster) { u._node = 'users'; globalUsers.push(u); }});
@@ -486,7 +497,6 @@
             const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster); 
             
-            // العزل الصارم للطلبات
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
             document.getElementById('stat-pending').innerText = pendingOrders.length;
@@ -499,7 +509,7 @@
             }
 
             if (pendingOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">الرادار هادئ... لا توجد طلبات لشركتك حالياً 📡</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">الرادار هادئ... لا توجد طلبات لشركتك حاليا 📡</td></tr>';
                 return;
             }
 
@@ -558,7 +568,7 @@
         };
 
         window.dismissOrder = async function(orderId) {
-            if(confirm("هل تريد رفض وإخفاء هذا الطلب من الرادار؟ 😊")) {
+            if(confirm("هل تريد إخفاء هذا الطلب من الرادار 😊")) {
                 const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString() };
                 completedOrders.unshift(entry);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
@@ -578,15 +588,14 @@
                 document.getElementById('mem_name').innerText = currentTargetCaptain.Cap_Name || currentTargetCaptain.name;
                 document.getElementById('man_cap_name').value = currentTargetCaptain.Cap_Name || currentTargetCaptain.name;
                 
-                // حالة الكابتن
                 const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
                 statusIndicator.style.display = 'block';
                 if (capStatus === 'active') {
                     statusIndicator.style.color = 'var(--success)';
-                    statusIndicator.innerText = '🟢 الكابتن متاح حالياً';
+                    statusIndicator.innerText = '🟢 الكابتن متاح حاليا';
                 } else {
                     statusIndicator.style.color = 'var(--danger)';
-                    statusIndicator.innerText = '🔴 الكابتن غير متاح (Off)';
+                    statusIndicator.innerText = '🔴 الكابتن غير متاح';
                 }
 
             } else if (captainMemory[phone]) {
@@ -603,7 +612,6 @@
             }
         };
 
-        // دالة الإرسال عبر التطبيق الجديدة مع التحقق من الحالة
         window.sendOrderViaApp = async function() {
             const phone = document.getElementById('man_phone').value.trim();
             const capName = document.getElementById('man_cap_name').value.trim();
@@ -613,20 +621,19 @@
             const ratio = document.getElementById('man_ratio').value || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { alert("يرجى إكمال بيانات التوجيه أولاً 😊"); return; }
+            if (!phone || !restInfo || !fee) { alert("يرجى إكمال بيانات التوجيه أولا 😊"); return; }
             
             if (!currentTargetCaptain) {
-                alert("لم يتم العثور على الكابتن في النظام. يرجى التأكد من الرقم 😊");
+                alert("لم يتم العثور على الكابتن في النظام 😊");
                 return;
             }
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
             if (capStatus === 'paused' || capStatus === 'off') {
-                alert("⚠️ عذراً، هذا الكابتن غير متاح حالياً يرجى توجيه الطلب لكابتن آخر 😊");
+                alert("عذرا الكابتن غير متاح حاليا 😊");
                 return;
             }
 
-            // الخصم المالي للعمولة
             const commission = (parseFloat(fee) * (parseFloat(ratio) / 100)).toFixed(2);
             const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
             const newBal = currentBal - parseFloat(commission);
@@ -635,7 +642,6 @@
             updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = newBal;
             updates[`${currentTargetCaptain._node}/${capKey}/balance`] = newBal;
             
-            // إنشاء عقدة الطلب للكابتن (في قسم خاص لطلبات التطبيق)
             const appOrderId = "APP_ORD_" + Date.now();
             const orderData = {
                 id: appOrderId,
@@ -652,7 +658,6 @@
             try {
                 await update(ref(db), updates);
                 
-                // توثيق في الأرشيف
                 const entry = {
                     orderId: linkedId || appOrderId,
                     time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
@@ -665,9 +670,8 @@
                 completedOrders.unshift(entry);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
 
-                alert(`تم إرسال الطلب بنجاح لتطبيق الكابتن ${capName} 🚀`);
+                alert(`تم إرسال الطلب لتطبيق الكابتن بنجاح 🚀`);
                 
-                // تنظيف النموذج
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
@@ -676,7 +680,7 @@
                 renderCompletedOrders();
 
             } catch (error) {
-                alert("حدث خطأ أثناء الإرسال يرجى المحاولة مرة أخرى 😊");
+                alert("حدث خطأ أثناء الإرسال يرجى المحاولة 😊");
             }
         };
 
@@ -689,7 +693,7 @@
             const ratio = document.getElementById('man_ratio').value || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { alert("يرجى إكمال بيانات التوجيه أولاً 😊"); return; }
+            if (!phone || !restInfo || !fee) { alert("يرجى إكمال بيانات التوجيه أولا 😊"); return; }
 
             const commission = (parseFloat(fee) * (parseFloat(ratio) / 100)).toFixed(2);
             
@@ -773,7 +777,7 @@
         };
 
         window.deleteFromArchive = function(id) {
-            if(confirm("هل تريد حذف هذا الطلب من الأرشيف؟ 😊")) {
+            if(confirm("هل تريد الحذف من الأرشيف 😊")) {
                 completedOrders = completedOrders.filter(o => o.orderId !== id);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderCompletedOrders();
@@ -782,7 +786,7 @@
         };
 
         window.clearCompletedOrders = function() {
-            if(confirm("هل أنت متأكد من مسح أرشيف الطلبات المكتملة لليوم؟ 😊")) {
+            if(confirm("هل أنت متأكد من مسح الأرشيف 😊")) {
                 completedOrders = [];
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderCompletedOrders();
@@ -791,7 +795,7 @@
         };
 
         window.clearLiveRadar = async function() {
-            if(confirm("تحذير: سيتم مسح جميع الطلبات المعروضة في الرادار من السيرفر نهائياً هل أنت متأكد؟ 😊")) {
+            if(confirm("تحذير سيتم مسح جميع الطلبات المعروضة نهائيا 😊")) {
                 const myMaster = currentUser.Client_User || currentUser.user;
                 const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
                 myShops.push(myMaster);
@@ -805,7 +809,7 @@
                 
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
-                    alert("تم تنظيف طلبات شركتك من الرادار بنجاح 🧹");
+                    alert("تم التنظيف بنجاح 🧹");
                 } else {
                     alert("لا توجد طلبات لمسحها 😊");
                 }
@@ -819,6 +823,7 @@
             btn.classList.add('active');
         };
 
+        // الحارس الذكي لمنع التكرار
         window.addNewCaptain = async function() {
             const name = document.getElementById('new_cap_name').value.trim();
             const phone = document.getElementById('new_cap_phone').value.trim();
@@ -827,6 +832,13 @@
             
             if(!name || !phone) { alert("أكمل البيانات يا بطة 😊"); return; }
             
+            // الفحص الشامل لمنع تكرار الكابتن
+            const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
+            if(exists) {
+                alert("هذا الكابتن مسجل مسبقا لا يمكن تكرار البيانات أو مسح الحساب القديم 😊");
+                return;
+            }
+
             const myMaster = currentUser.Client_User || currentUser.user;
             
             const capData = {
@@ -841,7 +853,9 @@
                 role: "captain",
                 type: "captain",
                 company: myMaster,
-                Client_Master: myMaster
+                Client_Master: myMaster,
+                app_sync_lock: false,
+                app_access: "granted"
             };
             
             await set(ref(db, 'captains/' + phone), capData);
@@ -878,7 +892,7 @@
         };
 
         window.chargeCaptainBalance = async function() {
-            if (!activeSmartCaptain) { alert("ابحث عن الكابتن أولاً بالرقم 😊"); return; }
+            if (!activeSmartCaptain) { alert("ابحث عن الكابتن أولا بالرقم 😊"); return; }
             const amount = parseFloat(document.getElementById('charge_amount').value);
             if(isNaN(amount)) { alert("أدخل مبلغ الشحن بشكل صحيح 😊"); return; }
             
@@ -890,7 +904,7 @@
             updates[`${cap._node}/${capKey}/balance`] = newBal;
             
             await update(ref(db), updates);
-            alert(`تم شحن ${amount} د.أ بنجاح للكابتن ${cap.Cap_Name || cap.name} 💰`);
+            alert(`تم الشحن بنجاح 💰`);
             
             document.getElementById('charge_amount').value = '';
             document.getElementById('smart_search_phone').value = '';
@@ -905,6 +919,12 @@
             
             const myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster)).reverse();
             
+            // تحديث العدادات الميدانية للكباتن
+            const activeCount = myCaptains.filter(c => (c.Cap_Status || c.status) !== 'paused').length;
+            const pausedCount = myCaptains.length - activeCount;
+            document.getElementById('stat-cap-active').innerText = activeCount;
+            document.getElementById('stat-cap-paused').innerText = pausedCount;
+
             if (myCaptains.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">لا يوجد كباتن مسجلين بعد</td></tr>';
                 return;
@@ -935,14 +955,18 @@
             });
         };
 
+        // تجهيز خيوط التجميد للتطبيق المستقبلي
         window.toggleCapStatus = async function(user, nextStatus) {
-            const msg = nextStatus === 'paused' ? "تأكيد إيقاف حساب الكابتن؟ 😊" : "تأكيد إعادة تفعيل حساب الكابتن؟ 😊";
+            const msg = nextStatus === 'paused' ? "تأكيد إيقاف حساب الكابتن 😊" : "تأكيد إعادة تفعيل حساب الكابتن 😊";
             if(confirm(msg)) {
                 const updates = {};
                 globalUsers.forEach(u => {
                     if ((u.Cap_User === user || u.user === user) && u._node) {
                         updates[`${u._node}/${user}/Cap_Status`] = nextStatus;
                         updates[`${u._node}/${user}/status`] = nextStatus;
+                        // إشارات برمجية جاهزة لتطبيق الكابتن
+                        updates[`${u._node}/${user}/app_sync_lock`] = nextStatus === 'paused' ? true : false;
+                        updates[`${u._node}/${user}/app_access`] = nextStatus === 'paused' ? 'denied' : 'granted';
                     }
                 });
                 await update(ref(db), updates);
@@ -950,14 +974,14 @@
         };
 
         window.deleteCaptain = async function(user) {
-            if(confirm("تحذير: سيتم حذف الكابتن نهائياً هل أنت متأكد؟ 😊")) {
+            if(confirm("تحذير سيتم حذف الكابتن نهائيا 😊")) {
                 let nodeFound = null;
                 globalUsers.forEach(u => {
                     if ((u.Cap_User === user || u.user === user) && u._node) { nodeFound = u._node; }
                 });
                 if (nodeFound) {
                     await remove(ref(db, `${nodeFound}/${user}`));
-                    alert("تم حذف الكابتن بنجاح 🗑️");
+                    alert("تم الحذف بنجاح 🗑️");
                 }
             }
         };
