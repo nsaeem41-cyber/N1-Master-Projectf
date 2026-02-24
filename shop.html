@@ -481,7 +481,7 @@
             const master = currentUser.Client_Master || currentUser.master;
             const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
             
-            const handleAd = (adsObj, senderName) => {
+            const handleAd = (adsObj) => {
                 if(!adsObj) return;
                 const now = Date.now();
                 let activeAd = null;
@@ -501,7 +501,8 @@
                 
                 if (activeAd && activeAd.text) {
                     adMarquee.innerText = activeAd.text;
-                    adBadge.innerText = `إشعار من ${senderName} 👑`;
+                    const finalSender = activeAd.sender || masterName || "الإدارة";
+                    adBadge.innerText = `إشعار من ${finalSender} 👑`;
                     adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal');
                     adContainer.style.display = 'flex';
                 } else {
@@ -509,7 +510,7 @@
                 }
             };
 
-            const handlePopup = (alertsObj, senderName) => {
+            const handlePopup = (alertsObj) => {
                 if(!alertsObj) return;
                 let activeAlert = null;
                 if (alertsObj.users && alertsObj.users[myUser]) activeAlert = alertsObj.users[myUser];
@@ -518,19 +519,20 @@
                 if (activeAlert && activeAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
                     if (activeAlert.timestamp > lastSeen) {
-                        document.getElementById('app-popup-msg').innerText = activeAlert.message;
+                        const finalSender = activeAlert.sender || masterName || "الإدارة";
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة من ${finalSender}</div>${activeAlert.message}`;
                         document.getElementById('app-popup-overlay').style.display = 'flex';
                         localStorage.setItem('last_seen_alert_shop_' + myUser, activeAlert.timestamp);
                     }
                 }
             };
 
-            onValue(ref(db, 'announcements'), snap => handleAd(snap.val(), 'N One'));
-            onValue(ref(db, 'alerts'), snap => handlePopup(snap.val(), 'N One'));
+            onValue(ref(db, 'announcements'), snap => handleAd(snap.val()));
+            onValue(ref(db, 'alerts'), snap => handlePopup(snap.val()));
 
             if(master) {
-                onValue(ref(db, `client_announcements/${master}/shops`), snap => handleAd(snap.val(), masterName));
-                onValue(ref(db, `client_alerts/${master}/shops`), snap => handlePopup(snap.val(), masterName));
+                onValue(ref(db, `client_announcements/${master}/shops`), snap => handleAd(snap.val()));
+                onValue(ref(db, `client_alerts/${master}/shops`), snap => handlePopup(snap.val()));
             }
         }
 
@@ -548,7 +550,6 @@
                 
                 if(snapshot.exists()) {
                     const allOrders = Object.values(snapshot.val());
-                    // عزل تام للطلبات بناءً على هوية اليوزر
                     const myOrders = allOrders.filter(o => o.Shop_User === myUser);
                     
                     const todayStr = new Date().toDateString();
@@ -592,9 +593,19 @@
                     if(data.users) flatData = flatData.concat(Object.values(data.users));
                     if(data.shops) flatData = flatData.concat(Object.values(data.shops));
                     if(data.captains) flatData = flatData.concat(Object.values(data.captains));
-                    if(data.prices) flatData = flatData.concat(Object.values(data.prices));
                     
-                    dbPrices = flatData.filter(d => d.Price_ID || d.Price_Area);
+                    function extractPrices(obj) {
+                        let arr = [];
+                        if(!obj) return arr;
+                        Object.values(obj).forEach(val => {
+                            if(val && typeof val === 'object') {
+                                if(val.Price_Area) arr.push(val);
+                                else arr = arr.concat(extractPrices(val));
+                            }
+                        });
+                        return arr;
+                    }
+                    dbPrices = extractPrices(data.prices);
 
                     const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
                     
