@@ -318,7 +318,7 @@
                 </div>
             </div>
 
-            <div class="card" style="max-width: 600px; margin: 25px auto 0; border-top-color: var(--info);">
+            <div id="ad-center-card" class="card" style="max-width: 600px; margin: 25px auto 0; border-top-color: var(--info); display: none;">
                 <div class="card-header" style="color: var(--info);">
                     <span>📢 مركز إرسال الإعلانات (المنشآت والكباتن والزبائن)</span>
                 </div>
@@ -355,6 +355,8 @@
                         <button class="btn-action" style="background-color: var(--info);" onclick="sendClientAd()">بث الإعلان اللحظي 🚀</button>
                         <button class="btn-action" style="background-color: var(--danger);" onclick="sendClientPopup()">إرسال تنبيه طارئ 🚨</button>
                     </div>
+
+                    <button class="btn-action" style="background-color: #78909c; margin-top: 5px;" onclick="clearClientAds()">مسح الإعلان / التنبيه 🗑️</button>
                 </div>
             </div>
         </div>
@@ -399,12 +401,28 @@
             document.getElementById('profile_user').value = currentUser.Client_User || currentUser.user || '';
             document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
 
+            checkAdPermission();
             updateCountdownTimer();
             setupRealtimeFreezeListener();
             setupSmartAdsListener();
             setupAlertsListener(); 
             fetchData();
         };
+
+        function checkAdPermission() {
+            const username = currentUser.Client_User || currentUser.user;
+            const userRef = ref(db, `users/${username}`);
+            onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.can_send_ads === true || data.can_send_ads === "true") {
+                        document.getElementById('ad-center-card').style.display = 'block';
+                    } else {
+                        document.getElementById('ad-center-card').style.display = 'none';
+                    }
+                }
+            });
+        }
 
         window.togglePasswordVisibility = function() {
             const passInput = document.getElementById('profile_pass');
@@ -767,6 +785,35 @@
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء إرسال التنبيه");
+            }
+        };
+
+        window.clearClientAds = async function() {
+            if(!confirm("هل أنت متأكد من مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين؟ 😊")) return;
+            
+            const group = document.getElementById('client_ad_group').value;
+            const target = document.getElementById('client_ad_target').value;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+
+            try {
+                const basePathAd = `client_announcements/${currentUserRef}/${group}`;
+                const basePathAlert = `client_alerts/${currentUserRef}/${group}`;
+                
+                if(target === 'all') {
+                    await remove(ref(db, `${basePathAd}/global`));
+                    await remove(ref(db, `${basePathAlert}/global`));
+                } else {
+                    await remove(ref(db, `${basePathAd}/users/${target}`));
+                    await remove(ref(db, `${basePathAlert}/users/${target}`));
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم مسح الإعلان والتنبيه بنجاح 🗑️");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء مسح الإعلان 😊");
             }
         };
 
