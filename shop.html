@@ -1,1 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>N One | Business Portal (Royal Edition)</title>
+    
+    <style>
+        :root {
+            --primary: #0f172a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --gold: #d4af37;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --input-bg: #f1f5f9;
+            --info: #0288d1;
+            --night: #311b92;
+        }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); margin: 0; padding: 0; 
+            color: var(--text-main); user-select: none; padding-bottom: 80px;
+        }
+
+        .header {
+            background: var(--primary);
+            padding: 25px 20px 15px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+            text-align: center; position: relative; z-index: 10;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .gold-text { color: var(--gold); }
+        
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.15); color: #fecaca; 
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 8px 16px; border-radius: 12px; 
+            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
+
+        .badges-container {
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;
+        }
+        
+        .shop-info-badge { 
+            background: rgba(255, 255, 255, 0.1); color: var(--gold);
+            padding: 8px 15px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;
+            font-size: 13px; font-weight: bold; border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap;
+        }
+
+        .nav-tabs {
+            display: flex; justify-content: center; gap: 8px; margin-top: 10px;
+            background: rgba(255,255,255,0.05); padding: 6px; border-radius: 20px; overflow-x: auto;
+        }
+        .nav-tab {
+            flex: 1; padding: 12px 15px; border: none; border-radius: 15px;
+            font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s;
+            background: transparent; color: #94a3b8; white-space: nowrap; min-width: max-content;
+        }
+        .nav-tab.active { 
+            background: var(--gold); color: var(--primary); 
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transform: translateY(-2px);
+        }
+
+        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; }
+
+        .section { display: none; animation: slideUp 0.4s ease-out; }
+        .section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--card-bg); padding: 25px; border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border);
+            margin-bottom: 20px; position: relative; overflow: hidden;
+        }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stat-box {
+            background: white; padding: 20px; border-radius: 20px; text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03); border: 1px solid var(--border);
+            position: relative; overflow: hidden;
+        }
+        .stat-box::before { content:''; position: absolute; top:0; left:0; width:100%; height:4px; background:var(--primary); }
+        .stat-box.gold-top::before { background:var(--gold); }
+        
+        .stat-label { font-size: 12px; font-weight:bold; color: var(--text-light); display:block; margin-bottom:5px; }
+        .stat-val { font-size: 24px; font-weight: 900; color: var(--primary); }
+        .stat-val.gold { color: var(--gold); }
+
+        .input-group { margin-bottom: 18px; position: relative; }
+        label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--text-light); }
+        input, select {
+            width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
+            font-size: 15px; background: var(--input-bg); outline: none; transition: 0.3s;
+            color: var(--primary); font-weight: 700; box-sizing: border-box;
+        }
+        input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
+        input[readonly] { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+
+        .night-fee-badge {
+            display: none; background: var(--night); color: white;
+            font-size: 11px; font-weight: bold; padding: 4px 8px;
+            border-radius: 12px; box-shadow: 0 2px 5px rgba(49, 27, 146, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .btn-main {
+            width: 100%; padding: 18px; border: none; border-radius: 16px;
+            font-size: 16px; font-weight: 800; cursor: pointer; color: white;
+            transition: 0.2s; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-main:active { transform: scale(0.98); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-send { background: var(--primary); }
+        .btn-check { background: var(--text-light); margin-bottom: 10px; }
+        .btn-confirm { background: var(--success); display: none; }
+
+        #cap-check-result {
+            display: none; background: #ecfdf5; padding: 15px; border-radius: 15px;
+            border: 1px solid #a7f3d0; margin-bottom: 15px; text-align: center;
+            animation: slideUp 0.3s;
+        }
+        .check-info { font-size: 14px; color: #064e3b; margin-bottom: 5px; }
+        .check-balance { font-size: 18px; font-weight: 900; color: var(--success); }
+
+        .history-list { margin-top: 10px; max-height: 250px; overflow-y: auto; }
+        .history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; border-bottom: 1px solid #f1f5f9;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .h-dest { font-weight: bold; color: var(--primary); font-size: 14px; }
+        .h-time { font-size: 11px; color: #94a3b8; }
+        .h-price { font-weight: 900; color: var(--gold); }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: white; padding: 12px 30px; border-radius: 30px;
+            font-size: 14px; font-weight: bold; display: none; z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #loader { 
+            position: fixed; top: 0; left: 0; width: 0%; height: 5px; 
+            background: var(--gold); z-index: 3000; transition: width 0.3s; 
+            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .modal-content {
+            background: white; padding: 30px 20px; border-radius: 25px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-top: 5px solid var(--gold); animation: slideUp 0.4s ease-out;
+        }
+        .modal-title { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+        .modal-desc { font-size: 14px; color: var(--text-light); margin-bottom: 20px; line-height: 1.5; }
+        
+        .secret-footer { text-align: center; padding: 15px; }
+        .secret-input { width: 50px; background: transparent; border: none; text-align: center; color: var(--border); outline: none; font-size: 10px; }
+        .secret-input::placeholder { color: #e2e8f0; }
+
+        /* ================= تصميم الإعلانات الذكية ================= */
+        .app-ad-container { 
+            display: none; align-items: center; background: white; 
+            margin: 20px auto 0; max-width: 500px; padding: 12px 15px; 
+            border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+            border-right: 5px solid var(--primary); animation: slideDown 0.5s ease; 
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .ad-n-one-badge { 
+            background: var(--gold); color: white; padding: 5px 12px; 
+            border-radius: 8px; font-size: 11px; font-weight: bold; 
+            margin-left: 10px; white-space: nowrap; letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
+        }
+        
+        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
+        .ad-text-scroll { font-weight: bold; font-size: 14px; width: 100%; }
+
+        .ad-type-normal { border-right-color: #555; }
+        .ad-type-news { border-right-color: var(--info); }
+        .ad-type-news .ad-text-scroll { color: var(--info); }
+        .ad-type-warning { border-right-color: var(--danger); background-color: #ffebee; }
+        .ad-type-warning .ad-text-scroll { color: var(--danger); }
+        .ad-type-offer { border-right-color: var(--success); }
+        .ad-type-offer .ad-text-scroll { color: var(--success); }
+
+        /* ================= تصميم التنبيه الطارئ ================= */
+        .app-popup-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; 
+            backdrop-filter: blur(5px); 
+        }
+        .app-popup-box { 
+            background: white; padding: 30px; border-radius: 20px; text-align: center; 
+            max-width: 400px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+            border-top: 6px solid var(--danger); animation: slideUp 0.4s ease-out; 
+        }
+        .app-popup-icon { font-size: 50px; margin-bottom: 15px; }
+        .app-popup-msg { font-size: 18px; font-weight: bold; color: var(--text-main); line-height: 1.5; margin-bottom: 25px; }
+        .app-popup-btn { 
+            background: var(--danger); color: white; border: none; padding: 12px 30px; 
+            border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.3s;
+        }
+        .app-popup-btn:active { transform: scale(0.95); }
+
+    </style>
+</head>
+<body>
+
+    <div id="loader"></div>
+
+    <div id="app-popup-overlay" class="app-popup-overlay">
+        <div class="app-popup-box">
+            <div class="app-popup-icon">🚨</div>
+            <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
+            <button class="app-popup-btn" onclick="closeAppPopup()">حسناً، فهمت</button>
+        </div>
+    </div>
+
+    <div id="location-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">أهلاً بكِ في النظام 👑</div>
+            <div class="modal-desc">
+                يرجى اختيار منطقتك المعتمدة لتفعيل حسابك وربط الأسعار الخاصة بك بشكل دقيق ونهائي.
+            </div>
+            
+            <div class="input-group" style="text-align: right;">
+                <label>📍 اختر المنطقة (المصدر المعتمد)</label>
+                <select id="modal-location-select">
+                    <option value="">جاري تحميل المناطق...</option>
+                </select>
+            </div>
+            
+            <button class="btn-main" style="background: var(--gold); color: var(--primary);" onclick="saveShopLocation()">
+                ✅ تثبيت الموقع للأبد
+            </button>
+        </div>
+    </div>
+
+    <header class="header">
+        <div class="header-top">
+            <div class="brand" id="parent-company-brand">جاري التحميل...</div>
+            <button class="btn-logout" onclick="logout()">
+                <span>🏃‍♂️</span> مغادرة
+            </button>
+        </div>
+        
+        <div class="badges-container">
+            <div class="shop-info-badge">
+                🏪 <span id="hdr-shop-name">...</span>
+            </div>
+            <div class="shop-info-badge">
+                📍 <span id="hdr-shop-area">غير محدد</span>
+            </div>
+            <div class="shop-info-badge">
+                👤 <span id="hdr-shop-user">...</span>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('orders')">📦 إرسال طلب</button>
+            <button class="nav-tab" onclick="switchTab('charging')">⚡ شحن كابتن</button>
+            <button class="nav-tab" onclick="switchTab('settings')">⚙️ الإعدادات</button>
+        </div>
+    </header>
+
+    <div style="padding: 0 20px;">
+        <div id="smart-ad-container" class="app-ad-container">
+            <div class="ad-n-one-badge" id="ad-sender-badge">إشعار 👑</div>
+            <div class="ad-content-wrapper">
+                <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div id="orders" class="section active">
+            
+            <div class="stats-grid">
+                <div class="stat-box gold-top">
+                    <span class="stat-label">إنجاز اليوم 🏆</span>
+                    <span class="stat-val gold" id="orders-today">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">الإجمالي العام 🚀</span>
+                    <span class="stat-val" id="orders-total">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="input-group">
+                    <label>📍 وجهة الطلب (اختر من القائمة المعتمدة)</label>
+                    <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة..." oninput="calculateFee()" onchange="calculateFee()">
+                    <datalist id="areas-list"></datalist>
+                </div>
+
+                <div class="input-group">
+                    <label>💰 قيمة التحصيل (دينار)</label>
+                    <input type="number" id="order_val" placeholder="سعر الطلب (مثلاً 20.50)">
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        <span>🛵 سعر التوصيل (تلقائي)</span>
+                        <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                    </label>
+                    <input type="text" id="delivery_fee" placeholder="---" readonly>
+                </div>
+
+                <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">
+                    🚀 إرسال للرادار فوراً
+                </button>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+                <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 آخر الطلبات (الخاصة بك فقط)</div>
+                <div id="history-list" class="history-list">
+                    <div style="text-align:center; color:#cbd5e1; padding:10px;">جاري سحب السجل...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="charging" class="section">
+            <div class="card" style="border-top: 4px solid var(--success);">
+                <div style="text-align:center; margin-bottom:25px;">
+                    <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
+                    <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
+                        رصيدك الحالي: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
+                    </p>
+                </div>
+
+                <div class="input-group">
+                    <label>🔍 كود الكابتن أو رقم الهاتف</label>
+                    <input type="text" id="cap_id" placeholder="مثلاً C-101 أو 07xxxxxxxx">
+                </div>
+
+                <div class="input-group">
+                    <label>💵 المبلغ المراد شحنه</label>
+                    <input type="number" id="charge_amount" placeholder="0.00">
+                </div>
+
+                <button class="btn-main btn-check" id="btn-check" onclick="verifyCaptain()">
+                    🔍 فحص الكابتن أولاً
+                </button>
+
+                <div id="cap-check-result">
+                    <div class="check-info">تم العثور على الكابتن <b id="found-cap-name">---</b></div>
+                    <div class="check-info">رصيده الحالي <b id="found-cap-balance">---</b> د.أ</div>
+                    <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
+                    <div style="font-size:12px; font-weight:bold; color:var(--primary);">
+                        سيصبح رصيده <span id="future-cap-balance" style="color:var(--success);">---</span>
+                    </div>
+                </div>
+
+                <button class="btn-main btn-confirm" id="btn-charge" onclick="executeTransfer()">
+                    ✅ تأكيد وتحويل الرصيد
+                </button>
+            </div>
+        </div>
+
+        <div id="settings" class="section">
+            <div class="card" style="border-top: 4px solid var(--gold);">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <h3 style="margin:0; color:var(--primary); font-size:18px;">⚙️ إعدادات الحساب</h3>
+                    <p style="font-size:12px; color:var(--text-light); margin-top:5px;">تحديث بيانات الدخول الخاصة بك</p>
+                </div>
+
+                <div class="input-group">
+                    <label>اسم المستخدم (User ID)</label>
+                    <input type="text" id="profile_user" placeholder="الاسم بالإنجليزي" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
+                </div>
+
+                <div class="input-group">
+                    <label>كلمة المرور الجديدة</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور" style="width: 100%; padding-left: 45px;">
+                        <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 15px; cursor: pointer; font-size: 18px; color: #64748b;" title="إظهار/إخفاء">👁️</span>
+                    </div>
+                </div>
+
+                <button class="btn-main" id="btn-save-settings" style="background: var(--gold); color: var(--primary);" onclick="updateShopProfile()">
+                    💾 حفظ التعديلات اللحظية
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="secret-footer">
+        <input type="password" id="secret-pin" class="secret-input" placeholder="🔑" oninput="checkSecretPin(this.value)">
+    </div>
+
+    <div id="toast" class="toast">تمت العملية بنجاح</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, get, set, child, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        let pricingMatrix = {}; 
+        let dbPrices = [];
+        let currentUser = null;
+        let myBalance = 0;
+        let verifiedCaptain = null;
+        let masterName = "الشركة الأم";
+        window.myNode = 'shops'; // العقدة الجذرية للمنشأة لتفادي العقد الشبحية
+
+        window.onload = async function() {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (!currentUser) { window.location.href = 'index.html'; return; }
+            
+            const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "منشأة تجارية";
+            const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "غير متوفر";
+            const shopLocStr = currentUser.Shop_Location || currentUser.Client_Location || "غير محدد";
+            
+            document.getElementById('hdr-shop-name').innerText = shopNameStr;
+            document.getElementById('hdr-shop-user').innerText = shopUserStr;
+            document.getElementById('hdr-shop-area').innerText = shopLocStr;
+
+            document.getElementById('profile_user').value = shopUserStr;
+            document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
+            
+            fetchMasterInfo();
+            setupAdsAndAlerts();
+            setupLiveOrders();
+            await fetchAllData(); 
+            attachBalanceListener();
+        };
+
+        function fetchMasterInfo() {
+            const myMaster = currentUser.Client_Master || currentUser.master;
+            if (myMaster) {
+                onValue(ref(db, `users/${myMaster}`), snap => {
+                    if(snap.exists()) {
+                        masterName = snap.val().name || snap.val().Client_Name || myMaster;
+                        document.getElementById('parent-company-brand').innerText = masterName;
+                    } else {
+                        document.getElementById('parent-company-brand').innerText = myMaster;
+                    }
+                });
+            } else {
+                document.getElementById('parent-company-brand').innerText = "N One System";
+            }
+        }
+
+        window.togglePasswordVisibility = function() {
+            const passInput = document.getElementById('profile_pass');
+            const passIcon = document.getElementById('toggle_pass_icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                passIcon.innerText = '🙈';
+            } else {
+                passInput.type = 'password';
+                passIcon.innerText = '👁️';
+            }
+        };
+
+        // خوارزمية الاستقبال الذكية المطورة
+        function setupAdsAndAlerts() {
+            const master = currentUser.Client_Master || currentUser.master;
+            const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
+            
+            let activeAds = { admin: null, client: null };
+            let activeAlerts = { admin: null, client: null };
+
+            const renderAd = () => {
+                const now = Date.now();
+                let displayAd = null;
+                let senderLabel = "الإدارة";
+
+                // الأولوية لإعلان الشركة التابعة (الماستر)، ثم الإدارة العامة
+                if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) {
+                    displayAd = activeAds.client;
+                    senderLabel = activeAds.client.sender || masterName;
+                } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
+                    displayAd = activeAds.admin;
+                    senderLabel = activeAds.admin.sender || "الإدارة العامة";
+                }
+
+                const adContainer = document.getElementById('smart-ad-container');
+                const adMarquee = document.getElementById('smart-ad-text');
+                const adBadge = document.getElementById('ad-sender-badge');
+                
+                if (displayAd && displayAd.text) {
+                    adMarquee.innerText = displayAd.text;
+                    adBadge.innerText = `إشعار من ${senderLabel} 👑`;
+                    adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal');
+                    adContainer.style.display = 'flex';
+                } else {
+                    adContainer.style.display = 'none';
+                }
+            };
+
+            const extractAd = (adsObj) => {
+                if (!adsObj) return null;
+                if (adsObj.users && adsObj.users[myUser]) return adsObj.users[myUser];
+                if (adsObj.global) return adsObj.global;
+                return null;
+            };
+
+            const renderAlert = () => {
+                let displayAlert = activeAlerts.client || activeAlerts.admin;
+                let senderLabel = activeAlerts.client ? (activeAlerts.client.sender || masterName) : (activeAlerts.admin ? (activeAlerts.admin.sender || "الإدارة العامة") : "الإدارة");
+
+                if (displayAlert && displayAlert.message) {
+                    const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
+                    if (displayAlert.timestamp > lastSeen) {
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة من ${senderLabel}</div>${displayAlert.message}`;
+                        document.getElementById('app-popup-overlay').style.display = 'flex';
+                        localStorage.setItem('last_seen_alert_shop_' + myUser, displayAlert.timestamp);
+                    }
+                }
+            };
+
+            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractAd(snap.val()); renderAd(); });
+            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractAd(snap.val()); renderAlert(); });
+
+            if(master) {
+                onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); });
+                onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); });
+            }
+        }
+
+        window.closeAppPopup = function() {
+            document.getElementById('app-popup-overlay').style.display = 'none';
+        }
+
+        function setupLiveOrders() {
+            const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
+            const ordersRef = ref(db, 'orders');
+            
+            onValue(ordersRef, (snapshot) => {
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                
+                if(snapshot.exists()) {
+                    const allOrders = Object.values(snapshot.val());
+                    const myOrders = allOrders.filter(o => o.Shop_User === myUser);
+                    
+                    const todayStr = new Date().toDateString();
+                    const todayCount = myOrders.filter(o => new Date(o.Shop_Date || Date.now()).toDateString() === todayStr).length;
+                    
+                    document.getElementById('orders-today').innerText = todayCount;
+                    document.getElementById('orders-total').innerText = myOrders.length;
+
+                    const recentOrders = myOrders.reverse().slice(0, 20);
+                    
+                    if(recentOrders.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد طلبات مسجلة في رصيدك بعد</div>';
+                    } else {
+                        recentOrders.forEach(item => {
+                            const timeStr = new Date(item.Shop_Date || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            list.innerHTML += `
+                                <div class="history-item">
+                                    <div>
+                                        <div class="h-dest">📍 ${item.Shop_Pickup}</div>
+                                        <div class="h-time">🕐 ${timeStr}</div>
+                                    </div>
+                                    <div class="h-price">${item.Shop_Val} د.أ</div>
+                                </div>
+                            `;
+                        });
+                    }
+                } else {
+                    document.getElementById('orders-today').innerText = 0;
+                    document.getElementById('orders-total').innerText = 0;
+                    list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد طلبات مسجلة في رصيدك بعد</div>';
+                }
+            });
+        }
+
+        window.fetchAllData = async function() {
+            try {
+                const snapshot = await get(ref(db));
+                if(snapshot.exists()) {
+                    const data = snapshot.val();
+                    let flatData = [];
+                    
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
+                    };
+                    
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
+                    
+                    function extractPrices(obj) {
+                        let arr = [];
+                        if(!obj) return arr;
+                        Object.values(obj).forEach(val => {
+                            if(val && typeof val === 'object') {
+                                if(val.Price_Area) arr.push(val);
+                                else arr = arr.concat(extractPrices(val));
+                            }
+                        });
+                        return arr;
+                    }
+                    dbPrices = extractPrices(data.prices);
+
+                    const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
+                    
+                    const me = flatData.find(u => 
+                        String(u.Shop_User || "").trim() === shopKey || 
+                        String(u.Client_User || "").trim() === shopKey || 
+                        String(u.user || "").trim() === shopKey || 
+                        String(u.Shop_Phone || "").trim() === shopKey || 
+                        String(u.Client_Phone || "").trim() === shopKey || 
+                        String(u.phone || "").trim() === shopKey
+                    );
+                    
+                    if (me) {
+                        window.myNode = me._node || 'shops'; // تحديد العقدة الجذرية للمنشأة
+                        myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
+                        document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                        
+                        const savedLocation = me.Shop_Location || me.Client_Location || "";
+                        
+                        if (savedLocation && String(savedLocation).trim() !== "") {
+                            currentUser.Shop_Location = savedLocation;
+                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                            document.getElementById('location-modal').style.display = 'none';
+                            document.getElementById('hdr-shop-area').innerText = savedLocation;
+                            loadShopPrices();
+                        } else {
+                            showLocationModal();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Fetch Data Error", e);
+            }
+        }
+
+        window.attachBalanceListener = function() {
+            const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
+            
+            onValue(ref(db, `${window.myNode}/${shopKey}`), (snap) => {
+                if(snap.exists()){
+                    const me = snap.val();
+                    myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
+                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                }
+            });
+        }
+
+        window.showLocationModal = function() {
+            const select = document.getElementById('modal-location-select');
+            select.innerHTML = '<option value="">-- اختر منطقتك المعتمدة --</option>';
+            
+            const uniqueSources = [...new Set(dbPrices.map(p => p.Price_Source))].filter(Boolean);
+            
+            uniqueSources.forEach(source => {
+                const opt = document.createElement('option');
+                opt.value = source;
+                opt.innerText = source;
+                select.appendChild(opt);
+            });
+            
+            document.getElementById('location-modal').style.display = 'flex';
+        }
+
+        window.saveShopLocation = async function() {
+            const selectedLocation = document.getElementById('modal-location-select').value;
+            if (!selectedLocation) {
+                alert("يرجى اختيار المنطقة من القائمة للاستمرار");
+                return;
+            }
+
+            const btn = document.querySelector('#location-modal .btn-main');
+            const originalText = btn.innerText;
+            btn.innerText = "جاري اللحام";
+            btn.style.opacity = 0.7;
+
+            try {
+                const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
+                
+                // حفظ الموقع فقط في العقدة الصحيحة (myNode) لمنع العقد الشبحية وتلف تسجيل الدخول
+                const updates = {};
+                updates[`${window.myNode}/${shopKey}/Shop_Location`] = selectedLocation;
+                updates[`${window.myNode}/${shopKey}/Client_Location`] = selectedLocation;
+
+                await update(ref(db), updates);
+                
+                currentUser.Shop_Location = selectedLocation;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                document.getElementById('location-modal').style.display = 'none';
+                document.getElementById('hdr-shop-area').innerText = selectedLocation;
+                showToast("تم تثبيت منطقتك بنجاح للأبد");
+                
+                loadShopPrices();
+
+            } catch(e) {
+                alert("حدث خطأ يرجى المحاولة مرة أخرى");
+            } finally {
+                btn.innerText = originalText;
+                btn.style.opacity = 1;
+            }
+        }
+
+        window.loadShopPrices = function() {
+            pricingMatrix = {};
+            const datalist = document.getElementById('areas-list');
+            datalist.innerHTML = '';
+            
+            if (!currentUser.Shop_Location) return;
+
+            const myPrices = dbPrices.filter(p => String(p.Price_Source).trim() === String(currentUser.Shop_Location).trim());
+            
+            myPrices.forEach(p => {
+                const currentPrice = parseFloat(p.Price_Current || p.Price_Base || 0);
+                pricingMatrix[String(p.Price_Area).trim()] = currentPrice;
+                
+                const opt = document.createElement('option');
+                opt.value = String(p.Price_Area).trim();
+                datalist.appendChild(opt);
+            });
+        }
+
+        window.checkSecretPin = function(val) {
+            if (val === '12345') {
+                document.getElementById('secret-pin').value = '';
+                showLocationModal();
+            }
+        }
+
+        window.calculateFee = function() {
+            const dest = String(document.getElementById('destination').value).trim();
+            const nightBadge = document.getElementById('night-fee-badge');
+            
+            if (pricingMatrix[dest] !== undefined) {
+                let baseFee = pricingMatrix[dest];
+                const hour = new Date().getHours();
+                // تفعيل الحارس الليلي إذا كانت الساعة بين 11 مساءً و 6 صباحاً
+                const isNightTime = (hour >= 23 || hour < 6);
+                
+                if (isNightTime) {
+                    baseFee += 0.50;
+                    nightBadge.style.display = 'inline-block';
+                } else {
+                    nightBadge.style.display = 'none';
+                }
+                
+                document.getElementById('delivery_fee').value = baseFee.toFixed(2);
+            } else {
+                document.getElementById('delivery_fee').value = '';
+                nightBadge.style.display = 'none';
+            }
+        }
+
+        window.sendOrder = async function() {
+            const dest = String(document.getElementById('destination').value).trim();
+            const val = document.getElementById('order_val').value;
+            const fee = document.getElementById('delivery_fee').value;
+
+            if (!dest || !val || !fee) { showToast("يرجى تعبئة جميع الحقول وتحديد منطقة صحيحة"); return; }
+            if (pricingMatrix[dest] === undefined) { showToast("المنطقة المدخلة غير معتمدة في التسعيرة"); return; }
+            
+            setLoading('btn-send', true);
+            
+            const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone;
+            const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name;
+
+            const orderId = "SHOP_ORD_" + Date.now();
+            const orderData = {
+                Shop_Ord_ID: orderId,
+                Shop_Type: "shop_order",
+                Shop_User: shopUserStr,
+                Shop_Name: shopNameStr,
+                Shop_Pickup: dest,
+                Shop_Val: val,
+                Shop_Fee: fee,
+                Shop_Date: new Date().toISOString(),
+                Shop_IsEmergency: "false", 
+                Shop_Status: "new"
+            };
+
+            try {
+                await set(ref(db, `orders/${orderId}`), orderData);
+                showToast("تم إرسال الطلب للرادار بنجاح");
+                
+                document.getElementById('destination').value = '';
+                document.getElementById('order_val').value = '';
+                document.getElementById('delivery_fee').value = '';
+                document.getElementById('night-fee-badge').style.display = 'none';
+
+            } catch (e) {
+                showToast("خطأ في الاتصال");
+            } finally {
+                setLoading('btn-send', false, "🚀 إرسال للرادار فوراً");
+            }
+        }
+
+        window.verifyCaptain = async function() {
+            const capId = String(document.getElementById('cap_id').value).trim();
+            const amount = parseFloat(document.getElementById('charge_amount').value);
+
+            if (!capId || !amount) { showToast("أدخل الكود أو الهاتف والمبلغ"); return; }
+            if (amount <= 0) { showToast("المبلغ غير صحيح"); return; }
+            
+            if (myBalance < amount) { 
+                alert(`رصيدك الحالي غير كاف لإتمام العملية`); 
+                return; 
+            }
+
+            setLoading('btn-check', true);
+
+            try {
+                const snapshot = await get(ref(db));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    let flatData = [];
+                    
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
+                    };
+                    
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
+
+                    const cap = flatData.find(c => 
+                        String(c.Cap_User || "").trim() === capId || 
+                        String(c.user || "").trim() === capId || 
+                        String(c.Cap_Phone || "").trim() === capId || 
+                        String(c.Client_Phone || "").trim() === capId || 
+                        String(c.phone || "").trim() === capId
+                    );
+                    
+                    if (!cap) {
+                        alert("الكابتن غير موجود تأكد من الكود أو الهاتف");
+                        verifiedCaptain = null;
+                        document.getElementById('cap-check-result').style.display = 'none';
+                        document.getElementById('btn-charge').style.display = 'none';
+                    } else {
+                        verifiedCaptain = cap;
+                        const capName = cap.Cap_Name || cap.name || "كابتن";
+                        const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0);
+
+                        document.getElementById('found-cap-name').innerText = capName;
+                        document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
+                        document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
+                        
+                        document.getElementById('cap-check-result').style.display = 'block';
+                        document.getElementById('btn-charge').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                showToast("خطأ في الاتصال");
+            } finally {
+                setLoading('btn-check', false, "🔍 فحص الكابتن أولا");
+            }
+        }
+
+        window.executeTransfer = async function() {
+            if (!verifiedCaptain) return;
+            const amount = parseFloat(document.getElementById('charge_amount').value);
+            if (myBalance < amount) { alert("رصيدك نفذ"); return; }
+
+            if (!confirm(`تأكيد نهائي خصم المبلغ من رصيدك وشحنه للكابتن`)) return;
+
+            setLoading('btn-charge', true);
+
+            try {
+                const currentCapBal = parseFloat(verifiedCaptain.Cap_Balance || verifiedCaptain.balance || 0);
+                const newCapBal = currentCapBal + amount;
+                const newShopBal = myBalance - amount;
+
+                const capKey = String(verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone || verifiedCaptain.phone).trim();
+                const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
+                
+                const capNode = verifiedCaptain._node || 'users';
+
+                const updates = {};
+                updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal;
+                updates[`${capNode}/${capKey}/balance`] = newCapBal;
+                
+                // استخدام العقدة الجذرية للمنشأة للتحديث المالي بدون تكرار
+                updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
+
+                await update(ref(db), updates);
+
+                myBalance = newShopBal;
+                document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                
+                alert(`تمت العملية بنجاح، الرصيد وصل للكابتن`);
+                
+                document.getElementById('cap_id').value = '';
+                document.getElementById('charge_amount').value = '';
+                document.getElementById('cap-check-result').style.display = 'none';
+                document.getElementById('btn-charge').style.display = 'none';
+                verifiedCaptain = null;
+
+            } catch (e) {
+                showToast("حدث خطأ أثناء التحويل");
+            } finally {
+                setLoading('btn-charge', false, "✅ تأكيد وتحويل الرصيد");
+            }
+        }
+
+        window.updateShopProfile = async function() {
+            const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+            const newUser = document.getElementById('profile_user').value.trim();
+            const newPass = document.getElementById('profile_pass').value;
+
+            if(!newUser || !newPass) { alert("يرجى تعبئة كافة الحقول للتحديث"); return; }
+            
+            setLoading('btn-save-settings', true);
+
+            try {
+                if(newUser !== oldUser) {
+                    const snap = await get(child(ref(db), `${window.myNode}/${newUser}`));
+                    if(snap.exists()) {
+                        alert("عذراً، اسم المستخدم هذا محجوز يرجى اختيار اسم آخر");
+                        setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
+                        return;
+                    }
+                    
+                    const oldSnap = await get(child(ref(db), `${window.myNode}/${oldUser}`));
+                    if(oldSnap.exists()) {
+                        const data = oldSnap.val();
+                        data.Shop_User = newUser; data.user = newUser; data.Client_User = newUser;
+                        data.Shop_Pass = newPass; data.pass = newPass; data.Client_Pass = newPass;
+                        
+                        const updates = {};
+                        updates[`${window.myNode}/${newUser}`] = data;
+                        updates[`${window.myNode}/${oldUser}`] = null;
+                        await update(ref(db), updates);
+                        
+                        currentUser = data;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        alert("تم تحديث البيانات بنجاح، سيتم إعادة تحميل الصفحة للاعتماد");
+                        window.location.reload();
+                    } else {
+                        alert("لم يتم العثور على بيانات الحساب القديمة");
+                        setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
+                    }
+                } else {
+                    const updates = {
+                        [`${window.myNode}/${oldUser}/Shop_Pass`]: newPass,
+                        [`${window.myNode}/${oldUser}/pass`]: newPass,
+                        [`${window.myNode}/${oldUser}/Client_Pass`]: newPass
+                    };
+                    await update(ref(db), updates);
+                    
+                    currentUser.Shop_Pass = newPass;
+                    currentUser.Client_Pass = newPass;
+                    currentUser.pass = newPass;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    alert("تم حفظ كلمة المرور الجديدة بنجاح");
+                    setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
+                }
+            } catch(e) {
+                alert("حدث خطأ أثناء حفظ التعديلات");
+                setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
+            }
+        }
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        window.logout = function() {
+            if(confirm("هل تريد مغادرة النظام")) {
+                localStorage.removeItem('currentUser');
+                window.location.replace('index.html'); 
+            }
+        }
+
+        window.showToast = function(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        window.setLoading = function(btnId, isLoading, originalText) {
+            const btn = document.getElementById(btnId);
+            const loader = document.getElementById('loader');
+            if (isLoading) {
+                btn.dataset.text = btn.innerText;
+                btn.innerText = "جاري التنفيذ";
+                btn.style.opacity = 0.7;
+                btn.disabled = true;
+                loader.style.width = "100%";
+            } else {
+                btn.innerText = originalText || btn.dataset.text;
+                btn.style.opacity = 1;
+                btn.disabled = false;
+                loader.style.width = "0%";
+            }
+        }
+
+    </script>
+</body>
+</html>
