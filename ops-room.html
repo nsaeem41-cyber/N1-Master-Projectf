@@ -405,6 +405,7 @@
             fetchLiveOrders();
             fetchGlobalUsers();
             renderCompletedOrders();
+            setupRealtimeFreezeListener();
             setInterval(refreshDynamicElements, 1000);
         };
 
@@ -418,6 +419,30 @@
                 audio.play().then(() => { audio.pause(); soundEnabled = true; }).catch(() => {});
             }
         };
+
+        // دالة الاندماج والسيطرة المطلقة
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const myRef = ref(db, `users/${username}`);
+            
+            onValue(myRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.Client_Status === 'paused' || data.status === 'paused') {
+                        alert("⚠️ تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
+                        localStorage.removeItem('current_company_user');
+                        localStorage.removeItem('currentUser');
+                        window.location.replace('index.html');
+                    }
+                } else {
+                    alert("⚠️ تم حذف الحساب نهائياً من قبل الإدارة المركزية سيتم تسجيل الخروج فوراً 😊");
+                    localStorage.removeItem('current_company_user');
+                    localStorage.removeItem('currentUser');
+                    window.location.replace('index.html');
+                }
+            });
+        }
 
         function fetchLiveOrders() {
             onValue(ref(db, 'orders'), (snapshot) => {
