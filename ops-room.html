@@ -270,6 +270,14 @@
                                     <label>رقم السيارة</label>
                                     <input type="text" id="new_cap_car" placeholder="مثلاً: 12-34567">
                                 </div>
+                                <div class="form-group">
+                                    <label>اسم المستخدم (للتطبيق)</label>
+                                    <input type="text" id="new_cap_user" placeholder="يوزر الدخول">
+                                </div>
+                                <div class="form-group">
+                                    <label>كلمة المرور</label>
+                                    <input type="text" id="new_cap_pass" placeholder="باسوورد الدخول">
+                                </div>
                                 <div class="form-group full-width">
                                     <label>الرصيد الافتتاحي (د.أ)</label>
                                     <input type="number" id="new_cap_bal" placeholder="0.00" value="0">
@@ -425,7 +433,6 @@
             setInterval(refreshDynamicElements, 1000);
         };
 
-        // خيط العودة السلس المحسن
         window.goBackToCustomer = function() {
             if (document.referrer) {
                 window.history.back();
@@ -823,17 +830,17 @@
             btn.classList.add('active');
         };
 
-        // الحارس الذكي لمنع التكرار
         window.addNewCaptain = async function() {
             const name = document.getElementById('new_cap_name').value.trim();
             const phone = document.getElementById('new_cap_phone').value.trim();
             const car = document.getElementById('new_cap_car').value.trim();
+            const user = document.getElementById('new_cap_user').value.trim();
+            const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            if(!name || !phone) { alert("أكمل البيانات يا بطة 😊"); return; }
+            if(!name || !phone || !user || !pass) { alert("أكمل البيانات يا بطة 😊"); return; }
             
-            // الفحص الشامل لمنع تكرار الكابتن
-            const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
+            const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             if(exists) {
                 alert("هذا الكابتن مسجل مسبقا لا يمكن تكرار البيانات أو مسح الحساب القديم 😊");
                 return;
@@ -845,8 +852,8 @@
                 Cap_ID: "CAP_" + Date.now(),
                 Cap_Name: name,
                 Cap_Phone: phone,
-                Cap_User: phone,
-                Cap_Pass: "123456",
+                Cap_User: user,
+                Cap_Pass: pass,
                 Cap_Car: car,
                 Cap_Status: "active",
                 Cap_Balance: bal,
@@ -858,11 +865,13 @@
                 app_access: "granted"
             };
             
-            await set(ref(db, 'captains/' + phone), capData);
+            await set(ref(db, 'captains/' + user), capData);
             alert("تم تسجيل الكابتن بنجاح 🦸‍♂️");
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
             document.getElementById('new_cap_car').value = '';
+            document.getElementById('new_cap_user').value = '';
+            document.getElementById('new_cap_pass').value = '';
             document.getElementById('new_cap_bal').value = '0';
         };
 
@@ -919,7 +928,6 @@
             
             const myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster)).reverse();
             
-            // تحديث العدادات الميدانية للكباتن
             const activeCount = myCaptains.filter(c => (c.Cap_Status || c.status) !== 'paused').length;
             const pausedCount = myCaptains.length - activeCount;
             document.getElementById('stat-cap-active').innerText = activeCount;
@@ -955,7 +963,6 @@
             });
         };
 
-        // تجهيز خيوط التجميد للتطبيق المستقبلي
         window.toggleCapStatus = async function(user, nextStatus) {
             const msg = nextStatus === 'paused' ? "تأكيد إيقاف حساب الكابتن 😊" : "تأكيد إعادة تفعيل حساب الكابتن 😊";
             if(confirm(msg)) {
@@ -964,7 +971,6 @@
                     if ((u.Cap_User === user || u.user === user) && u._node) {
                         updates[`${u._node}/${user}/Cap_Status`] = nextStatus;
                         updates[`${u._node}/${user}/status`] = nextStatus;
-                        // إشارات برمجية جاهزة لتطبيق الكابتن
                         updates[`${u._node}/${user}/app_sync_lock`] = nextStatus === 'paused' ? true : false;
                         updates[`${u._node}/${user}/app_access`] = nextStatus === 'paused' ? 'denied' : 'granted';
                     }
