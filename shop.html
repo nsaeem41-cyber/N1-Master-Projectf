@@ -18,6 +18,7 @@
             --border: #e2e8f0;
             --input-bg: #f1f5f9;
             --info: #0288d1;
+            --night: #311b92;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -102,7 +103,7 @@
         .stat-val.gold { color: var(--gold); }
 
         .input-group { margin-bottom: 18px; position: relative; }
-        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--text-light); }
+        label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--text-light); }
         input, select {
             width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
             font-size: 15px; background: var(--input-bg); outline: none; transition: 0.3s;
@@ -110,6 +111,13 @@
         }
         input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
         input[readonly] { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+
+        .night-fee-badge {
+            display: none; background: var(--night); color: white;
+            font-size: 11px; font-weight: bold; padding: 4px 8px;
+            border-radius: 12px; box-shadow: 0 2px 5px rgba(49, 27, 146, 0.3);
+            animation: slideUp 0.3s ease;
+        }
 
         .btn-main {
             width: 100%; padding: 18px; border: none; border-radius: 16px;
@@ -313,7 +321,10 @@
                 </div>
 
                 <div class="input-group">
-                    <label>🛵 سعر التوصيل (تلقائي)</label>
+                    <label>
+                        <span>🛵 سعر التوصيل (تلقائي)</span>
+                        <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                    </label>
                     <input type="text" id="delivery_fee" placeholder="---" readonly>
                 </div>
 
@@ -425,6 +436,7 @@
         let myBalance = 0;
         let verifiedCaptain = null;
         let masterName = "الشركة الأم";
+        window.myNode = 'shops'; // العقدة الجذرية للمنشأة لتفادي العقد الشبحية
 
         window.onload = async function() {
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -477,62 +489,69 @@
             }
         };
 
+        // خوارزمية الاستقبال الذكية المطورة
         function setupAdsAndAlerts() {
             const master = currentUser.Client_Master || currentUser.master;
             const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
             
-            const handleAd = (adsObj) => {
-                if(!adsObj) return;
+            let activeAds = { admin: null, client: null };
+            let activeAlerts = { admin: null, client: null };
+
+            const renderAd = () => {
                 const now = Date.now();
-                let activeAd = null;
-                
-                if (adsObj.users && adsObj.users[myUser]) {
-                    const specificAd = adsObj.users[myUser];
-                    if (!specificAd.expireAt || specificAd.expireAt > now) activeAd = specificAd;
+                let displayAd = null;
+                let senderLabel = "الإدارة";
+
+                // الأولوية لإعلان الشركة التابعة (الماستر)، ثم الإدارة العامة
+                if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) {
+                    displayAd = activeAds.client;
+                    senderLabel = activeAds.client.sender || masterName;
+                } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
+                    displayAd = activeAds.admin;
+                    senderLabel = activeAds.admin.sender || "الإدارة العامة";
                 }
-                if (!activeAd && adsObj.global) {
-                    const globalAd = adsObj.global;
-                    if (!globalAd.expireAt || globalAd.expireAt > now) activeAd = globalAd;
-                }
-                
+
                 const adContainer = document.getElementById('smart-ad-container');
                 const adMarquee = document.getElementById('smart-ad-text');
                 const adBadge = document.getElementById('ad-sender-badge');
                 
-                if (activeAd && activeAd.text) {
-                    adMarquee.innerText = activeAd.text;
-                    const finalSender = activeAd.sender || masterName || "الإدارة";
-                    adBadge.innerText = `إشعار من ${finalSender} 👑`;
-                    adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal');
+                if (displayAd && displayAd.text) {
+                    adMarquee.innerText = displayAd.text;
+                    adBadge.innerText = `إشعار من ${senderLabel} 👑`;
+                    adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal');
                     adContainer.style.display = 'flex';
                 } else {
                     adContainer.style.display = 'none';
                 }
             };
 
-            const handlePopup = (alertsObj) => {
-                if(!alertsObj) return;
-                let activeAlert = null;
-                if (alertsObj.users && alertsObj.users[myUser]) activeAlert = alertsObj.users[myUser];
-                else if (alertsObj.global) activeAlert = alertsObj.global;
-                
-                if (activeAlert && activeAlert.message) {
+            const extractAd = (adsObj) => {
+                if (!adsObj) return null;
+                if (adsObj.users && adsObj.users[myUser]) return adsObj.users[myUser];
+                if (adsObj.global) return adsObj.global;
+                return null;
+            };
+
+            const renderAlert = () => {
+                let displayAlert = activeAlerts.client || activeAlerts.admin;
+                let senderLabel = activeAlerts.client ? (activeAlerts.client.sender || masterName) : (activeAlerts.admin ? (activeAlerts.admin.sender || "الإدارة العامة") : "الإدارة");
+
+                if (displayAlert && displayAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
-                    if (activeAlert.timestamp > lastSeen) {
-                        const finalSender = activeAlert.sender || masterName || "الإدارة";
-                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة من ${finalSender}</div>${activeAlert.message}`;
+                    if (displayAlert.timestamp > lastSeen) {
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة من ${senderLabel}</div>${displayAlert.message}`;
                         document.getElementById('app-popup-overlay').style.display = 'flex';
-                        localStorage.setItem('last_seen_alert_shop_' + myUser, activeAlert.timestamp);
+                        localStorage.setItem('last_seen_alert_shop_' + myUser, displayAlert.timestamp);
                     }
                 }
             };
 
-            onValue(ref(db, 'announcements'), snap => handleAd(snap.val()));
-            onValue(ref(db, 'alerts'), snap => handlePopup(snap.val()));
+            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractAd(snap.val()); renderAd(); });
+            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractAd(snap.val()); renderAlert(); });
 
             if(master) {
-                onValue(ref(db, `client_announcements/${master}/shops`), snap => handleAd(snap.val()));
-                onValue(ref(db, `client_alerts/${master}/shops`), snap => handlePopup(snap.val()));
+                onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); });
+                onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); });
             }
         }
 
@@ -590,9 +609,14 @@
                 if(snapshot.exists()) {
                     const data = snapshot.val();
                     let flatData = [];
-                    if(data.users) flatData = flatData.concat(Object.values(data.users));
-                    if(data.shops) flatData = flatData.concat(Object.values(data.shops));
-                    if(data.captains) flatData = flatData.concat(Object.values(data.captains));
+                    
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
+                    };
+                    
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
                     
                     function extractPrices(obj) {
                         let arr = [];
@@ -619,6 +643,7 @@
                     );
                     
                     if (me) {
+                        window.myNode = me._node || 'shops'; // تحديد العقدة الجذرية للمنشأة
                         myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
                         document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                         
@@ -643,15 +668,7 @@
         window.attachBalanceListener = function() {
             const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
             
-            onValue(ref(db, `shops/${shopKey}`), (snap) => {
-                if(snap.exists()){
-                    const me = snap.val();
-                    myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
-                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
-                }
-            });
-
-            onValue(ref(db, `users/${shopKey}`), (snap) => {
+            onValue(ref(db, `${window.myNode}/${shopKey}`), (snap) => {
                 if(snap.exists()){
                     const me = snap.val();
                     myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
@@ -691,11 +708,10 @@
             try {
                 const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
                 
+                // حفظ الموقع فقط في العقدة الصحيحة (myNode) لمنع العقد الشبحية وتلف تسجيل الدخول
                 const updates = {};
-                updates[`shops/${shopKey}/Shop_Location`] = selectedLocation;
-                updates[`shops/${shopKey}/Client_Location`] = selectedLocation;
-                updates[`users/${shopKey}/Shop_Location`] = selectedLocation;
-                updates[`users/${shopKey}/Client_Location`] = selectedLocation;
+                updates[`${window.myNode}/${shopKey}/Shop_Location`] = selectedLocation;
+                updates[`${window.myNode}/${shopKey}/Client_Location`] = selectedLocation;
 
                 await update(ref(db), updates);
                 
@@ -744,10 +760,25 @@
 
         window.calculateFee = function() {
             const dest = String(document.getElementById('destination').value).trim();
+            const nightBadge = document.getElementById('night-fee-badge');
+            
             if (pricingMatrix[dest] !== undefined) {
-                document.getElementById('delivery_fee').value = pricingMatrix[dest].toFixed(2);
+                let baseFee = pricingMatrix[dest];
+                const hour = new Date().getHours();
+                // تفعيل الحارس الليلي إذا كانت الساعة بين 11 مساءً و 6 صباحاً
+                const isNightTime = (hour >= 23 || hour < 6);
+                
+                if (isNightTime) {
+                    baseFee += 0.50;
+                    nightBadge.style.display = 'inline-block';
+                } else {
+                    nightBadge.style.display = 'none';
+                }
+                
+                document.getElementById('delivery_fee').value = baseFee.toFixed(2);
             } else {
                 document.getElementById('delivery_fee').value = '';
+                nightBadge.style.display = 'none';
             }
         }
 
@@ -785,6 +816,7 @@
                 document.getElementById('destination').value = '';
                 document.getElementById('order_val').value = '';
                 document.getElementById('delivery_fee').value = '';
+                document.getElementById('night-fee-badge').style.display = 'none';
 
             } catch (e) {
                 showToast("خطأ في الاتصال");
@@ -859,7 +891,7 @@
             const amount = parseFloat(document.getElementById('charge_amount').value);
             if (myBalance < amount) { alert("رصيدك نفذ"); return; }
 
-            if (!confirm(`تأكيد نهائي خصم المبلغ من رصيدك وشحنها للكابتن`)) return;
+            if (!confirm(`تأكيد نهائي خصم المبلغ من رصيدك وشحنه للكابتن`)) return;
 
             setLoading('btn-charge', true);
 
@@ -877,20 +909,17 @@
                 updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal;
                 updates[`${capNode}/${capKey}/balance`] = newCapBal;
                 
-                updates[`shops/${shopKey}/Shop_Balance`] = newShopBal;
-                updates[`shops/${shopKey}/Client_Balance`] = newShopBal;
-                updates[`shops/${shopKey}/balance`] = newShopBal;
-                
-                updates[`users/${shopKey}/Shop_Balance`] = newShopBal;
-                updates[`users/${shopKey}/Client_Balance`] = newShopBal;
-                updates[`users/${shopKey}/balance`] = newShopBal;
+                // استخدام العقدة الجذرية للمنشأة للتحديث المالي بدون تكرار
+                updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
 
                 await update(ref(db), updates);
 
                 myBalance = newShopBal;
                 document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 
-                alert(`تمت العملية بنجاح الرصيد وصل للكابتن`);
+                alert(`تمت العملية بنجاح، الرصيد وصل للكابتن`);
                 
                 document.getElementById('cap_id').value = '';
                 document.getElementById('charge_amount').value = '';
@@ -916,22 +945,22 @@
 
             try {
                 if(newUser !== oldUser) {
-                    const snap = await get(child(ref(db), `shops/${newUser}`));
+                    const snap = await get(child(ref(db), `${window.myNode}/${newUser}`));
                     if(snap.exists()) {
                         alert("عذراً، اسم المستخدم هذا محجوز يرجى اختيار اسم آخر");
                         setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
                         return;
                     }
                     
-                    const oldSnap = await get(child(ref(db), `shops/${oldUser}`));
+                    const oldSnap = await get(child(ref(db), `${window.myNode}/${oldUser}`));
                     if(oldSnap.exists()) {
                         const data = oldSnap.val();
                         data.Shop_User = newUser; data.user = newUser; data.Client_User = newUser;
                         data.Shop_Pass = newPass; data.pass = newPass; data.Client_Pass = newPass;
                         
                         const updates = {};
-                        updates[`shops/${newUser}`] = data;
-                        updates[`shops/${oldUser}`] = null;
+                        updates[`${window.myNode}/${newUser}`] = data;
+                        updates[`${window.myNode}/${oldUser}`] = null;
                         await update(ref(db), updates);
                         
                         currentUser = data;
@@ -944,9 +973,9 @@
                     }
                 } else {
                     const updates = {
-                        [`shops/${oldUser}/Shop_Pass`]: newPass,
-                        [`shops/${oldUser}/pass`]: newPass,
-                        [`shops/${oldUser}/Client_Pass`]: newPass
+                        [`${window.myNode}/${oldUser}/Shop_Pass`]: newPass,
+                        [`${window.myNode}/${oldUser}/pass`]: newPass,
+                        [`${window.myNode}/${oldUser}/Client_Pass`]: newPass
                     };
                     await update(ref(db), updates);
                     
