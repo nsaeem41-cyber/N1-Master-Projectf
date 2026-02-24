@@ -245,6 +245,8 @@
             const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
             
             targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
+            targetSelect.innerHTML += '<option value="clients_only">الشركات الصغيرة فقط</option>';
+            targetSelect.innerHTML += '<option value="shops_only">المنشآت التجارية فقط</option>';
             
             clients.forEach(c => {
                 const username = c.Client_User || c.user;
@@ -276,11 +278,34 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
+                const snap = await get(ref(db));
+                const dbData = snap.val() || {};
+                let allUsers = [];
+                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
+                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+
                 if(target === 'all') {
                     await update(ref(db, 'announcements/global'), adData);
+                } else if(target === 'clients_only') {
+                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const updates = {};
+                    clients.forEach(c => {
+                        const uName = c.Client_User || c.user;
+                        if(uName) updates[`announcements/users/${uName}`] = adData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else if(target === 'shops_only') {
+                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const updates = {};
+                    shops.forEach(s => {
+                        const uName = s.Shop_User || s.user || s.Client_User;
+                        if(uName) updates[`announcements/users/${uName}`] = adData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 } else {
                     await update(ref(db, `announcements/users/${target}`), adData);
                 }
+                
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
                 alert("تم بث الإعلان بنجاح");
@@ -294,7 +319,7 @@
             const text = document.getElementById('ad_text').value.trim();
             if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
             
-            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند الكستمر، هل أنت متأكد؟")) return;
+            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
 
             const target = document.getElementById('ad_target').value;
             const alertData = {
@@ -305,11 +330,34 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
+                const snap = await get(ref(db));
+                const dbData = snap.val() || {};
+                let allUsers = [];
+                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
+                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+
                 if(target === 'all') {
                     await update(ref(db, 'alerts/global'), alertData);
+                } else if(target === 'clients_only') {
+                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const updates = {};
+                    clients.forEach(c => {
+                        const uName = c.Client_User || c.user;
+                        if(uName) updates[`alerts/users/${uName}`] = alertData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else if(target === 'shops_only') {
+                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const updates = {};
+                    shops.forEach(s => {
+                        const uName = s.Shop_User || s.user || s.Client_User;
+                        if(uName) updates[`alerts/users/${uName}`] = alertData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 } else {
                     await update(ref(db, `alerts/users/${target}`), alertData);
                 }
+                
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
                 alert("تم إرسال التنبيه الطارئ بنجاح");
@@ -320,7 +368,7 @@
         }
 
         window.clearAnnouncement = async function() {
-            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات، هل أنت متأكد؟")) return;
+            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'announcements'));
             document.getElementById('loader-overlay').style.display = 'none';
@@ -487,7 +535,7 @@
 
         window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً؟ سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
+            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
