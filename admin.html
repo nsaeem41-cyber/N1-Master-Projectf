@@ -121,6 +121,12 @@
                     <option value="365">سنة كاملة</option>
                 </select>
                 <input type="number" id="sub_price" placeholder="قيمة الاشتراك (د.أ)">
+                
+                <div style="display: flex; align-items: center; gap: 10px; background: #e3f2fd; padding: 12px; border-radius: 8px; border: 1px solid #90caf9;">
+                    <input type="checkbox" id="can_send_ads" style="width: 20px; height: 20px; cursor: pointer;" checked>
+                    <label for="can_send_ads" style="font-weight: bold; color: var(--primary); cursor: pointer; margin: 0;">تفعيل ميزة الإعلانات 📢</label>
+                </div>
+
                 <button class="btn-add" id="btnAddUser" onclick="addUser()">+ إضافة بقاعدة بيانات مستقلة 🚀</button>
             </div>
         </div>
@@ -204,12 +210,11 @@
         const db = getDatabase(app);
 
         let allData = [];
-        let activeClients = []; // لتعبئة قائمة الإعلانات الموجهة
+        let activeClients = [];
 
         window.onload = async function() {
             const sessionData = localStorage.getItem('currentUser');
             if (!sessionData) {
-                // للسماح بالتجربة المباشرة دون الحاجة لتسجيل دخول مسبق
                 // window.location.replace('index.html');
                 // return;
             } else {
@@ -231,16 +236,14 @@
                     allData = [];
                 }
                 renderTables();
-                populateAdTargets(); // تحديث قائمة الشركات للإعلانات
+                populateAdTargets();
             });
         }
         
-        // تعبئة قائمة الشركات في قسم الإعلانات
         window.populateAdTargets = function() {
             const targetSelect = document.getElementById('ad_target');
             const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
             
-            // الاحتفاظ بالخيار الأول (إرسال للجميع)
             targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
             
             clients.forEach(c => {
@@ -250,10 +253,9 @@
             });
         }
 
-        // إرسال الإعلان للشريط العلوي
         window.sendAnnouncement = async function() {
             const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً 😊"); return; }
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
             
             const target = document.getElementById('ad_target').value;
             const type = document.getElementById('ad_type').value;
@@ -275,25 +277,22 @@
             
             try {
                 if(target === 'all') {
-                    // إعلان للجميع
                     await update(ref(db, 'announcements/global'), adData);
                 } else {
-                    // إعلان موجه لشركة محددة
                     await update(ref(db, `announcements/users/${target}`), adData);
                 }
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
-                alert("تم بث الإعلان بنجاح 🚀");
+                alert("تم بث الإعلان بنجاح");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء إرسال الإعلان");
             }
         }
 
-        // إرسال تنبيه طارئ Pop-up
         window.sendPopupAlert = async function() {
             const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً 😊"); return; }
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
             
             if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند الكستمر، هل أنت متأكد؟")) return;
 
@@ -313,20 +312,19 @@
                 }
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
-                alert("تم إرسال التنبيه الطارئ بنجاح 🚨");
+                alert("تم إرسال التنبيه الطارئ بنجاح");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء إرسال التنبيه");
             }
         }
 
-        // مسح الإعلانات
         window.clearAnnouncement = async function() {
             if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات، هل أنت متأكد؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'announcements'));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تنظيف واجهات الإعلانات 🧹");
+            alert("تم تنظيف واجهات الإعلانات");
         }
 
         window.renderTables = function() {
@@ -349,7 +347,6 @@
             tbody.innerHTML = '';
             
             data.forEach(item => {
-                // مزامنة الأيام لتعمل بنفس الطريقة تماماً بين الإدارة والشركات
                 const expiryDate = new Date(item.Client_Expiry || item.expiry);
                 expiryDate.setHours(23, 59, 59, 999);
                 const now = new Date();
@@ -373,15 +370,19 @@
                     daysText = diffDays <= 3 ? `<span style="color:#c62828;">${diffDays} يوم ⚠️</span>` : `<span style="color:#2e7d32;">${diffDays} يوم</span>`;
                 }
                 
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#0288d1; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#757575; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+
                 const toggleBtn = currentStatus === 'active'
                     ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
                     : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
+
+                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#757575' : '#0288d1'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
 
                 const row = `
                     <tr>
                         <td><b>${item.Client_Name || item.name}</b></td>
                         <td style="font-size:12px; color:#555; direction:ltr; text-align:right;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:12px;">${item.Client_Price || item.price || 0} د.أ</td>
+                        <td style="font-size:12px;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
                         <td>${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
@@ -389,6 +390,7 @@
                                 <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
                                 ${toggleBtn}
                                 <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
+                                ${adToggleBtn}
                                 <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
                             </div>
                         </td>
@@ -405,6 +407,7 @@
             const pass = document.getElementById('new_pass').value;
             const days = document.getElementById('sub_duration').value;
             const price = document.getElementById('sub_price').value;
+            const canSendAds = document.getElementById('can_send_ads').checked;
 
             if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول"); return; }
 
@@ -419,7 +422,6 @@
             
             document.getElementById('loader-overlay').style.display = 'flex';
             
-            // إضافة المتغيرات المزدوجة لضمان التوافق مع الكاستمر والأدمن بشكل مثالي
             const newItem = {
                 Client_ID: "CL_" + Date.now(),
                 Client_User: user,
@@ -431,6 +433,7 @@
                 Client_Expiry: expDate.toISOString().split('T')[0],
                 Client_Price: price,
                 Client_PlanDays: days,
+                can_send_ads: canSendAds,
                 id: "CL_" + Date.now(), 
                 user: user, 
                 pass: pass, 
@@ -446,16 +449,26 @@
             try {
                 await set(ref(db, 'users/' + user), newItem);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة بالكامل ✅");
+                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة بالكامل");
                 
                 document.getElementById('new_name').value = '';
                 document.getElementById('new_user').value = '';
                 document.getElementById('new_pass').value = '';
                 document.getElementById('sub_price').value = '';
+                document.getElementById('can_send_ads').checked = true;
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ في الربط");
             }
+        }
+
+        window.toggleAdPermission = async function(username, currentStatus) {
+            const nextStatus = !currentStatus;
+            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة")) return;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
+            document.getElementById('loader-overlay').style.display = 'none';
         }
 
         window.editUser = async function(username, oldName, oldPass) {
@@ -472,7 +485,6 @@
             alert("تم تحديث البيانات");
         }
 
-        // إرسال أمر التجميد على المتغيرين لضمان الطرد اللحظي للمستخدم
         window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
             if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً؟ سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
@@ -498,7 +510,7 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تجديد الاشتراك بنجاح 📅");
+            alert("تم تجديد الاشتراك بنجاح");
         }
 
         window.deleteUser = async function(username) {
@@ -506,7 +518,7 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'users/' + username));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الحساب نهائياً 🗑️");
+            alert("تم حذف الحساب نهائياً");
         }
 
         window.logout = function() { 
