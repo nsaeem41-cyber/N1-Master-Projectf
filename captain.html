@@ -379,20 +379,24 @@
                 <div class="login-logo" style="font-size: 24px; margin-bottom: 25px;" id="lang_reg_title">تسجيل كابتن جديد 📝</div>
                 
                 <div class="input-group">
-                    <label id="lang_reg_name">الاسم الكامل</label>
+                    <label id="lang_reg_name">الاسم الشخصي</label>
                     <input type="text" id="reg_name" placeholder="أدخل اسمك الكريم">
                 </div>
                 <div class="input-group">
-                    <label id="lang_reg_phone">رقم الهاتف (سيكون اسم المستخدم)</label>
+                    <label id="lang_reg_phone">رقم الهاتف</label>
                     <input type="tel" id="reg_phone" placeholder="مثال: 07xxxxxxxx">
-                </div>
-                <div class="input-group">
-                    <label id="lang_reg_pass">كلمة المرور</label>
-                    <input type="password" id="reg_pass" placeholder="اختر كلمة مرور آمنة">
                 </div>
                 <div class="input-group">
                     <label id="lang_reg_car">السيارة (النوع والترميز)</label>
                     <input type="text" id="reg_car" placeholder="مثال: كيا سيراتو - 50-12345">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_user">اسم المستخدم (User Name) للدخول</label>
+                    <input type="text" id="reg_user" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_pass">كلمة المرور (Password)</label>
+                    <input type="password" id="reg_pass" placeholder="اختر كلمة مرور آمنة">
                 </div>
                 <div class="input-group">
                     <label id="lang_reg_comp">الشركة التابع لها</label>
@@ -401,7 +405,7 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label id="lang_reg_area">منطقة العمل المعتمدة</label>
+                    <label id="lang_reg_area">المنطقة (المسحوبة من المصدر المعتمد)</label>
                     <select id="reg_area">
                         <option value="">يرجى اختيار الشركة أولاً...</option>
                     </select>
@@ -539,12 +543,13 @@
                 lang_login_btn: 'دخول آمن 🚀',
                 lang_register_btn: 'تسجيل كابتن جديد 📝',
                 lang_reg_title: 'تسجيل كابتن جديد 📝',
-                lang_reg_name: 'الاسم الكامل',
-                lang_reg_phone: 'رقم الهاتف (سيكون اسم المستخدم)',
-                lang_reg_pass: 'كلمة المرور',
+                lang_reg_name: 'الاسم الشخصي',
+                lang_reg_phone: 'رقم الهاتف',
                 lang_reg_car: 'السيارة (النوع والترميز)',
+                lang_reg_user: 'اسم المستخدم (User Name) للدخول',
+                lang_reg_pass: 'كلمة المرور (Password)',
                 lang_reg_comp: 'الشركة التابع لها',
-                lang_reg_area: 'منطقة العمل المعتمدة',
+                lang_reg_area: 'المنطقة (المسحوبة من المصدر المعتمد)',
                 lang_reg_submit: 'إرسال الطلب 🚀',
                 lang_reg_back: 'عودة لشاشة الدخول',
                 lang_header_cap: 'كابتن 🦸‍♂️',
@@ -585,9 +590,10 @@
                 lang_register_btn: 'Register New Captain 📝',
                 lang_reg_title: 'Register New Captain 📝',
                 lang_reg_name: 'Full Name',
-                lang_reg_phone: 'Phone Number (Username)',
-                lang_reg_pass: 'Password',
+                lang_reg_phone: 'Phone Number',
                 lang_reg_car: 'Car (Type & Plate)',
+                lang_reg_user: 'Username',
+                lang_reg_pass: 'Password',
                 lang_reg_comp: 'Company Name',
                 lang_reg_area: 'Approved Work Area',
                 lang_reg_submit: 'Submit Request 🚀',
@@ -718,13 +724,23 @@
             
             try {
                 const snap = await get(ref(db, 'prices'));
+                const usersSnap = await get(ref(db, 'users'));
+                let usersDict = {};
+                if (usersSnap.exists()) {
+                    usersDict = usersSnap.val();
+                }
+
                 if(snap.exists()) {
                     globalPricesList = Object.values(snap.val());
                     const companies = [...new Set(globalPricesList.map(p => p.Client_Master || p.Price_Source))].filter(Boolean);
                     const compSelect = document.getElementById('reg_company');
                     compSelect.innerHTML = '<option value="">اختر الشركة...</option>';
                     companies.forEach(c => {
-                        compSelect.innerHTML += `<option value="${c}">${c}</option>`;
+                        let displayName = c;
+                        if (usersDict[c]) {
+                            displayName = usersDict[c].Client_Name || usersDict[c].name || c;
+                        }
+                        compSelect.innerHTML += `<option value="${c}">${displayName}</option>`;
                     });
                 }
             } catch(e) {
@@ -749,12 +765,13 @@
         window.submitRegistration = async function() {
             const name = document.getElementById('reg_name').value.trim();
             const phone = document.getElementById('reg_phone').value.trim();
-            const pass = document.getElementById('reg_pass').value.trim();
             const car = document.getElementById('reg_car').value.trim();
+            const user = document.getElementById('reg_user').value.trim();
+            const pass = document.getElementById('reg_pass').value.trim();
             const comp = document.getElementById('reg_company').value;
             const area = document.getElementById('reg_area').value;
 
-            if(!name || !phone || !pass || !car || !comp || !area) {
+            if(!name || !phone || !car || !user || !pass || !comp || !area) {
                 alert("يرجى تعبئة جميع الحقول بشكل صحيح");
                 return;
             }
@@ -762,16 +779,16 @@
             document.getElementById('loader').style.display = 'flex';
 
             try {
-                const existing = await get(ref(db, `captains/${phone}`));
+                const existing = await get(ref(db, `captains/${user}`));
                 if(existing.exists()) {
                     document.getElementById('loader').style.display = 'none';
-                    alert("رقم الهاتف مستخدم مسبقاً يرجى تسجيل الدخول");
+                    alert("اسم المستخدم مستخدم مسبقاً يرجى اختيار اسم آخر");
                     return;
                 }
 
                 const newCaptain = {
-                    Cap_User: phone,
-                    user: phone,
+                    Cap_User: user,
+                    user: user,
                     Cap_Name: name,
                     name: name,
                     Cap_Phone: phone,
@@ -790,11 +807,11 @@
                     created_at: Date.now()
                 };
 
-                await set(ref(db, `captains/${phone}`), newCaptain);
+                await set(ref(db, `captains/${user}`), newCaptain);
                 
                 localStorage.setItem('n1_captain_session', JSON.stringify(newCaptain));
                 currentCaptain = newCaptain;
-                capNodeKey = phone;
+                capNodeKey = user;
                 
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('register-screen').classList.remove('active');
@@ -821,6 +838,15 @@
             const master = currentCaptain.company || currentCaptain.Client_Master;
             let activeAds = { admin: null, client: null };
             let activeAlerts = { admin: null, client: null };
+            
+            let masterNameForAlerts = master || "N One";
+            if (master) {
+                get(ref(db, `users/${master}`)).then(snap => {
+                    if (snap.exists()) {
+                        masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
+                    }
+                });
+            }
 
             const renderAd = () => {
                 const now = Date.now();
@@ -829,7 +855,7 @@
 
                 if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) {
                     displayAd = activeAds.client;
-                    senderLabel = master;
+                    senderLabel = masterNameForAlerts;
                 } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
                     displayAd = activeAds.admin;
                     senderLabel = currentLang === 'ar' ? "الإدارة العامة" : "General Admin";
@@ -848,7 +874,7 @@
 
             const renderAlert = () => {
                 let displayAlert = activeAlerts.client || activeAlerts.admin;
-                let senderLabel = activeAlerts.client ? master : (currentLang==='ar' ? "الإدارة العامة" : "General Admin");
+                let senderLabel = activeAlerts.client ? masterNameForAlerts : (currentLang==='ar' ? "الإدارة العامة" : "General Admin");
 
                 if (displayAlert && displayAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_cap_' + capNodeKey) || 0;
@@ -1037,7 +1063,19 @@
         }
 
         function updateUIProfile(data) {
-            document.getElementById('ui_company_name').innerText = data.company || data.Client_Master || "الشركة الأم";
+            const masterId = data.company || data.Client_Master;
+            if (masterId) {
+                get(ref(db, `users/${masterId}`)).then(snap => {
+                    let mName = masterId;
+                    if (snap.exists()) {
+                        mName = snap.val().Client_Name || snap.val().name || masterId;
+                    }
+                    document.getElementById('ui_company_name').innerText = mName;
+                });
+            } else {
+                document.getElementById('ui_company_name').innerText = "N One";
+            }
+            
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
             document.getElementById('ui_cap_car').innerText = data.Cap_Car || (currentLang==='ar'?'السيارة غير محددة':'Car info missing');
             
