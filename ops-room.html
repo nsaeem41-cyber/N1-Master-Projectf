@@ -210,6 +210,7 @@
                     <div class="card-header">
                         <span>📡 طلبات قيد الانتظار (Live Feed)</span>
                         <div class="action-btns">
+                            <button class="btn-royal" style="background:var(--app-color); color:white; font-size:12px; padding:8px 15px; width:auto;" onclick="triggerAutoRadarMaster()">🚀 تفعيل الرادار</button>
                             <button class="btn-royal btn-print" onclick="window.print()">🖨️ طباعة الكشف</button>
                             <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearLiveRadar()" title="مسح الرادار">🗑️</button>
                         </div>
@@ -438,7 +439,6 @@
                 return;
             }
             
-            // تحميل نسبة العمولة الذكية
             document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
             
             fetchLiveOrders();
@@ -569,7 +569,6 @@
                         </td>
                         <td>
                             <div class="action-btns">
-                                <button class="mini-circle-btn" style="background:var(--app-color); color:white;" onclick="autoDispatchOrder('${ord.Shop_Ord_ID}')" title="إرسال أوتوماتيكي ذكي">🤖</button>
                                 <button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="loadToManual('${ord.Shop_Ord_ID}')" title="توجيه يدوي">📲</button>
                                 <button class="mini-circle-btn" style="background:#e2e8f0; color:#64748b;" onclick="dismissOrder('${ord.Shop_Ord_ID}')" title="إخفاء">✕</button>
                             </div>
@@ -579,57 +578,92 @@
             });
         };
 
-        window.autoDispatchOrder = async function(orderId) {
-            const ord = allOrders.find(o => o.Shop_Ord_ID === orderId);
-            if (!ord) return;
-            
-            const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-            const orderRegion = shopData ? (shopData.Shop_Location || shopData.Client_Location || '').trim() : '';
-            
+        window.triggerAutoRadarMaster = async function() {
+            const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = currentUser.Client_User || currentUser.user;
-            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster));
+            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
+            myShops.push(myMaster);
             
-            // فلترة الكباتن: متاح، غير مجمد، وغير مشغول
-            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active' && !c.is_busy);
+            const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
-            if (availableCaptains.length === 0) {
-                alert("عذراً.. لا يوجد أي كابتن متاح وغير مشغول حالياً 🤖");
+            if(pendingOrders.length === 0) {
+                alert("الرادار هادئ.. لا توجد طلبات لتوزيعها 😊");
                 return;
             }
+
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster));
             
-            // إعطاء الأولوية لمنطقة الكابتن المطابقة لمنطقة الطلب
-            let selectedCaptain = availableCaptains.find(c => (c.Cap_Region || '').trim() === orderRegion) || availableCaptains[0];
-            const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
-            
-            const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
-            const fee = parseFloat(ord.Shop_Fee || 0);
-            const commission = (fee * (ratio / 100)).toFixed(2);
-            
-            const currentBal = parseFloat(selectedCaptain.Cap_Balance || selectedCaptain.balance || 0);
-            const newBal = (currentBal - parseFloat(commission)).toFixed(2);
-            
-            const updates = {};
-            updates[`${selectedCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-            updates[`${selectedCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
-            
-            const appOrderId = "APP_ORD_" + Date.now();
-            const orderData = {
-                id: appOrderId,
-                restaurant: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
-                value: ord.Shop_Val,
-                fee: ord.Shop_Fee,
-                status: 'assigned',
-                timestamp: Date.now(),
-                linkedRadarId: orderId
-            };
-            
-            updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
-            
+            let busyCaptains = new Set();
             try {
-                await update(ref(db), updates);
+                const snap = await get(ref(db, 'assigned_orders'));
+                if(snap.exists()) {
+                    const allAssigned = snap.val();
+                    for(let capKey in allAssigned) {
+                        let hasActive = false;
+                        for(let ordKey in allAssigned[capKey]) {
+                            if(allAssigned[capKey][ordKey].status === 'assigned' || allAssigned[capKey][ordKey].status === 'accepted') {
+                                hasActive = true;
+                                break;
+                            }
+                        }
+                        if(hasActive) busyCaptains.add(capKey);
+                    }
+                }
+            } catch(e) {}
+
+            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
+            availableCaptains = availableCaptains.filter(c => {
+                const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                return !busyCaptains.has(k);
+            });
+
+            if (availableCaptains.length === 0) {
+                alert("عذراً.. لا يوجد أي كابتن متاح وغير مشغول حالياً لاستقبال الطلبات 😊");
+                return;
+            }
+
+            let dispatchedCount = 0;
+            let updates = {};
+
+            for (let ord of pendingOrders) {
+                if(availableCaptains.length === 0) break;
+
+                const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                const orderRegion = shopData ? (shopData.Shop_Location || shopData.Client_Location || '').trim() : '';
+
+                let selectedIndex = availableCaptains.findIndex(c => (c.Cap_Region || '').trim() === orderRegion);
+                if(selectedIndex === -1) selectedIndex = 0; 
+
+                let selectedCaptain = availableCaptains[selectedIndex];
+                const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
+
+                availableCaptains.splice(selectedIndex, 1);
+
+                const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
+                const fee = parseFloat(ord.Shop_Fee || 0);
+                const commission = (fee * (ratio / 100)).toFixed(2);
+                
+                const currentBal = parseFloat(selectedCaptain.Cap_Balance || selectedCaptain.balance || 0);
+                const newBal = (currentBal - parseFloat(commission)).toFixed(2);
+                
+                updates[`${selectedCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                updates[`${selectedCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
+
+                const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
+                const orderData = {
+                    id: appOrderId,
+                    restaurant: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
+                    value: ord.Shop_Val,
+                    fee: ord.Shop_Fee,
+                    status: 'assigned',
+                    timestamp: Date.now(),
+                    linkedRadarId: ord.Shop_Ord_ID
+                };
+                
+                updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
                 
                 const entry = {
-                    orderId: orderId,
+                    orderId: ord.Shop_Ord_ID,
                     time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
                     cap: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
                     rest: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
@@ -638,13 +672,21 @@
                     via: "Auto"
                 };
                 completedOrders.unshift(entry);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                dispatchedCount++;
+            }
 
-                alert(`تم التوزيع الأوتوماتيكي للكابتن ${selectedCaptain.Cap_Name || selectedCaptain.name} بنجاح 🤖🚀`);
-                renderRadar();
-                renderCompletedOrders();
-            } catch(e) {
-                alert("حدث خطأ أثناء التوزيع التلقائي 😊");
+            if(dispatchedCount > 0) {
+                try {
+                    await update(ref(db), updates);
+                    localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                    alert(`تم التوزيع الأوتوماتيكي بنجاح لعدد (${dispatchedCount}) طلبات 🚀😊`);
+                    renderRadar();
+                    renderCompletedOrders();
+                } catch(e) {
+                    alert("حدث خطأ أثناء التوزيع التلقائي 😊");
+                }
+            } else {
+                alert("لم يتم توزيع أي طلب 😊");
             }
         };
 
@@ -747,7 +789,6 @@
 
             const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
 
-            // خوارزمية ذكاء الانشغال (Busy Driver Logic)
             try {
                 const ordersSnap = await get(ref(db, `assigned_orders/${capKey}`));
                 let activeCount = 0;
@@ -761,14 +802,13 @@
 
                 if (activeCount > 0) {
                     if (!confirm(`عذراً.. هذا الكابتن لديه (${activeCount}) طلب قيد التنفيذ حالياً، هل ترغب بالتأكيد على إرسال طلب آخر له؟`)) {
-                        return; // إلغاء الإرسال بناءً على اختيار المسؤول ويبقى الطلب عالرادار
+                        return; 
                     }
                 }
             } catch (error) {
                 console.error("Error checking busy status:", error);
             }
 
-            // اقتطاع مالي دقيق مباشر بناء على النسبة
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
             const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
             const newBal = (currentBal - parseFloat(commission)).toFixed(2);
@@ -841,7 +881,6 @@
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
 
             if (currentTargetCaptain) {
-                // التأكد من وضع الكابتن
                 if (currentTargetCaptain.app_status === 'offline') {
                     alert("عذراً.. هذا الكابتن خارج الخدمة حالياً 😊");
                     return;
@@ -849,7 +888,6 @@
 
                 const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
                 
-                // فحص الانشغال
                 try {
                     const ordersSnap = await get(ref(db, `assigned_orders/${capKey}`));
                     let activeCount = 0;
@@ -915,7 +953,6 @@
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             
-            // حساب الإجمالي التراكمي
             document.getElementById('stat-completed-total').innerText = completedOrders.length;
             
             const today = new Date().toDateString();
@@ -947,7 +984,7 @@
         };
 
         window.resetDailyStats = function() {
-            if(confirm("هل أنت متأكد من تصفير طلبات وعمولات اليوم؟ ستبقى أرصدة الكباتن كما هي بكل رقي 😊")) {
+            if(confirm("هل أنت متأكد من تصفير طلبات وعمولات اليوم ستبقى أرصدة الكباتن كما هي بكل رقي 😊")) {
                 const today = new Date().toDateString();
                 completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
@@ -965,7 +1002,7 @@
         };
 
         window.clearCompletedOrders = function() {
-            if(confirm("تحذير: هل أنت متأكد من مسح الأرشيف التراكمي كاملاً 😊")) {
+            if(confirm("تحذير هل أنت متأكد من مسح الأرشيف التراكمي كاملا 😊")) {
                 completedOrders = [];
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderCompletedOrders();
@@ -1106,7 +1143,7 @@
             
             document.getElementById('stat-cap-total').innerText = myCaptains.length;
 
-            const activeCount = myCaptains.filter(c => (c.Cap_Status || c.status) !== 'paused').length;
+            const activeCount = myCaptains.filter(c => (c.Cap_Status || c.status) === 'active' && c.app_status === 'online').length;
             const pausedCount = myCaptains.length - activeCount;
             document.getElementById('stat-cap-active').innerText = activeCount;
             document.getElementById('stat-cap-paused').innerText = pausedCount;
