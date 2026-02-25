@@ -47,10 +47,19 @@
         .shop-login-option {
             background: rgba(26, 35, 126, 0.05); padding: 12px; border-radius: 10px; border: 1px solid #eee;
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .shop-login-option input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; padding: 0; }
         .shop-login-option label { margin: 0; cursor: pointer; color: #1a237e; font-size: 13px; font-weight: bold; }
+
+        /* تصميم خيار الكابتن الألماسي الجديد */
+        .captain-login-option {
+            background: linear-gradient(135deg, #0f172a, #1e293b); padding: 12px; border-radius: 10px; border: 1px solid #d4af37;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-bottom: 20px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+        .captain-login-option input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; padding: 0; accent-color: #d4af37; }
+        .captain-login-option label { margin: 0; cursor: pointer; color: #d4af37; font-size: 13px; font-weight: 900; }
 
         .btn-login {
             width: 100%; padding: 15px; background: #1a237e; color: white;
@@ -89,8 +98,13 @@
         </div>
 
         <div class="shop-login-option">
-            <input type="checkbox" id="is_shop">
+            <input type="checkbox" id="is_shop" onchange="if(this.checked) document.getElementById('is_captain').checked = false;">
             <label for="is_shop">تسجيل دخول كمنشأة تجارية مطعم ومحل</label>
+        </div>
+
+        <div class="captain-login-option">
+            <input type="checkbox" id="is_captain" onchange="if(this.checked) document.getElementById('is_shop').checked = false;">
+            <label for="is_captain">تسجيل دخول فرسان الميدان (كابتن) 🦸‍♂️</label>
         </div>
 
         <button class="btn-login" onclick="loginNow()" id="loginBtn">تسجيل الدخول 🚀</button>
@@ -99,7 +113,7 @@
 
         <div class="footer">
             &copy; 2026 N One Global Systems<br>
-            Secure Access v4.0 Ultimate (Firebase)
+            Secure Access v4.1 Diamond Update (Firebase)
         </div>
     </div>
 
@@ -122,6 +136,7 @@
 
         window.onload = function() {
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('n1_captain_session');
             console.log("Session Cleared Ready for secure login");
         }
 
@@ -129,6 +144,7 @@
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             const isShop = document.getElementById('is_shop').checked; 
+            const isCaptain = document.getElementById('is_captain').checked; 
             const btn = document.getElementById('loginBtn');
             const msgBox = document.getElementById('msg');
 
@@ -145,25 +161,34 @@
             try {
                 const dbRef = ref(db);
                 let userRecord = null;
+                let foundNode = "users";
                 
                 let snapshot = await get(child(dbRef, `users/${u}`));
                 if(snapshot.exists()) {
                     userRecord = snapshot.val();
+                    foundNode = "users";
                 } else {
                     snapshot = await get(child(dbRef, `shops/${u}`));
                     if(snapshot.exists()) {
                         userRecord = snapshot.val();
+                        foundNode = "shops";
+                    } else {
+                        snapshot = await get(child(dbRef, `captains/${u}`));
+                        if(snapshot.exists()) {
+                            userRecord = snapshot.val();
+                            foundNode = "captains";
+                        }
                     }
                 }
 
                 if (userRecord) {
-                    const dbPass = userRecord.Client_Pass || userRecord.pass || "";
+                    const dbPass = userRecord.Client_Pass || userRecord.pass || userRecord.Cap_Pass || userRecord.Shop_Pass || "";
                     
                     let encodedP = "";
                     try { encodedP = btoa(p); } catch(e) {}
 
                     if (dbPass === p || dbPass === encodedP) {
-                        const status = userRecord.Client_Status || userRecord.status;
+                        const status = userRecord.Client_Status || userRecord.status || userRecord.Cap_Status || userRecord.Shop_Status;
                         if (status !== 'active') {
                             showError("عذرا هذا الحساب موقوف راجع الإدارة ☺️");
                             resetBtn();
@@ -172,18 +197,22 @@
 
                         const secureSession = {
                             ...userRecord,
-                            user: userRecord.Client_User || userRecord.user,
-                            pass: userRecord.Client_Pass || userRecord.pass,
-                            name: userRecord.Client_Name || userRecord.name,
-                            role: userRecord.Client_Role || userRecord.role,
+                            user: userRecord.Client_User || userRecord.user || userRecord.Cap_User || userRecord.Shop_User,
+                            pass: userRecord.Client_Pass || userRecord.pass || userRecord.Cap_Pass || userRecord.Shop_Pass,
+                            name: userRecord.Client_Name || userRecord.name || userRecord.Cap_Name || userRecord.Shop_Name,
+                            role: userRecord.Client_Role || userRecord.role || userRecord.Cap_Role,
                             type: userRecord.Client_Type || userRecord.type,
                             status: status,
+                            _node: foundNode,
                             loginTime: Date.now()
                         };
                         
                         localStorage.setItem('currentUser', JSON.stringify(secureSession));
                         
-                        if (isShop || secureSession.role === 'shop' || secureSession.type === 'shop') {
+                        if (isCaptain || secureSession.role === 'captain' || foundNode === 'captains') {
+                            localStorage.setItem('n1_captain_session', JSON.stringify(secureSession));
+                            window.location.replace('captain.html');
+                        } else if (isShop || secureSession.role === 'shop' || secureSession.type === 'shop' || foundNode === 'shops') {
                             window.location.replace('shop.html');
                         } else if (secureSession.role === 'admin') {
                             window.location.replace('admin.html');
