@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>N One | Business Portal (Royal Edition)</title>
+    <title>Business Portal (Royal Edition)</title>
     
     <style>
         :root {
@@ -118,6 +118,15 @@
             border-radius: 12px; box-shadow: 0 2px 5px rgba(49, 27, 146, 0.3);
             animation: slideUp 0.3s ease;
         }
+        
+        /* ميزة النجمة الذهبية للسعر المميز */
+        .star-feature-badge {
+            display: none; background: #fffbeb; color: #d97706;
+            font-size: 11px; font-weight: bold; padding: 4px 8px;
+            border-radius: 12px; border: 1px solid #fde68a;
+            box-shadow: 0 2px 5px rgba(217, 119, 6, 0.1);
+            animation: slideUp 0.3s ease; margin-right: 5px;
+        }
 
         .btn-main {
             width: 100%; padding: 18px; border: none; border-radius: 16px;
@@ -186,7 +195,7 @@
         }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .ad-n-one-badge { 
+        .ad-sender-badge { 
             background: var(--gold); color: white; padding: 5px 12px; 
             border-radius: 8px; font-size: 11px; font-weight: bold; 
             margin-left: 10px; white-space: nowrap; letter-spacing: 0.5px;
@@ -239,7 +248,7 @@
 
     <div id="location-modal" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-title">أهلاً بكِ في النظام 👑</div>
+            <div class="modal-title">أهلاً بك في النظام 👑</div>
             <div class="modal-desc">
                 يرجى اختيار منطقتك المعتمدة لتفعيل حسابك وربط الأسعار الخاصة بك بشكل دقيق ونهائي.
             </div>
@@ -286,7 +295,7 @@
 
     <div style="padding: 0 20px;">
         <div id="smart-ad-container" class="app-ad-container">
-            <div class="ad-n-one-badge" id="ad-sender-badge">إشعار 👑</div>
+            <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
             <div class="ad-content-wrapper">
                 <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
             </div>
@@ -323,7 +332,10 @@
                 <div class="input-group">
                     <label>
                         <span>🛵 سعر التوصيل (تلقائي)</span>
-                        <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                        <div>
+                            <span id="star-feature-badge" class="star-feature-badge">⭐ سعر مميز</span>
+                            <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                        </div>
                     </label>
                     <input type="text" id="delivery_fee" placeholder="---" readonly>
                 </div>
@@ -431,6 +443,7 @@
         const db = getDatabase(app);
         
         let pricingMatrix = {}; 
+        let featureMatrix = {}; // مصفوفة جديدة لحفظ ميزات السعر
         let dbPrices = [];
         let currentUser = null;
         let myBalance = 0;
@@ -473,7 +486,7 @@
                     }
                 });
             } else {
-                document.getElementById('parent-company-brand').innerText = "N One System";
+                document.getElementById('parent-company-brand').innerText = "النظام الإداري";
             }
         }
 
@@ -508,7 +521,7 @@
                     senderLabel = activeAds.client.sender || masterName;
                 } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
                     displayAd = activeAds.admin;
-                    senderLabel = activeAds.admin.sender || "الإدارة العامة";
+                    senderLabel = activeAds.admin.sender || masterName; // توحيد المرسل ليكون الشركة التابعة دائماً
                 }
 
                 const adContainer = document.getElementById('smart-ad-container');
@@ -534,7 +547,7 @@
 
             const renderAlert = () => {
                 let displayAlert = activeAlerts.client || activeAlerts.admin;
-                let senderLabel = activeAlerts.client ? (activeAlerts.client.sender || masterName) : (activeAlerts.admin ? (activeAlerts.admin.sender || "الإدارة العامة") : "الإدارة");
+                let senderLabel = activeAlerts.client ? (activeAlerts.client.sender || masterName) : (activeAlerts.admin ? (activeAlerts.admin.sender || masterName) : masterName);
 
                 if (displayAlert && displayAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
@@ -702,7 +715,7 @@
 
             const btn = document.querySelector('#location-modal .btn-main');
             const originalText = btn.innerText;
-            btn.innerText = "جاري اللحام";
+            btn.innerText = "جاري الحفظ";
             btn.style.opacity = 0.7;
 
             try {
@@ -734,6 +747,7 @@
 
         window.loadShopPrices = function() {
             pricingMatrix = {};
+            featureMatrix = {}; // تهيئة مصفوفة الميزات
             const datalist = document.getElementById('areas-list');
             datalist.innerHTML = '';
             
@@ -743,10 +757,16 @@
             
             myPrices.forEach(p => {
                 const currentPrice = parseFloat(p.Price_Current || p.Price_Base || 0);
-                pricingMatrix[String(p.Price_Area).trim()] = currentPrice;
+                const areaName = String(p.Price_Area).trim();
+                
+                pricingMatrix[areaName] = currentPrice;
+                // حفظ الميزة إذا كانت نجمة
+                if(p.Price_Feature && p.Price_Feature.includes('⭐')) {
+                    featureMatrix[areaName] = '⭐';
+                }
                 
                 const opt = document.createElement('option');
-                opt.value = String(p.Price_Area).trim();
+                opt.value = areaName;
                 datalist.appendChild(opt);
             });
         }
@@ -761,6 +781,7 @@
         window.calculateFee = function() {
             const dest = String(document.getElementById('destination').value).trim();
             const nightBadge = document.getElementById('night-fee-badge');
+            const starBadge = document.getElementById('star-feature-badge');
             
             if (pricingMatrix[dest] !== undefined) {
                 let baseFee = pricingMatrix[dest];
@@ -774,11 +795,19 @@
                 } else {
                     nightBadge.style.display = 'none';
                 }
+
+                // إظهار شارة النجمة الذهبية إذا كانت المنطقة مميزة
+                if(featureMatrix[dest] === '⭐') {
+                    starBadge.style.display = 'inline-block';
+                } else {
+                    starBadge.style.display = 'none';
+                }
                 
                 document.getElementById('delivery_fee').value = baseFee.toFixed(2);
             } else {
                 document.getElementById('delivery_fee').value = '';
                 nightBadge.style.display = 'none';
+                starBadge.style.display = 'none';
             }
         }
 
@@ -817,6 +846,7 @@
                 document.getElementById('order_val').value = '';
                 document.getElementById('delivery_fee').value = '';
                 document.getElementById('night-fee-badge').style.display = 'none';
+                document.getElementById('star-feature-badge').style.display = 'none';
 
             } catch (e) {
                 showToast("خطأ في الاتصال");
@@ -862,7 +892,7 @@
                     );
                     
                     if (!cap) {
-                        alert("الكابتن غير موجود تأكد من الكود أو الهاتف");
+                        alert("الكابتن غير موجود، تأكد من الكود أو الهاتف");
                         verifiedCaptain = null;
                         document.getElementById('cap-check-result').style.display = 'none';
                         document.getElementById('btn-charge').style.display = 'none';
@@ -882,7 +912,7 @@
             } catch (e) {
                 showToast("خطأ في الاتصال");
             } finally {
-                setLoading('btn-check', false, "🔍 فحص الكابتن أولا");
+                setLoading('btn-check', false, "🔍 فحص الكابتن أولاً");
             }
         }
 
@@ -891,7 +921,7 @@
             const amount = parseFloat(document.getElementById('charge_amount').value);
             if (myBalance < amount) { alert("رصيدك نفذ"); return; }
 
-            if (!confirm(`تأكيد نهائي خصم المبلغ من رصيدك وشحنه للكابتن`)) return;
+            if (!confirm(`تأكيد نهائي: خصم المبلغ من رصيدك وشحنه للكابتن`)) return;
 
             setLoading('btn-charge', true);
 
@@ -1001,7 +1031,7 @@
         }
 
         window.logout = function() {
-            if(confirm("هل تريد مغادرة النظام")) {
+            if(confirm("هل تريد مغادرة النظام؟")) {
                 localStorage.removeItem('currentUser');
                 window.location.replace('index.html'); 
             }
@@ -1019,7 +1049,7 @@
             const loader = document.getElementById('loader');
             if (isLoading) {
                 btn.dataset.text = btn.innerText;
-                btn.innerText = "جاري التنفيذ";
+                btn.innerText = "جاري التنفيذ...";
                 btn.style.opacity = 0.7;
                 btn.disabled = true;
                 loader.style.width = "100%";
