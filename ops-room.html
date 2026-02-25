@@ -100,6 +100,17 @@
         .order-row-new { animation: pulseBorder 2s infinite; }
         .order-row-urgent { border-right: 5px solid var(--danger); background: #fef2f2; }
 
+        /* أنيميشن الرادار اللانهائي */
+        @keyframes pulseRocket {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .radar-active {
+            background: var(--success) !important;
+            animation: pulseRocket 1.5s infinite;
+        }
+
         .badge { padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
         .bg-money { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
         .bg-fee { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
@@ -115,7 +126,7 @@
             width: 100%; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 12px; 
             outline: none; background: #f8fafc; transition: 0.3s; font-weight: 700; color: var(--primary); box-sizing: border-box;
         }
-        input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
+        input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
 
         .btn-royal {
             width: 100%; padding: 12px 15px; border: none; border-radius: 12px; font-weight: 800;
@@ -210,7 +221,7 @@
                     <div class="card-header">
                         <span>📡 طلبات قيد الانتظار (Live Feed)</span>
                         <div class="action-btns">
-                            <button class="btn-royal" style="background:var(--app-color); color:white; font-size:12px; padding:8px 15px; width:auto;" onclick="triggerAutoRadarMaster()">🚀 تفعيل الرادار</button>
+                            <button id="btn-auto-radar" class="btn-royal" style="background:var(--app-color); color:white; font-size:12px; padding:8px 15px; width:auto;" onclick="toggleAutoRadar()">🚀 تفعيل الرادار</button>
                             <button class="btn-royal btn-print" onclick="window.print()">🖨️ طباعة الكشف</button>
                             <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearLiveRadar()" title="مسح الرادار">🗑️</button>
                         </div>
@@ -268,7 +279,7 @@
                             <div class="form-grid">
                                 <div class="form-group full-width">
                                     <label>الاسم الكامل</label>
-                                    <input type="text" id="new_cap_name" placeholder="مثلاً: محمد علي">
+                                    <input type="text" id="new_cap_name" placeholder="مثلاً محمد علي">
                                 </div>
                                 <div class="form-group">
                                     <label>رقم الهاتف</label>
@@ -276,11 +287,13 @@
                                 </div>
                                 <div class="form-group">
                                     <label>رقم السيارة</label>
-                                    <input type="text" id="new_cap_car" placeholder="مثلاً: 12-34567">
+                                    <input type="text" id="new_cap_car" placeholder="مثلاً 12-34567">
                                 </div>
                                 <div class="form-group full-width">
-                                    <label>المنطقة (إجباري للتوزيع الذكي)</label>
-                                    <input type="text" id="new_cap_region" placeholder="مثلاً: الجبيهة">
+                                    <label>المنطقة (تسحب من قائمة الأسعار)</label>
+                                    <select id="new_cap_region">
+                                        <option value="">جاري تحميل المناطق...</option>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label>اسم المستخدم (للتطبيق)</label>
@@ -308,9 +321,9 @@
                             </div>
                             
                             <div id="smart-cap-card" class="smart-cap-card">
-                                <div class="smart-cap-info"><span style="color:#64748b;">الاسم:</span> <span id="s_cap_name" style="color:var(--primary);">---</span></div>
-                                <div class="smart-cap-info"><span style="color:#64748b;">السيارة:</span> <span id="s_cap_car" style="color:var(--primary);">---</span></div>
-                                <div class="smart-cap-info"><span style="color:#64748b;">الرصيد الحالي:</span> <span id="s_cap_bal" style="color:var(--success);">0.00 د.أ</span></div>
+                                <div class="smart-cap-info"><span style="color:#64748b;">الاسم</span> <span id="s_cap_name" style="color:var(--primary);">---</span></div>
+                                <div class="smart-cap-info"><span style="color:#64748b;">السيارة</span> <span id="s_cap_car" style="color:var(--primary);">---</span></div>
+                                <div class="smart-cap-info"><span style="color:#64748b;">الرصيد الحالي</span> <span id="s_cap_bal" style="color:var(--success);">0.00 د.أ</span></div>
                                 <hr style="border:0; border-top:1px dashed #cbd5e1; margin:10px 0;">
                                 <div class="form-group">
                                     <label>المبلغ المراد شحنه (د.أ)</label>
@@ -329,6 +342,7 @@
                             <tr>
                                 <th>الاسم</th>
                                 <th>الهاتف</th>
+                                <th>اليوزر والباسورد</th>
                                 <th>المنطقة</th>
                                 <th>السيارة</th>
                                 <th>الرصيد</th>
@@ -337,7 +351,7 @@
                             </tr>
                         </thead>
                         <tbody id="captains-log-body">
-                            <tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">جاري سحب بيانات الكباتن...</td></tr>
+                            <tr><td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">جاري سحب بيانات الكباتن...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -359,7 +373,7 @@
                         <div class="form-group">
                             <label>رقم الكابتن</label>
                             <input type="tel" id="man_phone" placeholder="07xxxxxxxx" oninput="checkCaptainMemory()">
-                            <div id="mem_hint" style="font-size:11px; color:var(--gold); margin-top:5px; display:none;">🦸‍♂️ البطل: <span id="mem_name"></span></div>
+                            <div id="mem_hint" style="font-size:11px; color:var(--gold); margin-top:5px; display:none;">🦸‍♂️ البطل <span id="mem_name"></span></div>
                             <div id="cap_status_indicator" style="font-size:11px; font-weight:bold; margin-top:5px; display:none;"></div>
                         </div>
                         <div class="form-group">
@@ -368,7 +382,7 @@
                         </div>
                         <div class="form-group">
                             <label>المنشأة والمنطقة</label>
-                            <input type="text" id="man_rest_name" placeholder="مثلاً: ماكدونالدز - الجبيهة">
+                            <input type="text" id="man_rest_name" placeholder="مثلاً ماكدونالدز الجبيهة">
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="form-group">
@@ -381,7 +395,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>نسبة العمولة (%)</label>
+                            <label>نسبة العمولة بالمئة</label>
                             <input type="number" id="man_ratio" placeholder="10" onchange="saveRatio()">
                         </div>
                     </div>
@@ -427,6 +441,7 @@
         let isAlarmPlaying = false;
         let activeSmartCaptain = null;
         let currentTargetCaptain = null;
+        let isAutoRadarActive = false;
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
@@ -441,11 +456,41 @@
             
             document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
             
+            fetchRegionsFromPrices();
             fetchLiveOrders();
             fetchGlobalUsers();
             renderCompletedOrders();
             setupRealtimeFreezeListener();
             setInterval(refreshDynamicElements, 1000);
+        };
+
+        function fetchRegionsFromPrices() {
+            onValue(ref(db, 'prices'), (snapshot) => {
+                const select = document.getElementById('new_cap_region');
+                select.innerHTML = '<option value="">اختر المنطقة...</option>';
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    Object.keys(data).forEach(key => {
+                        const areaName = data[key].name || data[key].area || key;
+                        select.innerHTML += `<option value="${areaName}">${areaName}</option>`;
+                    });
+                } else {
+                    select.innerHTML += '<option value="الجبيهة">الجبيهة</option><option value="تلال العلي">تلال العلي</option><option value="عمان">عمان</option>';
+                }
+            });
+        }
+
+        window.toggleAutoRadar = function() {
+            isAutoRadarActive = !isAutoRadarActive;
+            const btn = document.getElementById('btn-auto-radar');
+            if (isAutoRadarActive) {
+                btn.classList.add('radar-active');
+                btn.innerHTML = '🚀 الرادار يعمل...';
+                triggerAutoRadarMaster(true);
+            } else {
+                btn.classList.remove('radar-active');
+                btn.innerHTML = '🚀 تفعيل الرادار';
+            }
         };
 
         window.saveRatio = function() {
@@ -494,6 +539,9 @@
             onValue(ref(db, 'orders'), (snapshot) => {
                 allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
                 renderRadar();
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster(true);
+                }
             });
         }
 
@@ -535,7 +583,7 @@
             }
 
             if (pendingOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">الرادار هادئ... لا توجد طلبات لشركتك حاليا 📡</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">الرادار هادئ لا توجد طلبات لشركتك حاليا 📡</td></tr>';
                 return;
             }
 
@@ -578,7 +626,7 @@
             });
         };
 
-        window.triggerAutoRadarMaster = async function() {
+        window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = currentUser.Client_User || currentUser.user;
             const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
@@ -587,7 +635,7 @@
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
             if(pendingOrders.length === 0) {
-                alert("الرادار هادئ.. لا توجد طلبات لتوزيعها 😊");
+                if(!silent) alert("الرادار هادئ لا توجد طلبات لتوزيعها 😊");
                 return;
             }
 
@@ -618,7 +666,7 @@
             });
 
             if (availableCaptains.length === 0) {
-                alert("عذراً.. لا يوجد أي كابتن متاح وغير مشغول حالياً لاستقبال الطلبات 😊");
+                if(!silent) alert("عذرا لا يوجد أي كابتن متاح وغير مشغول حاليا لاستقبال الطلبات 😊");
                 return;
             }
 
@@ -679,14 +727,14 @@
                 try {
                     await update(ref(db), updates);
                     localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                    alert(`تم التوزيع الأوتوماتيكي بنجاح لعدد (${dispatchedCount}) طلبات 🚀😊`);
+                    if(!silent) alert(`تم التوزيع الأوتوماتيكي بنجاح لعدد ${dispatchedCount} طلبات 🚀😊`);
                     renderRadar();
                     renderCompletedOrders();
                 } catch(e) {
-                    alert("حدث خطأ أثناء التوزيع التلقائي 😊");
+                    if(!silent) alert("حدث خطأ أثناء التوزيع التلقائي 😊");
                 }
             } else {
-                alert("لم يتم توزيع أي طلب 😊");
+                if(!silent) alert("لم يتم توزيع أي طلب 😊");
             }
         };
 
@@ -736,7 +784,7 @@
                         statusIndicator.innerText = '🟢 الكابتن متاح وجاهز للطلبات';
                     } else {
                         statusIndicator.style.color = 'var(--danger)';
-                        statusIndicator.innerText = '🔴 الكابتن غير متاح (أوفلاين)';
+                        statusIndicator.innerText = '🔴 الكابتن غير متاح أوفلاين';
                     }
                 } else {
                     statusIndicator.style.color = 'var(--danger)';
@@ -778,12 +826,12 @@
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
             if (capStatus === 'paused' || capStatus === 'off') {
-                alert("عذرا، حساب الكابتن مجمد 😊");
+                alert("عذرا حساب الكابتن مجمد 😊");
                 return;
             }
 
             if (currentTargetCaptain.app_status === 'offline') {
-                alert("عذراً.. هذا الكابتن خارج الخدمة حالياً 😊");
+                alert("عذرا هذا الكابتن خارج الخدمة حاليا 😊");
                 return;
             }
 
@@ -801,13 +849,11 @@
                 }
 
                 if (activeCount > 0) {
-                    if (!confirm(`عذراً.. هذا الكابتن لديه (${activeCount}) طلب قيد التنفيذ حالياً، هل ترغب بالتأكيد على إرسال طلب آخر له؟`)) {
+                    if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ حاليا هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
                         return; 
                     }
                 }
-            } catch (error) {
-                console.error("Error checking busy status:", error);
-            }
+            } catch (error) {}
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
             const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
@@ -882,7 +928,7 @@
 
             if (currentTargetCaptain) {
                 if (currentTargetCaptain.app_status === 'offline') {
-                    alert("عذراً.. هذا الكابتن خارج الخدمة حالياً 😊");
+                    alert("عذرا هذا الكابتن خارج الخدمة حاليا 😊");
                     return;
                 }
 
@@ -900,13 +946,11 @@
                     }
 
                     if (activeCount > 0) {
-                        if (!confirm(`عذراً.. هذا الكابتن لديه (${activeCount}) طلب قيد التنفيذ حالياً، هل ترغب بالتأكيد على إرسال طلب آخر له؟`)) {
+                        if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ حاليا هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
                             return; 
                         }
                     }
-                } catch (error) {
-                    console.error("Error checking busy status:", error);
-                }
+                } catch (error) {}
 
                 const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
                 const newBal = (currentBal - parseFloat(commission)).toFixed(2);
@@ -1048,7 +1092,7 @@
             const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            if(!name || !phone || !user || !pass || !region) { alert("أكمل البيانات يا بطة وتأكد من إدخال المنطقة 😊"); return; }
+            if(!name || !phone || !user || !pass || !region) { alert("أكمل البيانات يا بطة وتأكد من اختيار المنطقة 😊"); return; }
             
             const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             if(exists) {
@@ -1149,7 +1193,7 @@
             document.getElementById('stat-cap-paused').innerText = pausedCount;
 
             if (myCaptains.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">لا يوجد كباتن مسجلين بعد</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">لا يوجد كباتن مسجلين بعد</td></tr>';
                 return;
             }
 
@@ -1164,6 +1208,10 @@
                     <tr>
                         <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
                         <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
+                        <td>
+                            <div style="font-size:11px; color:var(--primary); font-weight:bold;">U: ${cap.Cap_User || cap.user || '---'}</div>
+                            <div style="font-size:11px; color:var(--danger); font-weight:bold;">P: ${cap.Cap_Pass || cap.password || '---'}</div>
+                        </td>
                         <td><span class="area-badge" style="background:#f1f5f9; color:#64748b; border:none;">${cap.Cap_Region || 'عام'}</span></td>
                         <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
                         <td style="font-weight:bold; color:${bal < 0 ? 'var(--danger)' : 'var(--success)'};">${bal} د.أ</td>
@@ -1171,12 +1219,30 @@
                         <td>
                             <div class="action-btns">
                                 ${toggleBtn}
+                                <button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="editCaptainPhone('${cap.Cap_User || cap.user}', '${cap.Cap_Phone || cap.phone}')" title="تعديل الهاتف">✏️</button>
                                 <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${cap.Cap_User || cap.user}')" title="حذف نهائي">✕</button>
                             </div>
                         </td>
                     </tr>
                 `;
             });
+        };
+
+        window.editCaptainPhone = async function(userKey, currentPhone) {
+            const newPhone = prompt("أدخل رقم الهاتف الجديد للكابتن 😊", currentPhone);
+            if(newPhone && newPhone !== currentPhone) {
+                const updates = {};
+                let nodeFound = null;
+                globalUsers.forEach(u => {
+                    if ((u.Cap_User === userKey || u.user === userKey) && u._node) { nodeFound = u._node; }
+                });
+                if (nodeFound) {
+                    updates[`${nodeFound}/${userKey}/Cap_Phone`] = newPhone;
+                    updates[`${nodeFound}/${userKey}/phone`] = newPhone;
+                    await update(ref(db), updates);
+                    alert("تم تحديث رقم الهاتف بنجاح 📱");
+                }
+            }
         };
 
         window.toggleCapStatus = async function(user, nextStatus) {
