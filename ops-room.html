@@ -368,8 +368,8 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>العمولة المتفق عليها (%)</label>
-                            <input type="number" id="man_ratio" placeholder="10">
+                            <label>قيمة الاقتطاع المالي (د.أ)</label>
+                            <input type="number" id="man_commission" placeholder="0.00">
                         </div>
                     </div>
                     
@@ -596,13 +596,20 @@
                 document.getElementById('man_cap_name').value = currentTargetCaptain.Cap_Name || currentTargetCaptain.name;
                 
                 const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
+                const appStatus = currentTargetCaptain.app_status;
+                
                 statusIndicator.style.display = 'block';
                 if (capStatus === 'active') {
-                    statusIndicator.style.color = 'var(--success)';
-                    statusIndicator.innerText = '🟢 الكابتن متاح حاليا';
+                    if (appStatus === 'online') {
+                        statusIndicator.style.color = 'var(--success)';
+                        statusIndicator.innerText = '🟢 الكابتن متاح وجاهز للطلبات';
+                    } else {
+                        statusIndicator.style.color = 'var(--danger)';
+                        statusIndicator.innerText = '🔴 الكابتن غير متاح (أوفلاين)';
+                    }
                 } else {
                     statusIndicator.style.color = 'var(--danger)';
-                    statusIndicator.innerText = '🔴 الكابتن غير متاح';
+                    statusIndicator.innerText = '🔴 حساب الكابتن مجمد';
                 }
 
             } else if (captainMemory[phone]) {
@@ -625,10 +632,13 @@
             const restInfo = document.getElementById('man_rest_name').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
-            const ratio = document.getElementById('man_ratio').value || 10;
+            const commissionVal = document.getElementById('man_commission').value;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { alert("يرجى إكمال بيانات التوجيه أولا 😊"); return; }
+            if (!phone || !restInfo || !fee || !commissionVal) { 
+                alert("يرجى إكمال بيانات التوجيه (بما فيها مبلغ الاقتطاع) أولا 😊"); 
+                return; 
+            }
             
             if (!currentTargetCaptain) {
                 alert("لم يتم العثور على الكابتن في النظام 😊");
@@ -637,14 +647,43 @@
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
             if (capStatus === 'paused' || capStatus === 'off') {
-                alert("عذرا الكابتن غير متاح حاليا 😊");
+                alert("عذرا، حساب الكابتن مجمد 😊");
                 return;
             }
 
-            const commission = (parseFloat(fee) * (parseFloat(ratio) / 100)).toFixed(2);
+            if (currentTargetCaptain.app_status === 'offline') {
+                alert("عذرا، الكابتن بوضع (غير متاح) ولا يمكن إرسال الطلب له حاليا 😊");
+                return;
+            }
+
+            const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
+
+            // خوارزمية ذكاء الانشغال (Busy Driver Logic)
+            try {
+                const ordersSnap = await get(ref(db, `assigned_orders/${capKey}`));
+                let activeCount = 0;
+                if (ordersSnap.exists()) {
+                    Object.values(ordersSnap.val()).forEach(o => {
+                        if (o.status === 'assigned' || o.status === 'accepted') {
+                            activeCount++;
+                        }
+                    });
+                }
+
+                if (activeCount > 0) {
+                    if (!confirm(`عذراً.. هذا الكابتن لديه (${activeCount}) طلب قيد التنفيذ حالياً، هل ترغب بالتأكيد على إرسال طلب آخر له؟`)) {
+                        return; // إلغاء الإرسال بناءً على اختيار المسؤول
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking busy status:", error);
+            }
+
+            // اقتطاع مالي دقيق مباشر
+            const commission = parseFloat(commissionVal).toFixed(2);
             const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
             const newBal = currentBal - parseFloat(commission);
-            const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
+            
             const updates = {};
             updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = newBal;
             updates[`${currentTargetCaptain._node}/${capKey}/balance`] = newBal;
@@ -682,6 +721,7 @@
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
+                document.getElementById('man_commission').value = '';
                 document.getElementById('linked_order_id').value = '';
                 renderRadar();
                 renderCompletedOrders();
@@ -697,22 +737,54 @@
             const restInfo = document.getElementById('man_rest_name').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
-            const ratio = document.getElementById('man_ratio').value || 10;
+            const commissionVal = document.getElementById('man_commission').value;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { alert("يرجى إكمال بيانات التوجيه أولا 😊"); return; }
+            if (!phone || !restInfo || !fee || !commissionVal) { 
+                alert("يرجى إكمال بيانات التوجيه (بما فيها الاقتطاع) أولا 😊"); 
+                return; 
+            }
 
-            const commission = (parseFloat(fee) * (parseFloat(ratio) / 100)).toFixed(2);
-            
             if (capName) {
                 captainMemory[phone] = capName;
                 localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
             }
 
+            const commission = parseFloat(commissionVal).toFixed(2);
+
             if (currentTargetCaptain) {
+                // التأكد من وضع الكابتن
+                if (currentTargetCaptain.app_status === 'offline') {
+                    alert("عذرا، الكابتن بوضع (غير متاح) بالوقت الحالي 😊");
+                    return;
+                }
+
+                const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
+                
+                // فحص الانشغال
+                try {
+                    const ordersSnap = await get(ref(db, `assigned_orders/${capKey}`));
+                    let activeCount = 0;
+                    if (ordersSnap.exists()) {
+                        Object.values(ordersSnap.val()).forEach(o => {
+                            if (o.status === 'assigned' || o.status === 'accepted') {
+                                activeCount++;
+                            }
+                        });
+                    }
+
+                    if (activeCount > 0) {
+                        if (!confirm(`عذراً.. هذا الكابتن لديه (${activeCount}) طلب قيد التنفيذ حالياً، هل ترغب بالتأكيد على إرسال طلب آخر له؟`)) {
+                            return; 
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking busy status:", error);
+                }
+
                 const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
                 const newBal = currentBal - parseFloat(commission);
-                const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
+                
                 const updates = {};
                 updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = newBal;
                 updates[`${currentTargetCaptain._node}/${capKey}/balance`] = newBal;
@@ -747,6 +819,7 @@
             document.getElementById('man_rest_name').value = '';
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
+            document.getElementById('man_commission').value = '';
             document.getElementById('linked_order_id').value = '';
             renderRadar();
             renderCompletedOrders();
@@ -862,7 +935,8 @@
                 company: myMaster,
                 Client_Master: myMaster,
                 app_sync_lock: false,
-                app_access: "granted"
+                app_access: "granted",
+                app_status: "offline" // افتراضياً الكابتن الجديد غير متاح
             };
             
             await set(ref(db, 'captains/' + user), capData);
