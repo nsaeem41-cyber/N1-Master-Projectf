@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>N One | Captain App 💎</title>
+    <title>Captain Portal 💎</title>
     
     <style>
         /* ================= تصميم Captain App (Royal Navy & Diamond White) ================= */
@@ -46,27 +46,34 @@
         .screen.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ================= شاشة تسجيل الدخول ================= */
+        /* ================= شاشة تسجيل الدخول والتسجيل الذاتي ================= */
         .login-wrapper {
             flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 30px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white; text-align: center;
+            color: white; text-align: center; overflow-y: auto;
         }
-        .login-logo { font-size: 40px; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .login-logo { font-size: 34px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .login-sub { color: var(--gold); font-size: 14px; margin-bottom: 40px; font-weight: bold; }
         .input-group { margin-bottom: 20px; text-align: right; }
         .input-group label { display: block; font-size: 12px; margin-bottom: 8px; color: #94a3b8; font-weight: bold; }
-        .input-group input {
+        .input-group input, .input-group select {
             width: 100%; padding: 15px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px;
             background: rgba(255,255,255,0.05); color: white; font-weight: bold; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s;
         }
-        .input-group input:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
+        .input-group select option { background: var(--primary); color: white; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
         .btn-login {
             width: 100%; padding: 15px; background: var(--gold); color: var(--primary);
             border: none; border-radius: 12px; font-weight: 900; font-size: 16px; margin-top: 10px;
             cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
         }
         .btn-login:active { transform: scale(0.98); }
+        
+        .btn-link {
+            background: transparent; border: none; color: var(--diamond); font-size: 14px; font-weight: bold;
+            margin-top: 20px; cursor: pointer; text-decoration: underline; transition: 0.3s;
+        }
+        .btn-link:hover { color: var(--gold); }
 
         /* ================= الهيدر الداخلي ================= */
         .app-header {
@@ -95,7 +102,7 @@
             border-right: 5px solid var(--primary); animation: slideDown 0.5s ease; 
         }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .ad-n-one-badge { 
+        .ad-sender-badge { 
             background: var(--gold); color: white; padding: 5px 12px; 
             border-radius: 8px; font-size: 11px; font-weight: bold; 
             margin-left: 10px; white-space: nowrap; box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
@@ -257,7 +264,7 @@
         }
         .hotspot-tag span { background: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--primary); }
 
-        /* شاشة الإيقاف */
+        /* شاشة الإيقاف والانتظار */
         .blocked-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.98); z-index: 9999;
@@ -268,6 +275,8 @@
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
         .blocked-title { font-size: 24px; font-weight: 900; color: var(--danger); margin-bottom: 15px; }
         .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
+
+        .pending-title { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 15px; }
 
         #loader {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
@@ -288,7 +297,7 @@
         
         <div id="loader">
             <div class="spinner"></div>
-            <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;">N <span style="color:white;">One</span></div>
+            <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;" id="loader_dynamic_name">بوابة الكباتن</div>
             <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;" id="lang_loader">جاري الاتصال بالنواة...</div>
         </div>
 
@@ -335,14 +344,21 @@
         <div id="blocked-screen" class="blocked-screen">
             <div class="blocked-icon">🛑</div>
             <div class="blocked-title" id="lang_blocked_title">تم إيقاف حسابك</div>
-            <div class="blocked-text" id="lang_blocked_text">عذراً يا بطل، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.</div>
+            <div class="blocked-text" id="lang_blocked_text">عذراً، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.</div>
             <button class="btn-logout" style="margin-top: 30px; background: rgba(239, 68, 68, 0.2); border-color: var(--danger);" onclick="logout()" id="lang_blocked_btn">تسجيل الخروج</button>
+        </div>
+
+        <div id="pending-screen" class="blocked-screen" style="background: rgba(15, 23, 42, 0.98);">
+            <div class="blocked-icon">⏳</div>
+            <div class="pending-title" id="lang_pending_title">حسابك قيد الانتظار</div>
+            <div class="blocked-text" id="lang_pending_text">لقد تم استلام طلب تسجيلك بنجاح.<br><br>الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات.</div>
+            <button class="btn-logout" style="margin-top: 30px; background: rgba(255, 255, 255, 0.2);" onclick="logout()" id="lang_pending_btn">العودة للرئيسية</button>
         </div>
 
         <div id="login-screen" class="screen">
             <div class="login-wrapper">
-                <div class="login-logo">N <span class="gold-text" style="color:var(--gold)">One</span></div>
-                <div class="login-sub" id="lang_login_sub">بوابة الكباتن الألماسية 💎</div>
+                <div class="login-logo">بوابة <span class="gold-text" style="color:var(--gold)">الكباتن</span></div>
+                <div class="login-sub" id="lang_login_sub">المنصة الألماسية 💎</div>
                 
                 <div class="input-group">
                     <label id="lang_login_user_lbl">اسم المستخدم (User ID)</label>
@@ -354,6 +370,45 @@
                 </div>
                 
                 <button class="btn-login" onclick="loginCaptain()" id="lang_login_btn">دخول آمن 🚀</button>
+                <button class="btn-link" onclick="openRegisterScreen()" id="lang_register_btn">تسجيل كابتن جديد 📝</button>
+            </div>
+        </div>
+
+        <div id="register-screen" class="screen">
+            <div class="login-wrapper" style="padding: 20px;">
+                <div class="login-logo" style="font-size: 24px; margin-bottom: 25px;" id="lang_reg_title">تسجيل كابتن جديد 📝</div>
+                
+                <div class="input-group">
+                    <label id="lang_reg_name">الاسم الكامل</label>
+                    <input type="text" id="reg_name" placeholder="أدخل اسمك الكريم">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_phone">رقم الهاتف (سيكون اسم المستخدم)</label>
+                    <input type="tel" id="reg_phone" placeholder="مثال: 07xxxxxxxx">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_pass">كلمة المرور</label>
+                    <input type="password" id="reg_pass" placeholder="اختر كلمة مرور آمنة">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_car">السيارة (النوع والترميز)</label>
+                    <input type="text" id="reg_car" placeholder="مثال: كيا سيراتو - 50-12345">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_comp">الشركة التابع لها</label>
+                    <select id="reg_company" onchange="updateRegAreas()">
+                        <option value="">جاري تحميل الشركات...</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_area">منطقة العمل المعتمدة</label>
+                    <select id="reg_area">
+                        <option value="">يرجى اختيار الشركة أولاً...</option>
+                    </select>
+                </div>
+                
+                <button class="btn-login" onclick="submitRegistration()" id="lang_reg_submit">إرسال الطلب 🚀</button>
+                <button class="btn-link" onclick="backToLogin()" id="lang_reg_back">عودة لشاشة الدخول</button>
             </div>
         </div>
 
@@ -371,7 +426,7 @@
             </div>
 
             <div id="smart-ad-container" class="app-ad-container">
-                <div class="ad-n-one-badge" id="ad-sender-badge">إشعار 👑</div>
+                <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
                 <div class="ad-content-wrapper">
                     <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
                 </div>
@@ -414,7 +469,7 @@
                     <div class="achievement-card">
                         <div class="ach-title" id="lang_ach_title">إنجاز اليوم 🏆</div>
                         <div class="ach-number" id="ui_today_count">0</div>
-                        <div class="ach-subtitle" id="lang_ach_sub">عاش المشاكس!</div>
+                        <div class="ach-subtitle" id="lang_ach_sub">عمل ممتاز!</div>
                     </div>
                     <div class="achievement-card">
                         <div class="ach-title" id="lang_hot_title">نقاط ساخنة 🔥</div>
@@ -438,7 +493,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -458,11 +513,10 @@
         let allCompletedOrders = [];
         let ringtoneActive = false;
         let currentLang = 'ar';
+        let globalPricesList = [];
         
-        // التعديل الألماسي: نسبة الاقتطاع 10%
         const COMMISSION_RATE = 0.10; 
 
-        // قاموس الترجمة السلس
         const dict = {
             'ar': {
                 lang_loader: 'جاري الاتصال بالنواة...',
@@ -474,19 +528,32 @@
                 lang_toggle_btn: '🌐 Switch to English',
                 lang_save_btn: 'حفظ التعديلات ✅',
                 lang_blocked_title: 'تم إيقاف حسابك',
-                lang_blocked_text: 'عذراً يا بطل، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.',
+                lang_blocked_text: 'عذراً، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.',
                 lang_blocked_btn: 'تسجيل الخروج',
-                lang_login_sub: 'بوابة الكباتن الألماسية 💎',
+                lang_pending_title: 'حسابك قيد الانتظار',
+                lang_pending_text: 'لقد تم استلام طلب تسجيلك بنجاح.<br><br>الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات.',
+                lang_pending_btn: 'العودة للرئيسية',
+                lang_login_sub: 'المنصة الألماسية 💎',
                 lang_login_user_lbl: 'اسم المستخدم (User ID)',
                 lang_login_pass_lbl: 'كلمة المرور (Password)',
                 lang_login_btn: 'دخول آمن 🚀',
+                lang_register_btn: 'تسجيل كابتن جديد 📝',
+                lang_reg_title: 'تسجيل كابتن جديد 📝',
+                lang_reg_name: 'الاسم الكامل',
+                lang_reg_phone: 'رقم الهاتف (سيكون اسم المستخدم)',
+                lang_reg_pass: 'كلمة المرور',
+                lang_reg_car: 'السيارة (النوع والترميز)',
+                lang_reg_comp: 'الشركة التابع لها',
+                lang_reg_area: 'منطقة العمل المعتمدة',
+                lang_reg_submit: 'إرسال الطلب 🚀',
+                lang_reg_back: 'عودة لشاشة الدخول',
                 lang_header_cap: 'كابتن 🦸‍♂️',
                 lang_btn_out: 'خروج 🔒',
                 lang_bal_warn: 'عذراً، وصل رصيدك للحد المانع (-1 د.أ). يرجى شحن رصيدك للاستمرار في استقبال الطلبات.',
                 lang_bal_title: 'الرصيد المالي الفعلي',
                 lang_rating: 'تقييم ألماسي 💎',
                 lang_ach_title: 'إنجاز اليوم 🏆',
-                lang_ach_sub: 'عاش المشاكس!',
+                lang_ach_sub: 'عمل ممتاز!',
                 lang_hot_title: 'نقاط ساخنة 🔥',
                 lang_sec_orders: '📲 الطلبات الواردة',
                 status_online: 'متاح وجاهز للطلبات 🟢',
@@ -506,19 +573,32 @@
                 lang_toggle_btn: '🌐 التبديل للعربية',
                 lang_save_btn: 'Save Changes ✅',
                 lang_blocked_title: 'Account Blocked',
-                lang_blocked_text: 'Sorry hero, your account has been suspended.<br><br>Please contact your company management to reactivate.',
+                lang_blocked_text: 'Sorry, your account has been suspended.<br><br>Please contact your company management to reactivate.',
                 lang_blocked_btn: 'Logout',
-                lang_login_sub: 'Diamond Captain Portal 💎',
+                lang_pending_title: 'Account Pending',
+                lang_pending_text: 'Your registration has been received successfully.<br><br>Please contact your company administration to activate the account.',
+                lang_pending_btn: 'Return to Home',
+                lang_login_sub: 'Diamond Portal 💎',
                 lang_login_user_lbl: 'Username',
                 lang_login_pass_lbl: 'Password',
                 lang_login_btn: 'Secure Login 🚀',
+                lang_register_btn: 'Register New Captain 📝',
+                lang_reg_title: 'Register New Captain 📝',
+                lang_reg_name: 'Full Name',
+                lang_reg_phone: 'Phone Number (Username)',
+                lang_reg_pass: 'Password',
+                lang_reg_car: 'Car (Type & Plate)',
+                lang_reg_comp: 'Company Name',
+                lang_reg_area: 'Approved Work Area',
+                lang_reg_submit: 'Submit Request 🚀',
+                lang_reg_back: 'Back to Login',
                 lang_header_cap: 'Captain 🦸‍♂️',
                 lang_btn_out: 'Logout 🔒',
                 lang_bal_warn: 'Warning, balance reached the limit (-1 JOD). Please recharge to receive orders.',
                 lang_bal_title: 'Actual Balance',
                 lang_rating: 'Diamond Rating 💎',
                 lang_ach_title: 'Today\'s Wins 🏆',
-                lang_ach_sub: 'Keep it up!',
+                lang_ach_sub: 'Great Job!',
                 lang_hot_title: 'Hotspots 🔥',
                 lang_sec_orders: '📲 Incoming Orders',
                 status_online: 'Online & Ready 🟢',
@@ -537,7 +617,7 @@
             for(const key in dict[currentLang]) {
                 const el = document.getElementById(key);
                 if(el) {
-                    if(key === 'lang_blocked_text') el.innerHTML = dict[currentLang][key];
+                    if(key === 'lang_blocked_text' || key === 'lang_pending_text') el.innerHTML = dict[currentLang][key];
                     else el.innerText = dict[currentLang][key];
                 }
             }
@@ -563,7 +643,17 @@
             if (savedUser) {
                 currentCaptain = JSON.parse(savedUser);
                 capNodeKey = currentCaptain.Cap_User || currentCaptain.user;
+                
+                if (currentCaptain.app_access === 'pending' || currentCaptain.Cap_Status === 'pending') {
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('register-screen').classList.remove('active');
+                    document.getElementById('main-screen').classList.remove('active');
+                    document.getElementById('pending-screen').style.display = 'flex';
+                    return;
+                }
+                
                 document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('register-screen').classList.remove('active');
                 document.getElementById('main-screen').classList.add('active');
                 initRealtimeListeners();
                 setupAdsAndAlerts();
@@ -576,7 +666,7 @@
             const user = document.getElementById('login_user').value.trim();
             const pass = document.getElementById('login_pass').value.trim();
             
-            if(!user || !pass) { alert("يرجى إدخال اليوزر والباسورد يا بطل 😊"); return; }
+            if(!user || !pass) { alert("يرجى إدخال اليوزر والباسورد"); return; }
             
             document.getElementById('loader').style.display = 'flex';
             
@@ -586,6 +676,14 @@
                 
                 if (snap.exists() && (snap.val().Cap_Pass === pass || snap.val().pass === pass)) {
                     const data = snap.val();
+                    
+                    if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('login-screen').classList.remove('active');
+                        document.getElementById('pending-screen').style.display = 'flex';
+                        localStorage.setItem('n1_captain_session', JSON.stringify(data));
+                        return;
+                    }
                     
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
                         document.getElementById('loader').style.display = 'none';
@@ -605,12 +703,113 @@
                     setupAdsAndAlerts();
                 } else {
                     document.getElementById('loader').style.display = 'none';
-                    alert("بيانات الدخول غير صحيحة يرجى التأكد 😊");
+                    alert("بيانات الدخول غير صحيحة يرجى التأكد");
                 }
             } catch (error) {
                 document.getElementById('loader').style.display = 'none';
-                alert("حدث خطأ في الاتصال 😊");
+                alert("حدث خطأ في الاتصال");
             }
+        };
+
+        window.openRegisterScreen = async function() {
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('register-screen').classList.add('active');
+            document.getElementById('loader').style.display = 'flex';
+            
+            try {
+                const snap = await get(ref(db, 'prices'));
+                if(snap.exists()) {
+                    globalPricesList = Object.values(snap.val());
+                    const companies = [...new Set(globalPricesList.map(p => p.Client_Master || p.Price_Source))].filter(Boolean);
+                    const compSelect = document.getElementById('reg_company');
+                    compSelect.innerHTML = '<option value="">اختر الشركة...</option>';
+                    companies.forEach(c => {
+                        compSelect.innerHTML += `<option value="${c}">${c}</option>`;
+                    });
+                }
+            } catch(e) {
+                console.log("Error loading prices", e);
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        };
+
+        window.updateRegAreas = function() {
+            const comp = document.getElementById('reg_company').value;
+            const areaSelect = document.getElementById('reg_area');
+            areaSelect.innerHTML = '<option value="">اختر المنطقة...</option>';
+            if(comp) {
+                const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === comp || p.Price_Source === comp).map(p => p.Price_Area))].filter(Boolean);
+                areas.forEach(a => {
+                    areaSelect.innerHTML += `<option value="${a}">${a}</option>`;
+                });
+            }
+        };
+
+        window.submitRegistration = async function() {
+            const name = document.getElementById('reg_name').value.trim();
+            const phone = document.getElementById('reg_phone').value.trim();
+            const pass = document.getElementById('reg_pass').value.trim();
+            const car = document.getElementById('reg_car').value.trim();
+            const comp = document.getElementById('reg_company').value;
+            const area = document.getElementById('reg_area').value;
+
+            if(!name || !phone || !pass || !car || !comp || !area) {
+                alert("يرجى تعبئة جميع الحقول بشكل صحيح");
+                return;
+            }
+
+            document.getElementById('loader').style.display = 'flex';
+
+            try {
+                const existing = await get(ref(db, `captains/${phone}`));
+                if(existing.exists()) {
+                    document.getElementById('loader').style.display = 'none';
+                    alert("رقم الهاتف مستخدم مسبقاً يرجى تسجيل الدخول");
+                    return;
+                }
+
+                const newCaptain = {
+                    Cap_User: phone,
+                    user: phone,
+                    Cap_Name: name,
+                    name: name,
+                    Cap_Phone: phone,
+                    phone: phone,
+                    Cap_Pass: pass,
+                    pass: pass,
+                    Cap_Car: car,
+                    company: comp,
+                    Client_Master: comp,
+                    Cap_Location: area,
+                    Cap_Balance: 0,
+                    balance: 0,
+                    app_access: 'pending', 
+                    app_status: 'offline',
+                    Cap_Status: 'pending',
+                    created_at: Date.now()
+                };
+
+                await set(ref(db, `captains/${phone}`), newCaptain);
+                
+                localStorage.setItem('n1_captain_session', JSON.stringify(newCaptain));
+                currentCaptain = newCaptain;
+                capNodeKey = phone;
+                
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('register-screen').classList.remove('active');
+                
+                checkSession(); 
+                
+            } catch(e) {
+                document.getElementById('loader').style.display = 'none';
+                alert("حدث خطأ أثناء التسجيل");
+            }
+        };
+
+        window.backToLogin = function() {
+            document.getElementById('register-screen').classList.remove('active');
+            document.getElementById('login-screen').classList.add('active');
         };
 
         window.logout = function() {
@@ -687,11 +886,20 @@
                     const data = snapshot.val();
                     currentCaptain = data;
                     
+                    if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
+                        document.getElementById('blocked-screen').style.display = 'none';
+                        document.getElementById('main-screen').classList.remove('active');
+                        document.getElementById('pending-screen').style.display = 'flex';
+                        return;
+                    }
+                    
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
+                        document.getElementById('pending-screen').style.display = 'none';
                         document.getElementById('blocked-screen').style.display = 'flex';
                         return;
                     } else {
                         document.getElementById('blocked-screen').style.display = 'none';
+                        document.getElementById('pending-screen').style.display = 'none';
                     }
 
                     updateUIProfile(data);
@@ -722,7 +930,6 @@
                         }
                         
                         if (ord.status === 'assigned') {
-                            // درع الإتاحة إذا كان أوفلاين لا يظهر الطلب ولا يرن
                             if(currentCaptain.app_status !== 'online') return;
 
                             hasActive = true;
@@ -876,7 +1083,7 @@
             const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
             
             if (isOnline && bal <= -1) {
-                const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد 😊" : "Recharge balance to go online 😊";
+                const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online";
                 alert(msg);
                 document.getElementById('toggle_status').checked = false;
                 return;
@@ -902,13 +1109,12 @@
             updates[`captains/${capNodeKey}/Cap_Balance`] = newBal;
             updates[`captains/${capNodeKey}/balance`] = newBal;
             
-            // خوارزمية تتبع حالة الانشغال للرادار المركزي
             updates[`captains/${capNodeKey}/is_busy`] = true;
 
             try {
                 await update(ref(db), updates);
             } catch (e) {
-                const msg = currentLang === 'ar' ? "حدث خطأ أثناء الربط المالي حاول مجدداً 😊" : "Error in financial transaction, please retry 😊";
+                const msg = currentLang === 'ar' ? "حدث خطأ أثناء الربط المالي حاول مجدداً" : "Error in financial transaction, please retry";
                 alert(msg);
             }
         };
@@ -929,7 +1135,6 @@
                 updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'completed';
                 updates[`assigned_orders/${capNodeKey}/${orderId}/completed_at`] = Date.now();
                 
-                // تحرير خوارزمية الانشغال
                 updates[`captains/${capNodeKey}/is_busy`] = false;
                 
                 await update(ref(db), updates);
@@ -984,7 +1189,7 @@
         window.saveSettings = async function() {
             const newUser = document.getElementById('set_user').value.trim();
             const newPass = document.getElementById('set_pass').value.trim();
-            const msgEmpty = currentLang === 'ar' ? "البيانات فارغة 😊" : "Fields cannot be empty 😊";
+            const msgEmpty = currentLang === 'ar' ? "البيانات فارغة" : "Fields cannot be empty";
             if(!newUser || !newPass) { alert(msgEmpty); return; }
 
             try {
@@ -1004,11 +1209,11 @@
                     currentCaptain.pass = newPass;
                     localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
                 }
-                const msgOk = currentLang === 'ar' ? "تم التحديث بنجاح الألماس بيلمع 😊" : "Updated successfully 😊";
+                const msgOk = currentLang === 'ar' ? "تم التحديث بنجاح" : "Updated successfully";
                 alert(msgOk);
                 document.getElementById('settings-modal').style.display = 'none';
             } catch(e) {
-                alert(currentLang === 'ar' ? "حدث خطأ بالاتصال 😊" : "Connection Error 😊");
+                alert(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection Error");
             }
         };
 
