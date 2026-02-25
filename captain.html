@@ -26,6 +26,7 @@
             background-color: var(--primary); margin: 0; padding: 0; 
             color: var(--text); user-select: none; overflow-x: hidden;
             display: flex; justify-content: center; min-height: 100vh;
+            transition: all 0.3s ease;
         }
 
         /* حاوية التطبيق (شكل الهاتف) */
@@ -75,17 +76,16 @@
         }
         .header-brand { font-size: 18px; font-weight: 900; display: flex; flex-direction: column; }
         .header-company { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; width: fit-content; }
-        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
         
-        /* زر السجل الألماسي */
-        .btn-history {
+        .btn-action-top {
             background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); color: var(--gold);
-            padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold;
+            padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold;
             transition: 0.3s; display: flex; align-items: center; gap: 4px;
         }
-        .btn-history:active { transform: scale(0.95); background: var(--gold); color: var(--primary); }
+        .btn-action-top:active { transform: scale(0.95); background: var(--gold); color: var(--primary); }
         
-        .btn-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+        .btn-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
 
         /* ================= تصميم الإعلانات والتنبيهات ================= */
         .app-ad-container { 
@@ -205,22 +205,22 @@
         .btn-complete { background: var(--primary); width: 100%; }
         .btn-action:active { transform: scale(0.95); }
 
-        /* سجل الطلبات (History Modal) */
-        .history-modal-overlay {
+        /* سجل الطلبات والإعدادات (Modals) */
+        .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
             display: none; justify-content: center; align-items: flex-end; z-index: 5000;
         }
-        .history-modal-content {
+        .modal-content {
             background: white; width: 100%; max-width: 480px; height: 80vh;
             border-top-left-radius: 25px; border-top-right-radius: 25px;
             padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;
             animation: slideUpModal 0.4s ease-out;
         }
         @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
-        .history-title { font-size: 18px; font-weight: 900; color: var(--primary); }
-        .close-history { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; color: var(--danger); cursor: pointer; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        .modal-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+        .close-modal { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; color: var(--danger); cursor: pointer; }
         
         .history-list { flex: 1; overflow-y: auto; padding-right: 5px; }
         .history-item { 
@@ -230,6 +230,24 @@
         .h-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
         .h-val { color: var(--primary); }
         .h-commission { color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 8px; font-size: 11px; border: 1px solid #fecaca; }
+
+        /* نموذج الإعدادات */
+        .settings-form { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .settings-group { margin-bottom: 20px; }
+        .settings-group label { display: block; font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .settings-group input { 
+            width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; 
+            font-size: 15px; background: #f8fafc; outline: none; transition: 0.3s; box-sizing: border-box; 
+        }
+        .settings-group input:focus { border-color: var(--gold); }
+        .lang-toggle { 
+            background: var(--primary); color: white; border: none; padding: 12px; 
+            border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        .btn-save-settings { 
+            background: var(--gold); color: var(--primary); border: none; padding: 15px; 
+            border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; 
+        }
 
         /* خريطة النقاط الساخنة */
         .hotspots-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
@@ -260,7 +278,7 @@
 
     </style>
 </head>
-<body>
+<body id="app-body">
 
     <audio id="order-ringtone" loop preload="auto">
         <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
@@ -271,62 +289,84 @@
         <div id="loader">
             <div class="spinner"></div>
             <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;">N <span style="color:white;">One</span></div>
-            <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;">جاري الاتصال بالنواة...</div>
+            <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;" id="lang_loader">جاري الاتصال بالنواة...</div>
         </div>
 
         <div id="app-popup-overlay" class="app-popup-overlay">
             <div class="app-popup-box">
                 <div class="app-popup-icon">🚨</div>
                 <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
-                <button class="app-popup-btn" onclick="document.getElementById('app-popup-overlay').style.display='none'">حسناً، فهمت</button>
+                <button class="app-popup-btn" onclick="document.getElementById('app-popup-overlay').style.display='none'" id="lang_popup_btn">حسناً، فهمت</button>
             </div>
         </div>
 
-        <div id="history-modal" class="history-modal-overlay">
-            <div class="history-modal-content">
-                <div class="history-header">
-                    <div class="history-title">سجل الطلبات الألماسي 💎</div>
-                    <button class="close-history" onclick="document.getElementById('history-modal').style.display='none'">✕</button>
+        <div id="history-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="lang_history_title">سجل الطلبات الألماسي 💎</div>
+                    <button class="close-modal" onclick="document.getElementById('history-modal').style.display='none'">✕</button>
                 </div>
                 <div id="history-list-container" class="history-list">
                     </div>
             </div>
         </div>
 
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="lang_settings_title">الإعدادات ⚙️</div>
+                    <button class="close-modal" onclick="document.getElementById('settings-modal').style.display='none'">✕</button>
+                </div>
+                <div class="settings-form">
+                    <div class="settings-group">
+                        <label id="lang_set_user">اسم المستخدم (يوزر الدخول)</label>
+                        <input type="text" id="set_user" autocomplete="off">
+                    </div>
+                    <div class="settings-group">
+                        <label id="lang_set_pass">كلمة المرور</label>
+                        <input type="password" id="set_pass">
+                    </div>
+                    <button class="lang-toggle" onclick="toggleLanguage()" id="lang_toggle_btn">🌐 Switch to English</button>
+                    <button class="btn-save-settings" onclick="saveSettings()" id="lang_save_btn">حفظ التعديلات ✅</button>
+                </div>
+            </div>
+        </div>
+
         <div id="blocked-screen" class="blocked-screen">
             <div class="blocked-icon">🛑</div>
-            <div class="blocked-title">تم إيقاف حسابك</div>
-            <div class="blocked-text">عذراً يا بطل، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.</div>
-            <button class="btn-logout" style="margin-top: 30px; background: rgba(239, 68, 68, 0.2); border-color: var(--danger);" onclick="logout()">تسجيل الخروج</button>
+            <div class="blocked-title" id="lang_blocked_title">تم إيقاف حسابك</div>
+            <div class="blocked-text" id="lang_blocked_text">عذراً يا بطل، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.</div>
+            <button class="btn-logout" style="margin-top: 30px; background: rgba(239, 68, 68, 0.2); border-color: var(--danger);" onclick="logout()" id="lang_blocked_btn">تسجيل الخروج</button>
         </div>
 
         <div id="login-screen" class="screen">
             <div class="login-wrapper">
                 <div class="login-logo">N <span class="gold-text" style="color:var(--gold)">One</span></div>
-                <div class="login-sub">بوابة الكباتن الألماسية 💎</div>
+                <div class="login-sub" id="lang_login_sub">بوابة الكباتن الألماسية 💎</div>
                 
                 <div class="input-group">
-                    <label>اسم المستخدم (User ID)</label>
+                    <label id="lang_login_user_lbl">اسم المستخدم (User ID)</label>
                     <input type="text" id="login_user" placeholder="أدخل اليوزر الخاص بك" autocomplete="off">
                 </div>
                 <div class="input-group">
-                    <label>كلمة المرور (Password)</label>
+                    <label id="lang_login_pass_lbl">كلمة المرور (Password)</label>
                     <input type="password" id="login_pass" placeholder="أدخل كلمة المرور">
                 </div>
                 
-                <button class="btn-login" onclick="loginCaptain()">دخول آمن 🚀</button>
+                <button class="btn-login" onclick="loginCaptain()" id="lang_login_btn">دخول آمن 🚀</button>
             </div>
         </div>
 
         <div id="main-screen" class="screen">
             <div class="app-header">
                 <div class="header-brand">
-                    <div style="font-size: 16px;">كابتن 🦸‍♂️</div>
+                    <div style="font-size: 16px;" id="lang_header_cap">كابتن 🦸‍♂️</div>
                     <div id="ui_company_name" class="header-company">الشركة الأم</div>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-history" onclick="openHistoryModal()">السجل 📜</button>
-                    <button class="btn-logout" onclick="logout()">خروج 🔒</button>
+                    <button class="btn-action-top" onclick="openSettingsModal()" id="lang_btn_set">⚙️</button>
+                    <button class="btn-action-top" onclick="openHistoryModal()" id="lang_btn_hist">📜</button>
+                    <button class="btn-logout" onclick="logout()" id="lang_btn_out">خروج 🔒</button>
                 </div>
             </div>
 
@@ -341,7 +381,7 @@
                 
                 <div id="balance-warning" class="warning-banner">
                     <span style="font-size: 18px;">⚠️</span>
-                    <span>عذراً، وصل رصيدك للحد المانع (-1 د.أ). يرجى شحن رصيدك للاستمرار في استقبال الطلبات.</span>
+                    <span id="lang_bal_warn">عذراً، وصل رصيدك للحد المانع (-1 د.أ). يرجى شحن رصيدك للاستمرار في استقبال الطلبات.</span>
                 </div>
 
                 <div class="cap-profile-card">
@@ -349,12 +389,12 @@
                     <div class="cap-car" id="ui_cap_car">---</div>
                     <div class="cap-stats-row">
                         <div>
-                            <div class="bal-title">الرصيد المالي الفعلي</div>
+                            <div class="bal-title" id="lang_bal_title">الرصيد المالي الفعلي</div>
                             <div class="bal-amount" id="ui_cap_bal">0.00 <span style="font-size:14px;">د.أ</span></div>
                         </div>
                         <div class="rating-box">
                             <div class="stars">★★★★★</div>
-                            <div class="rating-text">تقييم ألماسي 💎</div>
+                            <div class="rating-text" id="lang_rating">تقييم ألماسي 💎</div>
                         </div>
                     </div>
                 </div>
@@ -372,21 +412,21 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="achievement-card">
-                        <div class="ach-title">إنجاز اليوم 🏆</div>
+                        <div class="ach-title" id="lang_ach_title">إنجاز اليوم 🏆</div>
                         <div class="ach-number" id="ui_today_count">0</div>
-                        <div class="ach-subtitle">عاش المشاكس!</div>
+                        <div class="ach-subtitle" id="lang_ach_sub">عاش المشاكس!</div>
                     </div>
                     <div class="achievement-card">
-                        <div class="ach-title">نقاط ساخنة 🔥</div>
+                        <div class="ach-title" id="lang_hot_title">نقاط ساخنة 🔥</div>
                         <div id="ui_hotspots" class="hotspots-container" style="margin: 0; justify-content: center;">
-                            <div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">جاري الرصد...</div>
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;" id="lang_hot_wait">جاري الرصد...</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="section-title">📲 الطلبات الواردة</div>
+                <div class="section-title" id="lang_sec_orders">📲 الطلبات الواردة</div>
                 <div id="active-orders-container">
-                    <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">
+                    <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;" id="lang_no_orders">
                         لا توجد طلبات حالياً، خليك قريب من النقاط الساخنة 📡
                     </div>
                 </div>
@@ -417,9 +457,92 @@
         let capNodeKey = null;
         let allCompletedOrders = [];
         let ringtoneActive = false;
+        let currentLang = 'ar';
         
-        // نسبة العمولة الافتراضية للشركة (مثلاً 15%)
-        const COMMISSION_RATE = 0.15; 
+        // التعديل الألماسي: نسبة الاقتطاع 10%
+        const COMMISSION_RATE = 0.10; 
+
+        // قاموس الترجمة السلس
+        const dict = {
+            'ar': {
+                lang_loader: 'جاري الاتصال بالنواة...',
+                lang_popup_btn: 'حسناً، فهمت',
+                lang_history_title: 'سجل الطلبات الألماسي 💎',
+                lang_settings_title: 'الإعدادات ⚙️',
+                lang_set_user: 'اسم المستخدم (يوزر الدخول)',
+                lang_set_pass: 'كلمة المرور',
+                lang_toggle_btn: '🌐 Switch to English',
+                lang_save_btn: 'حفظ التعديلات ✅',
+                lang_blocked_title: 'تم إيقاف حسابك',
+                lang_blocked_text: 'عذراً يا بطل، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.',
+                lang_blocked_btn: 'تسجيل الخروج',
+                lang_login_sub: 'بوابة الكباتن الألماسية 💎',
+                lang_login_user_lbl: 'اسم المستخدم (User ID)',
+                lang_login_pass_lbl: 'كلمة المرور (Password)',
+                lang_login_btn: 'دخول آمن 🚀',
+                lang_header_cap: 'كابتن 🦸‍♂️',
+                lang_btn_out: 'خروج 🔒',
+                lang_bal_warn: 'عذراً، وصل رصيدك للحد المانع (-1 د.أ). يرجى شحن رصيدك للاستمرار في استقبال الطلبات.',
+                lang_bal_title: 'الرصيد المالي الفعلي',
+                lang_rating: 'تقييم ألماسي 💎',
+                lang_ach_title: 'إنجاز اليوم 🏆',
+                lang_ach_sub: 'عاش المشاكس!',
+                lang_hot_title: 'نقاط ساخنة 🔥',
+                lang_sec_orders: '📲 الطلبات الواردة',
+                status_online: 'متاح وجاهز للطلبات 🟢',
+                status_offline: 'غير متاح للطلبات 🔴',
+                status_blocked: 'غير متاح (محظور مالياً)',
+                no_orders: 'لا توجد طلبات حالياً، خليك قريب من النقاط الساخنة 📡',
+                no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن.',
+                dir: 'rtl'
+            },
+            'en': {
+                lang_loader: 'Connecting to Core...',
+                lang_popup_btn: 'Got it',
+                lang_history_title: 'Diamond History 💎',
+                lang_settings_title: 'Settings ⚙️',
+                lang_set_user: 'Username',
+                lang_set_pass: 'Password',
+                lang_toggle_btn: '🌐 التبديل للعربية',
+                lang_save_btn: 'Save Changes ✅',
+                lang_blocked_title: 'Account Blocked',
+                lang_blocked_text: 'Sorry hero, your account has been suspended.<br><br>Please contact your company management to reactivate.',
+                lang_blocked_btn: 'Logout',
+                lang_login_sub: 'Diamond Captain Portal 💎',
+                lang_login_user_lbl: 'Username',
+                lang_login_pass_lbl: 'Password',
+                lang_login_btn: 'Secure Login 🚀',
+                lang_header_cap: 'Captain 🦸‍♂️',
+                lang_btn_out: 'Logout 🔒',
+                lang_bal_warn: 'Warning, balance reached the limit (-1 JOD). Please recharge to receive orders.',
+                lang_bal_title: 'Actual Balance',
+                lang_rating: 'Diamond Rating 💎',
+                lang_ach_title: 'Today\'s Wins 🏆',
+                lang_ach_sub: 'Keep it up!',
+                lang_hot_title: 'Hotspots 🔥',
+                lang_sec_orders: '📲 Incoming Orders',
+                status_online: 'Online & Ready 🟢',
+                status_offline: 'Offline 🔴',
+                status_blocked: 'Offline (Blocked)',
+                no_orders: 'No active orders right now, stay near hotspots 📡',
+                no_history: 'No completed orders in history yet.',
+                dir: 'ltr'
+            }
+        };
+
+        window.toggleLanguage = function() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            document.getElementById('app-body').dir = dict[currentLang].dir;
+            
+            for(const key in dict[currentLang]) {
+                const el = document.getElementById(key);
+                if(el) {
+                    if(key === 'lang_blocked_text') el.innerHTML = dict[currentLang][key];
+                    else el.innerText = dict[currentLang][key];
+                }
+            }
+            if(currentCaptain) updateUIProfile(currentCaptain);
+        };
 
         window.onload = function() {
             setTimeout(() => {
@@ -427,7 +550,6 @@
                 checkSession();
             }, 800);
             
-            // تفعيل الصوت بعد تفاعل المستخدم
             document.body.addEventListener('click', () => {
                 const audio = document.getElementById('order-ringtone');
                 if(audio.paused && ringtoneActive) {
@@ -483,7 +605,7 @@
                     setupAdsAndAlerts();
                 } else {
                     document.getElementById('loader').style.display = 'none';
-                    alert("بيانات الدخول غير صحيحة، يرجى التأكد 😊");
+                    alert("بيانات الدخول غير صحيحة يرجى التأكد 😊");
                 }
             } catch (error) {
                 document.getElementById('loader').style.display = 'none';
@@ -497,7 +619,7 @@
         };
 
         function setupAdsAndAlerts() {
-            const master = currentCaptain.company || currentCaptain.Client_Master || "الشركة";
+            const master = currentCaptain.company || currentCaptain.Client_Master;
             let activeAds = { admin: null, client: null };
             let activeAlerts = { admin: null, client: null };
 
@@ -511,13 +633,13 @@
                     senderLabel = master;
                 } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
                     displayAd = activeAds.admin;
-                    senderLabel = "الإدارة العامة";
+                    senderLabel = currentLang === 'ar' ? "الإدارة العامة" : "General Admin";
                 }
 
                 const adContainer = document.getElementById('smart-ad-container');
                 if (displayAd && displayAd.text) {
                     document.getElementById('smart-ad-text').innerText = displayAd.text;
-                    document.getElementById('ad-sender-badge').innerText = `إشعار من ${senderLabel} 👑`;
+                    document.getElementById('ad-sender-badge').innerText = currentLang === 'ar' ? `إشعار من ${senderLabel} 👑` : `Notice from ${senderLabel} 👑`;
                     adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal');
                     adContainer.style.display = 'flex';
                 } else {
@@ -527,12 +649,13 @@
 
             const renderAlert = () => {
                 let displayAlert = activeAlerts.client || activeAlerts.admin;
-                let senderLabel = activeAlerts.client ? master : "الإدارة العامة";
+                let senderLabel = activeAlerts.client ? master : (currentLang==='ar' ? "الإدارة العامة" : "General Admin");
 
                 if (displayAlert && displayAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_cap_' + capNodeKey) || 0;
                     if (displayAlert.timestamp > lastSeen) {
-                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة من ${senderLabel}</div>${displayAlert.message}`;
+                        const lbl = currentLang === 'ar' ? "رسالة من" : "Message from";
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">${lbl} ${senderLabel}</div>${displayAlert.message}`;
                         document.getElementById('app-popup-overlay').style.display = 'flex';
                         localStorage.setItem('last_seen_alert_cap_' + capNodeKey, displayAlert.timestamp);
                     }
@@ -598,59 +721,73 @@
                             allCompletedOrders.push(ord);
                         }
                         
-                        // الطلب جديد وبحاجة للقبول/الرفض
                         if (ord.status === 'assigned') {
+                            // درع الإتاحة إذا كان أوفلاين لا يظهر الطلب ولا يرن
+                            if(currentCaptain.app_status !== 'online') return;
+
                             hasActive = true;
                             hasNewRinging = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
+                            const btnAccept = currentLang === 'ar' ? "قبول الطلب ✅" : "Accept ✅";
+                            const btnReject = currentLang === 'ar' ? "رفض ❌" : "Reject ❌";
+                            const lblVal = currentLang === 'ar' ? "قيمة الطلب" : "Order Val";
+                            const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
+                            const lblOrd = currentLang === 'ar' ? "رقم" : "No";
+                            const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
+
                             container.innerHTML += `
                                 <div class="order-card ringing">
                                     <div class="order-header">
-                                        <span>رقم: #${ord.id.substring(ord.id.length - 4)}</span>
-                                        <span>الوقت: ${ordTime}</span>
+                                        <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
+                                        <span>${lblTime}: ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || 'المنشأة'}</div>
+                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
-                                            <div class="detail-lbl">قيمة الطلب</div>
+                                            <div class="detail-lbl">${lblVal}</div>
                                             <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
                                         </div>
                                         <div class="detail-box">
-                                            <div class="detail-lbl">رسوم التوصيل</div>
+                                            <div class="detail-lbl">${lblFee}</div>
                                             <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
                                         </div>
                                     </div>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}')">قبول الطلب ✅</button>
-                                        <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">رفض ❌</button>
+                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}')">${btnAccept}</button>
+                                        <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
                                     </div>
                                 </div>
                             `;
                         }
-                        // الطلب تم قبوله وفي مرحلة التوصيل
                         else if (ord.status === 'accepted') {
                             hasActive = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
+                            const btnComp = currentLang === 'ar' ? "إتمام وتسليم الطلب ✅" : "Complete Order ✅";
+                            const lblVal = currentLang === 'ar' ? "قيمة الطلب" : "Order Val";
+                            const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
+                            const lblOrd = currentLang === 'ar' ? "رقم" : "No";
+                            const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
+
                             container.innerHTML += `
                                 <div class="order-card">
                                     <div class="order-header">
-                                        <span>رقم: #${ord.id.substring(ord.id.length - 4)}</span>
-                                        <span>الوقت: ${ordTime}</span>
+                                        <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
+                                        <span>${lblTime}: ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || 'المنشأة'}</div>
+                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
-                                            <div class="detail-lbl">قيمة الطلب</div>
+                                            <div class="detail-lbl">${lblVal}</div>
                                             <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
                                         </div>
                                         <div class="detail-box">
-                                            <div class="detail-lbl">رسوم التوصيل</div>
+                                            <div class="detail-lbl">${lblFee}</div>
                                             <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
                                         </div>
                                     </div>
-                                    <button class="btn-action btn-complete" onclick="completeOrder('${ord.id}')">إتمام وتسليم الطلب ✅</button>
+                                    <button class="btn-action btn-complete" onclick="completeOrder('${ord.id}')">${btnComp}</button>
                                 </div>
                             `;
                         }
@@ -659,9 +796,8 @@
                 
                 document.getElementById('ui_today_count').innerText = todayCount;
                 
-                // التحكم بالجرس
                 const audio = document.getElementById('order-ringtone');
-                if (hasNewRinging) {
+                if (hasNewRinging && currentCaptain.app_status === 'online') {
                     ringtoneActive = true;
                     audio.play().catch(e => console.log("تحتاج تفاعل"));
                 } else {
@@ -673,7 +809,7 @@
                 if (!hasActive) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">
-                            لا توجد طلبات حالياً، خليك قريب من النقاط الساخنة 📡
+                            ${dict[currentLang].no_orders}
                         </div>
                     `;
                 }
@@ -684,8 +820,9 @@
                 const globalOrdersRef = ref(db, 'orders');
                 onValue(globalOrdersRef, (snapshot) => {
                     if (snapshot.exists()) {
+                        const txt = currentLang === 'ar' ? 'النقاط الساخنة <span>🔥 مفعّلة</span>' : 'Hotspots <span>🔥 Active</span>';
                         document.getElementById('ui_hotspots').innerHTML = `
-                            <div class="hotspot-tag">النقاط الساخنة <span>🔥 مفعّلة</span></div>
+                            <div class="hotspot-tag">${txt}</div>
                         `;
                     }
                 });
@@ -695,7 +832,7 @@
         function updateUIProfile(data) {
             document.getElementById('ui_company_name').innerText = data.company || data.Client_Master || "الشركة الأم";
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
-            document.getElementById('ui_cap_car').innerText = data.Cap_Car || 'رقم السيارة غير محدد';
+            document.getElementById('ui_cap_car').innerText = data.Cap_Car || (currentLang==='ar'?'السيارة غير محددة':'Car info missing');
             
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
             const balEl = document.getElementById('ui_cap_bal');
@@ -715,7 +852,7 @@
                 toggleBtn.checked = false;
                 toggleBtn.disabled = true;
                 statusInd.className = 'status-indicator offline';
-                statusTxt.innerText = 'غير متاح (محظور مالياً)';
+                statusTxt.innerText = dict[currentLang].status_blocked;
                 
             } else {
                 balEl.classList.remove('negative');
@@ -725,11 +862,11 @@
                 if (data.app_status === 'online') {
                     toggleBtn.checked = true;
                     statusInd.className = 'status-indicator online';
-                    statusTxt.innerText = 'متاح وجاهز للطلبات 🟢';
+                    statusTxt.innerText = dict[currentLang].status_online;
                 } else {
                     toggleBtn.checked = false;
                     statusInd.className = 'status-indicator offline';
-                    statusTxt.innerText = 'غير متاح للطلبات 🔴';
+                    statusTxt.innerText = dict[currentLang].status_offline;
                 }
             }
         }
@@ -739,7 +876,8 @@
             const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
             
             if (isOnline && bal <= -1) {
-                alert("لا يمكنك التفعيل، يرجى شحن الرصيد 😊");
+                const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد 😊" : "Recharge balance to go online 😊";
+                alert(msg);
                 document.getElementById('toggle_status').checked = false;
                 return;
             }
@@ -753,7 +891,6 @@
         }
 
         window.acceptOrder = async function(orderId, fee) {
-            // الخيط المالي: خصم النسبة آلياً عند القبول
             const actualFee = parseFloat(fee || 0);
             const commissionAmount = actualFee * COMMISSION_RATE;
             const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
@@ -764,16 +901,21 @@
             updates[`assigned_orders/${capNodeKey}/${orderId}/commission`] = commissionAmount;
             updates[`captains/${capNodeKey}/Cap_Balance`] = newBal;
             updates[`captains/${capNodeKey}/balance`] = newBal;
+            
+            // خوارزمية تتبع حالة الانشغال للرادار المركزي
+            updates[`captains/${capNodeKey}/is_busy`] = true;
 
             try {
                 await update(ref(db), updates);
             } catch (e) {
-                alert("حدث خطأ أثناء الربط المالي، حاول مجدداً 😊");
+                const msg = currentLang === 'ar' ? "حدث خطأ أثناء الربط المالي حاول مجدداً 😊" : "Error in financial transaction, please retry 😊";
+                alert(msg);
             }
         };
 
         window.rejectOrder = async function(orderId) {
-            if(confirm("هل أنت متأكد من رفض الطلب؟ ❌")) {
+            const msg = currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب؟ ❌" : "Are you sure you want to reject? ❌";
+            if(confirm(msg)) {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'rejected';
                 await update(ref(db), updates);
@@ -781,11 +923,16 @@
         };
 
         window.completeOrder = async function(orderId) {
-            if(confirm("تأكيد إتمام وتسليم الطلب للزبون؟ ✅")) {
-                await update(ref(db, `assigned_orders/${capNodeKey}/${orderId}`), { 
-                    status: 'completed',
-                    completed_at: Date.now()
-                });
+            const msg = currentLang === 'ar' ? "تأكيد إتمام وتسليم الطلب للزبون؟ ✅" : "Confirm order completion? ✅";
+            if(confirm(msg)) {
+                const updates = {};
+                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'completed';
+                updates[`assigned_orders/${capNodeKey}/${orderId}/completed_at`] = Date.now();
+                
+                // تحرير خوارزمية الانشغال
+                updates[`captains/${capNodeKey}/is_busy`] = false;
+                
+                await update(ref(db), updates);
             }
         };
 
@@ -794,26 +941,31 @@
             container.innerHTML = '';
             
             if (allCompletedOrders.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">لا يوجد سجل طلبات مكتملة حتى الآن.</div>';
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
             } else {
                 allCompletedOrders.sort((a,b) => b.completed_at - a.completed_at).forEach(ord => {
                     const d = new Date(ord.completed_at || ord.timestamp);
-                    const dateStr = d.toLocaleDateString('ar-EG');
-                    const timeStr = d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+                    const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
                     const comm = parseFloat(ord.commission || 0).toFixed(2);
                     
+                    const lblDest = currentLang === 'ar' ? "الوجهة:" : "Destination:";
+                    const lblVal = currentLang === 'ar' ? "قيمة الطلب:" : "Order Val:";
+                    const lblFee = currentLang === 'ar' ? "التوصيل:" : "Fee:";
+                    const lblComm = currentLang === 'ar' ? "نسبة الشركة المقتطعة:" : "Company Commission:";
+
                     container.innerHTML += `
                         <div class="history-item">
                             <div class="h-row">
-                                <span>الوجهة: ${ord.restaurant || ord.Shop_Pickup || 'المنشأة'}</span>
+                                <span>${lblDest} ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
                                 <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
                             </div>
                             <div class="h-row">
-                                <span>قيمة الطلب: <span class="h-val">${ord.value || ord.Shop_Val} د.أ</span></span>
-                                <span>التوصيل: <span class="h-val" style="color:var(--success)">${ord.fee || ord.Shop_Fee} د.أ</span></span>
+                                <span>${lblVal} <span class="h-val">${ord.value || ord.Shop_Val} د.أ</span></span>
+                                <span>${lblFee} <span class="h-val" style="color:var(--success)">${ord.fee || ord.Shop_Fee} د.أ</span></span>
                             </div>
                             <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                                <span>نسبة الشركة المقتطعة:</span>
+                                <span>${lblComm}</span>
                                 <span class="h-commission">-${comm} د.أ</span>
                             </div>
                         </div>
@@ -821,6 +973,43 @@
                 });
             }
             document.getElementById('history-modal').style.display = 'flex';
+        };
+
+        window.openSettingsModal = function() {
+            document.getElementById('set_user').value = currentCaptain.Cap_User || currentCaptain.user || '';
+            document.getElementById('set_pass').value = currentCaptain.Cap_Pass || currentCaptain.pass || '';
+            document.getElementById('settings-modal').style.display = 'flex';
+        };
+
+        window.saveSettings = async function() {
+            const newUser = document.getElementById('set_user').value.trim();
+            const newPass = document.getElementById('set_pass').value.trim();
+            const msgEmpty = currentLang === 'ar' ? "البيانات فارغة 😊" : "Fields cannot be empty 😊";
+            if(!newUser || !newPass) { alert(msgEmpty); return; }
+
+            try {
+                if(newUser !== capNodeKey) {
+                    const newData = { ...currentCaptain, Cap_User: newUser, user: newUser, Cap_Pass: newPass, pass: newPass };
+                    const updates = {};
+                    updates[`captains/${newUser}`] = newData;
+                    updates[`captains/${capNodeKey}`] = null;
+                    await update(ref(db), updates);
+                    
+                    capNodeKey = newUser;
+                    currentCaptain = newData;
+                    localStorage.setItem('n1_captain_session', JSON.stringify(newData));
+                } else {
+                    await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass });
+                    currentCaptain.Cap_Pass = newPass;
+                    currentCaptain.pass = newPass;
+                    localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
+                }
+                const msgOk = currentLang === 'ar' ? "تم التحديث بنجاح الألماس بيلمع 😊" : "Updated successfully 😊";
+                alert(msgOk);
+                document.getElementById('settings-modal').style.display = 'none';
+            } catch(e) {
+                alert(currentLang === 'ar' ? "حدث خطأ بالاتصال 😊" : "Connection Error 😊");
+            }
         };
 
     </script>
