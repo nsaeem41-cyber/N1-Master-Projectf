@@ -291,9 +291,9 @@
                                     <input type="text" id="new_cap_car" placeholder="مثلاً 12-34567">
                                 </div>
                                 <div class="form-group full-width">
-                                    <label>المنطقة (تسحب من قائمة الأسعار)</label>
+                                    <label>المصدر المعتمد (تسحب من قائمة الأسعار)</label>
                                     <select id="new_cap_region">
-                                        <option value="">جاري تحميل المناطق...</option>
+                                        <option value="">جاري تحميل المصادر المعتمدة...</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -452,7 +452,7 @@
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الشركة";
             } else {
-                alert("يرجى تسجيل الدخول للوصول إلى النظام");
+                alert("يرجى تسجيل الدخول للوصول إلى النظام 😊");
                 window.history.back();
                 return;
             }
@@ -541,22 +541,22 @@
             const myMaster = currentUser.Client_User || currentUser.user;
             onValue(ref(db, 'prices'), (snapshot) => {
                 const select = document.getElementById('new_cap_region');
-                select.innerHTML = '<option value="">اختر المنطقة...</option>';
-                let areasAdded = new Set();
+                select.innerHTML = '<option value="">اختر المصدر المعتمد...</option>';
+                let sourcesAdded = new Set();
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
                         if (priceObj.Client_Master === myMaster || priceObj.company === myMaster) {
-                            const areaName = priceObj.Price_Area || priceObj.name || priceObj.area;
-                            if (areaName && !areasAdded.has(areaName)) {
-                                areasAdded.add(areaName);
-                                select.innerHTML += `<option value="${areaName}">${areaName}</option>`;
+                            const sourceName = priceObj.Price_Source;
+                            if (sourceName && !sourcesAdded.has(sourceName)) {
+                                sourcesAdded.add(sourceName);
+                                select.innerHTML += `<option value="${sourceName}">${sourceName}</option>`;
                             }
                         }
                     });
                 }
-                if (areasAdded.size === 0) {
-                     select.innerHTML += '<option value="">لا توجد مناطق مسجلة (يرجى إضافتها من قائمة الأسعار)</option>';
+                if (sourcesAdded.size === 0) {
+                     select.innerHTML += '<option value="">لا توجد مصادر مسجلة (يرجى إضافتها من قائمة الأسعار)</option>';
                 }
             });
         }
@@ -595,13 +595,13 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("تم إيقاف الحساب، يرجى مراجعة الإدارة المركزية");
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
                         localStorage.removeItem('current_company_user');
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
                     }
                 } else {
-                    alert("تم حذف الحساب نهائياً، سيتم تسجيل الخروج");
+                    alert("تم حذف الحساب نهائيا سيتم تسجيل الخروج 😊");
                     localStorage.removeItem('current_company_user');
                     localStorage.removeItem('currentUser');
                     window.location.replace('index.html');
@@ -744,7 +744,7 @@
             const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
 
             if(trulyPendingOrders.length === 0) {
-                if(!silent) alert("الرادار هادئ، أو أن جميع الطلبات قيد الانتظار لدى الكباتن");
+                if(!silent) alert("الرادار هادئ أو جميع الطلبات بانتظار قبول الكباتن 😊");
                 return;
             }
 
@@ -767,7 +767,7 @@
             });
 
             if (availableCaptains.length === 0) {
-                if(!silent) alert("عذراً، لا يوجد أي كابتن متاح وغير مشغول حالياً لاستقبال الطلبات");
+                if(!silent) alert("عذرا لا يوجد أي كابتن متاح وغير مشغول حاليا لاستقبال الطلبات 😊");
                 return;
             }
 
@@ -813,12 +813,12 @@
             if(dispatchedCount > 0) {
                 try {
                     await update(ref(db), updates);
-                    if(!silent) alert('تم إرسال ' + dispatchedCount + ' طلبات، بانتظار قبول الكباتن 🚀');
+                    if(!silent) alert(`تم إرسال ${dispatchedCount} طلبات بانتظار قبول الكباتن 🚀😊`);
                 } catch(e) {
-                    if(!silent) alert("حدث خطأ أثناء التوزيع التلقائي، يرجى المحاولة مرة أخرى");
+                    if(!silent) alert("حدث خطأ أثناء التوزيع التلقائي يرجى المحاولة 😊");
                 }
             } else {
-                if(!silent) alert("لم يتم توزيع أي طلب");
+                if(!silent) alert("لم يتم توزيع أي طلب 😊");
             }
         };
 
@@ -838,7 +838,7 @@
         };
 
         window.dismissOrder = async function(orderId) {
-            if(confirm("هل تريد إخفاء هذا الطلب من الرادار؟")) {
+            if(confirm("هل تريد إخفاء هذا الطلب من الرادار 😊")) {
                 const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString() };
                 completedOrders.unshift(entry);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
@@ -899,23 +899,23 @@
             const linkedId = document.getElementById('linked_order_id').value;
 
             if (!phone || !restInfo || !fee) { 
-                alert("يرجى إكمال بيانات التوجيه أولاً"); 
+                alert("يرجى إكمال بيانات التوجيه أولا 😊"); 
                 return; 
             }
             
             if (!currentTargetCaptain) {
-                alert("لم يتم العثور على الكابتن في النظام");
+                alert("لم يتم العثور على الكابتن في النظام 😊");
                 return;
             }
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
             if (capStatus === 'paused' || capStatus === 'off') {
-                alert("عذراً، حساب الكابتن مجمد");
+                alert("عذرا حساب الكابتن مجمد 😊");
                 return;
             }
 
             if (currentTargetCaptain.app_status === 'offline') {
-                alert("عذراً، هذا الكابتن خارج الخدمة حالياً");
+                alert("عذرا هذا الكابتن خارج الخدمة حاليا 😊");
                 return;
             }
 
@@ -929,7 +929,7 @@
             }
 
             if (activeCount > 0) {
-                if (!confirm(`عذراً هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ أو معلق هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
+                if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ أو معلق هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
                     return; 
                 }
             }
@@ -955,7 +955,7 @@
             
             try {
                 await update(ref(db), updates);
-                alert("تم إرسال الطلب، بانتظار قبول الكابتن ⏳");
+                alert("تم إرسال الطلب بانتظار قبول الكابتن ⏳😊");
                 
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_val').value = '';
@@ -963,7 +963,7 @@
                 document.getElementById('linked_order_id').value = '';
 
             } catch (error) {
-                alert("حدث خطأ أثناء الإرسال، يرجى المحاولة");
+                alert("حدث خطأ أثناء الإرسال يرجى المحاولة 😊");
             }
         };
 
@@ -977,7 +977,7 @@
             const linkedId = document.getElementById('linked_order_id').value;
 
             if (!phone || !restInfo || !fee) { 
-                alert("يرجى إكمال بيانات التوجيه أولاً"); 
+                alert("يرجى إكمال بيانات التوجيه أولا 😊"); 
                 return; 
             }
 
@@ -990,7 +990,7 @@
 
             if (currentTargetCaptain) {
                 if (currentTargetCaptain.app_status === 'offline') {
-                    alert("عذراً، هذا الكابتن خارج الخدمة حالياً");
+                    alert("عذرا هذا الكابتن خارج الخدمة حاليا 😊");
                     return;
                 }
 
@@ -1004,7 +1004,7 @@
                 }
 
                 if (activeCount > 0) {
-                    if (!confirm(`عذراً هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
+                    if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
                         return; 
                     }
                 }
@@ -1085,7 +1085,7 @@
         };
 
         window.resetDailyStats = function() {
-            if(confirm("هل أنت متأكد من تصفير طلبات وعمولات اليوم؟ ستبقى أرصدة الكباتن كما هي.")) {
+            if(confirm("هل أنت متأكد من تصفير طلبات وعمولات اليوم ستبقى أرصدة الكباتن كما هي 😊")) {
                 const today = new Date().toDateString();
                 completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
@@ -1094,7 +1094,7 @@
         };
 
         window.deleteFromArchive = function(id) {
-            if(confirm("هل تريد الحذف من الأرشيف؟")) {
+            if(confirm("هل تريد الحذف من الأرشيف 😊")) {
                 completedOrders = completedOrders.filter(o => o.orderId !== id);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderCompletedOrders();
@@ -1103,7 +1103,7 @@
         };
 
         window.clearCompletedOrders = function() {
-            if(confirm("تحذير: هل أنت متأكد من مسح الأرشيف التراكمي كاملاً؟")) {
+            if(confirm("تحذير هل أنت متأكد من مسح الأرشيف التراكمي كاملا 😊")) {
                 completedOrders = [];
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderCompletedOrders();
@@ -1112,7 +1112,7 @@
         };
 
         window.clearLiveRadar = async function() {
-            if(confirm("تحذير: سيتم مسح جميع الطلبات المعروضة نهائياً")) {
+            if(confirm("تحذير سيتم مسح جميع الطلبات المعروضة نهائيا 😊")) {
                 const myMaster = currentUser.Client_User || currentUser.user;
                 const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
                 myShops.push(myMaster);
@@ -1126,9 +1126,9 @@
                 
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
-                    alert("تم التنظيف بنجاح 🧹");
+                    alert("تم التنظيف بنجاح 🧹😊");
                 } else {
-                    alert("لا توجد طلبات لمسحها");
+                    alert("لا توجد طلبات لمسحها 😊");
                 }
             }
         };
@@ -1149,11 +1149,11 @@
             const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            if(!name || !phone || !user || !pass || !region) { alert("يرجى إكمال البيانات والتأكد من اختيار المنطقة"); return; }
+            if(!name || !phone || !user || !pass || !region) { alert("يرجى إكمال البيانات والتأكد من اختيار المنطقة 😊"); return; }
             
             const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             if(exists) {
-                alert("هذا الكابتن مسجل مسبقاً، لا يمكن تكرار البيانات أو مسح الحساب القديم");
+                alert("هذا الكابتن مسجل مسبقا لا يمكن تكرار البيانات أو مسح الحساب القديم 😊");
                 return;
             }
 
@@ -1179,7 +1179,7 @@
             };
             
             await set(ref(db, 'captains/' + user), capData);
-            alert("تم تسجيل الكابتن بنجاح 🦸‍♂️");
+            alert("تم تسجيل الكابتن بنجاح 🦸‍♂️😊");
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
             document.getElementById('new_cap_car').value = '';
@@ -1215,9 +1215,9 @@
         };
 
         window.chargeCaptainBalance = async function() {
-            if (!activeSmartCaptain) { alert("يرجى البحث عن الكابتن أولاً باستخدام رقم الهاتف"); return; }
+            if (!activeSmartCaptain) { alert("يرجى البحث عن الكابتن أولا باستخدام رقم الهاتف 😊"); return; }
             const amount = parseFloat(document.getElementById('charge_amount').value);
-            if(isNaN(amount)) { alert("يرجى إدخال مبلغ الشحن بشكل صحيح"); return; }
+            if(isNaN(amount)) { alert("يرجى إدخال مبلغ الشحن بشكل صحيح 😊"); return; }
             
             const cap = activeSmartCaptain;
             const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
@@ -1227,7 +1227,7 @@
             updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
             
             await update(ref(db), updates);
-            alert(`تم الشحن بنجاح 💰`);
+            alert(`تم الشحن بنجاح 💰😊`);
             
             document.getElementById('charge_amount').value = '';
             document.getElementById('smart_search_phone').value = '';
@@ -1286,7 +1286,7 @@
         };
 
         window.editCaptainPhone = async function(userKey, currentPhone) {
-            const newPhone = prompt("أدخل رقم الهاتف الجديد للكابتن:", currentPhone);
+            const newPhone = prompt("أدخل رقم الهاتف الجديد للكابتن 😊", currentPhone);
             if(newPhone && newPhone !== currentPhone) {
                 const updates = {};
                 let nodeFound = null;
@@ -1297,13 +1297,13 @@
                     updates[`${nodeFound}/${userKey}/Cap_Phone`] = newPhone;
                     updates[`${nodeFound}/${userKey}/phone`] = newPhone;
                     await update(ref(db), updates);
-                    alert("تم تحديث رقم الهاتف بنجاح 📱");
+                    alert("تم تحديث رقم الهاتف بنجاح 📱😊");
                 }
             }
         };
 
         window.toggleCapStatus = async function(user, nextStatus) {
-            const msg = nextStatus === 'paused' ? "تأكيد إيقاف حساب الكابتن" : "تأكيد إعادة تفعيل حساب الكابتن";
+            const msg = nextStatus === 'paused' ? "تأكيد إيقاف حساب الكابتن 😊" : "تأكيد إعادة تفعيل حساب الكابتن 😊";
             if(confirm(msg)) {
                 const updates = {};
                 globalUsers.forEach(u => {
@@ -1319,14 +1319,14 @@
         };
 
         window.deleteCaptain = async function(user) {
-            if(confirm("تحذير: سيتم حذف الكابتن نهائياً")) {
+            if(confirm("تحذير سيتم حذف الكابتن نهائيا 😊")) {
                 let nodeFound = null;
                 globalUsers.forEach(u => {
                     if ((u.Cap_User === user || u.user === user) && u._node) { nodeFound = u._node; }
                 });
                 if (nodeFound) {
                     await remove(ref(db, `${nodeFound}/${user}`));
-                    alert("تم الحذف بنجاح 🗑️");
+                    alert("تم الحذف بنجاح 🗑️😊");
                 }
             }
         };
