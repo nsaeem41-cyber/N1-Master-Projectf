@@ -99,6 +99,7 @@
         }
         .order-row-new { animation: pulseBorder 2s infinite; }
         .order-row-urgent { border-right: 5px solid var(--danger); background: #fef2f2; }
+        .order-row-waiting { border-right: 5px solid #f59e0b; background: #fffbeb; opacity: 0.95; }
 
         /* أنيميشن الرادار اللانهائي */
         @keyframes pulseRocket {
@@ -435,6 +436,8 @@
         let currentUser = null;
         let allOrders = [];
         let globalUsers = [];
+        let allAssignedOrders = {};
+        let processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders') || '[]');
         let completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders') || '[]');
         let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
         let soundEnabled = false;
@@ -457,12 +460,63 @@
             document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
             
             fetchRegionsFromPrices();
+            fetchAssignedOrders();
             fetchLiveOrders();
             fetchGlobalUsers();
             renderCompletedOrders();
             setupRealtimeFreezeListener();
             setInterval(refreshDynamicElements, 1000);
         };
+
+        function fetchAssignedOrders() {
+            onValue(ref(db, 'assigned_orders'), (snapshot) => {
+                allAssignedOrders = snapshot.exists() ? snapshot.val() : {};
+                checkAssignedOrdersStatus();
+                renderRadar();
+            });
+        }
+
+        function checkAssignedOrdersStatus() {
+            for (let capKey in allAssignedOrders) {
+                for (let appOrdId in allAssignedOrders[capKey]) {
+                    let ord = allAssignedOrders[capKey][appOrdId];
+                    
+                    if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
+                        const commission = ord.commission_amount || 0;
+                        if(commission > 0) {
+                            const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                            if(capData) {
+                                const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
+                                update(ref(db), {
+                                    [`${capData._node}/${capKey}/Cap_Balance`]: parseFloat(newBal),
+                                    [`${capData._node}/${capKey}/balance`]: parseFloat(newBal)
+                                });
+                            }
+                        }
+                        
+                        const entry = {
+                            orderId: ord.linkedRadarId || appOrdId,
+                            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                            cap: ord.cap_name || "كابتن",
+                            rest: ord.restaurant,
+                            comm: commission,
+                            date: new Date().toISOString(),
+                            via: ord.dispatch_method || "App"
+                        };
+                        completedOrders.unshift(entry);
+                        localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                        
+                        processedAppOrders.push(appOrdId);
+                        localStorage.setItem('n1_processed_app_orders', JSON.stringify(processedAppOrders));
+                        
+                        renderCompletedOrders();
+                    }
+                    else if (ord.status === 'rejected') {
+                        remove(ref(db, `assigned_orders/${capKey}/${appOrdId}`));
+                    }
+                }
+            }
+        }
 
         function fetchRegionsFromPrices() {
             onValue(ref(db, 'prices'), (snapshot) => {
@@ -587,6 +641,18 @@
                 return;
             }
 
+            let assignedInfoMap = {};
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    if(allAssignedOrders[capKey][ordKey].status === 'assigned') {
+                        let radarId = allAssignedOrders[capKey][ordKey].linkedRadarId;
+                        if(radarId) {
+                            assignedInfoMap[radarId] = allAssignedOrders[capKey][ordKey].cap_name || "كابتن";
+                        }
+                    }
+                }
+            }
+
             tbody.innerHTML = '';
             pendingOrders.forEach(ord => {
                 const orderDate = new Date(ord.Shop_Date);
@@ -598,7 +664,21 @@
                 const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
 
                 const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
-                let rowStatusClass = diffSec > 120 ? 'order-row-urgent' : 'order-row-new';
+                
+                let isWaiting = !!assignedInfoMap[ord.Shop_Ord_ID];
+                let rowStatusClass = isWaiting ? 'order-row-waiting' : (diffSec > 120 ? 'order-row-urgent' : 'order-row-new');
+                
+                let actionHtml = '';
+                if (isWaiting) {
+                    actionHtml = `<span class="badge" style="background:#fef3c7; color:#d97706; font-size:11px;">⏳ معلق عند ${assignedInfoMap[ord.Shop_Ord_ID]}</span>`;
+                } else {
+                    actionHtml = `
+                        <div class="action-btns">
+                            <button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="loadToManual('${ord.Shop_Ord_ID}')" title="توجيه يدوي">📲</button>
+                            <button class="mini-circle-btn" style="background:#e2e8f0; color:#64748b;" onclick="dismissOrder('${ord.Shop_Ord_ID}')" title="إخفاء">✕</button>
+                        </div>
+                    `;
+                }
 
                 tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ord.Shop_Ord_ID}">
@@ -615,12 +695,7 @@
                                 <span class="badge bg-fee">+${ord.Shop_Fee}</span>
                             </div>
                         </td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="loadToManual('${ord.Shop_Ord_ID}')" title="توجيه يدوي">📲</button>
-                                <button class="mini-circle-btn" style="background:#e2e8f0; color:#64748b;" onclick="dismissOrder('${ord.Shop_Ord_ID}')" title="إخفاء">✕</button>
-                            </div>
-                        </td>
+                        <td>${actionHtml}</td>
                     </tr>
                 `;
             });
@@ -634,30 +709,36 @@
             
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
-            if(pendingOrders.length === 0) {
-                if(!silent) alert("الرادار هادئ لا توجد طلبات لتوزيعها 😊");
+            let activeLinkedIds = new Set();
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    let st = allAssignedOrders[capKey][ordKey].status;
+                    if(st === 'assigned' || st === 'accepted') {
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
+                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        }
+                    }
+                }
+            }
+            
+            const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
+
+            if(trulyPendingOrders.length === 0) {
+                if(!silent) alert("الرادار هادئ أو جميع الطلبات بانتظار رد الكباتن 😊");
                 return;
             }
 
             let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster));
             
             let busyCaptains = new Set();
-            try {
-                const snap = await get(ref(db, 'assigned_orders'));
-                if(snap.exists()) {
-                    const allAssigned = snap.val();
-                    for(let capKey in allAssigned) {
-                        let hasActive = false;
-                        for(let ordKey in allAssigned[capKey]) {
-                            if(allAssigned[capKey][ordKey].status === 'assigned' || allAssigned[capKey][ordKey].status === 'accepted') {
-                                hasActive = true;
-                                break;
-                            }
-                        }
-                        if(hasActive) busyCaptains.add(capKey);
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                        busyCaptains.add(capKey);
+                        break;
                     }
                 }
-            } catch(e) {}
+            }
 
             let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
@@ -673,7 +754,7 @@
             let dispatchedCount = 0;
             let updates = {};
 
-            for (let ord of pendingOrders) {
+            for (let ord of trulyPendingOrders) {
                 if(availableCaptains.length === 0) break;
 
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
@@ -691,12 +772,6 @@
                 const fee = parseFloat(ord.Shop_Fee || 0);
                 const commission = (fee * (ratio / 100)).toFixed(2);
                 
-                const currentBal = parseFloat(selectedCaptain.Cap_Balance || selectedCaptain.balance || 0);
-                const newBal = (currentBal - parseFloat(commission)).toFixed(2);
-                
-                updates[`${selectedCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                updates[`${selectedCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
-
                 const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
                 const orderData = {
                     id: appOrderId,
@@ -705,31 +780,20 @@
                     fee: ord.Shop_Fee,
                     status: 'assigned',
                     timestamp: Date.now(),
-                    linkedRadarId: ord.Shop_Ord_ID
+                    linkedRadarId: ord.Shop_Ord_ID,
+                    commission_amount: commission,
+                    cap_name: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
+                    dispatch_method: "Auto"
                 };
                 
                 updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
-                
-                const entry = {
-                    orderId: ord.Shop_Ord_ID,
-                    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                    cap: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
-                    rest: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
-                    comm: commission,
-                    date: new Date().toISOString(),
-                    via: "Auto"
-                };
-                completedOrders.unshift(entry);
                 dispatchedCount++;
             }
 
             if(dispatchedCount > 0) {
                 try {
                     await update(ref(db), updates);
-                    localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                    if(!silent) alert(`تم التوزيع الأوتوماتيكي بنجاح لعدد ${dispatchedCount} طلبات 🚀😊`);
-                    renderRadar();
-                    renderCompletedOrders();
+                    if(!silent) alert(`تم إرسال ${dispatchedCount} طلبات بانتظار قبول الكباتن 🚀😊`);
                 } catch(e) {
                     if(!silent) alert("حدث خطأ أثناء التوزيع التلقائي 😊");
                 }
@@ -837,33 +901,23 @@
 
             const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
 
-            try {
-                const ordersSnap = await get(ref(db, `assigned_orders/${capKey}`));
-                let activeCount = 0;
-                if (ordersSnap.exists()) {
-                    Object.values(ordersSnap.val()).forEach(o => {
-                        if (o.status === 'assigned' || o.status === 'accepted') {
-                            activeCount++;
-                        }
-                    });
+            let activeCount = 0;
+            for(let ordKey in allAssignedOrders[capKey]) {
+                if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                    activeCount++;
                 }
+            }
 
-                if (activeCount > 0) {
-                    if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ حاليا هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
-                        return; 
-                    }
+            if (activeCount > 0) {
+                if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ أو معلق هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
+                    return; 
                 }
-            } catch (error) {}
+            }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
-            const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
-            const newBal = (currentBal - parseFloat(commission)).toFixed(2);
-            
             const updates = {};
-            updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-            updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
-            
             const appOrderId = "APP_ORD_" + Date.now();
+            
             const orderData = {
                 id: appOrderId,
                 restaurant: restInfo,
@@ -871,34 +925,22 @@
                 fee: fee,
                 status: 'assigned',
                 timestamp: Date.now(),
-                linkedRadarId: linkedId || null
+                linkedRadarId: linkedId || null,
+                commission_amount: commission,
+                cap_name: capName || currentTargetCaptain.Cap_Name || currentTargetCaptain.name,
+                dispatch_method: "App"
             };
             
             updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
             
             try {
                 await update(ref(db), updates);
-                
-                const entry = {
-                    orderId: linkedId || appOrderId,
-                    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                    cap: capName || "كابتن",
-                    rest: restInfo,
-                    comm: commission,
-                    date: new Date().toISOString(),
-                    via: "App"
-                };
-                completedOrders.unshift(entry);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-
-                alert(`تم إرسال الطلب لتطبيق الكابتن بنجاح 🚀`);
+                alert(`تم إرسال الطلب بانتظار قبول الكابتن ⏳😊`);
                 
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
                 document.getElementById('linked_order_id').value = '';
-                renderRadar();
-                renderCompletedOrders();
 
             } catch (error) {
                 alert("حدث خطأ أثناء الإرسال يرجى المحاولة 😊");
@@ -934,23 +976,18 @@
 
                 const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
                 
-                try {
-                    const ordersSnap = await get(ref(db, `assigned_orders/${capKey}`));
-                    let activeCount = 0;
-                    if (ordersSnap.exists()) {
-                        Object.values(ordersSnap.val()).forEach(o => {
-                            if (o.status === 'assigned' || o.status === 'accepted') {
-                                activeCount++;
-                            }
-                        });
+                let activeCount = 0;
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                        activeCount++;
                     }
+                }
 
-                    if (activeCount > 0) {
-                        if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ حاليا هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
-                            return; 
-                        }
+                if (activeCount > 0) {
+                    if (!confirm(`عذرا هذا الكابتن لديه ${activeCount} طلب قيد التنفيذ هل ترغب بالتأكيد على إرسال طلب آخر له`)) {
+                        return; 
                     }
-                } catch (error) {}
+                }
 
                 const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
                 const newBal = (currentBal - parseFloat(commission)).toFixed(2);
@@ -1276,6 +1313,9 @@
 
         function refreshDynamicElements() {
             renderRadar();
+            if (isAutoRadarActive) {
+                triggerAutoRadarMaster(true);
+            }
         }
 
     </script>
