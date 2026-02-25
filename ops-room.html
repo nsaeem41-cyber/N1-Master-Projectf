@@ -175,12 +175,16 @@
 
         <div class="live-stats-bar">
             <div class="stat-box">
+                <div class="stat-val" id="stat-cap-total">0</div>
+                <div class="stat-lbl">إجمالي الكباتن</div>
+            </div>
+            <div class="stat-box">
                 <div class="stat-val" id="stat-pending">0</div>
                 <div class="stat-lbl">انتظار</div>
             </div>
             <div class="stat-box">
-                <div class="stat-val" id="stat-completed-today">0</div>
-                <div class="stat-lbl">مكتمل</div>
+                <div class="stat-val" id="stat-completed-total">0</div>
+                <div class="stat-lbl">إجمالي المكتمل</div>
             </div>
             <div class="stat-box">
                 <div class="stat-val" id="stat-comm-total">0.00</div>
@@ -232,7 +236,10 @@
                 <div class="card" style="border-top: 4px solid var(--success);">
                     <div class="card-header">
                         <span>✅ الطلبات المكتملة (Daily Archive)</span>
-                        <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearCompletedOrders()" title="مسح الأرشيف">🗑️</button>
+                        <div class="action-btns">
+                            <button class="mini-circle-btn" style="background:#f59e0b; color:white; width:auto; padding:0 15px; border-radius:12px; font-weight:bold; font-size:12px;" onclick="resetDailyStats()">🔄 تصفير يومي</button>
+                            <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearCompletedOrders()" title="مسح الأرشيف كامل">🗑️</button>
+                        </div>
                     </div>
                     <table>
                         <thead>
@@ -269,6 +276,10 @@
                                 <div class="form-group">
                                     <label>رقم السيارة</label>
                                     <input type="text" id="new_cap_car" placeholder="مثلاً: 12-34567">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>المنطقة (إجباري للتوزيع الذكي)</label>
+                                    <input type="text" id="new_cap_region" placeholder="مثلاً: الجبيهة">
                                 </div>
                                 <div class="form-group">
                                     <label>اسم المستخدم (للتطبيق)</label>
@@ -317,6 +328,7 @@
                             <tr>
                                 <th>الاسم</th>
                                 <th>الهاتف</th>
+                                <th>المنطقة</th>
                                 <th>السيارة</th>
                                 <th>الرصيد</th>
                                 <th>الحالة</th>
@@ -324,7 +336,7 @@
                             </tr>
                         </thead>
                         <tbody id="captains-log-body">
-                            <tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">جاري سحب بيانات الكباتن...</td></tr>
+                            <tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">جاري سحب بيانات الكباتن...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -368,8 +380,8 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>قيمة الاقتطاع المالي (د.أ)</label>
-                            <input type="number" id="man_commission" placeholder="0.00">
+                            <label>نسبة العمولة (%)</label>
+                            <input type="number" id="man_ratio" placeholder="10" onchange="saveRatio()">
                         </div>
                     </div>
                     
@@ -426,11 +438,18 @@
                 return;
             }
             
+            // تحميل نسبة العمولة الذكية
+            document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
+            
             fetchLiveOrders();
             fetchGlobalUsers();
             renderCompletedOrders();
             setupRealtimeFreezeListener();
             setInterval(refreshDynamicElements, 1000);
+        };
+
+        window.saveRatio = function() {
+            localStorage.setItem('n1_commission_ratio', document.getElementById('man_ratio').value);
         };
 
         window.goBackToCustomer = function() {
@@ -550,13 +569,83 @@
                         </td>
                         <td>
                             <div class="action-btns">
-                                <button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="loadToManual('${ord.Shop_Ord_ID}')">📲</button>
-                                <button class="mini-circle-btn" style="background:#e2e8f0; color:#64748b;" onclick="dismissOrder('${ord.Shop_Ord_ID}')">✕</button>
+                                <button class="mini-circle-btn" style="background:var(--app-color); color:white;" onclick="autoDispatchOrder('${ord.Shop_Ord_ID}')" title="إرسال أوتوماتيكي ذكي">🤖</button>
+                                <button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="loadToManual('${ord.Shop_Ord_ID}')" title="توجيه يدوي">📲</button>
+                                <button class="mini-circle-btn" style="background:#e2e8f0; color:#64748b;" onclick="dismissOrder('${ord.Shop_Ord_ID}')" title="إخفاء">✕</button>
                             </div>
                         </td>
                     </tr>
                 `;
             });
+        };
+
+        window.autoDispatchOrder = async function(orderId) {
+            const ord = allOrders.find(o => o.Shop_Ord_ID === orderId);
+            if (!ord) return;
+            
+            const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+            const orderRegion = shopData ? (shopData.Shop_Location || shopData.Client_Location || '').trim() : '';
+            
+            const myMaster = currentUser.Client_User || currentUser.user;
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster));
+            
+            // فلترة الكباتن: متاح، غير مجمد، وغير مشغول
+            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active' && !c.is_busy);
+            
+            if (availableCaptains.length === 0) {
+                alert("عذراً.. لا يوجد أي كابتن متاح وغير مشغول حالياً 🤖");
+                return;
+            }
+            
+            // إعطاء الأولوية لمنطقة الكابتن المطابقة لمنطقة الطلب
+            let selectedCaptain = availableCaptains.find(c => (c.Cap_Region || '').trim() === orderRegion) || availableCaptains[0];
+            const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
+            
+            const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
+            const fee = parseFloat(ord.Shop_Fee || 0);
+            const commission = (fee * (ratio / 100)).toFixed(2);
+            
+            const currentBal = parseFloat(selectedCaptain.Cap_Balance || selectedCaptain.balance || 0);
+            const newBal = (currentBal - parseFloat(commission)).toFixed(2);
+            
+            const updates = {};
+            updates[`${selectedCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+            updates[`${selectedCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
+            
+            const appOrderId = "APP_ORD_" + Date.now();
+            const orderData = {
+                id: appOrderId,
+                restaurant: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
+                value: ord.Shop_Val,
+                fee: ord.Shop_Fee,
+                status: 'assigned',
+                timestamp: Date.now(),
+                linkedRadarId: orderId
+            };
+            
+            updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
+            
+            try {
+                await update(ref(db), updates);
+                
+                const entry = {
+                    orderId: orderId,
+                    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                    cap: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
+                    rest: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
+                    comm: commission,
+                    date: new Date().toISOString(),
+                    via: "Auto"
+                };
+                completedOrders.unshift(entry);
+                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+
+                alert(`تم التوزيع الأوتوماتيكي للكابتن ${selectedCaptain.Cap_Name || selectedCaptain.name} بنجاح 🤖🚀`);
+                renderRadar();
+                renderCompletedOrders();
+            } catch(e) {
+                alert("حدث خطأ أثناء التوزيع التلقائي 😊");
+            }
         };
 
         window.loadToManual = function(orderId) {
@@ -632,11 +721,11 @@
             const restInfo = document.getElementById('man_rest_name').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
-            const commissionVal = document.getElementById('man_commission').value;
+            const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee || !commissionVal) { 
-                alert("يرجى إكمال بيانات التوجيه (بما فيها مبلغ الاقتطاع) أولا 😊"); 
+            if (!phone || !restInfo || !fee) { 
+                alert("يرجى إكمال بيانات التوجيه أولا 😊"); 
                 return; 
             }
             
@@ -652,7 +741,7 @@
             }
 
             if (currentTargetCaptain.app_status === 'offline') {
-                alert("عذرا، الكابتن بوضع (غير متاح) ولا يمكن إرسال الطلب له حاليا 😊");
+                alert("عذراً.. هذا الكابتن خارج الخدمة حالياً 😊");
                 return;
             }
 
@@ -672,21 +761,21 @@
 
                 if (activeCount > 0) {
                     if (!confirm(`عذراً.. هذا الكابتن لديه (${activeCount}) طلب قيد التنفيذ حالياً، هل ترغب بالتأكيد على إرسال طلب آخر له؟`)) {
-                        return; // إلغاء الإرسال بناءً على اختيار المسؤول
+                        return; // إلغاء الإرسال بناءً على اختيار المسؤول ويبقى الطلب عالرادار
                     }
                 }
             } catch (error) {
                 console.error("Error checking busy status:", error);
             }
 
-            // اقتطاع مالي دقيق مباشر
-            const commission = parseFloat(commissionVal).toFixed(2);
+            // اقتطاع مالي دقيق مباشر بناء على النسبة
+            const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
             const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
-            const newBal = currentBal - parseFloat(commission);
+            const newBal = (currentBal - parseFloat(commission)).toFixed(2);
             
             const updates = {};
-            updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = newBal;
-            updates[`${currentTargetCaptain._node}/${capKey}/balance`] = newBal;
+            updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+            updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
             
             const appOrderId = "APP_ORD_" + Date.now();
             const orderData = {
@@ -721,7 +810,6 @@
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
-                document.getElementById('man_commission').value = '';
                 document.getElementById('linked_order_id').value = '';
                 renderRadar();
                 renderCompletedOrders();
@@ -737,11 +825,11 @@
             const restInfo = document.getElementById('man_rest_name').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
-            const commissionVal = document.getElementById('man_commission').value;
+            const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee || !commissionVal) { 
-                alert("يرجى إكمال بيانات التوجيه (بما فيها الاقتطاع) أولا 😊"); 
+            if (!phone || !restInfo || !fee) { 
+                alert("يرجى إكمال بيانات التوجيه أولا 😊"); 
                 return; 
             }
 
@@ -750,12 +838,12 @@
                 localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
             }
 
-            const commission = parseFloat(commissionVal).toFixed(2);
+            const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
 
             if (currentTargetCaptain) {
                 // التأكد من وضع الكابتن
                 if (currentTargetCaptain.app_status === 'offline') {
-                    alert("عذرا، الكابتن بوضع (غير متاح) بالوقت الحالي 😊");
+                    alert("عذراً.. هذا الكابتن خارج الخدمة حالياً 😊");
                     return;
                 }
 
@@ -783,11 +871,11 @@
                 }
 
                 const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
-                const newBal = currentBal - parseFloat(commission);
+                const newBal = (currentBal - parseFloat(commission)).toFixed(2);
                 
                 const updates = {};
-                updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = newBal;
-                updates[`${currentTargetCaptain._node}/${capKey}/balance`] = newBal;
+                updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
                 await update(ref(db), updates);
             }
 
@@ -819,7 +907,6 @@
             document.getElementById('man_rest_name').value = '';
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
-            document.getElementById('man_commission').value = '';
             document.getElementById('linked_order_id').value = '';
             renderRadar();
             renderCompletedOrders();
@@ -827,10 +914,13 @@
 
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
+            
+            // حساب الإجمالي التراكمي
+            document.getElementById('stat-completed-total').innerText = completedOrders.length;
+            
             const today = new Date().toDateString();
             const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض");
             
-            document.getElementById('stat-completed-today').innerText = todayOrders.length;
             let totalComm = todayOrders.reduce((sum, o) => sum + parseFloat(o.comm), 0);
             document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
             document.getElementById('side-total-comm').innerText = totalComm.toFixed(2) + " د.أ";
@@ -842,7 +932,7 @@
 
             tbody.innerHTML = '';
             todayOrders.forEach(o => {
-                const methodIcon = o.via === 'App' ? '📱' : '💬';
+                const methodIcon = o.via === 'App' ? '📱' : (o.via === 'Auto' ? '🤖' : '💬');
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-size:11px; color:#64748b;">${o.time}</td>
@@ -856,6 +946,15 @@
             });
         };
 
+        window.resetDailyStats = function() {
+            if(confirm("هل أنت متأكد من تصفير طلبات وعمولات اليوم؟ ستبقى أرصدة الكباتن كما هي بكل رقي 😊")) {
+                const today = new Date().toDateString();
+                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today);
+                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                renderCompletedOrders();
+            }
+        };
+
         window.deleteFromArchive = function(id) {
             if(confirm("هل تريد الحذف من الأرشيف 😊")) {
                 completedOrders = completedOrders.filter(o => o.orderId !== id);
@@ -866,7 +965,7 @@
         };
 
         window.clearCompletedOrders = function() {
-            if(confirm("هل أنت متأكد من مسح الأرشيف 😊")) {
+            if(confirm("تحذير: هل أنت متأكد من مسح الأرشيف التراكمي كاملاً 😊")) {
                 completedOrders = [];
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderCompletedOrders();
@@ -907,11 +1006,12 @@
             const name = document.getElementById('new_cap_name').value.trim();
             const phone = document.getElementById('new_cap_phone').value.trim();
             const car = document.getElementById('new_cap_car').value.trim();
+            const region = document.getElementById('new_cap_region').value.trim();
             const user = document.getElementById('new_cap_user').value.trim();
             const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            if(!name || !phone || !user || !pass) { alert("أكمل البيانات يا بطة 😊"); return; }
+            if(!name || !phone || !user || !pass || !region) { alert("أكمل البيانات يا بطة وتأكد من إدخال المنطقة 😊"); return; }
             
             const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             if(exists) {
@@ -928,6 +1028,7 @@
                 Cap_User: user,
                 Cap_Pass: pass,
                 Cap_Car: car,
+                Cap_Region: region,
                 Cap_Status: "active",
                 Cap_Balance: bal,
                 role: "captain",
@@ -936,7 +1037,7 @@
                 Client_Master: myMaster,
                 app_sync_lock: false,
                 app_access: "granted",
-                app_status: "offline" // افتراضياً الكابتن الجديد غير متاح
+                app_status: "offline" 
             };
             
             await set(ref(db, 'captains/' + user), capData);
@@ -944,6 +1045,7 @@
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
             document.getElementById('new_cap_car').value = '';
+            document.getElementById('new_cap_region').value = '';
             document.getElementById('new_cap_user').value = '';
             document.getElementById('new_cap_pass').value = '';
             document.getElementById('new_cap_bal').value = '0';
@@ -980,11 +1082,11 @@
             if(isNaN(amount)) { alert("أدخل مبلغ الشحن بشكل صحيح 😊"); return; }
             
             const cap = activeSmartCaptain;
-            const newBal = parseFloat(cap.Cap_Balance || cap.balance || 0) + amount;
+            const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
             const capKey = cap.Cap_User || cap.user || cap.Cap_Phone || cap.phone;
             const updates = {};
-            updates[`${cap._node}/${capKey}/Cap_Balance`] = newBal;
-            updates[`${cap._node}/${capKey}/balance`] = newBal;
+            updates[`${cap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+            updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
             
             await update(ref(db), updates);
             alert(`تم الشحن بنجاح 💰`);
@@ -1002,13 +1104,15 @@
             
             const myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster)).reverse();
             
+            document.getElementById('stat-cap-total').innerText = myCaptains.length;
+
             const activeCount = myCaptains.filter(c => (c.Cap_Status || c.status) !== 'paused').length;
             const pausedCount = myCaptains.length - activeCount;
             document.getElementById('stat-cap-active').innerText = activeCount;
             document.getElementById('stat-cap-paused').innerText = pausedCount;
 
             if (myCaptains.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">لا يوجد كباتن مسجلين بعد</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">لا يوجد كباتن مسجلين بعد</td></tr>';
                 return;
             }
 
@@ -1023,6 +1127,7 @@
                     <tr>
                         <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
                         <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
+                        <td><span class="area-badge" style="background:#f1f5f9; color:#64748b; border:none;">${cap.Cap_Region || 'عام'}</span></td>
                         <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
                         <td style="font-weight:bold; color:${bal < 0 ? 'var(--danger)' : 'var(--success)'};">${bal} د.أ</td>
                         <td>${statusBadge}</td>
