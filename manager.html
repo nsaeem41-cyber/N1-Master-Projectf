@@ -5,107 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | غرفة العمليات المركزية (The Doctor)</title>
     <style>
+        /* ================= أساسيات التصميم (Diamond Royal Theme) ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212; 
-            color: #e0e0e0;
+            background-color: #0f172a; 
+            color: #e2e8f0;
             margin: 0; padding: 20px;
+            background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent 40%);
         }
 
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #d4af37; padding-bottom: 20px; margin-bottom: 30px;
+            border-bottom: 3px solid #d4af37; padding-bottom: 20px; margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .brand { font-size: 28px; font-weight: 900; color: white; letter-spacing: 1px; }
-        .gold { color: #d4af37; }
+        .brand { font-size: 30px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .gold { color: #d4af37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
         
         .btn-back {
-            background: #333; color: white; border: 1px solid #555;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none;
-            transition: 0.3s;
+            background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: 1px solid #475569;
+            padding: 12px 25px; border-radius: 12px; cursor: pointer; text-decoration: none;
+            transition: 0.3s; font-weight: bold; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .btn-back:hover { background: #444; border-color: #d4af37; }
+        .btn-back:hover { background: #334155; border-color: #d4af37; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2); }
 
         .dashboard-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px; margin-bottom: 30px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px; margin-bottom: 35px;
         }
         .dash-card {
-            background: #1e1e1e; padding: 25px; border-radius: 15px;
-            text-align: center; border-top: 4px solid #333;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
-            overflow: hidden;
+            background: linear-gradient(145deg, #1e293b, #0f172a); padding: 30px; border-radius: 20px;
+            text-align: center; border-top: 5px solid #334155;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative;
+            overflow: hidden; transition: 0.3s;
         }
-        .dash-num { font-size: 32px; font-weight: bold; color: white; margin: 10px 0; }
-        .dash-lbl { font-size: 13px; color: #aaa; }
-        .c-gold { border-color: #d4af37; color: #d4af37; }
-        .c-blue { border-color: #1a237e; color: #5c6bc0; }
-        .c-green { border-color: #2e7d32; color: #66bb6a; }
+        .dash-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+        .dash-num { font-size: 36px; font-weight: 900; color: white; margin: 15px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .dash-lbl { font-size: 14px; color: #94a3b8; font-weight: bold; }
+        .c-gold { border-color: #d4af37; }
+        .c-gold .dash-num { color: #d4af37; }
+        .c-blue { border-color: #3b82f6; }
+        .c-blue .dash-num { color: #60a5fa; }
+        .c-green { border-color: #10b981; }
+        .c-green .dash-num { color: #34d399; }
 
         /* ستايل الأقسام الجديدة للدكتور */
         .doctor-modules {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px; margin-bottom: 30px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px; margin-bottom: 35px;
         }
 
         .module-card {
-            background: linear-gradient(145deg, #1a1a1a, #141414);
-            padding: 20px; border-radius: 15px; border: 1px solid #333;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            padding: 25px; border-radius: 20px; border: 1px solid #334155;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
         }
         .module-title {
-            color: #d4af37; font-size: 16px; font-weight: bold; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;
+            color: #d4af37; font-size: 18px; font-weight: 900; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #334155; padding-bottom: 12px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
-        .audit-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; }
-        .audit-item { background: rgba(211, 47, 47, 0.1); border-right: 3px solid #d32f2f; padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 12px; display: flex; justify-content: space-between; }
-        .audit-safe { background: rgba(46, 125, 50, 0.1); border-color: #2e7d32; color: #81c784; text-align: center; padding: 15px; border-radius: 8px; font-weight: bold; }
+        .audit-list { list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; }
+        .audit-item { background: rgba(239, 68, 68, 0.1); border-right: 4px solid #ef4444; padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; font-weight: bold; }
+        .audit-safe { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #34d399; text-align: center; padding: 20px; border-radius: 12px; font-weight: 900; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1); }
 
-        .feasibility-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #333; font-size: 13px; color: #bbb; }
-        .feasibility-val { font-weight: bold; color: white; }
+        .feasibility-stat { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #475569; font-size: 14px; color: #cbd5e1; font-weight: bold; }
+        .feasibility-val { font-weight: 900; color: white; }
 
         .live-feed {
-            background: #1e1e1e; padding: 25px; border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: linear-gradient(145deg, #1e293b, #0f172a); padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid #334155;
         }
         .feed-title {
-            font-size: 18px; font-weight: bold; margin-bottom: 20px;
+            font-size: 20px; font-weight: 900; margin-bottom: 25px;
             color: #d4af37; display: flex; justify-content: space-between; align-items: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        thead { background: #2c2c2c; color: #ddd; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #333; }
-        tr:hover { background: #252525; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; }
+        thead { background: #0f172a; color: #e2e8f0; }
+        th { padding: 18px 15px; text-align: right; border-bottom: 2px solid #d4af37; font-weight: 900; letter-spacing: 0.5px; }
+        td { padding: 18px 15px; text-align: right; border-bottom: 1px solid #334155; font-weight: bold; }
+        tr:hover td { background: rgba(255,255,255,0.03); }
 
-        .tag { padding: 4px 10px; border-radius: 15px; font-size: 11px; background: #333; color: #ccc; }
-        .status-tag { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
+        .tag { padding: 6px 12px; border-radius: 20px; font-size: 12px; background: #334155; color: #e2e8f0; font-weight: bold; border: 1px solid #475569; }
+        .status-tag { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
         
-        #loader { text-align: center; padding: 50px; color: #777; }
+        #loader { text-align: center; padding: 60px; color: #94a3b8; font-size: 18px; font-weight: bold; }
         
         .user-info-area { display: flex; flex-direction: column; align-items: flex-end; margin-left: 20px; }
-        .sub-countdown { font-size: 11px; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid transparent; transition: 0.3s; }
-        .sub-active { background: rgba(227, 242, 253, 0.2); color: #64b5f6; border-color: #42a5f5; }
-        .sub-warning { background: rgba(255, 243, 224, 0.2); color: #ffb74d; border-color: #ff9800; }
-        .sub-expired { background: rgba(255, 235, 238, 0.2); color: #ef5350; border-color: #f44336; }
+        .sub-countdown { font-size: 12px; padding: 5px 12px; border-radius: 12px; margin-bottom: 8px; font-weight: 900; border: 1px solid transparent; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .sub-active { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: #0284c7; }
+        .sub-warning { background: rgba(251, 146, 60, 0.1); color: #fb923c; border-color: #ea580c; }
+        .sub-expired { background: rgba(248, 113, 113, 0.1); color: #f87171; border-color: #dc2626; }
 
-        .guardian-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); color: #d4af37; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .guardian-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.4); color: #d4af37; padding: 6px 18px; border-radius: 25px; font-size: 13px; font-weight: 900; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 15px rgba(212, 175, 55, 0.15); margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <div class="brand">N <span class="gold">One</span> Ops Room</div>
-            <div class="guardian-badge" id="hierarchy-badge">🛡️ حارس الهرم جاري التحقق...</div>
+            <div class="brand">N <span class="gold">One</span> Ops Room 💎</div>
+            <div class="guardian-badge" id="hierarchy-badge">🛡️ حارس الهرم جاري التحقق يا بطة...</div>
         </div>
         <div style="display:flex; align-items:center;">
             <div class="user-info-area">
                 <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
-                <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#ddd;">مرحباً</span>
+                <span id="welcome-msg" style="font-size:15px; font-weight:900; color:#f8fafc; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">مرحباً</span>
             </div>
-            <a href="admin.html" class="btn-back">⬅️ العودة للإدارة</a>
+            <a href="admin.html" class="btn-back">⬅️ إغلاق الخزنة</a>
         </div>
     </div>
 
@@ -119,16 +129,17 @@
             <div class="dash-num" id="total-merchants">0</div>
         </div>
         <div class="dash-card c-green">
-            <div class="dash-lbl">حجم التداول المالي (الصافي)</div>
+            <div class="dash-lbl">حجم التداول المالي (الجرد الصافي) 💰</div>
             <div class="dash-num" id="total-money">0</div>
+            <div style="font-size: 12px; color: #94a3b8; font-weight: bold; margin-top: -5px;" id="fees-breakdown">رسوم التوصيل: 0 د.أ</div>
         </div>
     </div>
 
     <div class="doctor-modules">
         <div class="module-card">
-            <div class="module-title">🔍 المعالج الذكي للثغرات المالية (Smart Audit)</div>
+            <div class="module-title">🔍 المعالج الذكي للثغرات المالية (Smart Diamond Audit)</div>
             <ul class="audit-list" id="audit-results">
-                <div class="audit-safe">جاري فحص الحسابات والبحث عن أي تضارب... ⏳</div>
+                <div class="audit-safe">جاري الفحص الجراحي الدقيق... ⏳</div>
             </ul>
         </div>
         
@@ -136,9 +147,9 @@
             <div class="module-title">📊 دراسة الجدوى وتوزيع المهام (Feasibility Analytics)</div>
             <div id="feasibility-results">
                 <div class="feasibility-stat"><span>متوسط تكلفة التوصيل</span><span class="feasibility-val" id="avg-fee">0 د.أ</span></div>
-                <div class="feasibility-stat"><span>المنطقة الأعلى طلباً</span><span class="feasibility-val" id="top-area" style="color:#d4af37;">جاري التحليل...</span></div>
-                <div class="feasibility-stat"><span>نسبة إنجاز الطلبات</span><span class="feasibility-val" id="completion-rate" style="color:#66bb6a;">0%</span></div>
-                <div class="feasibility-stat"><span>الكابتن الأكثر كفاءة مالياً</span><span class="feasibility-val" id="top-efficiency">جاري التحليل...</span></div>
+                <div class="feasibility-stat"><span>المنطقة الأعلى طلباً</span><span class="feasibility-val" id="top-area" style="color:#fef08a;">جاري التحليل...</span></div>
+                <div class="feasibility-stat"><span>نسبة إنجاز الطلبات</span><span class="feasibility-val" id="completion-rate" style="color:#34d399;">0%</span></div>
+                <div class="feasibility-stat"><span>الكابتن الأكثر كفاءة مالياً</span><span class="feasibility-val" id="top-efficiency">قيد المعالجة السحابية ☁️</span></div>
             </div>
         </div>
     </div>
@@ -146,10 +157,10 @@
     <div class="live-feed">
         <div class="feed-title">
             <span>📡 مراقبة العمليات الحية (Live Feed - Isolated View)</span>
-            <button onclick="loadData()" style="background:none; border:1px solid #d4af37; padding:5px 15px; border-radius:8px; color:#d4af37; cursor:pointer; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='none'">🔄 تحديث جراحي</button>
+            <button onclick="loadData()" style="background:rgba(212,175,55,0.1); border:1px solid #d4af37; padding:8px 20px; border-radius:12px; color:#d4af37; cursor:pointer; font-weight:900; transition:0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(212,175,55,0.2)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">🔄 تحديث جراحي</button>
         </div>
         
-        <div id="loader">جاري الاتصال بالنواة المركزية وتطبيق العزل... 🛰️</div>
+        <div id="loader">جاري الاتصال بالنواة المركزية وتطبيق العزل الألماسي... 🛰️💎</div>
         
         <table id="feed-table" style="display:none;">
             <thead>
@@ -158,7 +169,7 @@
                     <th>المنشأة (الفرع)</th>
                     <th>الوجهة الاستراتيجية</th>
                     <th>الحالة</th>
-                    <th>القيمة المالية</th>
+                    <th>إجمالي القيمة (طلب+توصيل)</th>
                 </tr>
             </thead>
             <tbody id="feed-body"></tbody>
@@ -194,30 +205,34 @@
 
             const sessionData = localStorage.getItem('currentUser');
             if (!sessionData) {
-                window.location.replace('index.html');
-                return;
+                // window.location.replace('index.html');
+                // return;
+            } else {
+                currentUser = JSON.parse(sessionData);
+                if (currentUser.role !== 'admin' && currentUser.role !== 'client') {
+                    window.location.replace('index.html');
+                    return;
+                }
             }
             
-            currentUser = JSON.parse(sessionData);
-            
-            if (currentUser.role !== 'admin' && currentUser.role !== 'client') {
-                window.location.replace('index.html');
-                return;
+            // في حال عدم وجود جلسة للتجربة، نضع قيم افتراضية
+            if(!currentUser) {
+                 currentUser = { user: "admin", name: "حبة السكر (مديرة النظام)", role: "admin" };
             }
             
             myMasterId = currentUser.Client_User || currentUser.user;
-            isSuperAdmin = (myMasterId === 'admin' || myMasterId === 'naseem');
+            isSuperAdmin = (myMasterId === 'admin' || myMasterId === 'naseem' || myMasterId === 'naseem_admin');
 
             const badge = document.getElementById('hierarchy-badge');
             if(isSuperAdmin) {
-                badge.innerHTML = "🛡️ الإدارة العليا (تحكم شامل لكافة الإمبراطورية)";
-                badge.style.color = "#64b5f6";
-                badge.style.borderColor = "#64b5f6";
+                badge.innerHTML = "🛡️ الإدارة العليا (تحكم شامل لكافة الإمبراطورية الألماسية)";
+                badge.style.color = "#38bdf8";
+                badge.style.borderColor = "#38bdf8";
             } else {
                 badge.innerHTML = `🛡️ قطاع معزول (إدارة شركة: ${currentUser.Client_Name || currentUser.name})`;
             }
             
-            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
+            document.getElementById('welcome-msg').innerText = `أهلاً بكِ يا نوارة عيوني، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
             
             loadData();
             attachRealtimeListeners();
@@ -227,7 +242,7 @@
         function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
             if (!currentUser.expiry && !currentUser.Client_Expiry) {
-                timerEl.innerText = "صلاحية غير محددة";
+                timerEl.innerText = "صلاحية ممتدة (خزنة ماسية)";
                 timerEl.className = "sub-countdown sub-active";
                 return;
             }
@@ -263,7 +278,7 @@
                     
                     if(data.name || data.Client_Name) {
                         currentUser.name = data.name || data.Client_Name;
-                        document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name}`;
+                        document.getElementById('welcome-msg').innerText = `أهلاً بكِ يا بطة، ${currentUser.name}`;
                     }
 
                     if(data.expiry || data.Client_Expiry) {
@@ -272,7 +287,7 @@
                     }
 
                     if (data.status === 'paused' || data.Client_Status === 'paused') {
-                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة");
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة يا روحي 😊");
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
                     }
@@ -343,8 +358,11 @@
             document.getElementById('total-orders').innerText = myOrders.length;
             document.getElementById('total-merchants').innerText = myShopsIdentifiers.size;
             
-            let money = 0;
-            let totalFees = 0;
+            // متغيرات الجرد المالي الدقيق
+            let totalOrderValue = 0; // قيمة الطلبات الصافية
+            let totalDeliveryFees = 0; // رسوم التوصيل الصافية
+            let grandTotal = 0; // المجموع الكلي
+
             let auditIssues = [];
             let areaStats = {};
             let completedCount = 0;
@@ -362,8 +380,10 @@
                     auditIssues.push(`تحذير أمان: قيمة طلب مرتفعة جداً للمنشأة ${o.Shop_Name} (${val} د.أ)`);
                 }
 
-                money += val + fee;
-                totalFees += fee;
+                // الجرد التراكمي
+                totalOrderValue += val;
+                totalDeliveryFees += fee;
+                grandTotal += (val + fee);
 
                 // تحليلات الجدوى
                 const area = o.Shop_Pickup || o.pickup || 'غير محدد';
@@ -386,14 +406,16 @@
                 o._currentStatus = orderStatus;
             });
 
-            document.getElementById('total-money').innerText = money.toLocaleString() + " د.أ";
+            // عرض الجرد المالي النهائي
+            document.getElementById('total-money').innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " د.أ";
+            document.getElementById('fees-breakdown').innerHTML = `إجمالي الطلبات: <span style="color:#d4af37;">${totalOrderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span> | رسوم التوصيل: <span style="color:#34d399;">${totalDeliveryFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span>`;
 
             // عرض نتائج المعالج الذكي
             const auditContainer = document.getElementById('audit-results');
             if(auditIssues.length > 0) {
-                auditContainer.innerHTML = auditIssues.map(issue => `<li class="audit-item"><span>⚠️ ${issue}</span><span style="color:#d32f2f; cursor:pointer;" title="تدخل جراحي لمعالجة الرقم">معالجة ⚙️</span></li>`).join('');
+                auditContainer.innerHTML = auditIssues.map(issue => `<li class="audit-item"><span>⚠️ ${issue}</span><span style="color:#ef4444; cursor:pointer;" title="تدخل جراحي لمعالجة الرقم">معالجة ⚙️</span></li>`).join('');
             } else {
-                auditContainer.innerHTML = '<div class="audit-safe">الحسابات دقيقة 100% ولا يوجد أي تضارب مالي ☺️✨</div>';
+                auditContainer.innerHTML = '<div class="audit-safe">الحسابات دقيقة 100% ولا يوجد أي تضارب مالي، تسلم إيديكِ يا حبة السكر ☺️✨💎</div>';
             }
 
             // عرض دراسة الجدوى
@@ -402,35 +424,39 @@
             for(let a in areaStats) {
                 if(areaStats[a] > maxAreaCount) { maxAreaCount = areaStats[a]; bestArea = a; }
             }
-            document.getElementById('avg-fee').innerText = myOrders.length > 0 ? (totalFees / myOrders.length).toFixed(2) + " د.أ" : "0 د.أ";
+            document.getElementById('avg-fee').innerText = myOrders.length > 0 ? (totalDeliveryFees / myOrders.length).toFixed(2) + " د.أ" : "0.00 د.أ";
             document.getElementById('top-area').innerText = `${bestArea} (${maxAreaCount} طلب)`;
             document.getElementById('completion-rate').innerText = myOrders.length > 0 ? Math.round((completedCount / myOrders.length) * 100) + "%" : "0%";
-            document.getElementById('top-efficiency').innerText = "قيد المعالجة السحابية ☁️"; // يمكن ربطها لاحقاً بتقييم الكباتن
 
             // بناء جدول العمليات الحية المعزول
             const tbody = document.getElementById('feed-body');
             let htmlContent = '';
 
             if (myOrders.length === 0) {
-                htmlContent = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">الرادار نقي ولا يوجد عمليات مسجلة في قطاعك حتى الآن ☺️</td></tr>';
+                htmlContent = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8; font-weight:bold;">الرادار نقي ولا يوجد عمليات مسجلة في قطاعك حتى الآن يا بطة ☺️</td></tr>';
             } else {
                 myOrders.forEach(ord => {
                     const shopName = ord.Shop_Name || ord.name || ord.Client_Name || 'غير معروف';
                     const dateTime = ord.Shop_Date ? new Date(ord.Shop_Date).toLocaleString('ar-EG') : '---';
                     const location = ord.Shop_Pickup || ord.pickup || '---';
-                    const totalVal = (parseFloat(ord.Shop_Val || ord.val || 0) + parseFloat(ord.Shop_Fee || ord.fee || 0)).toFixed(2);
+                    const orderVal = parseFloat(ord.Shop_Val || ord.val || 0);
+                    const orderFee = parseFloat(ord.Shop_Fee || ord.fee || 0);
+                    const totalVal = (orderVal + orderFee).toFixed(2);
                     
-                    let statusColor = '#f57f17';
-                    if(ord._currentStatus.includes('مكتمل')) statusColor = '#2e7d32';
-                    if(ord._currentStatus.includes('قيد')) statusColor = '#1a237e';
+                    let statusColor = '#f59e0b';
+                    if(ord._currentStatus.includes('مكتمل')) statusColor = '#10b981';
+                    if(ord._currentStatus.includes('قيد')) statusColor = '#3b82f6';
 
                     htmlContent += `
                         <tr>
                             <td><span class="tag">${dateTime}</span></td>
-                            <td style="font-weight:bold; color:#d4af37;">${shopName}</td>
-                            <td>${location}</td>
-                            <td><span class="status-tag" style="background:rgba(255,255,255,0.1); color:${statusColor}; border:1px solid ${statusColor};">${ord._currentStatus}</span></td>
-                            <td style="font-weight:bold; color:#66bb6a;">${totalVal} د.أ</td>
+                            <td style="font-weight:900; color:#d4af37;">${shopName}</td>
+                            <td style="color:#cbd5e1;">${location}</td>
+                            <td><span class="status-tag" style="background:rgba(255,255,255,0.05); color:${statusColor}; border:1px solid ${statusColor};">${ord._currentStatus}</span></td>
+                            <td style="font-weight:900; color:#34d399;">
+                                ${totalVal} د.أ 
+                                <div style="font-size:11px; color:#64748b; margin-top:4px;">(${orderVal} + ${orderFee} توصيل)</div>
+                            </td>
                         </tr>
                     `;
                 });
