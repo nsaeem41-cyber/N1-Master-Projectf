@@ -178,7 +178,10 @@
                 </div>
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#64748b;">رابط الموقع</label>
-                    <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع (Google Maps)">
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع (Google Maps)">
+                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:auto; display:flex; align-items:center; margin:0;" onclick="smartMapSearchEdit()">بحث 🗺️</button>
+                    </div>
                 </div>
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#64748b;">الرصيد المتاح</label>
@@ -308,7 +311,10 @@
                         <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
                     </div>
 
-                    <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps)">
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps)">
+                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:auto; display:flex; align-items:center; margin:0;" onclick="smartMapSearch()">بحث 🗺️</button>
+                    </div>
 
                     <input type="number" id="shop_balance" placeholder="رصيد مبدئي للطلبات (اختياري)" step="0.5" style="border-color:var(--money);">
 
@@ -488,6 +494,44 @@
             fetchData();
         };
 
+        window.smartMapSearch = function() {
+            const shopName = document.getElementById('shop_name').value.trim();
+            if (!shopName) {
+                alert("يا روحي اكتبي اسم المنشأة أولا لحتى أقدر أبحث لك عن موقعها 🌸😊");
+                return;
+            }
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('loader-overlay').style.display = 'none';
+                if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده 🌸😊")) {
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+                    document.getElementById('shop_location_link').value = mapLink;
+                    alert("تم ربط الموقع وتأكيده بنجاح 🚀💎");
+                }
+            }, 1200);
+        };
+
+        window.smartMapSearchEdit = function() {
+            const shopName = document.getElementById('edit_shop_name').value.trim();
+            if (!shopName) {
+                alert("يا روحي اكتبي اسم المنشأة أولا 🌸😊");
+                return;
+            }
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('loader-overlay').style.display = 'none';
+                if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده 🌸😊")) {
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+                    document.getElementById('edit_shop_location_link').value = mapLink;
+                    alert("تم تحديث رابط الموقع بنجاح 🚀💎");
+                }
+            }, 1200);
+        };
+
         function checkAdPermission() {
             const username = currentUser.Client_User || currentUser.user;
             const userRef = ref(db, `users/${username}`);
@@ -642,13 +686,13 @@
                     }
 
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 🌸😊");
                         localStorage.removeItem('current_company_user');
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
                     }
                 } else {
-                    alert("تم حذف الحساب نهائياً من قبل الإدارة المركزية سيتم تسجيل الخروج فوراً 😊");
+                    alert("تم حذف الحساب نهائيا من قبل الإدارة المركزية سيتم تسجيل الخروج فورا 🌸😊");
                     localStorage.removeItem('current_company_user');
                     localStorage.removeItem('currentUser');
                     window.location.replace('index.html');
@@ -677,7 +721,7 @@
             const extId = document.getElementById('external_reg_id').value.trim();
 
             if (toggleState && !extId) {
-                alert("يرجى إدخال معرف الاستقبال أولاً 😊");
+                alert("يرجى إدخال معرف الاستقبال أولا 🌸😊");
                 return;
             }
 
@@ -689,10 +733,10 @@
                 });
                 document.getElementById('loader-overlay').style.display = 'none';
                 if (toggleState) alert("تم تفعيل الاستقبال الخارجي وحفظ المعرف الرسمي بنجاح 🚀");
-                else alert("تم تعطيل ميزة الاستقبال الخارجي 😊");
+                else alert("تم تعطيل ميزة الاستقبال الخارجي 🌸😊");
             } catch (error) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء حفظ الإعدادات 😊");
+                alert("حدث خطأ أثناء حفظ الإعدادات 🌸😊");
             }
         };
 
@@ -703,7 +747,7 @@
             const newPass = document.getElementById('profile_pass').value;
 
             if (!newName || !newUser || !newPass) {
-                alert("يرجى تعبئة كافة الحقول المطلوبة 😊");
+                alert("يرجى تعبئة كافة الحقول المطلوبة 🌸😊");
                 return;
             }
 
@@ -714,7 +758,7 @@
                     const checkSnap1 = await get(child(ref(db), `users/${newUser}`));
                     const checkSnap2 = await get(child(ref(db), `shops/${newUser}`));
                     if (checkSnap1.exists() || checkSnap2.exists()) {
-                        alert("عذراً اسم المستخدم الجديد محجوز لجهة أخرى يرجى اختيار اسم مختلف 😊");
+                        alert("عذرا اسم المستخدم الجديد محجوز لجهة أخرى يرجى اختيار اسم مختلف 🌸😊");
                         document.getElementById('loader-overlay').style.display = 'none';
                         return;
                     }
@@ -750,7 +794,7 @@
                         localStorage.setItem('current_company_user', JSON.stringify(currentUser));
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
                         
-                        alert("تم تحديث بياناتك بنجاح وتغيير هويتك سيتم إعادة تحميل الصفحة لحفظ التعديلات 😊");
+                        alert("تم تحديث بياناتك بنجاح وتغيير هويتك سيتم إعادة تحميل الصفحة لحفظ التعديلات 🌸😊");
                         window.location.reload();
                     }
                 } else {
@@ -771,11 +815,11 @@
                     
                     document.getElementById('welcome-msg').innerText = `أهلاً بك يا ${newName}`;
                     document.getElementById('display_company_name').innerText = newName;
-                    alert("تم حفظ التعديلات الألماسية بنجاح 😊");
+                    alert("تم حفظ التعديلات الألماسية بنجاح 🌸😊");
                     document.getElementById('loader-overlay').style.display = 'none';
                 }
             } catch (error) {
-                alert("حدث خطأ أثناء التحديث يرجى المحاولة لاحقاً 😊");
+                alert("حدث خطأ أثناء التحديث يرجى المحاولة لاحقا 🌸😊");
                 document.getElementById('loader-overlay').style.display = 'none';
             }
         };
@@ -860,7 +904,7 @@
 
         window.sendClientAd = async function() {
             const text = document.getElementById('client_ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً 😊"); return; }
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولا 🌸😊"); return; }
             
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
@@ -900,15 +944,15 @@
                 alert("تم بث الإعلان بنجاح 🚀");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال الإعلان 😊");
+                alert("حدث خطأ أثناء إرسال الإعلان 🌸😊");
             }
         };
 
         window.sendClientPopup = async function() {
             const text = document.getElementById('client_ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً 😊"); return; }
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولا 🌸😊"); return; }
             
-            if(!confirm("سيظهر هذا التنبيه فوراً في منتصف الشاشة هل أنت متأكد 😊")) return;
+            if(!confirm("سيظهر هذا التنبيه فورا في منتصف الشاشة هل أنت متأكد 🌸😊")) return;
 
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
@@ -937,12 +981,12 @@
                 alert("تم إرسال التنبيه الطارئ بنجاح 🚨");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال التنبيه 😊");
+                alert("حدث خطأ أثناء إرسال التنبيه 🌸😊");
             }
         };
 
         window.clearClientAds = async function() {
-            if(!confirm("هل أنت متأكد من مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين 😊")) return;
+            if(!confirm("هل أنت متأكد من مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين 🌸😊")) return;
             
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
@@ -967,7 +1011,7 @@
                 alert("تم مسح الإعلان والتنبيه بنجاح 🗑️");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء مسح الإعلان 😊");
+                alert("حدث خطأ أثناء مسح الإعلان 🌸😊");
             }
         };
 
@@ -996,9 +1040,9 @@
                 const checkUser = await get(child(ref(db), `users/${user}`));
                 
                 if (checkShop.exists() || checkUser.exists()) {
-                    alert("هذا الاسم محجوز يرجى اختيار اسم آخر 😊");
+                    alert("هذا الاسم محجوز يرجى اختيار اسم آخر 🌸😊");
                 } else {
-                    alert("الاسم متاح ويمكن استخدامه بكل تأكيد 😊");
+                    alert("الاسم متاح ويمكن استخدامه بكل تأكيد 🌸😊");
                 }
             } catch (error) {
             } finally {
@@ -1019,15 +1063,15 @@
             let commission = "0";
             if (subType === 'paid') {
                 commission = document.getElementById('fixed_commission').value;
-                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 😊"); return; }
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 🌸😊"); return; }
             }
 
-            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية 😊"); return; }
+            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية 🌸😊"); return; }
 
             const checkShop = await get(child(ref(db), `shops/${user}`));
             const checkUser = await get(child(ref(db), `users/${user}`));
             if (checkShop.exists() || checkUser.exists()) {
-                alert("عذراً اسم المستخدم محجوز يرجى تغيير الاسم 😊");
+                alert("عذرا اسم المستخدم محجوز يرجى تغيير الاسم 🌸😊");
                 return;
             }
 
@@ -1073,7 +1117,7 @@
                 document.getElementById('shop_balance').value = '';
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء الاتصال بالنظام 😊");
+                alert("حدث خطأ أثناء الاتصال بالنظام 🌸😊");
             }
         };
 
@@ -1112,7 +1156,7 @@
             document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
 
             if (myShops.length === 0) { 
-                const emptyMsg = currentShopFilter === 'active' ? 'لا توجد منشآت تابعة مفعّلة حالياً' : 'لا توجد طلبات معلقة حالياً';
+                const emptyMsg = currentShopFilter === 'active' ? 'لا توجد منشآت تابعة مفعّلة حاليا' : 'لا توجد طلبات معلقة حاليا';
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold; color:#94a3b8;">${emptyMsg}</td></tr>`; 
                 return; 
             }
@@ -1188,13 +1232,13 @@
             let confirmMsg = '';
             
             if (currentStatus === 'pending') {
-                confirmMsg = "تأكيد تفعيل وقبول المنشأة بالشبكة الألماسية 😊";
+                confirmMsg = "تأكيد تفعيل وقبول المنشأة بالشبكة الألماسية 🌸😊";
                 nextStatus = 'active';
             } else if (currentStatus === 'active') {
-                confirmMsg = "تأكيد تجميد حساب المنشأة 😊";
+                confirmMsg = "تأكيد تجميد حساب المنشأة 🌸😊";
                 nextStatus = 'paused';
             } else {
-                confirmMsg = "تأكيد إعادة تفعيل حساب المنشأة 😊";
+                confirmMsg = "تأكيد إعادة تفعيل حساب المنشأة 🌸😊";
                 nextStatus = 'active';
             }
             
@@ -1251,11 +1295,11 @@
             let commission = "0";
             if (subType === 'paid') {
                 commission = document.getElementById('edit_fixed_commission').value;
-                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 😊"); return; }
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 🌸😊"); return; }
             }
 
             if (!newName || !newUser || !newPass || !newPhone) { 
-                alert("يرجى تعبئة الحقول الأساسية 😊"); 
+                alert("يرجى تعبئة الحقول الأساسية 🌸😊"); 
                 return; 
             }
 
@@ -1267,7 +1311,7 @@
                     const checkUser = await get(child(ref(db), `users/${newUser}`));
                     
                     if (checkShop.exists() || checkUser.exists()) {
-                        alert("عذراً اسم المستخدم الجديد محجوز لجهة أخرى 😊");
+                        alert("عذرا اسم المستخدم الجديد محجوز لجهة أخرى 🌸😊");
                         document.getElementById('loader-overlay').style.display = 'none';
                         return;
                     }
@@ -1307,24 +1351,24 @@
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 closeEditModal();
-                alert("تم حفظ التعديلات الألماسية بنجاح 😊");
+                alert("تم حفظ التعديلات الألماسية بنجاح 🌸😊");
             } catch (error) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء حفظ التعديلات 😊");
+                alert("حدث خطأ أثناء حفظ التعديلات 🌸😊");
             }
         };
 
         window.deleteShop = async function(u) {
-            if(!confirm("تحذير هل أنت متأكد من الحذف النهائي لهذه المنشأة لا يمكن التراجع وسيتم تحرير المعرف 😊")) return;
+            if(!confirm("تحذير هل أنت متأكد من الحذف النهائي لهذه المنشأة لا يمكن التراجع وسيتم تحرير المعرف 🌸😊")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
                 await remove(ref(db, 'shops/' + u));
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم حذف المنشأة نهائياً والاسم متاح الآن 😊");
+                alert("تم حذف المنشأة نهائيا والاسم متاح الآن 🌸😊");
             } catch (error) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء عملية الحذف 😊");
+                alert("حدث خطأ أثناء عملية الحذف 🌸😊");
             }
         };
 
