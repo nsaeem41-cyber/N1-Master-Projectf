@@ -26,7 +26,7 @@
         .navbar { background: var(--primary); height: 65px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2); border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
         .brand { font-size: 20px; font-weight: 900; color: white; white-space: nowrap; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .gold-text { color: var(--gold); }
-        .btn-logout { background: var(--danger); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
+        .btn-logout { background: var(--danger); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
         .btn-logout:hover { background: #b91c1c; transform: translateY(-1px); }
 
         .container { max-width: 1400px; margin: 30px auto; padding: 0 15px; }
@@ -83,10 +83,10 @@
         
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
         
-        #commission-field, #edit-commission-field { display: none; background: #ecfdf5; padding: 15px; border-radius: 12px; border: 1px solid #a7f3d0; grid-column: span 1; }
+        #commission-field, #edit-commission-field { display: none; background: #ecfdf5; padding: 15px; border-radius: 12px; border: 1px solid #a7f3d0; }
         
         /* تصميم معلومات المستخدم والاشتراك */
-        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
+        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; margin-left: 15px; }
         .sub-countdown { font-size: 11px; padding: 4px 8px; border-radius: 10px; margin-bottom: 4px; font-weight: 800; border: 1px solid transparent; transition: 0.3s; }
         .sub-active { background: rgba(255,255,255,0.1); color: var(--gold); border-color: rgba(212,175,55,0.5); }
         .sub-warning { background: #fffbeb; color: #b45309; border-color: #fde68a; }
@@ -183,7 +183,7 @@
                     <label>رقم الهاتف</label>
                     <input type="tel" id="edit_shop_phone" placeholder="7xxxxxxxx" maxlength="9" style="direction:ltr; text-align:right;">
                 </div>
-                <div style="grid-column: 1 / -1;">
+                <div>
                     <label>رابط الموقع الجغرافي</label>
                     <div style="display:flex; gap:12px;">
                         <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع (Google Maps)">
@@ -201,7 +201,7 @@
                         <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
                     </select>
                 </div>
-                <div id="edit-commission-field" style="grid-column: 1 / -1; margin-top: 10px;">
+                <div id="edit-commission-field">
                     <label style="color:var(--money); font-size:12px;">💰 قيمة العمولة الثابتة</label>
                     <input type="number" id="edit_fixed_commission" placeholder="مثلاً 0.50" step="0.01">
                 </div>
@@ -221,9 +221,9 @@
                 <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
                 <span id="welcome-msg" style="font-size:15px; font-weight:900; color:white;">مرحباً</span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <button style="background:var(--gold); color:var(--primary); border:none; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:800; font-size:12px; transition:0.3s; width: 100%; box-shadow: 0 2px 8px rgba(212,175,55,0.3);" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
-                <button class="btn-logout" style="padding:8px 15px; font-size:12px; width: 100%;" onclick="logout()">تسجيل خروج 🔒</button>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button style="background:var(--gold); color:var(--primary); border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:800; font-size:13px; transition:0.3s; box-shadow: 0 4px 10px rgba(212,175,55,0.3);" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
+                <button class="btn-logout" style="padding:10px 20px; font-size:13px;" onclick="logout()">تسجيل خروج 🔒</button>
             </div>
         </div>
     </nav>
@@ -248,15 +248,15 @@
         </div>
 
         <div id="dashboard" class="tab-content active">
-            <div class="form-grid">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; align-items: stretch;">
                 
-                <div class="card" style="text-align:center;">
+                <div class="card" style="text-align:center; margin-bottom: 0; display: flex; flex-direction: column; justify-content: center; height: 100%; box-sizing: border-box;">
                     <h3 style="margin:0; color:#64748b; font-size:15px;">إجمالي المنشآت التابعة</h3>
                     <h1 id="total-shops" style="color:var(--primary); font-size:45px; margin:15px 0; font-weight:900;">0</h1>
                     <small style="color:#94a3b8; font-weight:bold; font-size:12px;">منشأة نشطة ومسجلة</small>
                 </div>
                 
-                <div class="card" style="text-align:center; border-top-color:var(--gold);">
+                <div class="card" style="text-align:center; border-top-color:var(--gold); margin-bottom: 0; display: flex; flex-direction: column; justify-content: center; height: 100%; box-sizing: border-box;">
                     <h3 style="margin:0; color:#64748b; font-size:15px;">حالة الاشتراكات للمنشآت</h3>
                     <div style="margin-top:20px; display:flex; justify-content:space-around;">
                         <div>
@@ -270,7 +270,7 @@
                     </div>
                 </div>
 
-                <div class="card" style="text-align:center; border-top-color:var(--success);">
+                <div class="card" style="text-align:center; border-top-color:var(--success); margin-bottom: 0; display: flex; flex-direction: column; justify-content: center; height: 100%; box-sizing: border-box;">
                     <h3 style="margin:0; color:#64748b; font-size:15px;">الملخص المالي</h3>
                     <div style="margin-top:20px; display:flex; justify-content:space-around;">
                         <div>
@@ -320,7 +320,7 @@
                         <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
                     </div>
 
-                    <div style="display:flex; gap:10px; grid-column: 1 / -1;">
+                    <div style="display:flex; gap:10px;">
                         <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps)">
                         <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:42px; display:flex; align-items:center; margin:0; padding: 0 20px;" onclick="smartMapSearch()">بحث 🗺️</button>
                     </div>
@@ -336,7 +336,7 @@
                         </select>
                     </div>
 
-                    <div id="commission-field" style="grid-column: 1 / -1;">
+                    <div id="commission-field">
                         <label style="font-size:12px; font-weight:900; color:var(--money); display:block; margin-bottom:8px;">💰 قيمة العمولة الثابتة (لكل طلب)</label>
                         <input type="number" id="fixed_commission" placeholder="مثلاً 0.50" step="0.01">
                     </div>
