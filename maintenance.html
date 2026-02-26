@@ -79,6 +79,10 @@
         .btn-analytics { background: #6a1b9a; }
         .btn-analytics:hover { background: #4a148c; }
 
+        /* ستايل المكنسة الألماسية */
+        .btn-purge { background: #00838f; }
+        .btn-purge:hover { background: #006064; }
+
         #loader-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center;
@@ -203,6 +207,14 @@
                 <div id="clean-msg" class="status-msg" style="color:#81c784;"></div>
             </div>
 
+            <div class="tool-card" style="border-top: 4px solid #00e5ff;">
+                <div class="tool-icon">💎</div>
+                <div class="tool-title">المكنسة الألماسية (Smart Purge)</div>
+                <div class="tool-desc">فلترة ذكية لضربات الجرس وتنبيهات الرادار المنتهية لتخفيف الأسطر وإبقاء السيرفر مستعداً للضغط العالي</div>
+                <button class="btn-action btn-purge" onclick="runDiamondPurge()">تشغيل المكنسة 🚀</button>
+                <div id="purge-msg" class="status-msg" style="color:#00e5ff;"></div>
+            </div>
+
         </div>
     </div>
 
@@ -241,6 +253,10 @@
             
             await fetchHealthStatus();
             setupRealtimeFreezeListener();
+            
+            // تشغيل المكنسة الألماسية في الخلفية بصمت عند التحميل وكل ساعة
+            runDiamondPurge(true);
+            setInterval(() => runDiamondPurge(true), 3600000);
         };
 
         function setupRealtimeFreezeListener() {
@@ -572,6 +588,63 @@
             msg.innerText = "تم تنظيف الشوائب والذاكرة الميتة ☺️✅";
             msg.style.display = "block";
             setTimeout(() => msg.style.display = "none", 4000);
+        }
+
+        // =================== دالة المكنسة الألماسية الجديدة (Smart Purge) =================== //
+        window.runDiamondPurge = async function(isAuto = false) {
+            if(!isAuto) showLoader("جاري تشغيل المكنسة الألماسية لتطهير السيرفر ⏳");
+            try {
+                const now = Date.now();
+                const sixHoursAgo = now - (6 * 60 * 60 * 1000);
+
+                // 1. تنظيف ضربات الجرس والتنبيهات القديمة
+                const alertsRef = ref(db, 'alerts');
+                const alertsSnap = await get(alertsRef);
+                if (alertsSnap.exists()) {
+                    const alertsData = alertsSnap.val();
+                    if(alertsData.global && alertsData.global.timestamp && alertsData.global.timestamp < sixHoursAgo) {
+                         await remove(ref(db, 'alerts/global'));
+                    }
+                }
+
+                // 2. تنظيف الإعلانات المنتهية الصلاحية
+                const adsRef = ref(db, 'announcements');
+                const adsSnap = await get(adsRef);
+                if(adsSnap.exists()) {
+                    const adsData = adsSnap.val();
+                    if(adsData.global && adsData.global.expireAt && adsData.global.expireAt < now) {
+                        await remove(ref(db, 'announcements/global'));
+                    }
+                    if(adsData.users) {
+                        for(let u in adsData.users) {
+                            if(adsData.users[u].expireAt && adsData.users[u].expireAt < now) {
+                                await remove(ref(db, `announcements/users/${u}`));
+                            }
+                        }
+                    }
+                }
+
+                // 3. تنظيف ضجيج الرادار القديم إذا كان مخزن
+                if(systemData.radar_history) {
+                    for(let key in systemData.radar_history) {
+                        if(systemData.radar_history[key].timestamp && systemData.radar_history[key].timestamp < sixHoursAgo) {
+                            await remove(ref(db, `radar_history/${key}`));
+                        }
+                    }
+                }
+
+                if(!isAuto) {
+                    const msg = document.getElementById('purge-msg');
+                    msg.innerText = "تمت الفلترة الألماسية بنجاح ☺️✅";
+                    msg.style.display = "block";
+                    setTimeout(() => msg.style.display = "none", 4000);
+                    await fetchHealthStatus();
+                }
+            } catch(e) {
+                if(!isAuto) alert("حدث خطأ أثناء الفلترة الألماسية ☺️");
+            } finally {
+                if(!isAuto) hideLoader();
+            }
         }
 
         function showLoader(text) {
