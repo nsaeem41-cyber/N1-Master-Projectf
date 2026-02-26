@@ -3,57 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | System Setup</title>
+    <title>N One | غرفة العمليات المركزية (The Doctor)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #000000 0%, #1a237e 100%); 
-            height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; color: #333;
+            background-color: #121212; 
+            color: #e0e0e0;
+            margin: 0; padding: 20px;
         }
-        .setup-card {
-            background: rgba(255, 255, 255, 0.95); width: 90%; max-width: 450px; padding: 40px;
-            border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); text-align: center; border-top: 6px solid #d4af37;
+
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #d4af37; padding-bottom: 20px; margin-bottom: 30px;
         }
-        h1 { margin: 0; color: #1a237e; font-size: 28px; font-weight: 800; }
-        p { color: #666; margin-top: 10px; font-size: 14px; }
-        .input-group { margin-top: 20px; text-align: right; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 12px; color: #555; }
-        input {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 14px; background: #fafafa; outline: none; box-sizing: border-box; margin-bottom: 10px; transition: 0.3s;
+        .brand { font-size: 28px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .gold { color: #d4af37; }
+        
+        .btn-back {
+            background: #333; color: white; border: 1px solid #555;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; text-decoration: none;
+            transition: 0.3s;
         }
-        input:focus { border-color: #1a237e; background: #fff; }
-        .btn-install {
-            background: #2e7d32; color: white; border: none; padding: 15px 30px;
-            font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer;
-            width: 100%; margin-top: 20px; transition: 0.3s; box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        .btn-back:hover { background: #444; border-color: #d4af37; }
+
+        .dashboard-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin-bottom: 30px;
         }
-        .btn-install:hover { background: #1b5e20; transform: translateY(-2px); }
-        .btn-install:disabled { background: #ccc; cursor: not-allowed; }
-        #status { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; font-size: 14px; }
-        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-        .info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
-        #setup-form { display: none; } 
+        .dash-card {
+            background: #1e1e1e; padding: 25px; border-radius: 15px;
+            text-align: center; border-top: 4px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
+            overflow: hidden;
+        }
+        .dash-num { font-size: 32px; font-weight: bold; color: white; margin: 10px 0; }
+        .dash-lbl { font-size: 13px; color: #aaa; }
+        .c-gold { border-color: #d4af37; color: #d4af37; }
+        .c-blue { border-color: #1a237e; color: #5c6bc0; }
+        .c-green { border-color: #2e7d32; color: #66bb6a; }
+
+        .doctor-modules {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px; margin-bottom: 30px;
+        }
+
+        .module-card {
+            background: linear-gradient(145deg, #1a1a1a, #141414);
+            padding: 20px; border-radius: 15px; border: 1px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        .module-title {
+            color: #d4af37; font-size: 16px; font-weight: bold; margin-bottom: 15px;
+            display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;
+        }
+        
+        .audit-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; }
+        .audit-item { background: rgba(211, 47, 47, 0.1); border-right: 3px solid #d32f2f; padding: 10px; margin-bottom: 8px; border-radius: 5px; font-size: 12px; display: flex; justify-content: space-between; }
+        .audit-safe { background: rgba(46, 125, 50, 0.1); border-color: #2e7d32; color: #81c784; text-align: center; padding: 15px; border-radius: 8px; font-weight: bold; }
+
+        .feasibility-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #333; font-size: 13px; color: #bbb; }
+        .feasibility-val { font-weight: bold; color: white; }
+
+        .live-feed {
+            background: #1e1e1e; padding: 25px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .feed-title {
+            font-size: 18px; font-weight: bold; margin-bottom: 20px;
+            color: #d4af37; display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        thead { background: #2c2c2c; color: #ddd; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #333; }
+        tr:hover { background: #252525; }
+
+        .tag { padding: 4px 10px; border-radius: 15px; font-size: 11px; background: #333; color: #ccc; }
+        .status-tag { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
+        
+        #loader { text-align: center; padding: 50px; color: #777; }
+        
+        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; margin-left: 20px; }
+        .sub-countdown { font-size: 11px; padding: 3px 8px; border-radius: 10px; margin-bottom: 5px; font-weight: bold; border: 1px solid transparent; transition: 0.3s; }
+        .sub-active { background: rgba(227, 242, 253, 0.2); color: #64b5f6; border-color: #42a5f5; }
+        .sub-warning { background: rgba(255, 243, 224, 0.2); color: #ffb74d; border-color: #ff9800; }
+        .sub-expired { background: rgba(255, 235, 238, 0.2); color: #ef5350; border-color: #f44336; }
+
+        .guardian-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); color: #d4af37; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="setup-card">
-        <h1>N One <span style="color:#d4af37">System</span></h1>
-        <p>تهيئة السيرفر الملكي وإنشاء حساب المدير العام</p>
-        <div id="status" class="info" style="display:block;">جاري فحص السيرفر والتحقق من الأمان ⏳</div>
-        <div id="setup-form">
-            <div class="input-group"><label>اسم المستخدم للإدارة (User ID)</label><input type="text" id="admin_user" placeholder="أدخل اسم المستخدم"></div>
-            <div class="input-group"><label>كلمة المرور (Password)</label><input type="password" id="admin_pass" placeholder="أدخل كلمة المرور القوية"></div>
-            <div class="input-group"><label>مفتاح الأمان السري (Setup Key)</label><input type="password" id="setup_key" placeholder="أدخل كود التنصيب السري"></div>
-            <button id="btn" class="btn-install" onclick="installSystem()">بدء التثبيت الآن 🚀</button>
+    <div class="header">
+        <div>
+            <div class="brand">N <span class="gold">One</span> Ops Room</div>
+            <div class="guardian-badge" id="hierarchy-badge">🛡️ حارس الهرم جاري التحقق...</div>
         </div>
+        <div style="display:flex; align-items:center;">
+            <div class="user-info-area">
+                <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
+                <span id="welcome-msg" style="font-size:14px; font-weight:bold; color:#ddd;">مرحباً</span>
+            </div>
+            <a href="admin.html" class="btn-back">⬅️ العودة للإدارة</a>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dash-card c-gold">
+            <div class="dash-lbl">إجمالي الطلبات (الخاصة بقطاعك)</div>
+            <div class="dash-num" id="total-orders">0</div>
+        </div>
+        <div class="dash-card c-blue">
+            <div class="dash-lbl">المنشآت التجارية (ضمن صلاحياتك)</div>
+            <div class="dash-num" id="total-merchants">0</div>
+        </div>
+        <div class="dash-card c-green">
+            <div class="dash-lbl">حجم التداول المالي (الصافي)</div>
+            <div class="dash-num" id="total-money">0</div>
+        </div>
+    </div>
+
+    <div class="doctor-modules">
+        <div class="module-card">
+            <div class="module-title">🔍 المعالج الذكي للثغرات المالية (Smart Audit)</div>
+            <ul class="audit-list" id="audit-results">
+                <div class="audit-safe">جاري فحص الحسابات والبحث عن أي تضارب... ⏳</div>
+            </ul>
+        </div>
+        
+        <div class="module-card">
+            <div class="module-title">📊 دراسة الجدوى وتوزيع المهام (Feasibility Analytics)</div>
+            <div id="feasibility-results">
+                <div class="feasibility-stat"><span>متوسط تكلفة التوصيل</span><span class="feasibility-val" id="avg-fee">0 د.أ</span></div>
+                <div class="feasibility-stat"><span>المنطقة الأعلى طلباً</span><span class="feasibility-val" id="top-area" style="color:#d4af37;">جاري التحليل...</span></div>
+                <div class="feasibility-stat"><span>نسبة إنجاز الطلبات</span><span class="feasibility-val" id="completion-rate" style="color:#66bb6a;">0%</span></div>
+                <div class="feasibility-stat"><span>الكابتن الأكثر كفاءة مالياً</span><span class="feasibility-val" id="top-efficiency">جاري التحليل...</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="live-feed">
+        <div class="feed-title">
+            <span>📡 مراقبة العمليات الحية (Live Feed - Isolated View)</span>
+            <button onclick="loadData()" style="background:none; border:1px solid #d4af37; padding:5px 15px; border-radius:8px; color:#d4af37; cursor:pointer; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='none'">🔄 تحديث جراحي</button>
+        </div>
+        
+        <div id="loader">جاري الاتصال بالنواة المركزية وتطبيق العزل... 🛰️</div>
+        
+        <table id="feed-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>التاريخ والوقت</th>
+                    <th>المنشأة (الفرع)</th>
+                    <th>الوجهة الاستراتيجية</th>
+                    <th>الحالة</th>
+                    <th>القيمة المالية</th>
+                </tr>
+            </thead>
+            <tbody id="feed-body"></tbody>
+        </table>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -68,84 +181,257 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.onload = async function() {
-            try {
-                const dbRef = ref(db);
-                const snapshot = await get(child(dbRef, 'users'));
-                let adminExists = false;
-                
-                if (snapshot.exists()) {
-                    const users = snapshot.val();
-                    adminExists = Object.values(users).some(user => user.role === 'admin');
-                }
-                
-                if (adminExists) {
-                    showStatus("error", "النظام منصب ومحمي مسبقا ☺️ لا يمكن إنشاء مدير جديد");
-                    document.getElementById('setup-form').style.display = 'none';
-                } else {
-                    showStatus("success", "السيرفر جاهز للتنصيب ☺️ أدخل بياناتك الملكية");
-                    document.getElementById('setup-form').style.display = 'block';
-                }
-            } catch (error) {
-                showStatus("error", "خطأ في الاتصال بالسيرفر تأكد من الإنترنت ☺️");
-            }
-        }
+        let currentUser = null;
+        let isSuperAdmin = false;
+        let myMasterId = "";
 
-        window.installSystem = async function() {
-            const btn = document.getElementById('btn');
-            const userVal = document.getElementById('admin_user').value.trim();
-            const passVal = document.getElementById('admin_pass').value.trim();
-            const keyVal = document.getElementById('setup_key').value.trim();
-
-            if (!userVal || !passVal || !keyVal) {
-                showStatus("error", "الرجاء تعبئة جميع الحقول ☺️");
-                return;
-            }
-            if (keyVal !== "555") {
-                showStatus("error", "مفتاح الأمان السري غير صحيح ☺️");
-                return;
-            }
-
-            btn.innerHTML = "جاري الحفر في الخزنة الماسية ⏳";
-            btn.disabled = true;
-
-            const encodedPass = btoa(passVal);
-            const adminUser = {
-                id: "ADMIN_" + Date.now(),
-                user: userVal,
-                pass: encodedPass, 
-                name: "مدير النظام (نسيم)",
-                role: "admin",      
-                type: "admin_master", 
-                status: "active",   
-                expiry: "2099-12-31",
-                date: new Date().toISOString()
+        window.onload = function() {
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
             };
 
-            try {
-                await set(ref(db, 'users/' + userVal), adminUser);
-                
-                showStatus("success", "تم إرسال الأوامر بنجاح ☺️ انتظر قليلاً للتوثيق");
-                btn.innerHTML = "تم التثبيت ✔️";
-                document.getElementById('setup-form').style.display = 'none';
+            const sessionData = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
+            if (!sessionData) {
+                window.location.replace('index.html');
+                return;
+            }
+            
+            currentUser = JSON.parse(sessionData);
+            
+            if (currentUser.role !== 'admin' && currentUser.role !== 'client') {
+                window.location.replace('index.html');
+                return;
+            }
+            
+            myMasterId = currentUser.Client_User || currentUser.user;
+            isSuperAdmin = (myMasterId === 'admin' || myMasterId === 'naseem');
 
-                setTimeout(() => {
-                    window.location.replace('index.html');
-                }, 3000);
+            const badge = document.getElementById('hierarchy-badge');
+            if(isSuperAdmin) {
+                badge.innerHTML = "🛡️ الإدارة العليا (تحكم شامل لكافة الإمبراطورية)";
+                badge.style.color = "#64b5f6";
+                badge.style.borderColor = "#64b5f6";
+            } else {
+                badge.innerHTML = `🛡️ قطاع معزول (إدارة شركة: ${currentUser.Client_Name || currentUser.name})`;
+            }
+            
+            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
+            
+            loadData();
+            attachRealtimeListeners();
+            setupRealtimeFreezeListener();
+        };
 
-            } catch (error) {
-                showStatus("error", "حدث خطأ في التوثيق ☺️ حاول مرة أخرى");
-                btn.innerHTML = "حاول مرة أخرى 🔄";
-                btn.disabled = false;
+        function updateCountdownTimer() {
+            const timerEl = document.getElementById('sub-timer');
+            if (!currentUser.expiry && !currentUser.Client_Expiry) {
+                timerEl.innerText = "صلاحية غير محددة";
+                timerEl.className = "sub-countdown sub-active";
+                return;
+            }
+
+            const expiryDate = new Date(currentUser.expiry || currentUser.Client_Expiry);
+            expiryDate.setHours(23, 59, 59, 999);
+            const now = new Date();
+            const diffTime = expiryDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 0) {
+                if (diffDays <= 3) {
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم لانتهاء الاشتراك`;
+                    timerEl.className = "sub-countdown sub-warning";
+                } else {
+                    timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-active";
+                }
+            } else {
+                timerEl.innerText = `الاشتراك منتهي`;
+                timerEl.className = "sub-countdown sub-expired";
             }
         }
 
-        window.showStatus = function(type, msg) {
-            const el = document.getElementById('status');
-            el.className = type;
-            el.innerText = msg;
-            el.style.display = 'block';
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || (!currentUser.user && !currentUser.Client_User)) return;
+            const username = currentUser.user || currentUser.Client_User;
+            const myRef = ref(db, `users/${username}`);
+            
+            onValue(myRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    if(data.name || data.Client_Name) {
+                        currentUser.name = data.name || data.Client_Name;
+                        document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name}`;
+                    }
+
+                    if(data.expiry || data.Client_Expiry) {
+                        currentUser.expiry = data.expiry || data.Client_Expiry;
+                        updateCountdownTimer();
+                    }
+
+                    if (data.status === 'paused' || data.Client_Status === 'paused') {
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة");
+                        localStorage.removeItem('current_company_user');
+                        localStorage.removeItem('currentUser');
+                        window.location.replace('index.html');
+                    }
+                }
+            });
+        }
+
+        window.loadData = async function() {
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('feed-table').style.display = 'none';
+
+            try {
+                const snapshot = await get(ref(db));
+                if (snapshot.exists()) {
+                    processData(snapshot.val());
+                } else {
+                    processData({});
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.attachRealtimeListeners = function() {
+            onValue(ref(db), (snapshot) => {
+                if (snapshot.exists()) {
+                    processData(snapshot.val());
+                }
+            });
+        };
+
+        window.processData = function(data) {
+            let rawOrders = data.orders ? Object.values(data.orders) : [];
+            let myOrders = [];
+            
+            let allShops = data.shops ? Object.values(data.shops) : [];
+            let allUsers = data.users ? Object.values(data.users) : [];
+            let myShopsIdentifiers = new Set();
+
+            if(isSuperAdmin) {
+                myOrders = rawOrders;
+                allShops.forEach(s => myShopsIdentifiers.add(s.Shop_User || s.user));
+                allUsers.filter(u => u.role === 'shop' || u.type === 'shop').forEach(u => myShopsIdentifiers.add(u.Client_User || u.user));
+            } else {
+                allShops.forEach(s => {
+                    if(s.Client_Master === myMasterId || s.master === myMasterId || s.Shop_User === myMasterId) {
+                        myShopsIdentifiers.add(s.Shop_User || s.user);
+                    }
+                });
+                allUsers.forEach(u => {
+                    if((u.role === 'shop' || u.type === 'shop') && (u.Client_Master === myMasterId || u.master === myMasterId)) {
+                        myShopsIdentifiers.add(u.Client_User || u.user);
+                    }
+                });
+                
+                rawOrders.forEach(o => {
+                    if(o.Shop_User === myMasterId || myShopsIdentifiers.has(o.Shop_User) || o.Client_Master === myMasterId) {
+                        myOrders.push(o);
+                    }
+                });
+            }
+
+            myOrders.reverse();
+
+            document.getElementById('total-orders').innerText = myOrders.length;
+            document.getElementById('total-merchants').innerText = myShopsIdentifiers.size;
+            
+            let money = 0;
+            let totalFees = 0;
+            let auditIssues = [];
+            let areaStats = {};
+            let completedCount = 0;
+            let assignedOrders = data.assigned_orders || {};
+
+            myOrders.forEach(o => {
+                const val = parseFloat(o.Shop_Val || o.val || 0);
+                const fee = parseFloat(o.Shop_Fee || o.fee || 0);
+                
+                if (val < 0 || fee < 0) {
+                    auditIssues.push(`ثغرة تسعير سلبية في طلب المنشأة: ${o.Shop_Name} بقيمة ${val} د.أ`);
+                }
+                if (val > 1000) {
+                    auditIssues.push(`تحذير أمان: قيمة طلب مرتفعة جداً للمنشأة ${o.Shop_Name} (${val} د.أ)`);
+                }
+
+                money += val + fee;
+                totalFees += fee;
+
+                const area = o.Shop_Pickup || o.pickup || 'غير محدد';
+                areaStats[area] = (areaStats[area] || 0) + 1;
+
+                let orderStatus = 'في الرادار 📡';
+                for(let cap in assignedOrders) {
+                    for(let k in assignedOrders[cap]) {
+                        if(assignedOrders[cap][k].linkedRadarId === o.Shop_Ord_ID) {
+                            if(assignedOrders[cap][k].status === 'completed') {
+                                orderStatus = 'مكتمل ✅';
+                                completedCount++;
+                            } else if (assignedOrders[cap][k].status === 'accepted') {
+                                orderStatus = 'قيد التوصيل 🦸‍♂️';
+                            }
+                        }
+                    }
+                }
+                o._currentStatus = orderStatus;
+            });
+
+            document.getElementById('total-money').innerText = money.toLocaleString() + " د.أ";
+
+            const auditContainer = document.getElementById('audit-results');
+            if(auditIssues.length > 0) {
+                auditContainer.innerHTML = auditIssues.map(issue => `<li class="audit-item"><span>⚠️ ${issue}</span><span style="color:#d32f2f; cursor:pointer;" title="تدخل جراحي لمعالجة الرقم">معالجة ⚙️</span></li>`).join('');
+            } else {
+                auditContainer.innerHTML = '<div class="audit-safe">الحسابات دقيقة 100% ولا يوجد أي تضارب مالي ☺️✨</div>';
+            }
+
+            let bestArea = "لا يوجد";
+            let maxAreaCount = 0;
+            for(let a in areaStats) {
+                if(areaStats[a] > maxAreaCount) { maxAreaCount = areaStats[a]; bestArea = a; }
+            }
+            document.getElementById('avg-fee').innerText = myOrders.length > 0 ? (totalFees / myOrders.length).toFixed(2) + " د.أ" : "0 د.أ";
+            document.getElementById('top-area').innerText = `${bestArea} (${maxAreaCount} طلب)`;
+            document.getElementById('completion-rate').innerText = myOrders.length > 0 ? Math.round((completedCount / myOrders.length) * 100) + "%" : "0%";
+            document.getElementById('top-efficiency').innerText = "قيد المعالجة السحابية ☁️"; 
+
+            const tbody = document.getElementById('feed-body');
+            let htmlContent = '';
+
+            if (myOrders.length === 0) {
+                htmlContent = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">الرادار نقي ولا يوجد عمليات مسجلة في قطاعك حتى الآن ☺️</td></tr>';
+            } else {
+                myOrders.forEach(ord => {
+                    const shopName = ord.Shop_Name || ord.name || ord.Client_Name || 'غير معروف';
+                    const dateTime = ord.Shop_Date ? new Date(ord.Shop_Date).toLocaleString('ar-EG') : '---';
+                    const location = ord.Shop_Pickup || ord.pickup || '---';
+                    const totalVal = (parseFloat(ord.Shop_Val || ord.val || 0) + parseFloat(ord.Shop_Fee || ord.fee || 0)).toFixed(2);
+                    
+                    let statusColor = '#f57f17';
+                    if(ord._currentStatus.includes('مكتمل')) statusColor = '#2e7d32';
+                    if(ord._currentStatus.includes('قيد')) statusColor = '#1a237e';
+
+                    htmlContent += `
+                        <tr>
+                            <td><span class="tag">${dateTime}</span></td>
+                            <td style="font-weight:bold; color:#d4af37;">${shopName}</td>
+                            <td>${location}</td>
+                            <td><span class="status-tag" style="background:rgba(255,255,255,0.1); color:${statusColor}; border:1px solid ${statusColor};">${ord._currentStatus}</span></td>
+                            <td style="font-weight:bold; color:#66bb6a;">${totalVal} د.أ</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            tbody.innerHTML = htmlContent;
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('feed-table').style.display = 'table';
         }
     </script>
+
 </body>
 </html>
