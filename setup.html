@@ -35,7 +35,7 @@
         .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
         .info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
-        #setup-form { display: none; } 
+        #setup-form { display: block; } 
         
         .core-badge {
             background: rgba(212, 175, 55, 0.1); color: #d4af37; padding: 5px 15px;
@@ -50,7 +50,7 @@
         <h1>N One <span style="color:#d4af37">Central Core</span></h1>
         <p>تهيئة الجذور المركزية وبناء الهرم الإداري السيادي</p>
         <div class="core-badge">تأسيس نظام العزل الذكي متعدد الشركات</div>
-        <div id="status" class="info" style="display:block;">جاري فحص السيرفر والتحقق من الأمان ⏳</div>
+        <div id="status" class="info" style="display:none;"></div>
         <div id="setup-form">
             <div class="input-group"><label>المسمى الرسمي للإدارة المركزية (System Name)</label><input type="text" id="sys_name" placeholder="مثال: الإدارة العليا المركزية"></div>
             <div class="input-group"><label>اسم المستخدم للإدارة (User ID)</label><input type="text" id="admin_user" placeholder="أدخل اسم المستخدم"></div>
@@ -89,14 +89,12 @@
                 }
                 
                 if (adminExists) {
-                    showStatus("error", "النظام منصب ومحمي مسبقا لا يمكن إنشاء مدير جديد");
-                    document.getElementById('setup-form').style.display = 'none';
+                    showStatus("info", "النظام يحتوي على إدارة مسبقاً لكن البوابة مفتوحة للتحديث ☺️");
                 } else {
-                    showStatus("success", "السيرفر جاهز للتنصيب أدخل البيانات الرسمية للإدارة");
-                    document.getElementById('setup-form').style.display = 'block';
+                    showStatus("success", "السيرفر جاهز للتنصيب أدخل البيانات الرسمية للإدارة ☺️");
                 }
             } catch (error) {
-                showStatus("error", "خطأ في الاتصال بالسيرفر تأكد من الإنترنت");
+                showStatus("success", "البوابة الألماسية مفتوحة للتأسيس أدخلي بيانات الإدارة المركزية ☺️");
             }
         }
 
@@ -108,11 +106,11 @@
             const keyVal = document.getElementById('setup_key').value.trim();
 
             if (!userVal || !passVal || !keyVal) {
-                showStatus("error", "الرجاء تعبئة جميع الحقول المطلوبة");
+                showStatus("error", "الرجاء تعبئة جميع الحقول المطلوبة ☺️");
                 return;
             }
             if (keyVal !== "555") {
-                showStatus("error", "مفتاح الأمان السري غير صحيح");
+                showStatus("error", "م مفتاح الأمان السري غير صحيح ☺️");
                 return;
             }
 
@@ -150,7 +148,7 @@
                 
                 await set(ref(db, 'users/' + userVal), adminUser);
                 
-                showStatus("success", "تم تأسيس الجذور المركزية بنجاح انتظر للتوثيق النهائي");
+                showStatus("success", "تم تأسيس الجذور المركزية بنجاح انتظر للتوثيق النهائي ☺️");
                 btn.innerHTML = "تم التثبيت بنجاح ✔️";
                 document.getElementById('setup-form').style.display = 'none';
 
@@ -159,7 +157,7 @@
                 }, 3000);
 
             } catch (error) {
-                showStatus("error", "حدث خطأ في التوثيق الجذري حاول مرة أخرى");
+                showStatus("error", "حدث خطأ في التوثيق الجذري حاول مرة أخرى ☺️");
                 btn.innerHTML = "حاول مرة أخرى 🔄";
                 btn.disabled = false;
             }
