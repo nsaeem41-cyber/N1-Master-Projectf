@@ -3,63 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة قيادة الشركات (Secure Isolation)</title>
+    <title>N One | غرفة قيادة الشركات (Diamond Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* ================= أساسيات التصميم (Pro Theme) ================= */
+        /* ================= أساسيات التصميم (Diamond Royal Theme) ================= */
         :root {
-            --primary: #1a237e; --gold: #d4af37; --bg: #f4f7f6; --text: #333;
-            --success: #2e7d32; --danger: #c62828; --warning: #f57f17; --info: #0288d1;
+            --primary: #0f172a;      /* نيفي بلو ملكي عميق */
+            --primary-light: #1e293b; 
+            --gold: #d4af37;         /* ذهبي ألماسي */
+            --gold-light: #fef08a;
+            --bg: #f8fafc;           /* خلفية هادئة وراقية */
+            --text: #334155;
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b; 
+            --info: #0ea5e9;
+            --diamond-glow: 0 0 15px rgba(212, 175, 55, 0.4);
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); margin: 0; padding: 0; 
+            color: var(--text); user-select: none; 
+            background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent 40%);
+        }
 
-        .navbar { background: white; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
-        .brand { font-size: 24px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
+        /* الهيدر الملكي */
+        .navbar { 
+            background: linear-gradient(to left, var(--primary), var(--primary-light)); 
+            height: 80px; display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+            border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
+        }
+        .brand { font-size: 28px; font-weight: 900; color: white; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .gold-text { color: var(--gold); }
-        .btn-logout { background: none; border: none; font-size: 16px; cursor: pointer; padding: 8px 15px; border-radius: 8px; background-color: var(--danger); color: white; transition: 0.3s; }
-        .btn-logout:hover { background-color: #b71c1c; }
+        
+        .welcome-msg {
+            font-weight: bold; color: var(--gold-light); font-size: 16px; 
+            background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.3); letter-spacing: 0.5px;
+        }
 
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .btn-logout { 
+            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); 
+            font-size: 15px; font-weight: bold; cursor: pointer; padding: 10px 25px; 
+            border-radius: 12px; color: #fca5a5; transition: 0.3s; 
+        }
+        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
 
-        /* الإحصائيات */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center; border-top: 5px solid var(--primary); }
-        .stat-number { font-size: 32px; font-weight: bold; color: var(--primary); margin: 10px 0; }
-        .stat-label { color: #777; font-size: 13px; }
+        .container { max-width: 1300px; margin: 40px auto; padding: 0 20px; }
+
+        /* بوابات الوصول السريع (كبسات الذهب) */
+        .quick-access-panel {
+            display: flex; gap: 20px; margin-bottom: 30px; justify-content: center;
+        }
+        
+        .btn-gold-gate {
+            background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+            border: 2px solid var(--gold);
+            color: #854d0e;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--diamond-glow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .btn-gold-gate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.5);
+            background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+            color: #713f12;
+        }
+
+        .btn-silver-gate {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #cbd5e1;
+            color: var(--primary);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .btn-silver-gate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-color: #94a3b8;
+        }
+
+        /* الإحصائيات الألماسية */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .stat-card { 
+            background: white; padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04); text-align: center; 
+            border-top: 6px solid var(--primary); transition: 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
+        .stat-number { font-size: 42px; font-weight: 900; color: var(--primary); margin: 15px 0 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+        .stat-label { color: #64748b; font-size: 15px; font-weight: bold; }
 
         /* الكروت ونموذج الإضافة */
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 30px; position: relative; border-top: 4px solid var(--primary); }
-        .card-header { font-size: 20px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; background: #fafafa; box-sizing: border-box; font-family: inherit; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: white; }
-        .btn-add { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; height: 100%; width: 100%; transition: 0.3s; }
-        .btn-add:hover { background: #1b5e20; }
-
-        /* الجداول */
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 950px; }
-        thead { background: #f8f9fa; color: #555; font-weight: bold; }
-        th, td { padding: 15px; text-align: right; border-bottom: 1px solid #eee; font-size: 14px; }
+        .card { 
+            background: white; padding: 35px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 40px; 
+            position: relative; border-top: 5px solid var(--primary); 
+        }
+        .card-header { 
+            font-size: 22px; font-weight: 900; color: var(--primary); 
+            border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 25px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
         
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .status-active { background: #e8f5e9; color: var(--success); }
-        .status-paused { background: #fff3e0; color: var(--warning); }
-        .status-expired { background: #ffebee; color: var(--danger); } 
+        input, select, textarea { 
+            width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; 
+            outline: none; background: #f8fafc; box-sizing: border-box; 
+            font-family: inherit; font-size: 15px; font-weight: bold; color: var(--primary); transition: 0.3s; 
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        
+        .btn-add { 
+            background: linear-gradient(135deg, var(--success), #059669); color: white; border: none; 
+            padding: 15px 30px; border-radius: 12px; font-size: 16px; font-weight: 900; 
+            cursor: pointer; height: 100%; width: 100%; transition: 0.3s; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+        .btn-add:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
+
+        /* الجداول الملكية */
+        .table-wrapper { overflow-x: auto; border-radius: 15px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        thead { background: var(--primary); color: white; }
+        th { padding: 18px 15px; text-align: right; font-weight: 800; font-size: 15px; letter-spacing: 0.5px; }
+        td { padding: 18px 15px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 15px; font-weight: bold; color: var(--text); }
+        tr:hover { background: #f8fafc; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 900; letter-spacing: 0.5px; }
+        .status-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-paused { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .status-expired { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; } 
 
         /* أزرار التحكم */
-        .action-group { display: flex; gap: 5px; }
-        .action-btn { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .action-group { display: flex; gap: 8px; }
+        .action-btn { 
+            padding: 8px 12px; border-radius: 8px; border: none; color: white; 
+            cursor: pointer; font-size: 14px; transition: 0.2s; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
         .act-freeze { background: var(--warning); }
         .act-active { background: var(--success); }
         .act-delete { background: var(--danger); }
         .act-renew { background: var(--info); }
         .act-edit { background: var(--primary); }
 
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: var(--primary); flex-direction: column; }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; font-size: 20px; font-weight: 900; color: var(--primary); flex-direction: column; }
         
         /* ألوان الإعلانات */
         .ad-color-normal { color: var(--text); }
@@ -67,29 +179,47 @@
         .ad-color-warning { color: var(--danger); font-weight: bold; }
         .ad-color-offer { color: var(--success); }
         
-        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-broadcast { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; transition: 0.3s; }
-        .btn-broadcast:hover { background: #151b54; }
-        .btn-popup { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-popup:hover { background: #b71c1c; }
-        .btn-clear-ad { background: #757575; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-clear-ad:hover { background: #616161; }
+        .ad-controls { display: flex; gap: 15px; margin-top: 20px; }
+        .btn-broadcast { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; padding: 15px 25px; border-radius: 12px; font-weight: 900; cursor: pointer; flex: 1; transition: 0.3s; font-size: 16px; box-shadow: 0 5px 15px rgba(15, 23, 42, 0.3); }
+        .btn-broadcast:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.4); }
+        
+        .btn-popup { background: linear-gradient(135deg, var(--danger), #b91c1c); color: white; border: none; padding: 15px 25px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 16px; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
+        .btn-popup:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
+        
+        .btn-clear-ad { background: linear-gradient(135deg, #64748b, #475569); color: white; border: none; padding: 15px 25px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 16px; box-shadow: 0 5px 15px rgba(100, 116, 139, 0.3); }
+        .btn-clear-ad:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(100, 116, 139, 0.4); }
+
+        /* لمسة دلع لبطتنا */
+        .cute-msg {
+            text-align: center; margin-bottom: 25px; font-size: 18px; font-weight: bold; color: var(--primary);
+        }
     </style>
 </head>
 <body>
 
     <div id="loader-overlay">
-        <div style="font-size:30px; margin-bottom:10px;">📡</div>
-        <div>جاري الاتصال بالنواة المركزية المباشرة...</div>
+        <div style="font-size:40px; margin-bottom:15px; text-shadow: var(--diamond-glow);">💎</div>
+        <div>جاري الاتصال بالنواة المركزية المباشرة يا بطة...</div>
     </div>
 
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> Admin</div>
-        <div style="font-weight: bold; color: var(--primary); font-size: 14px;">مرحباً بكِ يا حبة السكر في غرفة القيادة السيادية 👑</div>
-        <button class="btn-logout" onclick="logout()">خروج 🔒</button>
+        <div class="welcome-msg">مرحباً بكِ يا حبة السكر في غرفة القيادة السيادية 👑</div>
+        <button class="btn-logout" onclick="logout()">إغلاق الخزنة 🔒</button>
     </nav>
 
     <div class="container">
+        
+        <div class="cute-msg">كل الأمور تحت السيطرة يا أغلى مديرة، جاهزين للإبداع؟ ✨</div>
+
+        <div class="quick-access-panel">
+            <a href="manager.html" class="btn-gold-gate" title="الدخول المباشر لفحص السيستم">
+                <span style="font-size: 24px;">🩺</span> غرفة الطبيب (فحص النظام)
+            </a>
+            <a href="maintenance.html" class="btn-silver-gate" title="غرفة المراقبة والصيانة">
+                <span style="font-size: 24px;">⚙️</span> بوابة الصيانة المركزية
+            </a>
+        </div>
         
         <div class="stats-grid">
             <div class="stat-card">
@@ -122,12 +252,12 @@
                 </select>
                 <input type="number" id="sub_price" placeholder="قيمة الاشتراك (د.أ)">
                 
-                <div style="display: flex; align-items: center; gap: 10px; background: #e3f2fd; padding: 12px; border-radius: 8px; border: 1px solid #90caf9;">
+                <div style="display: flex; align-items: center; gap: 10px; background: #e0f2fe; padding: 12px; border-radius: 12px; border: 2px solid #bae6fd;">
                     <input type="checkbox" id="can_send_ads" style="width: 20px; height: 20px; cursor: pointer;" checked>
-                    <label for="can_send_ads" style="font-weight: bold; color: var(--primary); cursor: pointer; margin: 0;">تفعيل ميزة الإعلانات 📢</label>
+                    <label for="can_send_ads" style="font-weight: 900; color: var(--info); cursor: pointer; margin: 0; font-size: 14px;">تفعيل ميزة الإعلانات 📢</label>
                 </div>
 
-                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ إضافة بقاعدة بيانات مستقلة 🚀</button>
+                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور المستقلة 🚀</button>
             </div>
         </div>
         
@@ -135,15 +265,15 @@
             <div class="card-header">
                 <span>📢 مركز الإعلانات الذكية (Smart Announcements)</span>
             </div>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 20px; margin-bottom: 20px;">
                 <div style="flex: 2;">
-                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان أو التنبيه هنا..." style="resize: none; font-size: 15px; font-weight: bold;"></textarea>
+                    <textarea id="ad_text" rows="3" placeholder="اكتب الإعلان أو التنبيه هنا يا بطة..." style="resize: none;"></textarea>
                 </div>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
                     <select id="ad_target" title="الاستهداف">
                         <option value="all">إرسال للجميع (الكل)</option>
                         </select>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 12px;">
                         <select id="ad_type" title="نوع الإعلان" style="flex: 1;">
                             <option value="normal" class="ad-color-normal">إعلان عادي</option>
                             <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
@@ -169,7 +299,7 @@
         <div class="card">
             <div class="card-header">
                 <span>🏢 سجل شركات النقل (Companies Log)</span>
-                <span style="font-size:12px; color:#1a237e;">White Label Clients</span>
+                <span style="font-size:14px; color:var(--primary); font-weight: bold;">White Label Clients</span>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -184,7 +314,7 @@
                         </tr>
                     </thead>
                     <tbody id="clients-table">
-                        <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
+                        <tr><td colspan="6" style="text-align:center;">جاري تحميل البيانات يا حبة السكر...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -257,7 +387,7 @@
 
         window.sendAnnouncement = async function() {
             const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً يا بطة 😊"); return; }
             
             const target = document.getElementById('ad_target').value;
             const type = document.getElementById('ad_type').value;
@@ -308,7 +438,7 @@
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
-                alert("تم بث الإعلان بنجاح");
+                alert("تم بث الإعلان بنجاح 😊");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء إرسال الإعلان");
@@ -317,9 +447,9 @@
 
         window.sendPopupAlert = async function() {
             const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً يا بطة 😊"); return; }
             
-            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
+            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟ 😊")) return;
 
             const target = document.getElementById('ad_target').value;
             const alertData = {
@@ -360,7 +490,7 @@
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
-                alert("تم إرسال التنبيه الطارئ بنجاح");
+                alert("تم إرسال التنبيه الطارئ بنجاح 😊");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء إرسال التنبيه");
@@ -368,11 +498,11 @@
         }
 
         window.clearAnnouncement = async function() {
-            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد؟")) return;
+            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد يا بطة؟ 😊")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'announcements'));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تنظيف واجهات الإعلانات");
+            alert("تم تنظيف واجهات الإعلانات 😊");
         }
 
         window.renderTables = function() {
@@ -391,7 +521,7 @@
         }
 
         window.renderRows = function(tbody, data) {
-            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة</td></tr>'; return; }
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة حتى الآن</td></tr>'; return; }
             tbody.innerHTML = '';
             
             data.forEach(item => {
@@ -408,30 +538,30 @@
 
                 if (currentStatus === 'paused') {
                     statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
-                    daysText = `<span style="color:#f57f17;">موقف</span>`;
+                    daysText = `<span style="color:#b45309;">موقف</span>`;
                 } else if (diffDays <= 0) {
                     statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
-                    daysText = `<span style="color:#c62828; font-weight:bold;">انتهى</span>`;
+                    daysText = `<span style="color:#b91c1c; font-weight:bold;">انتهى</span>`;
                     if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
                 } else {
                     statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
-                    daysText = diffDays <= 3 ? `<span style="color:#c62828;">${diffDays} يوم ⚠️</span>` : `<span style="color:#2e7d32;">${diffDays} يوم</span>`;
+                    daysText = diffDays <= 3 ? `<span style="color:#b91c1c;">${diffDays} يوم ⚠️</span>` : `<span style="color:#15803d;">${diffDays} يوم</span>`;
                 }
                 
-                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#0288d1; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#757575; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:12px; color:#0ea5e9; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:12px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
 
                 const toggleBtn = currentStatus === 'active'
                     ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
                     : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
 
-                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#757575' : '#0288d1'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
+                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#94a3b8' : '#0ea5e9'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
 
                 const row = `
                     <tr>
-                        <td><b>${item.Client_Name || item.name}</b></td>
-                        <td style="font-size:12px; color:#555; direction:ltr; text-align:right;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:12px;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
-                        <td>${daysText}</td>
+                        <td style="color: var(--primary);"><b>${item.Client_Name || item.name}</b></td>
+                        <td style="font-size:13px; color:#64748b; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
+                        <td style="font-size:14px; font-weight: 900; color: var(--text);">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="font-size:14px;">${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <div class="action-group">
@@ -457,7 +587,7 @@
             const price = document.getElementById('sub_price').value;
             const canSendAds = document.getElementById('can_send_ads').checked;
 
-            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول"); return; }
+            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول يا بطة 😊"); return; }
 
             const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
             if (exists) {
@@ -497,7 +627,7 @@
             try {
                 await set(ref(db, 'users/' + user), newItem);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة بالكامل");
+                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات معزولة بالكامل 😊");
                 
                 document.getElementById('new_name').value = '';
                 document.getElementById('new_user').value = '';
@@ -512,7 +642,7 @@
 
         window.toggleAdPermission = async function(username, currentStatus) {
             const nextStatus = !currentStatus;
-            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة")) return;
+            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟ 😊" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟ 😊")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
@@ -520,7 +650,7 @@
         }
 
         window.editUser = async function(username, oldName, oldPass) {
-            const newName = prompt("تعديل الاسم التجاري:", oldName);
+            const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
             if (newName === null) return;
             const newPass = prompt("تعديل كلمة المرور:", oldPass);
             if (newPass === null) return;
@@ -530,12 +660,12 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تحديث البيانات");
+            alert("تم تحديث البيانات 😊");
         }
 
         window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
+            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة 😊" : "إعادة التفعيل 😊")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
@@ -547,7 +677,7 @@
         }
 
         window.renewUser = async function(username) {
-            const days = prompt("عدد أيام التجديد الإضافية:", "30");
+            const days = prompt("عدد أيام التجديد الإضافية يا حبة السكر:", "30");
             if (!days) return;
             const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
 
@@ -558,15 +688,15 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تجديد الاشتراك بنجاح");
+            alert("تم تجديد الاشتراك بنجاح 😊");
         }
 
         window.deleteUser = async function(username) {
-            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد")) return;
+            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد يا بطة؟ 😊")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'users/' + username));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الحساب نهائياً");
+            alert("تم حذف الحساب نهائياً 😊");
         }
 
         window.logout = function() { 
