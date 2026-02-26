@@ -80,7 +80,7 @@
         
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
         
-        #commission-field { display: none; background: #ecfdf5; padding: 12px; border-radius: 10px; border: 1px solid #a7f3d0; grid-column: span 1; }
+        #commission-field, #edit-commission-field { display: none; background: #ecfdf5; padding: 12px; border-radius: 10px; border: 1px solid #a7f3d0; grid-column: span 1; }
         
         /* تصميم معلومات المستخدم والاشتراك */
         .user-info-area { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
@@ -122,14 +122,22 @@
         .ad-type-offer { border-right-color: var(--success); }
         .ad-type-offer .ad-text-scroll { color: var(--success); }
 
-        /* تصميم التنبيه الطارئ Pop-up */
+        /* تصميم التنبيه الطارئ وواجهة التعديل Pop-up */
         .app-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .app-popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-top: 6px solid var(--danger); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .app-popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-top: 6px solid var(--danger); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto; }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
         .app-popup-icon { font-size: 50px; margin-bottom: 12px; }
         .app-popup-msg { font-size: 18px; font-weight: 900; color: var(--primary); line-height: 1.5; margin-bottom: 20px; }
         .app-popup-btn { background: var(--danger); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; font-size: 15px; transition: 0.3s; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
         .app-popup-btn:hover { background: #b91c1c; transform: translateY(-2px); }
+
+        /* ازرار التبديل الصغيرة (Toggle) */
+        .switch-small { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch-small input { opacity: 0; width: 0; height: 0; }
+        .slider-small { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider-small:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-small { background-color: var(--success); }
+        input:checked + .slider-small:before { transform: translateX(14px); }
     </style>
 </head>
 <body> 
@@ -144,6 +152,54 @@
             <div class="app-popup-icon">🚨</div>
             <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
             <button class="app-popup-btn" onclick="closeAppPopup()">حسناً، فهمت</button>
+        </div>
+    </div>
+
+    <div id="edit-shop-modal" class="app-popup-overlay">
+        <div class="app-popup-box" style="max-width: 600px; text-align: right; border-top-color: var(--gold);">
+            <h3 style="color:var(--primary); margin-top:0; border-bottom:2px solid #f1f5f9; padding-bottom:10px; font-weight:900;">تعديل شامل لبيانات المنشأة 🛠️</h3>
+            <input type="hidden" id="edit_original_user">
+            <div class="form-grid" style="margin-bottom: 20px; text-align: right;">
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">اسم المنشأة التجارية أو المطعم</label>
+                    <input type="text" id="edit_shop_name" placeholder="اسم الشركة">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">اسم المستخدم (User ID)</label>
+                    <input type="text" id="edit_shop_user" placeholder="اسم المستخدم (English)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">كلمة المرور</label>
+                    <input type="password" id="edit_shop_pass" placeholder="كلمة المرور">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">رقم الهاتف</label>
+                    <input type="tel" id="edit_shop_phone" placeholder="7xxxxxxxx" maxlength="9" style="direction:ltr; text-align:right;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">رابط الموقع</label>
+                    <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع (Google Maps)">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">الرصيد المتاح</label>
+                    <input type="number" id="edit_shop_balance" placeholder="الرصيد المتاح" step="0.5">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">نوع الاشتراك</label>
+                    <select id="edit_sub_type" onchange="toggleEditCommissionField()">
+                        <option value="free">اشتراك مجاني (بدون عمولة)</option>
+                        <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
+                    </select>
+                </div>
+                <div id="edit-commission-field">
+                    <label style="font-size:11px; font-weight:900; color:var(--money);">💰 قيمة العمولة الثابتة</label>
+                    <input type="number" id="edit_fixed_commission" placeholder="مثلاً 0.50" step="0.01" style="margin-top:6px;">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-action btn-add" style="background:var(--gold); color:var(--primary);" onclick="saveShopEdit()">حفظ التعديلات الألماسية 💾</button>
+                <button class="btn-action btn-delete" onclick="closeEditModal()">إلغاء ❌</button>
+            </div>
         </div>
     </div>
 
@@ -225,9 +281,18 @@
             <div class="card">
                 <div class="card-header">
                     <span>✨ إضافة منشأة جديدة</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:11px; font-weight:bold; color:#64748b;">تسجيل خارجي</span>
+                        <label class="switch-small">
+                            <input type="checkbox" id="toggle_external_reg" onchange="toggleExternalRegInput()">
+                            <span class="slider-small"></span>
+                        </label>
+                        <input type="text" id="external_reg_id" placeholder="ID الاستقبال" style="display:none; width:100px; padding:6px 10px; font-size:11px;">
+                        <button id="btn_save_ext_id" class="btn-check" style="display:none; height:28px; padding:0 8px; font-size:11px;" onclick="saveExternalRegData()">حفظ</button>
+                    </div>
                 </div>
                 <div class="form-grid">
-                    <input type="text" id="shop_name" placeholder="اسم الشركة">
+                    <input type="text" id="shop_name" placeholder="اسم المنشأة التجارية أو المطعم">
                     
                     <div style="display:flex; gap:8px;">
                         <input type="text" id="shop_user" placeholder="اسم المستخدم (English)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
@@ -270,16 +335,20 @@
 
             <div class="card">
                 <div class="card-header" style="display:flex; flex-direction:column; gap:10px; align-items:stretch;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                         <span>📋 سجل المنشآت التابعة</span>
+                        <div style="display:flex; gap:5px;">
+                            <button id="btn_filter_active" class="tab-btn active" style="padding:6px 12px; font-size:11px;" onclick="setShopFilter('active')">المنشآت المفعّلة ✅</button>
+                            <button id="btn_filter_pending" class="tab-btn" style="padding:6px 12px; font-size:11px;" onclick="setShopFilter('pending')">طلبات المنشآت ⏳</button>
+                        </div>
                     </div>
-                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم الشركة..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
+                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم المنشأة..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>اسم الشركة</th>
+                                <th>اسم المنشأة التجارية أو المطعم</th>
                                 <th>بيانات الدخول</th>
                                 <th>الهاتف / الموقع</th>
                                 <th>النوع / العمولة</th>
@@ -303,7 +372,7 @@
                     <div class="settings-avatar">💎</div>
                     <div class="settings-title-area">
                         <h2 id="display_company_name">الشركة</h2>
-                        <span>حساب الإدارة الماسي</span>
+                        <span>حساب الادارة</span>
                     </div>
                 </div>
                 <div class="settings-body">
@@ -324,48 +393,46 @@
                         </div>
                     </div>
                     <button class="btn-action" style="background:var(--gold); color:var(--primary); font-size:15px; margin-top:10px; box-shadow:0 8px 15px rgba(212,175,55,0.2);" onclick="updateProfileData()">حفظ وتوثيق التعديلات الألماسية 💾</button>
-                </div>
-            </div>
 
-            <div id="ad-center-card" class="card" style="max-width: 600px; margin: 20px auto 0; border-top-color: var(--info); display: none;">
-                <div class="card-header" style="color: var(--info);">
-                    <span>📢 مركز إرسال الإعلانات والتنبيهات</span>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <textarea id="client_ad_text" rows="3" placeholder="اكتب إعلانك أو رسالتك هنا..." style="resize: none; font-weight: bold;"></textarea>
-                    
-                    <div style="display: flex; gap: 8px;">
-                        <select id="client_ad_group" onchange="updateClientAdTargets()" style="flex: 1;">
-                            <option value="shops">المنشآت التجارية</option>
-                            <option value="captains">الكباتن</option>
-                            <option value="customers">الزبائن</option>
-                        </select>
-                        <select id="client_ad_target" style="flex: 1;">
-                            <option value="all">إرسال للجميع</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display: flex; gap: 8px;">
-                        <select id="client_ad_type" style="flex: 1;">
-                            <option value="normal">إعلان عادي</option>
-                            <option value="news">أخبار عامة 🔵</option>
-                            <option value="warning">تحذير / تنبيه 🔴</option>
-                            <option value="offer">عروض / هدايا 🟢</option>
-                        </select>
-                        <select id="client_ad_expire" style="flex: 1;">
-                            <option value="1">لمدة ساعة</option>
-                            <option value="24" selected>لمدة 24 ساعة</option>
-                            <option value="168">لمدة أسبوع</option>
-                            <option value="permanent">دائم</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display: flex; gap: 8px; margin-top: 5px;">
-                        <button class="btn-action" style="background-color: var(--info);" onclick="sendClientAd()">بث الإعلان اللحظي 🚀</button>
-                        <button class="btn-action" style="background-color: var(--danger);" onclick="sendClientPopup()">إرسال تنبيه طارئ 🚨</button>
-                    </div>
+                    <div id="integrated-ad-center" style="display: none; margin-top: 30px; padding-top: 25px; border-top: 2px dashed #e2e8f0;">
+                        <div style="color: var(--info); font-size: 15px; font-weight: 800; margin-bottom: 15px;">📢 مركز إرسال الإعلانات والتنبيهات</div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <textarea id="client_ad_text" rows="3" placeholder="اكتب إعلانك أو رسالتك هنا..." style="resize: none; font-weight: bold;"></textarea>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <select id="client_ad_group" onchange="updateClientAdTargets()" style="flex: 1;">
+                                    <option value="shops">المنشآت التجارية</option>
+                                    <option value="captains">الكباتن</option>
+                                    <option value="customers">الزبائن</option>
+                                </select>
+                                <select id="client_ad_target" style="flex: 1;">
+                                    <option value="all">إرسال للجميع</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <select id="client_ad_type" style="flex: 1;">
+                                    <option value="normal">إعلان عادي</option>
+                                    <option value="news">أخبار عامة 🔵</option>
+                                    <option value="warning">تحذير / تنبيه 🔴</option>
+                                    <option value="offer">عروض / هدايا 🟢</option>
+                                </select>
+                                <select id="client_ad_expire" style="flex: 1;">
+                                    <option value="1">لمدة ساعة</option>
+                                    <option value="24" selected>لمدة 24 ساعة</option>
+                                    <option value="168">لمدة أسبوع</option>
+                                    <option value="permanent">دائم</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                <button class="btn-action" style="background-color: var(--info);" onclick="sendClientAd()">بث الإعلان اللحظي 🚀</button>
+                                <button class="btn-action" style="background-color: var(--danger);" onclick="sendClientPopup()">إرسال تنبيه طارئ 🚨</button>
+                            </div>
 
-                    <button class="btn-action" style="background-color: #64748b; margin-top: 5px;" onclick="clearClientAds()">مسح الإعلان / التنبيه 🗑️</button>
+                            <button class="btn-action" style="background-color: #64748b; margin-top: 5px;" onclick="clearClientAds()">مسح الإعلان / التنبيه 🗑️</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -393,6 +460,7 @@
         let allData = [];
         let allCaptains = [];
         let allCustomers = [];
+        let currentShopFilter = 'active'; 
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
@@ -427,9 +495,9 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.can_send_ads === true || data.can_send_ads === "true") {
-                        document.getElementById('ad-center-card').style.display = 'block';
+                        document.getElementById('integrated-ad-center').style.display = 'block';
                     } else {
-                        document.getElementById('ad-center-card').style.display = 'none';
+                        document.getElementById('integrated-ad-center').style.display = 'none';
                     }
                 }
             });
@@ -562,6 +630,17 @@
                         updateCountdownTimer();
                     }
 
+                    if (data.external_reg_enabled) {
+                        document.getElementById('toggle_external_reg').checked = true;
+                        document.getElementById('external_reg_id').style.display = 'inline-block';
+                        document.getElementById('btn_save_ext_id').style.display = 'inline-block';
+                        document.getElementById('external_reg_id').value = data.external_reg_id || '';
+                    } else {
+                        document.getElementById('toggle_external_reg').checked = false;
+                        document.getElementById('external_reg_id').style.display = 'none';
+                        document.getElementById('btn_save_ext_id').style.display = 'none';
+                    }
+
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
                         alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
                         localStorage.removeItem('current_company_user');
@@ -576,6 +655,46 @@
                 }
             });
         }
+
+        window.toggleExternalRegInput = function() {
+            const isChecked = document.getElementById('toggle_external_reg').checked;
+            const idInput = document.getElementById('external_reg_id');
+            const saveBtn = document.getElementById('btn_save_ext_id');
+            
+            if (isChecked) {
+                idInput.style.display = 'inline-block';
+                saveBtn.style.display = 'inline-block';
+            } else {
+                idInput.style.display = 'none';
+                saveBtn.style.display = 'none';
+                saveExternalRegData(false);
+            }
+        };
+
+        window.saveExternalRegData = async function(isEnabled = null) {
+            const username = currentUser.Client_User || currentUser.user;
+            const toggleState = isEnabled !== null ? isEnabled : document.getElementById('toggle_external_reg').checked;
+            const extId = document.getElementById('external_reg_id').value.trim();
+
+            if (toggleState && !extId) {
+                alert("يرجى إدخال معرف الاستقبال أولاً 😊");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            try {
+                await update(ref(db, `users/${username}`), {
+                    external_reg_enabled: toggleState,
+                    external_reg_id: toggleState ? extId : null
+                });
+                document.getElementById('loader-overlay').style.display = 'none';
+                if (toggleState) alert("تم تفعيل الاستقبال الخارجي وحفظ المعرف الرسمي بنجاح 🚀");
+                else alert("تم تعطيل ميزة الاستقبال الخارجي 😊");
+            } catch (error) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء حفظ الإعدادات 😊");
+            }
+        };
 
         window.updateProfileData = async function() {
             const oldUser = currentUser.Client_User || currentUser.user;
@@ -676,6 +795,17 @@
             if(event && event.target && event.target.classList.contains('tab-btn')) {
                 event.target.classList.add('active');
             }
+        };
+
+        window.setShopFilter = function(filter) {
+            currentShopFilter = filter;
+            document.getElementById('btn_filter_active').classList.remove('active');
+            document.getElementById('btn_filter_pending').classList.remove('active');
+            
+            if(filter === 'active') document.getElementById('btn_filter_active').classList.add('active');
+            else document.getElementById('btn_filter_pending').classList.add('active');
+            
+            renderShops();
         };
 
         window.fetchData = function() {
@@ -848,6 +978,13 @@
             else field.style.display = 'none';
         };
 
+        window.toggleEditCommissionField = function() {
+            const type = document.getElementById('edit_sub_type').value;
+            const field = document.getElementById('edit-commission-field');
+            if (type === 'paid') field.style.display = 'block';
+            else field.style.display = 'none';
+        };
+
         window.checkAvailability = async function() {
             const user = document.getElementById('shop_user').value.trim();
             if (!user) return;
@@ -944,26 +1081,41 @@
             const tbody = document.getElementById('shops-table-body');
             const currentUserRef = currentUser.Client_User || currentUser.user;
             
-            const myShops = allData.filter(i => 
-                (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && 
-                (i.Client_Master === currentUserRef)
-            ).reverse();
+            const myShops = allData.filter(i => {
+                const isMyShop = (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === currentUserRef);
+                const stat = i.Client_Status || i.status;
+                const isPending = stat === 'pending';
+                
+                if (!isMyShop) return false;
+                
+                if (currentShopFilter === 'active') {
+                    return !isPending; 
+                } else {
+                    return isPending; 
+                }
+            }).reverse();
             
             let totalBalance = 0;
             let totalComm = 0;
             
-            myShops.forEach(s => {
+            const allMyActiveShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === currentUserRef) && (i.Client_Status !== 'pending' && i.status !== 'pending'));
+            
+            allMyActiveShops.forEach(s => {
                 totalBalance += Number(s.Client_Balance || s.Shop_Balance || 0);
                 totalComm += Number(s.Client_Comm || s.company_share || 0);
             });
 
-            document.getElementById('total-shops').innerText = myShops.length;
-            document.getElementById('count-paid').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
-            document.getElementById('count-free').innerText = myShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
+            document.getElementById('total-shops').innerText = allMyActiveShops.length;
+            document.getElementById('count-paid').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
+            document.getElementById('count-free').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
             document.getElementById('total-balance').innerText = totalBalance.toFixed(2) + " د.أ";
             document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
 
-            if (myShops.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold; color:#94a3b8;">لا توجد منشآت تابعة حالياً</td></tr>'; return; }
+            if (myShops.length === 0) { 
+                const emptyMsg = currentShopFilter === 'active' ? 'لا توجد منشآت تابعة مفعّلة حالياً' : 'لا توجد طلبات معلقة حالياً';
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold; color:#94a3b8;">${emptyMsg}</td></tr>`; 
+                return; 
+            }
             tbody.innerHTML = '';
             
             myShops.forEach(shop => {
@@ -972,14 +1124,20 @@
                     ? `<span class="badge" style="background:#ecfdf5; color:var(--money); border:1px solid #a7f3d0;">مدفوع (${commVal} د.أ)</span>` 
                     : `<span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">مجاني</span>`;
 
-                const isPaused = (shop.Client_Status || shop.status) === 'paused';
-                const statusBadge = isPaused 
-                    ? '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">مجمد ❄️</span>' 
-                    : '<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">نشط ✅</span>';
+                const stat = shop.Client_Status || shop.status;
+                let statusBadge = '';
+                let toggleBtn = '';
                 
-                const toggleBtn = isPaused 
-                    ? `<button class="btn-active" title="إعادة تفعيل" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>` 
-                    : `<button class="btn-freeze" title="تجميد مؤقت" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">❄️</button>`;
+                if (stat === 'pending') {
+                    statusBadge = '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">بانتظار التفعيل ⏳</span>';
+                    toggleBtn = `<button class="btn-active" title="تفعيل وقبول المنشأة" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل ✅</button>`;
+                } else if (stat === 'paused') {
+                    statusBadge = '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">مجمد ❄️</span>';
+                    toggleBtn = `<button class="btn-active" title="إعادة تفعيل" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>`;
+                } else {
+                    statusBadge = '<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">نشط ✅</span>';
+                    toggleBtn = `<button class="btn-freeze" title="تجميد مؤقت" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">❄️</button>`;
+                }
                 
                 let daysLeft = "غير محدد";
                 if (shop.Client_Expiry || shop.expiry) {
@@ -1005,7 +1163,7 @@
                         <td style="font-size:12px; font-weight:bold; color:#64748b;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
-                            <button class="btn-edit" onclick="editShop('${shop.Client_User || shop.user}', '${shop.Client_Name || shop.name}', '${shopPassDisplay}', '${currentBalance}')">✏️</button>
+                            <button class="btn-edit" onclick="openEditModal('${shop.Client_User || shop.user}')">✏️</button>
                             ${toggleBtn}
                             <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">❌</button>
                         </td>
@@ -1026,8 +1184,19 @@
         };
 
         window.toggleStatus = async function(u, currentStatus) {
-            const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            const confirmMsg = nextStatus === 'paused' ? "تأكيد تجميد حساب المنشأة 😊" : "تأكيد إعادة تفعيل حساب المنشأة 😊";
+            let nextStatus = 'active';
+            let confirmMsg = '';
+            
+            if (currentStatus === 'pending') {
+                confirmMsg = "تأكيد تفعيل وقبول المنشأة بالشبكة الألماسية 😊";
+                nextStatus = 'active';
+            } else if (currentStatus === 'active') {
+                confirmMsg = "تأكيد تجميد حساب المنشأة 😊";
+                nextStatus = 'paused';
+            } else {
+                confirmMsg = "تأكيد إعادة تفعيل حساب المنشأة 😊";
+                nextStatus = 'active';
+            }
             
             if(!confirm(confirmMsg)) return;
             
@@ -1036,14 +1205,113 @@
             document.getElementById('loader-overlay').style.display = 'none';
         };
 
-        window.editShop = async function(u, n, p, b) {
-            const newN = prompt("تعديل اسم الشركة 😊", n); if (newN === null) return;
-            const newP = prompt("تعديل كلمة المرور 😊", p); if (newP === null) return;
-            const newB = prompt("تعديل الرصيد المتاح 😊", b); if (newB === null) return;
+        window.openEditModal = function(userKey) {
+            const shop = allData.find(s => (s.Client_User === userKey || s.user === userKey));
+            if (!shop) return;
+
+            document.getElementById('edit_original_user').value = userKey;
+            document.getElementById('edit_shop_name').value = shop.Client_Name || shop.name || '';
+            document.getElementById('edit_shop_user').value = shop.Client_User || shop.user || '';
+            document.getElementById('edit_shop_pass').value = shop.Client_Pass || shop.pass || '';
+            document.getElementById('edit_shop_phone').value = shop.Client_Phone || shop.cap_phone || '';
+            document.getElementById('edit_shop_location_link').value = shop.Client_Location || shop.pickup || '';
+            document.getElementById('edit_shop_balance').value = shop.Client_Balance || shop.Shop_Balance || 0;
             
+            const commVal = Number(shop.Client_Comm || shop.company_share || 0);
+            if (commVal > 0) {
+                document.getElementById('edit_sub_type').value = 'paid';
+                document.getElementById('edit_fixed_commission').value = commVal;
+                document.getElementById('edit-commission-field').style.display = 'block';
+            } else {
+                document.getElementById('edit_sub_type').value = 'free';
+                document.getElementById('edit_fixed_commission').value = '';
+                document.getElementById('edit-commission-field').style.display = 'none';
+            }
+
+            document.getElementById('edit-shop-modal').style.display = 'flex';
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('edit-shop-modal').style.display = 'none';
+        };
+
+        window.saveShopEdit = async function() {
+            const originalUser = document.getElementById('edit_original_user').value;
+            const shop = allData.find(s => (s.Client_User === originalUser || s.user === originalUser));
+            if (!shop) return;
+
+            const newName = document.getElementById('edit_shop_name').value.trim();
+            const newUser = document.getElementById('edit_shop_user').value.trim();
+            const newPass = document.getElementById('edit_shop_pass').value;
+            const newPhone = document.getElementById('edit_shop_phone').value.trim();
+            const newLoc = document.getElementById('edit_shop_location_link').value.trim();
+            const newBal = document.getElementById('edit_shop_balance').value;
+            const subType = document.getElementById('edit_sub_type').value;
+            
+            let commission = "0";
+            if (subType === 'paid') {
+                commission = document.getElementById('edit_fixed_commission').value;
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 😊"); return; }
+            }
+
+            if (!newName || !newUser || !newPass || !newPhone) { 
+                alert("يرجى تعبئة الحقول الأساسية 😊"); 
+                return; 
+            }
+
             document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'shops/' + u), { Client_Name: newN, name: newN, Client_Pass: newP, pass: newP, Client_Balance: newB, Shop_Balance: newB });
-            document.getElementById('loader-overlay').style.display = 'none';
+
+            try {
+                if (newUser !== originalUser) {
+                    const checkShop = await get(child(ref(db), `shops/${newUser}`));
+                    const checkUser = await get(child(ref(db), `users/${newUser}`));
+                    
+                    if (checkShop.exists() || checkUser.exists()) {
+                        alert("عذراً اسم المستخدم الجديد محجوز لجهة أخرى 😊");
+                        document.getElementById('loader-overlay').style.display = 'none';
+                        return;
+                    }
+
+                    const updatedShop = {
+                        ...shop,
+                        Client_Name: newName, name: newName,
+                        Client_User: newUser, user: newUser,
+                        Client_Pass: newPass, pass: newPass,
+                        Client_Phone: newPhone, cap_phone: newPhone,
+                        Client_Location: newLoc, pickup: newLoc,
+                        Client_Balance: newBal, Shop_Balance: newBal,
+                        Client_Comm: commission, company_share: commission
+                    };
+
+                    const updates = {};
+                    updates[`shops/${newUser}`] = updatedShop;
+                    updates[`shops/${originalUser}`] = null;
+                    await update(ref(db), updates);
+                } else {
+                    const updates = {
+                        [`shops/${originalUser}/Client_Name`]: newName,
+                        [`shops/${originalUser}/name`]: newName,
+                        [`shops/${originalUser}/Client_Pass`]: newPass,
+                        [`shops/${originalUser}/pass`]: newPass,
+                        [`shops/${originalUser}/Client_Phone`]: newPhone,
+                        [`shops/${originalUser}/cap_phone`]: newPhone,
+                        [`shops/${originalUser}/Client_Location`]: newLoc,
+                        [`shops/${originalUser}/pickup`]: newLoc,
+                        [`shops/${originalUser}/Client_Balance`]: newBal,
+                        [`shops/${originalUser}/Shop_Balance`]: newBal,
+                        [`shops/${originalUser}/Client_Comm`]: commission,
+                        [`shops/${originalUser}/company_share`]: commission
+                    };
+                    await update(ref(db), updates);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                closeEditModal();
+                alert("تم حفظ التعديلات الألماسية بنجاح 😊");
+            } catch (error) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء حفظ التعديلات 😊");
+            }
         };
 
         window.deleteShop = async function(u) {
