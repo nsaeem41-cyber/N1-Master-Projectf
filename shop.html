@@ -29,6 +29,40 @@
             color: var(--text-main); user-select: none; padding-bottom: 80px;
         }
 
+        /* ================= بوابات الدخول والتسجيل ================= */
+        .auth-wrapper {
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; padding: 20px; background: linear-gradient(135deg, var(--primary), #1e293b);
+        }
+        .auth-card {
+            background: white; width: 100%; max-width: 420px; padding: 40px 30px;
+            border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center; position: relative; border-top: 5px solid var(--gold);
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .auth-logo { font-size: 50px; margin-bottom: 10px; }
+        .auth-title { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
+        .auth-subtitle { font-size: 13px; color: var(--text-light); margin-bottom: 30px; font-weight: bold; }
+        
+        .auth-link {
+            display: inline-block; margin-top: 20px; font-size: 13px; font-weight: 800;
+            color: var(--info); cursor: pointer; transition: 0.3s;
+        }
+        .auth-link:active { transform: scale(0.95); }
+
+        /* ================= واجهة الإيقاف ================= */
+        .suspended-card {
+            background: white; width: 100%; max-width: 400px; padding: 40px 30px;
+            border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center; border-top: 6px solid var(--danger);
+        }
+        .suspended-icon { font-size: 60px; margin-bottom: 15px; }
+        .suspended-title { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+        .suspended-desc { font-size: 14px; font-weight: bold; color: var(--text-light); line-height: 1.6; margin-bottom: 25px; }
+
+        /* ================= التطبيق الرئيسي ================= */
+        #app-container { display: none; }
+
         .header {
             background: var(--primary);
             padding: 25px 20px 15px;
@@ -102,7 +136,7 @@
         .stat-val { font-size: 24px; font-weight: 900; color: var(--primary); }
         .stat-val.gold { color: var(--gold); }
 
-        .input-group { margin-bottom: 18px; position: relative; }
+        .input-group { margin-bottom: 18px; position: relative; text-align: right; }
         label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--text-light); }
         input, select {
             width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
@@ -119,7 +153,6 @@
             animation: slideUp 0.3s ease;
         }
         
-        /* ميزة النجمة الذهبية للسعر المميز */
         .star-feature-badge {
             display: none; background: #fffbeb; color: #d97706;
             font-size: 11px; font-weight: bold; padding: 4px 8px;
@@ -169,24 +202,7 @@
             box-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
         }
 
-        .modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center; z-index: 9999;
-        }
-        .modal-content {
-            background: white; padding: 30px 20px; border-radius: 25px; width: 90%; max-width: 400px;
-            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            border-top: 5px solid var(--gold); animation: slideUp 0.4s ease-out;
-        }
-        .modal-title { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
-        .modal-desc { font-size: 14px; color: var(--text-light); margin-bottom: 20px; line-height: 1.5; }
-        
-        .secret-footer { text-align: center; padding: 15px; }
-        .secret-input { width: 50px; background: transparent; border: none; text-align: center; color: var(--border); outline: none; font-size: 10px; }
-        .secret-input::placeholder { color: #e2e8f0; }
-
-        /* ================= تصميم الإعلانات الذكية ================= */
+        /* ================= تصميم الإعلانات والتنبيهات ================= */
         .app-ad-container { 
             display: none; align-items: center; background: white; 
             margin: 20px auto 0; max-width: 500px; padding: 12px 15px; 
@@ -213,7 +229,6 @@
         .ad-type-offer { border-right-color: var(--success); }
         .ad-type-offer .ad-text-scroll { color: var(--success); }
 
-        /* ================= تصميم التنبيه الطارئ ================= */
         .app-popup-overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; 
@@ -246,181 +261,209 @@
         </div>
     </div>
 
-    <div id="location-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-title">أهلاً بك في النظام 👑</div>
-            <div class="modal-desc">
-                يرجى اختيار منطقتك المعتمدة لتفعيل حسابك وربط الأسعار الخاصة بك بشكل دقيق ونهائي.
+    <div id="auth-section" class="auth-wrapper">
+        <div id="login-card" class="auth-card">
+            <div class="auth-logo">💎</div>
+            <div class="auth-title">بوابة المنشآت</div>
+            <div class="auth-subtitle">تسجيل الدخول للنظام الألماسي</div>
+            
+            <div class="input-group">
+                <input type="text" id="login-user" placeholder="اسم المستخدم (User ID)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+            </div>
+            <div class="input-group">
+                <input type="password" id="login-pass" placeholder="كلمة المرور">
             </div>
             
-            <div class="input-group" style="text-align: right;">
-                <label>📍 اختر المنطقة (المصدر المعتمد)</label>
-                <select id="modal-location-select">
-                    <option value="">جاري تحميل المناطق...</option>
-                </select>
+            <button class="btn-main btn-send" id="btn-login" onclick="executeLogin()">دخول آمن 🔒</button>
+            <div class="auth-link" onclick="toggleAuth('register')">منشأة جديدة؟ قدم طلب تسجيل هنا ✨</div>
+        </div>
+
+        <div id="register-card" class="auth-card" style="display: none; border-top-color: var(--success);">
+            <div class="auth-logo">📝</div>
+            <div class="auth-title">طلب تسجيل</div>
+            <div class="auth-subtitle">الانضمام للشبكة الألماسية</div>
+            
+            <div class="input-group">
+                <input type="text" id="reg-name" placeholder="اسم المنشأة التجارية أو المطعم">
+            </div>
+            <div class="input-group">
+                <input type="text" id="reg-user" placeholder="اسم المستخدم (بالإنجليزي)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+            </div>
+            <div class="input-group">
+                <input type="password" id="reg-pass" placeholder="اختر كلمة مرور">
+            </div>
+            <div class="input-group">
+                <input type="tel" id="reg-phone" placeholder="رقم الهاتف (7xxxxxxxx)" maxlength="9" style="direction:ltr; text-align:right;">
+            </div>
+            <div class="input-group">
+                <input type="text" id="reg-master" placeholder="ID الاستقبال (رقم الشركة المرجعية)">
             </div>
             
-            <button class="btn-main" style="background: var(--gold); color: var(--primary);" onclick="saveShopLocation()">
-                ✅ تثبيت الموقع للأبد
-            </button>
+            <button class="btn-main" id="btn-register" style="background: var(--success);" onclick="executeRegister()">إرسال طلب الانضمام 🚀</button>
+            <div class="auth-link" style="color:var(--text-light);" onclick="toggleAuth('login')">العودة لتسجيل الدخول 🔙</div>
+        </div>
+
+        <div id="suspended-card" class="suspended-card" style="display: none;">
+            <div class="suspended-icon">🛑</div>
+            <div class="suspended-title">عذراً، الحساب موقوف</div>
+            <div class="suspended-desc">تم إيقاف أو تجميد حساب منشأتك مؤقتاً.<br>يرجى التواصل مع الإدارة المركزية أو الشركة الأم لمراجعة حالة الحساب وإعادة تفعيله.</div>
+            <button class="btn-logout" style="width:100%; justify-content:center; padding:15px; font-size:15px;" onclick="location.reload()">العودة للرئيسية</button>
         </div>
     </div>
 
-    <header class="header">
-        <div class="header-top">
-            <div class="brand" id="parent-company-brand">جاري التحميل...</div>
-            <button class="btn-logout" onclick="logout()">
-                <span>🏃‍♂️</span> مغادرة
-            </button>
-        </div>
-        
-        <div class="badges-container">
-            <div class="shop-info-badge">
-                🏪 <span id="hdr-shop-name">...</span>
+    <div id="app-container">
+        <header class="header">
+            <div class="header-top">
+                <div class="brand" id="parent-company-brand">جاري التحميل...</div>
+                <button class="btn-logout" onclick="logout()">
+                    <span>🏃‍♂️</span> مغادرة
+                </button>
             </div>
-            <div class="shop-info-badge">
-                📍 <span id="hdr-shop-area">غير محدد</span>
-            </div>
-            <div class="shop-info-badge">
-                👤 <span id="hdr-shop-user">...</span>
-            </div>
-        </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('orders')">📦 إرسال طلب</button>
-            <button class="nav-tab" onclick="switchTab('charging')">⚡ شحن كابتن</button>
-            <button class="nav-tab" onclick="switchTab('settings')">⚙️ الإعدادات</button>
-        </div>
-    </header>
-
-    <div style="padding: 0 20px;">
-        <div id="smart-ad-container" class="app-ad-container">
-            <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
-            <div class="ad-content-wrapper">
-                <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        
-        <div id="orders" class="section active">
             
-            <div class="stats-grid">
-                <div class="stat-box gold-top">
-                    <span class="stat-label">إنجاز اليوم 🏆</span>
-                    <span class="stat-val gold" id="orders-today">0</span>
+            <div class="badges-container">
+                <div class="shop-info-badge">
+                    🏪 <span id="hdr-shop-name">...</span>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-label">الإجمالي العام 🚀</span>
-                    <span class="stat-val" id="orders-total">0</span>
+                <div class="shop-info-badge">
+                    📍 <span id="hdr-shop-area">غير محدد</span>
+                </div>
+                <div class="shop-info-badge">
+                    👤 <span id="hdr-shop-user">...</span>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="input-group">
-                    <label>📍 وجهة الطلب (اختر من القائمة المعتمدة)</label>
-                    <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة..." oninput="calculateFee()" onchange="calculateFee()">
-                    <datalist id="areas-list"></datalist>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchTab('orders')">📦 إرسال طلب</button>
+                <button class="nav-tab" onclick="switchTab('charging')">⚡ شحن كابتن</button>
+                <button class="nav-tab" onclick="switchTab('settings')">⚙️ الإعدادات</button>
+            </div>
+        </header>
+
+        <div style="padding: 0 20px;">
+            <div id="smart-ad-container" class="app-ad-container">
+                <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
+                <div class="ad-content-wrapper">
+                    <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            
+            <div id="orders" class="section active">
+                
+                <div class="stats-grid">
+                    <div class="stat-box gold-top">
+                        <span class="stat-label">إنجاز اليوم 🏆</span>
+                        <span class="stat-val gold" id="orders-today">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">الإجمالي العام 🚀</span>
+                        <span class="stat-val" id="orders-total">0</span>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <label>💰 قيمة التحصيل (دينار)</label>
-                    <input type="number" id="order_val" placeholder="سعر الطلب (مثلاً 20.50)">
+                <div class="card">
+                    <div class="input-group">
+                        <label>📍 وجهة الطلب (اختر من القائمة المعتمدة)</label>
+                        <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة..." oninput="calculateFee()" onchange="calculateFee()">
+                        <datalist id="areas-list"></datalist>
+                    </div>
+
+                    <div class="input-group">
+                        <label>💰 قيمة التحصيل (دينار)</label>
+                        <input type="number" id="order_val" placeholder="سعر الطلب (مثلاً 20.50)">
+                    </div>
+
+                    <div class="input-group">
+                        <label>
+                            <span>🛵 سعر التوصيل (تلقائي)</span>
+                            <div>
+                                <span id="star-feature-badge" class="star-feature-badge">⭐ سعر مميز</span>
+                                <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                            </div>
+                        </label>
+                        <input type="text" id="delivery_fee" placeholder="---" readonly>
+                    </div>
+
+                    <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">
+                        🚀 إرسال للرادار فوراً
+                    </button>
                 </div>
 
-                <div class="input-group">
-                    <label>
-                        <span>🛵 سعر التوصيل (تلقائي)</span>
-                        <div>
-                            <span id="star-feature-badge" class="star-feature-badge">⭐ سعر مميز</span>
-                            <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                <div class="card" style="padding: 20px;">
+                    <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 آخر الطلبات (الخاصة بك فقط)</div>
+                    <div id="history-list" class="history-list">
+                        <div style="text-align:center; color:#cbd5e1; padding:10px;">جاري سحب السجل...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="charging" class="section">
+                <div class="card" style="border-top: 4px solid var(--success);">
+                    <div style="text-align:center; margin-bottom:25px;">
+                        <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
+                        <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
+                            رصيدك الحالي: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
+                        </p>
+                    </div>
+
+                    <div class="input-group">
+                        <label>🔍 كود الكابتن أو رقم الهاتف</label>
+                        <input type="text" id="cap_id" placeholder="مثلاً C-101 أو 07xxxxxxxx">
+                    </div>
+
+                    <div class="input-group">
+                        <label>💵 المبلغ المراد شحنه</label>
+                        <input type="number" id="charge_amount" placeholder="0.00">
+                    </div>
+
+                    <button class="btn-main btn-check" id="btn-check" onclick="verifyCaptain()">
+                        🔍 فحص الكابتن أولاً
+                    </button>
+
+                    <div id="cap-check-result">
+                        <div class="check-info">تم العثور على الكابتن <b id="found-cap-name">---</b></div>
+                        <div class="check-info">رصيده الحالي <b id="found-cap-balance">---</b> د.أ</div>
+                        <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
+                        <div style="font-size:12px; font-weight:bold; color:var(--primary);">
+                            سيصبح رصيده <span id="future-cap-balance" style="color:var(--success);">---</span>
                         </div>
-                    </label>
-                    <input type="text" id="delivery_fee" placeholder="---" readonly>
-                </div>
-
-                <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">
-                    🚀 إرسال للرادار فوراً
-                </button>
-            </div>
-
-            <div class="card" style="padding: 20px;">
-                <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 آخر الطلبات (الخاصة بك فقط)</div>
-                <div id="history-list" class="history-list">
-                    <div style="text-align:center; color:#cbd5e1; padding:10px;">جاري سحب السجل...</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="charging" class="section">
-            <div class="card" style="border-top: 4px solid var(--success);">
-                <div style="text-align:center; margin-bottom:25px;">
-                    <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
-                    <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
-                        رصيدك الحالي: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
-                    </p>
-                </div>
-
-                <div class="input-group">
-                    <label>🔍 كود الكابتن أو رقم الهاتف</label>
-                    <input type="text" id="cap_id" placeholder="مثلاً C-101 أو 07xxxxxxxx">
-                </div>
-
-                <div class="input-group">
-                    <label>💵 المبلغ المراد شحنه</label>
-                    <input type="number" id="charge_amount" placeholder="0.00">
-                </div>
-
-                <button class="btn-main btn-check" id="btn-check" onclick="verifyCaptain()">
-                    🔍 فحص الكابتن أولاً
-                </button>
-
-                <div id="cap-check-result">
-                    <div class="check-info">تم العثور على الكابتن <b id="found-cap-name">---</b></div>
-                    <div class="check-info">رصيده الحالي <b id="found-cap-balance">---</b> د.أ</div>
-                    <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
-                    <div style="font-size:12px; font-weight:bold; color:var(--primary);">
-                        سيصبح رصيده <span id="future-cap-balance" style="color:var(--success);">---</span>
                     </div>
-                </div>
 
-                <button class="btn-main btn-confirm" id="btn-charge" onclick="executeTransfer()">
-                    ✅ تأكيد وتحويل الرصيد
-                </button>
+                    <button class="btn-main btn-confirm" id="btn-charge" onclick="executeTransfer()">
+                        ✅ تأكيد وتحويل الرصيد
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div id="settings" class="section">
-            <div class="card" style="border-top: 4px solid var(--gold);">
-                <div style="text-align:center; margin-bottom:20px;">
-                    <h3 style="margin:0; color:var(--primary); font-size:18px;">⚙️ إعدادات الحساب</h3>
-                    <p style="font-size:12px; color:var(--text-light); margin-top:5px;">تحديث بيانات الدخول الخاصة بك</p>
-                </div>
-
-                <div class="input-group">
-                    <label>اسم المستخدم (User ID)</label>
-                    <input type="text" id="profile_user" placeholder="الاسم بالإنجليزي" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
-                </div>
-
-                <div class="input-group">
-                    <label>كلمة المرور الجديدة</label>
-                    <div style="position: relative; display: flex; align-items: center;">
-                        <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور" style="width: 100%; padding-left: 45px;">
-                        <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 15px; cursor: pointer; font-size: 18px; color: #64748b;" title="إظهار/إخفاء">👁️</span>
+            <div id="settings" class="section">
+                <div class="card" style="border-top: 4px solid var(--gold);">
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <h3 style="margin:0; color:var(--primary); font-size:18px;">⚙️ إعدادات الحساب</h3>
+                        <p style="font-size:12px; color:var(--text-light); margin-top:5px;">اسم المستخدم محمي ومثبت للرسمية</p>
                     </div>
+
+                    <div class="input-group">
+                        <label>اسم المستخدم (User ID)</label>
+                        <input type="text" id="profile_user" readonly title="بيانات الهوية الأساسية مثبتة">
+                    </div>
+
+                    <div class="input-group">
+                        <label>كلمة المرور الخاصة بالدخول</label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور لتغييرها" style="width: 100%; padding-left: 45px;">
+                            <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 15px; cursor: pointer; font-size: 18px; color: #64748b;" title="إظهار/إخفاء">👁️</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-main" id="btn-save-settings" style="background: var(--gold); color: var(--primary);" onclick="updateShopProfile()">
+                        💾 حفظ التعديلات اللحظية
+                    </button>
                 </div>
-
-                <button class="btn-main" id="btn-save-settings" style="background: var(--gold); color: var(--primary);" onclick="updateShopProfile()">
-                    💾 حفظ التعديلات اللحظية
-                </button>
             </div>
+
         </div>
-
-    </div>
-
-    <div class="secret-footer">
-        <input type="password" id="secret-pin" class="secret-input" placeholder="🔑" oninput="checkSecretPin(this.value)">
     </div>
 
     <div id="toast" class="toast">تمت العملية بنجاح</div>
@@ -443,27 +486,157 @@
         const db = getDatabase(app);
         
         let pricingMatrix = {}; 
-        let featureMatrix = {}; // مصفوفة لحفظ ميزات السعر (النجمة)
+        let featureMatrix = {};
         let dbPrices = [];
         let currentUser = null;
         let myBalance = 0;
         let verifiedCaptain = null;
         let masterName = "الشركة الأم";
-        window.myNode = 'shops'; // العقدة الجذرية للمنشأة لتفادي العقد الشبحية
+        window.myNode = 'shops'; 
 
         window.onload = async function() {
-            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                initializePortal();
+            } else {
+                document.getElementById('auth-section').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+            }
+        };
+
+        window.toggleAuth = function(mode) {
+            document.getElementById('login-card').style.display = 'none';
+            document.getElementById('register-card').style.display = 'none';
+            document.getElementById('suspended-card').style.display = 'none';
+
+            if(mode === 'login') document.getElementById('login-card').style.display = 'block';
+            if(mode === 'register') document.getElementById('register-card').style.display = 'block';
+        };
+
+        window.executeLogin = async function() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            if(!user || !pass) { showToast("يرجى إدخال اسم المستخدم وكلمة المرور"); return; }
             
-            if (!currentUser) { window.location.href = 'index.html'; return; }
-            
+            setLoading('btn-login', true);
+
+            try {
+                let userSnap = await get(child(ref(db), `shops/${user}`));
+                let foundNode = 'shops';
+                
+                if(!userSnap.exists()) {
+                    userSnap = await get(child(ref(db), `users/${user}`));
+                    foundNode = 'users';
+                }
+
+                if(userSnap.exists()) {
+                    const userData = userSnap.val();
+                    const actualPass = userData.Shop_Pass || userData.Client_Pass || userData.pass;
+                    
+                    if(actualPass === pass) {
+                        const status = userData.Client_Status || userData.status || 'active';
+                        
+                        if(status === 'paused') {
+                            document.getElementById('login-card').style.display = 'none';
+                            document.getElementById('suspended-card').style.display = 'block';
+                            setLoading('btn-login', false, "دخول آمن 🔒");
+                            return;
+                        } else if (status === 'pending') {
+                            showToast("حسابك قيد المراجعة من قبل الإدارة، يرجى الانتظار");
+                            setLoading('btn-login', false, "دخول آمن 🔒");
+                            return;
+                        }
+
+                        userData._node = foundNode;
+                        currentUser = userData;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        initializePortal();
+                    } else {
+                        showToast("كلمة المرور غير صحيحة");
+                    }
+                } else {
+                    showToast("اسم المستخدم غير موجود");
+                }
+            } catch (e) {
+                showToast("خطأ في الاتصال بقاعدة البيانات");
+            } finally {
+                setLoading('btn-login', false, "دخول آمن 🔒");
+            }
+        };
+
+        window.executeRegister = async function() {
+            const name = document.getElementById('reg-name').value.trim();
+            const user = document.getElementById('reg-user').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+            const phone = document.getElementById('reg-phone').value.trim();
+            const masterId = document.getElementById('reg-master').value.trim();
+
+            if(!name || !user || !pass || !phone || !masterId) { showToast("يرجى تعبئة كافة الحقول المطلوبة"); return; }
+
+            setLoading('btn-register', true);
+
+            try {
+                const checkSnap1 = await get(child(ref(db), `shops/${user}`));
+                const checkSnap2 = await get(child(ref(db), `users/${user}`));
+                
+                if (checkSnap1.exists() || checkSnap2.exists()) {
+                    showToast("اسم المستخدم محجوز، يرجى اختيار اسم آخر");
+                    setLoading('btn-register', false, "إرسال طلب الانضمام 🚀");
+                    return;
+                }
+
+                const newShop = {
+                    Client_ID: "REQ_" + Date.now(),
+                    Client_User: user, 
+                    Client_Pass: pass, 
+                    Client_Name: name,
+                    Client_Role: "shop", 
+                    Client_Type: "shop", 
+                    Client_Master: masterId, 
+                    Client_Status: "pending", // يذهب لسجل الطلبات
+                    Client_Phone: phone, 
+                    name: name,
+                    user: user,
+                    pass: pass,
+                    role: "shop",
+                    type: "shop",
+                    status: "pending",
+                    requestDate: new Date().toISOString()
+                };
+
+                await set(ref(db, `shops/${user}`), newShop);
+                
+                showToast("تم إرسال الطلب للإدارة بنجاح، يرجى انتظار التفعيل");
+                toggleAuth('login');
+                document.getElementById('reg-name').value = '';
+                document.getElementById('reg-user').value = '';
+                document.getElementById('reg-pass').value = '';
+                document.getElementById('reg-phone').value = '';
+                document.getElementById('reg-master').value = '';
+
+            } catch(e) {
+                showToast("حدث خطأ أثناء إرسال الطلب");
+            } finally {
+                setLoading('btn-register', false, "إرسال طلب الانضمام 🚀");
+            }
+        };
+
+        async function initializePortal() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+
             const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "منشأة تجارية";
             const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "غير متوفر";
-            const shopLocStr = currentUser.Shop_Location || currentUser.Client_Location || "غير محدد";
+            const shopLocStr = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "المنطقة غير محددة";
             
+            // تثبيت البيانات في الهيدر
             document.getElementById('hdr-shop-name').innerText = shopNameStr;
             document.getElementById('hdr-shop-user').innerText = shopUserStr;
             document.getElementById('hdr-shop-area').innerText = shopLocStr;
 
+            // تثبيت اسم المستخدم في الإعدادات
             document.getElementById('profile_user').value = shopUserStr;
             document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
             
@@ -472,7 +645,7 @@
             setupLiveOrders();
             await fetchAllData(); 
             attachBalanceListener();
-        };
+        }
 
         function fetchMasterInfo() {
             const myMaster = currentUser.Client_Master || currentUser.master;
@@ -502,7 +675,6 @@
             }
         };
 
-        // خوارزمية الاستقبال الذكية المطورة
         function setupAdsAndAlerts() {
             const master = currentUser.Client_Master || currentUser.master;
             const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
@@ -515,13 +687,12 @@
                 let displayAd = null;
                 let senderLabel = "الإدارة";
 
-                // الأولوية لإعلان الشركة التابعة (الماستر)، ثم الإدارة العامة
                 if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) {
                     displayAd = activeAds.client;
                     senderLabel = activeAds.client.sender || masterName;
                 } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
                     displayAd = activeAds.admin;
-                    senderLabel = activeAds.admin.sender || masterName; // توحيد المرسل ليكون الشركة التابعة دائماً
+                    senderLabel = activeAds.admin.sender || masterName; 
                 }
 
                 const adContainer = document.getElementById('smart-ad-container');
@@ -656,21 +827,11 @@
                     );
                     
                     if (me) {
-                        window.myNode = me._node || 'shops'; // تحديد العقدة الجذرية للمنشأة
+                        window.myNode = me._node || 'shops'; 
                         myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
                         document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                         
-                        const savedLocation = me.Shop_Location || me.Client_Location || "";
-                        
-                        if (savedLocation && String(savedLocation).trim() !== "") {
-                            currentUser.Shop_Location = savedLocation;
-                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                            document.getElementById('location-modal').style.display = 'none';
-                            document.getElementById('hdr-shop-area').innerText = savedLocation;
-                            loadShopPrices();
-                        } else {
-                            showLocationModal();
-                        }
+                        loadShopPrices();
                     }
                 }
             } catch (e) {
@@ -686,81 +847,35 @@
                     const me = snap.val();
                     myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                    
+                    const currentStatus = me.Client_Status || me.status || 'active';
+                    if (currentStatus === 'paused') {
+                        document.getElementById('app-container').style.display = 'none';
+                        document.getElementById('auth-section').style.display = 'flex';
+                        toggleAuth('suspended');
+                    }
+                } else {
+                    logout();
                 }
             });
         }
 
-        window.showLocationModal = function() {
-            const select = document.getElementById('modal-location-select');
-            select.innerHTML = '<option value="">-- اختر منطقتك المعتمدة --</option>';
-            
-            const uniqueSources = [...new Set(dbPrices.map(p => p.Price_Source))].filter(Boolean);
-            
-            uniqueSources.forEach(source => {
-                const opt = document.createElement('option');
-                opt.value = source;
-                opt.innerText = source;
-                select.appendChild(opt);
-            });
-            
-            document.getElementById('location-modal').style.display = 'flex';
-        }
-
-        window.saveShopLocation = async function() {
-            const selectedLocation = document.getElementById('modal-location-select').value;
-            if (!selectedLocation) {
-                alert("يرجى اختيار المنطقة من القائمة للاستمرار");
-                return;
-            }
-
-            const btn = document.querySelector('#location-modal .btn-main');
-            const originalText = btn.innerText;
-            btn.innerText = "جاري الحفظ";
-            btn.style.opacity = 0.7;
-
-            try {
-                const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
-                
-                // حفظ الموقع فقط في العقدة الصحيحة (myNode) لمنع العقد الشبحية وتلف تسجيل الدخول
-                const updates = {};
-                updates[`${window.myNode}/${shopKey}/Shop_Location`] = selectedLocation;
-                updates[`${window.myNode}/${shopKey}/Client_Location`] = selectedLocation;
-
-                await update(ref(db), updates);
-                
-                currentUser.Shop_Location = selectedLocation;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                document.getElementById('location-modal').style.display = 'none';
-                document.getElementById('hdr-shop-area').innerText = selectedLocation;
-                showToast("تم تثبيت منطقتك بنجاح للأبد");
-                
-                loadShopPrices();
-
-            } catch(e) {
-                alert("حدث خطأ يرجى المحاولة مرة أخرى");
-            } finally {
-                btn.innerText = originalText;
-                btn.style.opacity = 1;
-            }
-        }
-
         window.loadShopPrices = function() {
             pricingMatrix = {};
-            featureMatrix = {}; // تهيئة مصفوفة الميزات
+            featureMatrix = {}; 
             const datalist = document.getElementById('areas-list');
             datalist.innerHTML = '';
             
-            if (!currentUser.Shop_Location) return;
+            const myArea = currentUser.Client_PricingArea || currentUser.pricing_area || currentUser.Shop_Location;
+            if (!myArea) return;
 
-            const myPrices = dbPrices.filter(p => String(p.Price_Source).trim() === String(currentUser.Shop_Location).trim());
+            const myPrices = dbPrices.filter(p => String(p.Price_Source).trim() === String(myArea).trim());
             
             myPrices.forEach(p => {
                 const currentPrice = parseFloat(p.Price_Current || p.Price_Base || 0);
                 const areaName = String(p.Price_Area).trim();
                 
                 pricingMatrix[areaName] = currentPrice;
-                // تعديل سحري: فحص المتغير Price_Offer بدلاً من Price_Feature ليتوافق مع كود قائمة الأسعار
                 if(p.Price_Offer === 'true') {
                     featureMatrix[areaName] = '⭐';
                 }
@@ -771,13 +886,6 @@
             });
         }
 
-        window.checkSecretPin = function(val) {
-            if (val === '12345') {
-                document.getElementById('secret-pin').value = '';
-                showLocationModal();
-            }
-        }
-
         window.calculateFee = function() {
             const dest = String(document.getElementById('destination').value).trim();
             const nightBadge = document.getElementById('night-fee-badge');
@@ -786,7 +894,6 @@
             if (pricingMatrix[dest] !== undefined) {
                 let baseFee = pricingMatrix[dest];
                 const hour = new Date().getHours();
-                // تفعيل الحارس الليلي إذا كانت الساعة بين 11 مساءً و 6 صباحاً
                 const isNightTime = (hour >= 23 || hour < 6);
                 
                 if (isNightTime) {
@@ -796,7 +903,6 @@
                     nightBadge.style.display = 'none';
                 }
 
-                // إظهار شارة النجمة الذهبية إذا كانت المنطقة مميزة
                 if(featureMatrix[dest] === '⭐') {
                     starBadge.style.display = 'inline-block';
                 } else {
@@ -823,6 +929,8 @@
             
             const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone;
             const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name;
+            // الإخفاء الألماسي: الرابط الطويل يتم جلبه بصمت وإرساله في الخلفية للكابتن فقط
+            const hiddenLocationLink = currentUser.Shop_Location || currentUser.Client_Location || currentUser.pickup || "";
 
             const orderId = "SHOP_ORD_" + Date.now();
             const orderData = {
@@ -830,7 +938,8 @@
                 Shop_Type: "shop_order",
                 Shop_User: shopUserStr,
                 Shop_Name: shopNameStr,
-                Shop_Pickup: dest,
+                Shop_Pickup: dest, // منطقة التوصيل
+                Shop_Location_Link: hiddenLocationLink, // الرابط الجغرافي المخفي
                 Shop_Val: val,
                 Shop_Fee: fee,
                 Shop_Date: new Date().toISOString(),
@@ -939,7 +1048,6 @@
                 updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal;
                 updates[`${capNode}/${capKey}/balance`] = newCapBal;
                 
-                // استخدام العقدة الجذرية للمنشأة للتحديث المالي بدون تكرار
                 updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
                 updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
                 updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
@@ -966,59 +1074,29 @@
 
         window.updateShopProfile = async function() {
             const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
-            const newUser = document.getElementById('profile_user').value.trim();
             const newPass = document.getElementById('profile_pass').value;
 
-            if(!newUser || !newPass) { alert("يرجى تعبئة كافة الحقول للتحديث"); return; }
+            if(!newPass) { alert("يرجى إدخال كلمة المرور للتحديث"); return; }
             
             setLoading('btn-save-settings', true);
 
             try {
-                if(newUser !== oldUser) {
-                    const snap = await get(child(ref(db), `${window.myNode}/${newUser}`));
-                    if(snap.exists()) {
-                        alert("عذراً، اسم المستخدم هذا محجوز يرجى اختيار اسم آخر");
-                        setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
-                        return;
-                    }
-                    
-                    const oldSnap = await get(child(ref(db), `${window.myNode}/${oldUser}`));
-                    if(oldSnap.exists()) {
-                        const data = oldSnap.val();
-                        data.Shop_User = newUser; data.user = newUser; data.Client_User = newUser;
-                        data.Shop_Pass = newPass; data.pass = newPass; data.Client_Pass = newPass;
-                        
-                        const updates = {};
-                        updates[`${window.myNode}/${newUser}`] = data;
-                        updates[`${window.myNode}/${oldUser}`] = null;
-                        await update(ref(db), updates);
-                        
-                        currentUser = data;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        alert("تم تحديث البيانات بنجاح، سيتم إعادة تحميل الصفحة للاعتماد");
-                        window.location.reload();
-                    } else {
-                        alert("لم يتم العثور على بيانات الحساب القديمة");
-                        setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
-                    }
-                } else {
-                    const updates = {
-                        [`${window.myNode}/${oldUser}/Shop_Pass`]: newPass,
-                        [`${window.myNode}/${oldUser}/pass`]: newPass,
-                        [`${window.myNode}/${oldUser}/Client_Pass`]: newPass
-                    };
-                    await update(ref(db), updates);
-                    
-                    currentUser.Shop_Pass = newPass;
-                    currentUser.Client_Pass = newPass;
-                    currentUser.pass = newPass;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    
-                    alert("تم حفظ كلمة المرور الجديدة بنجاح");
-                    setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
-                }
+                const updates = {
+                    [`${window.myNode}/${oldUser}/Shop_Pass`]: newPass,
+                    [`${window.myNode}/${oldUser}/pass`]: newPass,
+                    [`${window.myNode}/${oldUser}/Client_Pass`]: newPass
+                };
+                await update(ref(db), updates);
+                
+                currentUser.Shop_Pass = newPass;
+                currentUser.Client_Pass = newPass;
+                currentUser.pass = newPass;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                alert("تم حفظ كلمة المرور الجديدة بنجاح");
             } catch(e) {
                 alert("حدث خطأ أثناء حفظ التعديلات");
+            } finally {
                 setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
             }
         }
@@ -1033,7 +1111,7 @@
         window.logout = function() {
             if(confirm("هل تريد مغادرة النظام؟")) {
                 localStorage.removeItem('currentUser');
-                window.location.replace('index.html'); 
+                window.location.reload(); 
             }
         }
 
