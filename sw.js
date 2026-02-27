@@ -1,6 +1,7 @@
 const CACHE_NAME = 'n-one-captain-v1';
 const urlsToCache = [
     './',
+    './captain.html',
     './manifest.json',
     './logo.jpg'
 ];
@@ -42,7 +43,7 @@ self.addEventListener('fetch', event => {
 
 self.addEventListener('push', event => {
     const options = {
-        body: event.data ? event.data.text() : 'طلب جديد بانتظارك 🔥',
+        body: event.data ? event.data.text() : 'طلب جديد بانتظارك من N One 🔥',
         icon: 'logo.jpg',
         badge: 'logo.jpg',
         vibrate: [200, 100, 200, 100, 200, 100, 200],
