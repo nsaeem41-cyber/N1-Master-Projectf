@@ -532,16 +532,19 @@
         };
 
         window.fetchPricingAreas = function() {
-            const pricesRef = ref(db, 'prices');
-            onValue(pricesRef, (snapshot) => {
+            const sourcesRef = ref(db, 'sources');
+            onValue(sourcesRef, (snapshot) => {
                 availablePricingAreas = [];
                 const currentUserRef = currentUser.Client_User || currentUser.user;
                 if (snapshot.exists()) {
                     const data = Object.values(snapshot.val());
                     const uniqueAreas = new Set();
                     data.forEach(r => {
-                        if (r.Client_Master === currentUserRef && r.Price_Area) {
-                            uniqueAreas.add(r.Price_Area);
+                        if (r.Client_Master === currentUserRef || r.company === currentUserRef) {
+                            const sourceName = r.name || r.source_name || r.Source_Name || r.source || r.Price_Area;
+                            if (sourceName) {
+                                uniqueAreas.add(sourceName);
+                            }
                         }
                     });
                     availablePricingAreas = Array.from(uniqueAreas).sort();
@@ -947,7 +950,7 @@
         };
 
         window.fetchData = function() {
-            fetchPricingAreas();
+            window.fetchPricingAreas();
             
             const shopsRef = ref(db, 'shops');
             onValue(shopsRef, (snapshot) => {
