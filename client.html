@@ -176,13 +176,22 @@
                     <label style="font-size:12px; font-weight:bold; color:#64748b;">رقم الهاتف</label>
                     <input type="tel" id="edit_shop_phone" placeholder="7xxxxxxxx" maxlength="9" style="direction:ltr; text-align:right;">
                 </div>
-                <div>
-                    <label style="font-size:12px; font-weight:bold; color:#64748b;">رابط الموقع</label>
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع (Google Maps)">
-                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:auto; display:flex; align-items:center; margin:0;" onclick="smartMapSearchEdit()">بحث 🗺️</button>
+                
+                <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
+                    <label style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:10px; display:block;">📍 بروتوكول التوجيه الجغرافي (مستقل عن منطقة التسعير)</label>
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <input type="text" id="edit_smart_search_input" placeholder="اسم المنشأة للبحث في خرائط جوجل (اختياري)">
+                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:42px; padding: 0 20px;" onclick="smartMapSearchEdit()">بحث ذكي 🔍</button>
+                    </div>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع الجغرافي النهائي" style="flex: 1; border-color:#cbd5e1;">
+                        <div style="display:flex; align-items:center; gap:8px; background:white; padding: 8px 15px; border-radius:10px; border:1px solid #e2e8f0; height:42px; box-sizing:border-box;">
+                            <div id="edit_green_light_status" style="width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition:0.3s;"></div>
+                            <span id="edit_green_light_text" style="font-size:12px; font-weight:900; color:#64748b; white-space:nowrap;">بانتظار التأكيد</span>
+                        </div>
                     </div>
                 </div>
+
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#64748b;">الرصيد المتاح</label>
                     <input type="number" id="edit_shop_balance" placeholder="الرصيد المتاح" step="0.5">
@@ -311,9 +320,19 @@
                         <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
                     </div>
 
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="shop_location_link" placeholder="رابط الموقع (Google Maps)">
-                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:auto; display:flex; align-items:center; margin:0;" onclick="smartMapSearch()">بحث 🗺️</button>
+                    <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:10px; display:block;">📍 بروتوكول التوجيه الجغرافي (مستقل عن منطقة التسعير)</label>
+                        <div style="display:flex; gap:10px; margin-bottom:15px;">
+                            <input type="text" id="smart_search_input" placeholder="اسم المنشأة للبحث في خرائط جوجل (اختياري)">
+                            <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:42px; padding: 0 20px;" onclick="smartMapSearch()">بحث ذكي 🔍</button>
+                        </div>
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            <input type="text" id="shop_location_link" placeholder="رابط الموقع الجغرافي النهائي (يستخدم لتوجيه الكابتن فقط)" style="flex: 1; border-color:#cbd5e1;">
+                            <div style="display:flex; align-items:center; gap:8px; background:white; padding: 8px 15px; border-radius:10px; border:1px solid #e2e8f0; height:42px; box-sizing:border-box;">
+                                <div id="green_light_status" style="width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition:0.3s;"></div>
+                                <span id="green_light_text" style="font-size:12px; font-weight:900; color:#64748b; white-space:nowrap;">بانتظار التأكيد</span>
+                            </div>
+                        </div>
                     </div>
 
                     <input type="number" id="shop_balance" placeholder="رصيد مبدئي للطلبات (اختياري)" step="0.5" style="border-color:var(--money);">
@@ -495,7 +514,9 @@
         };
 
         window.smartMapSearch = function() {
-            const shopName = document.getElementById('shop_name').value.trim();
+            let shopName = document.getElementById('smart_search_input').value.trim();
+            if (!shopName) shopName = document.getElementById('shop_name').value.trim();
+            
             if (!shopName) {
                 alert("يا روحي اكتبي اسم المنشأة أولا لحتى أقدر أبحث لك عن موقعها 🌸😊");
                 return;
@@ -506,15 +527,23 @@
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده 🌸😊")) {
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
                     document.getElementById('shop_location_link').value = mapLink;
+                    
+                    document.getElementById('green_light_status').style.background = 'var(--success)';
+                    document.getElementById('green_light_status').style.boxShadow = '0 0 10px var(--success)';
+                    document.getElementById('green_light_text').innerText = 'تم التأكيد ✅';
+                    document.getElementById('green_light_text').style.color = 'var(--success)';
+                    
                     alert("تم ربط الموقع وتأكيده بنجاح 🚀💎");
                 }
             }, 1200);
         };
 
         window.smartMapSearchEdit = function() {
-            const shopName = document.getElementById('edit_shop_name').value.trim();
+            let shopName = document.getElementById('edit_smart_search_input').value.trim();
+            if (!shopName) shopName = document.getElementById('edit_shop_name').value.trim();
+            
             if (!shopName) {
                 alert("يا روحي اكتبي اسم المنشأة أولا 🌸😊");
                 return;
@@ -525,8 +554,14 @@
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده 🌸😊")) {
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
                     document.getElementById('edit_shop_location_link').value = mapLink;
+                    
+                    document.getElementById('edit_green_light_status').style.background = 'var(--success)';
+                    document.getElementById('edit_green_light_status').style.boxShadow = '0 0 10px var(--success)';
+                    document.getElementById('edit_green_light_text').innerText = 'تم التأكيد ✅';
+                    document.getElementById('edit_green_light_text').style.color = 'var(--success)';
+                    
                     alert("تم تحديث رابط الموقع بنجاح 🚀💎");
                 }
             }, 1200);
@@ -1115,6 +1150,13 @@
                 document.getElementById('shop_phone').value = '';
                 document.getElementById('shop_location_link').value = '';
                 document.getElementById('shop_balance').value = '';
+                document.getElementById('smart_search_input').value = '';
+                
+                document.getElementById('green_light_status').style.background = '#cbd5e1';
+                document.getElementById('green_light_status').style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.1)';
+                document.getElementById('green_light_text').innerText = 'بانتظار التأكيد';
+                document.getElementById('green_light_text').style.color = '#64748b';
+
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء الاتصال بالنظام 🌸😊");
@@ -1260,6 +1302,19 @@
             document.getElementById('edit_shop_phone').value = shop.Client_Phone || shop.cap_phone || '';
             document.getElementById('edit_shop_location_link').value = shop.Client_Location || shop.pickup || '';
             document.getElementById('edit_shop_balance').value = shop.Client_Balance || shop.Shop_Balance || 0;
+            document.getElementById('edit_smart_search_input').value = '';
+            
+            if (shop.Client_Location || shop.pickup) {
+                document.getElementById('edit_green_light_status').style.background = 'var(--success)';
+                document.getElementById('edit_green_light_status').style.boxShadow = '0 0 10px var(--success)';
+                document.getElementById('edit_green_light_text').innerText = 'مؤكد مسبقا ✅';
+                document.getElementById('edit_green_light_text').style.color = 'var(--success)';
+            } else {
+                document.getElementById('edit_green_light_status').style.background = '#cbd5e1';
+                document.getElementById('edit_green_light_status').style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.1)';
+                document.getElementById('edit_green_light_text').innerText = 'بانتظار التأكيد';
+                document.getElementById('edit_green_light_text').style.color = '#64748b';
+            }
             
             const commVal = Number(shop.Client_Comm || shop.company_share || 0);
             if (commVal > 0) {
