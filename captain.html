@@ -321,6 +321,7 @@
     <div class="app-container">
         
         <div id="loader">
+            <img id="loader-logo" src="https://cdn-icons-png.flaticon.com/512/3081/3081559.png" style="width:80px; height:80px; margin-bottom:20px; border-radius:20px; object-fit:contain; box-shadow:0 0 20px rgba(212,175,55,0.4); background:white; padding:5px;">
             <div class="spinner"></div>
             <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;" id="loader_dynamic_name">بوابة الكباتن</div>
             <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;" id="lang_loader">جاري الاتصال بالنظام...</div>
@@ -360,6 +361,7 @@
                         <label id="lang_set_pass">كلمة المرور</label>
                         <input type="password" id="set_pass">
                     </div>
+                    <button class="btn-save-settings" style="background: var(--info); margin-top: 10px; color: white; box-shadow: 0 4px 10px rgba(14,165,233,0.3);" onclick="testNotification()" id="lang_test_notif">🔔 تجربة التنبيهات والرنة</button>
                     <button class="lang-toggle" onclick="toggleLanguage()" id="lang_toggle_btn">🌐 Switch to English</button>
                     <button class="btn-save-settings" onclick="saveSettings()" id="lang_save_btn">حفظ التعديلات ✅</button>
                 </div>
@@ -445,9 +447,12 @@
 
         <div id="main-screen" class="screen">
             <div class="app-header">
-                <div class="header-brand">
-                    <div style="font-size: 16px;" id="lang_header_cap">كابتن 🦸‍♂️</div>
-                    <div id="ui_company_name" class="header-company">الشركة الأم</div>
+                <div class="header-brand" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3081/3081559.png" style="width: 40px; height: 40px; border-radius: 10px; object-fit: contain; background: white; padding: 2px;" id="header-logo" alt="N One">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="font-size: 16px;" id="lang_header_cap">كابتن 🦸‍♂️</div>
+                        <div id="ui_company_name" class="header-company">الشركة الأم</div>
+                    </div>
                 </div>
                 <div class="header-actions">
                     <button class="btn-action-top" onclick="openSettingsModal()" id="lang_btn_set">⚙️</button>
@@ -523,6 +528,23 @@
     </div>
 
     <script>
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active');
+                }
+            } catch (err) {
+                console.log('Wake Lock error:', err);
+            }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(registration => {
@@ -569,6 +591,7 @@
                 lang_settings_title: 'الإعدادات ⚙️',
                 lang_set_user: 'اسم المستخدم (يوزر الدخول)',
                 lang_set_pass: 'كلمة المرور',
+                lang_test_notif: '🔔 تجربة التنبيهات والرنة',
                 lang_toggle_btn: '🌐 Switch to English',
                 lang_save_btn: 'حفظ التعديلات ✅',
                 lang_blocked_title: 'تم إيقاف حسابك',
@@ -615,6 +638,7 @@
                 lang_settings_title: 'Settings ⚙️',
                 lang_set_user: 'Username',
                 lang_set_pass: 'Password',
+                lang_test_notif: '🔔 Test Notifications',
                 lang_toggle_btn: '🌐 التبديل للعربية',
                 lang_save_btn: 'Save Changes ✅',
                 lang_blocked_title: 'Account Blocked',
@@ -671,6 +695,9 @@
         };
 
         window.onload = function() {
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
                 checkSession();
@@ -682,6 +709,30 @@
                     audio.play().catch(e => console.log(e));
                 }
             }, { once: true });
+        };
+
+        window.testNotification = function() {
+            const audio = document.getElementById('order-ringtone');
+            audio.play().catch(e => console.log(e));
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }, 3000);
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(currentLang === 'ar' ? 'N One - طلب تجريبي 🔥' : 'N One - Test Order 🔥', {
+                    body: currentLang === 'ar' ? 'هذا إشعار تجريبي لاختبار التنبيهات في الخلفية' : 'This is a test notification for background alerts',
+                    icon: 'https://cdn-icons-png.flaticon.com/512/3081/3081559.png'
+                });
+            } else if ('Notification' in window && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification('N One', { body: currentLang === 'ar' ? 'تم تفعيل التنبيهات بنجاح 💎' : 'Notifications enabled successfully 💎' });
+                    }
+                });
+            } else {
+                alert(currentLang === 'ar' ? "يرجى تفعيل التنبيهات من إعدادات المتصفح" : "Please enable notifications in browser settings");
+            }
         };
 
         function checkSession() {
@@ -701,6 +752,7 @@
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('register-screen').classList.remove('active');
                 document.getElementById('main-screen').classList.add('active');
+                requestWakeLock();
                 initRealtimeListeners();
                 setupAdsAndAlerts();
             } else {
@@ -745,6 +797,7 @@
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('main-screen').classList.add('active');
                     
+                    requestWakeLock();
                     initRealtimeListeners();
                     setupAdsAndAlerts();
                 } else {
@@ -811,7 +864,7 @@
                     
                     areaSelect.disabled = false;
                     areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة...' : 'Select Area...'}</option>`;
-                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => p.Price_Area))].filter(Boolean);
+                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => (p.Price_Area || '').trim()))].filter(Boolean);
                     
                     if (areas.length > 0) {
                         areas.forEach(a => {
