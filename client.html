@@ -532,22 +532,22 @@
         };
 
         window.fetchPricingAreas = function() {
-            const sourcesRef = ref(db, 'sources');
-            onValue(sourcesRef, (snapshot) => {
+            const pricesRef = ref(db, 'prices');
+            onValue(pricesRef, (snapshot) => {
                 availablePricingAreas = [];
                 const currentUserRef = currentUser.Client_User || currentUser.user;
                 if (snapshot.exists()) {
                     const data = Object.values(snapshot.val());
-                    const uniqueAreas = new Set();
+                    const uniqueSources = new Set();
                     data.forEach(r => {
                         if (r.Client_Master === currentUserRef || r.company === currentUserRef) {
-                            const sourceName = r.name || r.source_name || r.Source_Name || r.source || r.Price_Area;
+                            const sourceName = r.Price_Source;
                             if (sourceName) {
-                                uniqueAreas.add(sourceName);
+                                uniqueSources.add(sourceName);
                             }
                         }
                     });
-                    availablePricingAreas = Array.from(uniqueAreas).sort();
+                    availablePricingAreas = Array.from(uniqueSources).sort();
                 }
                 populatePricingDropdowns();
             });
