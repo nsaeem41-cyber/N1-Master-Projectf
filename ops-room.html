@@ -880,10 +880,8 @@
                     `;
                 }
 
-                let cleanShopName = ord.Shop_Name;
-                if(cleanShopName) {
-                    cleanShopName = cleanShopName.replace(/(https?:\/\/[^\s]+)/g, '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>');
-                }
+                let cleanShopName = ord.Shop_Name || '';
+                cleanShopName = cleanShopName.replace(/(https?:\/\/[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]+)/ig, '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>');
 
                 tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ord.Shop_Ord_ID}">
@@ -1014,12 +1012,7 @@
             const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
             const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || '') : '';
 
-            let cleanShopName = ord.Shop_Name;
-            if(cleanShopName) {
-                cleanShopName = cleanShopName.replace(/(https?:\/\/[^\s]+)/g, '').trim();
-            }
-
-            document.getElementById('man_rest_name').value = cleanShopName + (area ? " - " + area : "");
+            document.getElementById('man_rest_name').value = (ord.Shop_Name || '') + (area ? " - " + area : "");
             document.getElementById('man_val').value = ord.Shop_Val;
             document.getElementById('man_fee').value = ord.Shop_Fee;
             document.getElementById('linked_order_id').value = orderId;
@@ -1261,11 +1254,14 @@
             tbody.innerHTML = '';
             todayOrders.forEach(o => {
                 const methodIcon = o.via === 'App' ? '📱' : (o.via === 'Auto' ? '🤖' : '💬');
+                let cleanRestName = o.rest || '';
+                cleanRestName = cleanRestName.replace(/(https?:\/\/[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]+)/ig, '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>');
+
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-size:11px; color:#64748b;">${o.time}</td>
                         <td style="font-weight:800;">${o.cap}</td>
-                        <td>${o.rest}</td>
+                        <td style="line-height:1.5;">${cleanRestName}</td>
                         <td><span class="badge bg-money" style="background:#f0fdf4;">${o.comm}</span></td>
                         <td><span class="badge" style="background:#dcfce7; color:#166534;">مكتمل ${methodIcon}</span></td>
                         <td><button class="mini-circle-btn" onclick="deleteFromArchive('${o.orderId}')">🗑️</button></td>
