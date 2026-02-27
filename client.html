@@ -177,6 +177,13 @@
                     <input type="tel" id="edit_shop_phone" placeholder="7xxxxxxxx" maxlength="9" style="direction:ltr; text-align:right;">
                 </div>
                 
+                <div style="grid-column: 1 / -1; background: #fefce8; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; margin-bottom: 5px;">
+                    <label style="font-size:13px; font-weight:900; color:#b45309; margin-bottom:10px; display:block;">📋 منطقة التسعير المعتمدة (للحسابات المالية)</label>
+                    <select id="edit_shop_pricing_area" style="border-color:#fcd34d; background:white; cursor:pointer;">
+                        <option value="">جاري سحب المناطق من مصفوفة الأسعار...</option>
+                    </select>
+                </div>
+
                 <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
                     <label style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:10px; display:block;">📍 بروتوكول التوجيه الجغرافي (مستقل عن منطقة التسعير)</label>
                     <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -196,10 +203,12 @@
                     <label style="font-size:12px; font-weight:bold; color:#64748b;">الرصيد المتاح</label>
                     <input type="number" id="edit_shop_balance" placeholder="الرصيد المتاح" step="0.5">
                 </div>
+                
                 <div>
                     <label style="font-size:12px; font-weight:bold; color:#64748b;">نوع الاشتراك</label>
                     <select id="edit_sub_type" onchange="toggleEditCommissionField()">
                         <option value="free">اشتراك مجاني (بدون عمولة)</option>
+                        <option value="commission">اشتراك بعمولة (نسبة على الطلب)</option>
                         <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
                     </select>
                 </div>
@@ -320,6 +329,13 @@
                         <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
                     </div>
 
+                    <div style="grid-column: 1 / -1; background: #fefce8; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; margin-bottom: 5px;">
+                        <label style="font-size:13px; font-weight:900; color:#b45309; margin-bottom:10px; display:block;">📋 منطقة التسعير المعتمدة (للحسابات المالية)</label>
+                        <select id="shop_pricing_area" style="border-color:#fcd34d; background:white; cursor:pointer;">
+                            <option value="">جاري سحب المناطق من مصفوفة الأسعار...</option>
+                        </select>
+                    </div>
+
                     <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
                         <label style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:10px; display:block;">📍 بروتوكول التوجيه الجغرافي (مستقل عن منطقة التسعير)</label>
                         <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -339,6 +355,7 @@
 
                     <select id="sub_type" onchange="toggleCommissionField()">
                         <option value="free">اشتراك مجاني (بدون عمولة)</option>
+                        <option value="commission">اشتراك بعمولة (نسبة على الطلب)</option>
                         <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
                     </select>
 
@@ -348,7 +365,7 @@
                     </div>
 
                     <select id="sub_duration">
-                        <option value="30">30 يوم</option>
+                        <option value="30">شهر (30 يوم)</option>
                         <option value="90">3 أشهر</option>
                         <option value="180">6 أشهر</option>
                         <option value="365">سنة كاملة</option>
@@ -375,7 +392,7 @@
                             <tr>
                                 <th>اسم المنشأة التجارية أو المطعم</th>
                                 <th>بيانات الدخول</th>
-                                <th>الهاتف / الموقع</th>
+                                <th>الهاتف / الموقع / منطقة التسعير</th>
                                 <th>النوع / العمولة</th>
                                 <th>الرصيد المتاح</th>
                                 <th>الصلاحية</th>
@@ -486,6 +503,7 @@
         let allCaptains = [];
         let allCustomers = [];
         let currentShopFilter = 'active'; 
+        let availablePricingAreas = [];
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
@@ -511,6 +529,47 @@
             setupSmartAdsListener();
             setupAlertsListener(); 
             fetchData();
+        };
+
+        window.fetchPricingAreas = function() {
+            const pricesRef = ref(db, 'prices');
+            onValue(pricesRef, (snapshot) => {
+                availablePricingAreas = [];
+                const currentUserRef = currentUser.Client_User || currentUser.user;
+                if (snapshot.exists()) {
+                    const data = Object.values(snapshot.val());
+                    const uniqueAreas = new Set();
+                    data.forEach(r => {
+                        if (r.Client_Master === currentUserRef && r.Price_Area) {
+                            uniqueAreas.add(r.Price_Area);
+                        }
+                    });
+                    availablePricingAreas = Array.from(uniqueAreas).sort();
+                }
+                populatePricingDropdowns();
+            });
+        };
+
+        window.populatePricingDropdowns = function() {
+            const addSelect = document.getElementById('shop_pricing_area');
+            const editSelect = document.getElementById('edit_shop_pricing_area');
+            
+            let optionsHtml = '<option value="">-- يرجى اختيار منطقة التسعير --</option>';
+            availablePricingAreas.forEach(area => {
+                optionsHtml += `<option value="${area}">${area}</option>`;
+            });
+            
+            if(addSelect) {
+                const addVal = addSelect.value;
+                addSelect.innerHTML = optionsHtml;
+                if(addVal && availablePricingAreas.includes(addVal)) addSelect.value = addVal;
+            }
+            
+            if(editSelect) {
+                const editVal = editSelect.value;
+                editSelect.innerHTML = optionsHtml;
+                if(editVal && availablePricingAreas.includes(editVal)) editSelect.value = editVal;
+            }
         };
 
         window.smartMapSearch = function() {
@@ -888,6 +947,8 @@
         };
 
         window.fetchData = function() {
+            fetchPricingAreas();
+            
             const shopsRef = ref(db, 'shops');
             onValue(shopsRef, (snapshot) => {
                 allData = snapshot.exists() ? Object.values(snapshot.val()) : [];
@@ -1053,14 +1114,14 @@
         window.toggleCommissionField = function() {
             const type = document.getElementById('sub_type').value;
             const field = document.getElementById('commission-field');
-            if (type === 'paid') field.style.display = 'block';
+            if (type === 'paid' || type === 'commission') field.style.display = 'block';
             else field.style.display = 'none';
         };
 
         window.toggleEditCommissionField = function() {
             const type = document.getElementById('edit_sub_type').value;
             const field = document.getElementById('edit-commission-field');
-            if (type === 'paid') field.style.display = 'block';
+            if (type === 'paid' || type === 'commission') field.style.display = 'block';
             else field.style.display = 'none';
         };
 
@@ -1089,19 +1150,21 @@
             const name = document.getElementById('shop_name').value.trim();
             const user = document.getElementById('shop_user').value.trim();
             const pass = document.getElementById('shop_pass').value;
-            const subType = document.getElementById('sub_type').value;
             const phone = document.getElementById('shop_phone').value.trim(); 
+            const pricingArea = document.getElementById('shop_pricing_area').value;
             const locLink = document.getElementById('shop_location_link').value.trim();
-            const days = document.getElementById('sub_duration').value;
             const balance = document.getElementById('shop_balance').value || "0";
+            const subType = document.getElementById('sub_type').value;
+            const days = document.getElementById('sub_duration').value;
             
             let commission = "0";
-            if (subType === 'paid') {
+            if (subType === 'paid' || subType === 'commission') {
                 commission = document.getElementById('fixed_commission').value;
-                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 🌸😊"); return; }
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المختار 🌸😊"); return; }
             }
 
             if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية 🌸😊"); return; }
+            if (!pricingArea) { alert("يرجى تحديد منطقة التسعير المعتمدة من القائمة 🌸😊"); return; }
 
             const checkShop = await get(child(ref(db), `shops/${user}`));
             const checkUser = await get(child(ref(db), `users/${user}`));
@@ -1125,6 +1188,8 @@
                 Client_Master: currentUser.Client_User || currentUser.user, 
                 Client_Status: "active",
                 Client_Phone: phone, 
+                Client_PricingArea: pricingArea,
+                pricing_area: pricingArea,
                 Client_Location: locLink,  
                 Client_Comm: commission, 
                 Client_Expiry: expDate.toISOString().split('T')[0], 
@@ -1148,6 +1213,7 @@
                 document.getElementById('shop_user').value = '';
                 document.getElementById('shop_pass').value = '';
                 document.getElementById('shop_phone').value = '';
+                document.getElementById('shop_pricing_area').value = '';
                 document.getElementById('shop_location_link').value = '';
                 document.getElementById('shop_balance').value = '';
                 document.getElementById('smart_search_input').value = '';
@@ -1234,7 +1300,8 @@
                     daysLeft = d > 0 ? d + " يوم" : "منتهي";
                 }
                 
-                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 الموقع</a>` : '';
+                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 الموقع الجغرافي</a>` : '';
+                let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:10px; background:#fefce8; color:#b45309; padding:2px 6px; border-radius:4px; border:1px solid #fde68a; display:inline-block; margin-top:4px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
 
                 const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
                 const shopPassDisplay = shop.Client_Pass || shop.pass || 'غير متوفرة';
@@ -1243,7 +1310,7 @@
                     <tr>
                         <td><b style="color:var(--primary);">${shop.Client_Name || shop.name}</b></td>
                         <td style="font-size:12px; direction:ltr; text-align:right; color:#475569;">User: <b>${shop.Client_User || shop.user}</b><br>Pass: <b>${shopPassDisplay}</b></td>
-                        <td style="font-size:12px; direction:ltr; text-align:right; font-family:monospace; font-weight:bold;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
+                        <td style="font-size:12px; direction:ltr; text-align:right; font-family:monospace; font-weight:bold;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}${pricingBadge}</td>
                         <td>${subBadge}</td>
                         <td style="font-weight:900; color:var(--money); font-size:14px;">${currentBalance} د.أ</td>
                         <td style="font-size:12px; font-weight:bold; color:#64748b;">${daysLeft}</td>
@@ -1300,6 +1367,7 @@
             document.getElementById('edit_shop_user').value = shop.Client_User || shop.user || '';
             document.getElementById('edit_shop_pass').value = shop.Client_Pass || shop.pass || '';
             document.getElementById('edit_shop_phone').value = shop.Client_Phone || shop.cap_phone || '';
+            document.getElementById('edit_shop_pricing_area').value = shop.Client_PricingArea || shop.pricing_area || '';
             document.getElementById('edit_shop_location_link').value = shop.Client_Location || shop.pickup || '';
             document.getElementById('edit_shop_balance').value = shop.Client_Balance || shop.Shop_Balance || 0;
             document.getElementById('edit_smart_search_input').value = '';
@@ -1343,19 +1411,25 @@
             const newUser = document.getElementById('edit_shop_user').value.trim();
             const newPass = document.getElementById('edit_shop_pass').value;
             const newPhone = document.getElementById('edit_shop_phone').value.trim();
+            const newPricingArea = document.getElementById('edit_shop_pricing_area').value;
             const newLoc = document.getElementById('edit_shop_location_link').value.trim();
             const newBal = document.getElementById('edit_shop_balance').value;
             const subType = document.getElementById('edit_sub_type').value;
             
             let commission = "0";
-            if (subType === 'paid') {
+            if (subType === 'paid' || subType === 'commission') {
                 commission = document.getElementById('edit_fixed_commission').value;
-                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المدفوع 🌸😊"); return; }
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المختار 🌸😊"); return; }
             }
 
             if (!newName || !newUser || !newPass || !newPhone) { 
                 alert("يرجى تعبئة الحقول الأساسية 🌸😊"); 
                 return; 
+            }
+            
+            if (!newPricingArea) {
+                alert("يرجى تحديد منطقة التسعير المعتمدة 🌸😊");
+                return;
             }
 
             document.getElementById('loader-overlay').style.display = 'flex';
@@ -1377,6 +1451,7 @@
                         Client_User: newUser, user: newUser,
                         Client_Pass: newPass, pass: newPass,
                         Client_Phone: newPhone, cap_phone: newPhone,
+                        Client_PricingArea: newPricingArea, pricing_area: newPricingArea,
                         Client_Location: newLoc, pickup: newLoc,
                         Client_Balance: newBal, Shop_Balance: newBal,
                         Client_Comm: commission, company_share: commission
@@ -1394,6 +1469,8 @@
                         [`shops/${originalUser}/pass`]: newPass,
                         [`shops/${originalUser}/Client_Phone`]: newPhone,
                         [`shops/${originalUser}/cap_phone`]: newPhone,
+                        [`shops/${originalUser}/Client_PricingArea`]: newPricingArea,
+                        [`shops/${originalUser}/pricing_area`]: newPricingArea,
                         [`shops/${originalUser}/Client_Location`]: newLoc,
                         [`shops/${originalUser}/pickup`]: newLoc,
                         [`shops/${originalUser}/Client_Balance`]: newBal,
