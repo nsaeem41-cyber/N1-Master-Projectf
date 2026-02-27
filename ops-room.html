@@ -464,6 +464,7 @@
                     </div>
                     
                     <input type="hidden" id="linked_order_id" value="">
+                    <input type="hidden" id="man_hidden_url" value="">
                     
                     <button class="btn-royal btn-app" onclick="sendOrderViaApp()">
                         <span>إرسال عبر التطبيق</span> 📱
@@ -511,6 +512,10 @@
                 <div class="form-group">
                     <label>الرقم السري</label>
                     <input type="text" id="edit_cap_pass">
+                </div>
+                <div class="form-group full-width">
+                    <label>معرف الشركة (ID)</label>
+                    <input type="text" id="edit_cap_company">
                 </div>
             </div>
             <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
@@ -1017,14 +1022,19 @@
             const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
             const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || '') : '';
 
-            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
-            let cleanShopName = ord.Shop_Name || '';
-            cleanShopName = cleanShopName.replace(urlRegex, '').trim();
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
+            let fullShopName = ord.Shop_Name || '';
+            
+            let extractedUrls = fullShopName.match(urlRegex);
+            let hiddenUrlStr = extractedUrls ? extractedUrls.join(' ') : '';
+            
+            let cleanShopName = fullShopName.replace(urlRegex, '').trim();
 
             document.getElementById('man_rest_name').value = cleanShopName + (area ? " - " + area : "");
             document.getElementById('man_val').value = ord.Shop_Val;
             document.getElementById('man_fee').value = ord.Shop_Fee;
             document.getElementById('linked_order_id').value = orderId;
+            document.getElementById('man_hidden_url').value = hiddenUrlStr;
             
             document.querySelector('.side-content').scrollTop = 0;
         };
@@ -1085,6 +1095,7 @@
             const phone = document.getElementById('man_phone').value.trim();
             const capName = document.getElementById('man_cap_name').value.trim();
             const restInfo = document.getElementById('man_rest_name').value.trim();
+            const hiddenUrl = document.getElementById('man_hidden_url').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
@@ -1130,9 +1141,14 @@
             const updates = {};
             const appOrderId = "APP_ORD_" + Date.now();
             
+            let finalRestInfo = restInfo;
+            if(hiddenUrl) {
+                finalRestInfo += " - " + hiddenUrl;
+            }
+            
             const orderData = {
                 id: appOrderId,
-                restaurant: restInfo,
+                restaurant: finalRestInfo,
                 value: val,
                 fee: fee,
                 status: 'assigned',
@@ -1150,6 +1166,7 @@
                 showAppNotification("تم الإرسال للتطبيق بنجاح");
                 
                 document.getElementById('man_rest_name').value = '';
+                document.getElementById('man_hidden_url').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
                 document.getElementById('linked_order_id').value = '';
@@ -1163,6 +1180,7 @@
             const phone = document.getElementById('man_phone').value.trim();
             const capName = document.getElementById('man_cap_name').value.trim();
             const restInfo = document.getElementById('man_rest_name').value.trim();
+            const hiddenUrl = document.getElementById('man_hidden_url').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
@@ -1210,11 +1228,16 @@
                 await update(ref(db), updates);
             }
 
+            let finalRestInfo = restInfo;
+            if(hiddenUrl) {
+                finalRestInfo += " - " + hiddenUrl;
+            }
+
             const entry = {
                 orderId: linkedId || "MANUAL_" + Date.now(),
                 time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
                 cap: capName || "كابتن",
-                rest: restInfo,
+                rest: finalRestInfo,
                 comm: commission,
                 date: new Date().toISOString(),
                 via: "WhatsApp"
@@ -1225,9 +1248,11 @@
             let waPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
             if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
             
+            let urlText = hiddenUrl ? `📍 الموقع: ${hiddenUrl}%0a` : '';
             const msg = `*${currentUser.Client_Name || 'إمبراطورية N One'} | أوردر جديد* 🚀%0a` +
                         `-----------------------------%0a` +
                         `🏪 المنشأة: *${restInfo}*%0a` +
+                        urlText +
                         `🛵 التوصيل: *${fee} د.أ*%0a` +
                         `💰 القيمة: *${val} د.أ*%0a` +
                         `-----------------------------%0a` +
@@ -1236,6 +1261,7 @@
             window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank');
 
             document.getElementById('man_rest_name').value = '';
+            document.getElementById('man_hidden_url').value = '';
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
             document.getElementById('linked_order_id').value = '';
@@ -1580,6 +1606,7 @@
                 document.getElementById('edit_cap_region').value = cap.Cap_Region || cap.Cap_Location || '';
                 document.getElementById('edit_cap_user').value = userKey;
                 document.getElementById('edit_cap_pass').value = cap.Cap_Pass || cap.password || cap.pass || '';
+                document.getElementById('edit_cap_company').value = cap.Company_ID || cap.company || cap.Client_Master || '';
                 
                 document.getElementById('edit-captain-modal').style.display = 'flex';
             }
@@ -1596,6 +1623,7 @@
             const car = document.getElementById('edit_cap_car').value.trim();
             const region = document.getElementById('edit_cap_region').value;
             const pass = document.getElementById('edit_cap_pass').value.trim();
+            const company = document.getElementById('edit_cap_company').value.trim();
 
             if(!name || !phone || !pass) {
                 showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error");
@@ -1619,6 +1647,12 @@
                 updates[`${nodeFound}/${userKey}/Cap_Pass`] = pass;
                 updates[`${nodeFound}/${userKey}/pass`] = pass;
                 updates[`${nodeFound}/${userKey}/password`] = pass;
+                
+                if (company) {
+                    updates[`${nodeFound}/${userKey}/company`] = company;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = company;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = company;
+                }
 
                 await update(ref(db), updates);
                 showAppNotification("تم تحديث بيانات السجل بنجاح");
