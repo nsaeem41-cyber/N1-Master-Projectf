@@ -191,9 +191,31 @@
         }
         .balance-card::after { content: '💎'; position: absolute; right: -10px; bottom: -10px; font-size: 80px; opacity: 0.1; }
 
+        /* ================= إشعارات النظام الموحدة ================= */
+        #n-one-toast {
+            position: fixed; top: -150px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
+            color: white; padding: 15px 25px; border-radius: 12px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10000; transition: top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            width: 90%; max-width: 400px; box-sizing: border-box; direction: rtl;
+        }
+        #n-one-toast.show { top: 20px; }
+        .toast-content { display: flex; flex-direction: column; text-align: right; width: 100%; }
+        .toast-title { font-size: 13px; font-weight: 900; color: #94a3b8; margin-bottom: 4px; }
+        .toast-message { font-size: 15px; font-weight: bold; line-height: 1.4; }
+
     </style>
 </head>
 <body onclick="enableSound()">
+
+    <div id="n-one-toast">
+        <div class="toast-content">
+            <div class="toast-title">إشعار إداري</div>
+            <div id="toast-msg" class="toast-message">رسالة النظام...</div>
+        </div>
+    </div>
 
     <audio id="notif-sound" preload="auto" loop>
         <source src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" type="audio/mpeg">
@@ -528,6 +550,24 @@
         
         let currentCaptainsFilter = 'active'; 
 
+        // دالة الإشعارات الإدارية المنبثقة
+        window.showAppNotification = function(msg, type = 'success') {
+            const toast = document.getElementById('n-one-toast');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.innerText = msg;
+            
+            if(type === 'error') {
+                toast.style.borderLeft = '4px solid #ef4444';
+            } else if(type === 'warning') {
+                toast.style.borderLeft = '4px solid #f59e0b';
+            } else {
+                toast.style.borderLeft = '4px solid #10b981';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        };
+
         function getActiveMasterId() {
             return persistentCompanyId || (currentUser ? (currentUser.Client_User || currentUser.user) : '');
         }
@@ -554,8 +594,8 @@
                 }
                 
             } else {
-                alert("يرجى إتمام تسجيل الدخول للمتابعة");
-                window.history.back();
+                showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
+                setTimeout(() => { window.history.back(); }, 1500);
                 return;
             }
             
@@ -716,16 +756,20 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("عذراً تم إيقاف النظام يرجى مراجعة الإدارة");
+                        showAppNotification("عذراً تم إيقاف النظام يرجى مراجعة الإدارة", "error");
+                        setTimeout(() => {
+                            localStorage.removeItem('current_company_user');
+                            localStorage.removeItem('currentUser');
+                            window.location.replace('index.html');
+                        }, 2000);
+                    }
+                } else {
+                    showAppNotification("تم حذف الحساب سيتم تسجيل الخروج", "error");
+                    setTimeout(() => {
                         localStorage.removeItem('current_company_user');
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
-                    }
-                } else {
-                    alert("تم حذف الحساب سيتم تسجيل الخروج");
-                    localStorage.removeItem('current_company_user');
-                    localStorage.removeItem('currentUser');
-                    window.location.replace('index.html');
+                    }, 2000);
                 }
             });
         }
@@ -836,13 +880,18 @@
                     `;
                 }
 
+                let cleanShopName = ord.Shop_Name;
+                if(cleanShopName) {
+                    cleanShopName = cleanShopName.replace(/(https?:\/\/[^\s]+)/g, '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>');
+                }
+
                 tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ord.Shop_Ord_ID}">
                         <td>
                             <div style="font-size:13px; font-weight:800;">${timeStr}</div>
                             <div style="font-size:10px; color:#94a3b8;">${dateStr}</div>
                         </td>
-                        <td style="font-weight:900; color:var(--primary);">${ord.Shop_Name}</td>
+                        <td style="font-weight:900; color:var(--primary); line-height:1.5;">${cleanShopName}</td>
                         <td><span class="area-badge">${area}</span></td>
                         <td><span class="badge bg-phone">${phone}</span></td>
                         <td>
@@ -880,7 +929,7 @@
             const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
 
             if(trulyPendingOrders.length === 0) {
-                if(!silent) alert("لا توجد طلبات جديدة للتوزيع");
+                if(!silent) showAppNotification("لا توجد طلبات جديدة للتوزيع", "warning");
                 return;
             }
 
@@ -903,7 +952,7 @@
             });
 
             if (availableCaptains.length === 0) {
-                if(!silent) alert("عذراً لا يوجد كابتن متاح حالياً");
+                if(!silent) showAppNotification("عذراً لا يوجد كابتن متاح حالياً", "warning");
                 return;
             }
 
@@ -949,12 +998,12 @@
             if(dispatchedCount > 0) {
                 try {
                     await update(ref(db), updates);
-                    if(!silent) alert(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
+                    if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
                 } catch(e) {
-                    if(!silent) alert("حدث خطأ أثناء التوزيع التلقائي");
+                    if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
                 }
             } else {
-                if(!silent) alert("لم يتم توزيع أي طلب");
+                if(!silent) showAppNotification("لم يتم توزيع أي طلب", "warning");
             }
         };
 
@@ -965,7 +1014,12 @@
             const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
             const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || '') : '';
 
-            document.getElementById('man_rest_name').value = ord.Shop_Name + (area ? " - " + area : "");
+            let cleanShopName = ord.Shop_Name;
+            if(cleanShopName) {
+                cleanShopName = cleanShopName.replace(/(https?:\/\/[^\s]+)/g, '').trim();
+            }
+
+            document.getElementById('man_rest_name').value = cleanShopName + (area ? " - " + area : "");
             document.getElementById('man_val').value = ord.Shop_Val;
             document.getElementById('man_fee').value = ord.Shop_Fee;
             document.getElementById('linked_order_id').value = orderId;
@@ -1035,23 +1089,23 @@
             const linkedId = document.getElementById('linked_order_id').value;
 
             if (!phone || !restInfo || !fee) { 
-                alert("يرجى إكمال البيانات"); 
+                showAppNotification("يرجى إكمال البيانات", "warning"); 
                 return; 
             }
             
             if (!currentTargetCaptain) {
-                alert("الكابتن غير موجود بالنظام");
+                showAppNotification("الكابتن غير موجود بالنظام", "error");
                 return;
             }
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
             if (capStatus === 'paused' || capStatus === 'off') {
-                alert("حساب الكابتن مجمد");
+                showAppNotification("حساب الكابتن مجمد", "error");
                 return;
             }
 
             if (currentTargetCaptain.app_status === 'offline') {
-                alert("الكابتن أوفلاين");
+                showAppNotification("الكابتن أوفلاين", "error");
                 return;
             }
 
@@ -1091,7 +1145,7 @@
             
             try {
                 await update(ref(db), updates);
-                alert("تم الإرسال للتطبيق 🚀");
+                showAppNotification("تم الإرسال للتطبيق بنجاح");
                 
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_val').value = '';
@@ -1099,7 +1153,7 @@
                 document.getElementById('linked_order_id').value = '';
 
             } catch (error) {
-                alert("خطأ في الإرسال");
+                showAppNotification("خطأ في الإرسال", "error");
             }
         };
 
@@ -1113,7 +1167,7 @@
             const linkedId = document.getElementById('linked_order_id').value;
 
             if (!phone || !restInfo || !fee) { 
-                alert("يرجى إكمال البيانات"); 
+                showAppNotification("يرجى إكمال البيانات", "warning"); 
                 return; 
             }
 
@@ -1126,7 +1180,7 @@
 
             if (currentTargetCaptain) {
                 if (currentTargetCaptain.app_status === 'offline') {
-                    alert("الكابتن أوفلاين");
+                    showAppNotification("الكابتن أوفلاين", "error");
                     return;
                 }
 
@@ -1262,7 +1316,7 @@
                 
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
-                    alert("تم تنظيف الرادار");
+                    showAppNotification("تم تنظيف الرادار");
                 }
             }
         };
@@ -1286,13 +1340,13 @@
             const companyId = getActiveMasterId();
 
             if(!name || !phone || !user || !pass || !region || !companyId) { 
-                alert("يرجى إكمال جميع البيانات الأساسية"); 
+                showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); 
                 return; 
             }
             
             const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             if(exists) {
-                alert("هذا الكابتن مسجل مسبقاً");
+                showAppNotification("هذا الكابتن مسجل مسبقاً", "error");
                 return;
             }
 
@@ -1316,7 +1370,7 @@
             };
             
             await set(ref(db, 'captains/' + user), capData);
-            alert("تم التوثيق بنجاح ✅");
+            showAppNotification("تم التوثيق بنجاح");
             
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
@@ -1353,9 +1407,9 @@
         };
 
         window.chargeCaptainBalance = async function() {
-            if (!activeSmartCaptain) { alert("أدخل رقم الكابتن أولاً"); return; }
+            if (!activeSmartCaptain) { showAppNotification("أدخل رقم الكابتن أولاً", "warning"); return; }
             const amount = parseFloat(document.getElementById('charge_amount').value);
-            if(isNaN(amount)) { alert("أدخل المبلغ بشكل صحيح"); return; }
+            if(isNaN(amount)) { showAppNotification("أدخل المبلغ بشكل صحيح", "error"); return; }
             
             const cap = activeSmartCaptain;
             const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
@@ -1365,7 +1419,7 @@
             updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
             
             await update(ref(db), updates);
-            alert(`تم إيداع الرصيد بنجاح 💰`);
+            showAppNotification("تم إيداع الرصيد بنجاح");
             
             document.getElementById('charge_amount').value = '';
             document.getElementById('smart_search_phone').value = '';
@@ -1502,7 +1556,7 @@
                     }
 
                     await update(ref(db), updates);
-                    alert("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح ✅");
+                    showAppNotification("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح");
                 }
             }
         };
@@ -1535,7 +1589,7 @@
             const pass = document.getElementById('edit_cap_pass').value.trim();
 
             if(!name || !phone || !pass) {
-                alert("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري");
+                showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error");
                 return;
             }
 
@@ -1558,7 +1612,7 @@
                 updates[`${nodeFound}/${userKey}/password`] = pass;
 
                 await update(ref(db), updates);
-                alert("تم تحديث بيانات السجل بنجاح 💾");
+                showAppNotification("تم تحديث بيانات السجل بنجاح");
                 closeEditModal();
             }
         };
@@ -1587,7 +1641,7 @@
                 });
                 if (nodeFound) {
                     await remove(ref(db, `${nodeFound}/${user}`));
-                    alert("تم الحذف");
+                    showAppNotification("تم حذف السجل نهائياً");
                 }
             }
         };
