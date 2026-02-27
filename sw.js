@@ -41,16 +41,30 @@ self.addEventListener('fetch', event => {
     );
 });
 
+// التعديل الملكي هنا عشان يظهر اسم N One بوضوح
 self.addEventListener('push', event => {
     const options = {
-        body: event.data ? event.data.text() : 'طلب جديد بانتظارك من N One 🔥',
+        body: event.data ? event.data.text() : 'لديك طلب جديد بانتظارك الآن 🔥',
         icon: 'logo.jpg',
         badge: 'logo.jpg',
         vibrate: [200, 100, 200, 100, 200, 100, 200],
-        requireInteraction: true
+        tag: 'n-one-order', // عشان ما تتراكم الإشعارات المزعجة
+        renotify: true,
+        requireInteraction: true,
+        data: {
+            url: './captain.html' // عشان لما يضغط يفتح صفحة الكابتن فوراً
+        }
     };
 
     event.waitUntil(
-        self.registration.showNotification('إمبراطورية N One', options)
+        self.registration.showNotification('N One - إمبراطورية التوصيل 💎', options)
+    );
+});
+
+// كود عشان لما يضغط على الإشعار يفتح التطبيق فوراً
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('./captain.html')
     );
 });
