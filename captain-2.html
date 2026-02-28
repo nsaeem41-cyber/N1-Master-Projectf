@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Captain 2 - Smart Controller 💎</title>
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        :root {
+            --primary: #0f172a;    
+            --accent: #1e293b;     
+            --gold: #d4af37;       
+            --bg: #f8fafc;         
+            --text: #334155;       
+            --success: #10b981;    
+            --danger: #ef4444;     
+            --info: #0ea5e9;
+            --diamond: #e0f2fe;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg); margin: 0; padding: 0; 
+            color: var(--text); user-select: none;
+            display: flex; justify-content: center; min-height: 100vh;
+        }
+
+        .admin-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+            border-bottom: 5px solid var(--gold);
+        }
+
+        .admin-logo {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .admin-sub {
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .content-wrapper {
+            padding: 25px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .control-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border-right: 4px solid var(--gold);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            font-weight: bold;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            border-color: var(--gold);
+            background: white;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+            margin-top: 10px;
+        }
+
+        .btn-action:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        /* نظام الإشعارات الداخلي */
+        #toast-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 999999; display: flex; flex-direction: column; gap: 10px;
+            pointer-events: none; width: 90%; max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="admin-logo">Captain 2 <span style="color:var(--gold)">Core</span></div>
+            <div class="admin-sub">المحرك الذكي لإدارة تطبيق الكابتن 💎</div>
+        </div>
+
+        <div class="content-wrapper">
+            
+            <div class="control-card" style="border-right-color: var(--info);">
+                <div class="card-title">📢 بث إعلان شريطي (لجميع الكباتن)</div>
+                <div class="input-group">
+                    <label>نص الإعلان</label>
+                    <input type="text" id="ad_text" placeholder="اكتب الخبر أو الإعلان هنا...">
+                </div>
+                <div class="input-group">
+                    <label>نوع الإعلان</label>
+                    <select id="ad_type">
+                        <option value="normal">عادي (أزرق)</option>
+                        <option value="warning">تحذير (أحمر)</option>
+                    </select>
+                </div>
+                <button class="btn-action" style="background: var(--info);" onclick="sendAnnouncement()">بث الإعلان الآن 🚀</button>
+                <button class="btn-action btn-danger" style="margin-top: 10px;" onclick="clearAnnouncement()">إيقاف الإعلان الحالي ❌</button>
+            </div>
+
+            <div class="control-card" style="border-right-color: var(--danger);">
+                <div class="card-title">🚨 إرسال نافذة تنبيه إدارية (Popup)</div>
+                <div class="input-group">
+                    <label>نص الرسالة الإدارية</label>
+                    <textarea id="alert_text" rows="3" placeholder="اكتب الرسالة التي ستظهر بنصف الشاشة..."></textarea>
+                </div>
+                <button class="btn-action btn-danger" onclick="sendAdminAlert()">إرسال التنبيه الفوري 🔔</button>
+            </div>
+
+            <div class="control-card">
+                <div class="card-title">🔥 التحكم بالنقاط الساخنة (Hotspots)</div>
+                <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
+                    تفعيل هذا الخيار سيقوم بإنشاء نقطة وهمية في قاعدة البيانات ليقرأها تطبيق الكابتن ويظهر شارة "النقاط الساخنة مفعّلة".
+                </p>
+                <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleHotspots(true)">تفعيل النقاط الساخنة ✅</button>
+                <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleHotspots(false)">إلغاء التفعيل ❌</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.showToast = function(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
+            toast.style.color = 'white';
+            toast.style.padding = '15px 20px';
+            toast.style.borderRadius = '15px';
+            toast.style.fontWeight = 'bold';
+            toast.style.fontSize = '14px';
+            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            toast.style.textAlign = 'center';
+            toast.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            toast.style.transform = 'translateY(-50px)';
+            toast.style.opacity = '0';
+            toast.innerText = msg;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+            setTimeout(() => { toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+        };
+
+        window.sendAnnouncement = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            const type = document.getElementById('ad_type').value;
+            
+            if(!text) { window.showToast("يرجى كتابة نص الإعلان أولاً", true); return; }
+
+            try {
+                const adData = {
+                    text: text,
+                    type: type,
+                    timestamp: Date.now(),
+                    expireAt: Date.now() + (24 * 60 * 60 * 1000) 
+                };
+                await set(ref(db, 'announcements/global'), adData);
+                window.showToast("تم بث الإعلان لجميع الكباتن بنجاح 🚀");
+                document.getElementById('ad_text').value = '';
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء الإرسال", true);
+            }
+        };
+
+        window.clearAnnouncement = async function() {
+            try {
+                await remove(ref(db, 'announcements/global'));
+                window.showToast("تم إيقاف الإعلان الحالي بنجاح ✅");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء الإيقاف", true);
+            }
+        };
+
+        window.sendAdminAlert = async function() {
+            const text = document.getElementById('alert_text').value.trim();
+            if(!text) { window.showToast("يرجى كتابة نص التنبيه أولاً", true); return; }
+
+            try {
+                const alertData = {
+                    message: text,
+                    timestamp: Date.now()
+                };
+                await set(ref(db, 'alerts/global'), alertData);
+                window.showToast("تم إرسال التنبيه المنبثق بنجاح 🔔");
+                document.getElementById('alert_text').value = '';
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء الإرسال", true);
+            }
+        };
+
+        window.toggleHotspots = async function(isActive) {
+            try {
+                if(isActive) {
+                    await set(ref(db, 'orders/fake_hotspot_trigger'), { active: true, timestamp: Date.now() });
+                    window.showToast("تم تفعيل مؤشر النقاط الساخنة 🔥");
+                } else {
+                    await remove(ref(db, 'orders/fake_hotspot_trigger'));
+                    window.showToast("تم إيقاف مؤشر النقاط الساخنة ❌");
+                }
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التعديل", true);
+            }
+        };
+
+    </script>
+</body>
+</html>
