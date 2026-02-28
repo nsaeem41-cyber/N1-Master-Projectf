@@ -221,14 +221,15 @@
         .btn-complete { background: var(--primary); width: 100%; }
         .btn-action:active { transform: scale(0.95); }
 
-        /* زر التوجيه الجغرافي الألماسي الجديد */
+        /* زر التوجيه الجغرافي الألماسي الجديد (أيقونة سهم احترافية) */
         .btn-map-link {
-            background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; 
-            padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; 
-            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; 
-            gap: 5px; transition: 0.3s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);
+            background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; 
+            width: 38px; height: 38px; border-radius: 50%; font-size: 18px; 
+            display: inline-flex; justify-content: center; align-items: center; 
+            text-decoration: none; transition: 0.3s; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+            flex-shrink: 0; outline: none;
         }
-        .btn-map-link:hover { background: #bae6fd; color: #0369a1; transform: scale(1.05); }
+        .btn-map-link:hover { background: #bae6fd; transform: scale(1.1); color: #0369a1; }
 
         /* سجل الطلبات والإعدادات (Modals) */
         .modal-overlay {
@@ -541,6 +542,9 @@
         let verifiedCompanyId = null; 
         
         const COMMISSION_RATE = 0.10; 
+
+        // Regex لتنظيف الروابط الطويلة من النصوص
+        const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
 
         const dict = {
             'ar': {
@@ -898,9 +902,11 @@
             
             let masterNameForAlerts = master || "N One";
             if (master) {
-                get(ref(db, `users/${master}`)).then(snap => {
+                // استماع ديناميكي لتغيير اسم الشركة بالرادار
+                onValue(ref(db, `users/${master}`), snap => {
                     if (snap.exists()) {
                         masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
+                        renderAd(); // تحديث الإعلان لو الاسم تغير
                     }
                 });
             }
@@ -1007,9 +1013,15 @@
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
                     
                     orders.forEach(ord => {
+                        // تنظيف اسم المنشأة من الروابط المواسير الطويلة بالرادار
+                        let rawRestName = ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop');
+                        let extractedUrls = rawRestName.match(urlRegex);
+                        let cleanRestName = rawRestName.replace(urlRegex, '').trim().replace(/\s*-\s*$/, '');
+                        if(!cleanRestName) cleanRestName = currentLang === 'ar' ? 'الموقع 📍' : 'Location 📍';
+
                         if (ord.status === 'completed') {
                             if (new Date(ord.timestamp).toDateString() === todayStr) todayCount++;
-                            allCompletedOrders.push(ord);
+                            allCompletedOrders.push({...ord, cleanRestName});
                         }
                         
                         if (ord.status === 'assigned') {
@@ -1032,7 +1044,7 @@
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</div>
+                                    <div class="order-rest">🏪 ${cleanRestName}</div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${lblVal}</div>
@@ -1060,8 +1072,11 @@
                             const lblOrd = currentLang === 'ar' ? "رقم" : "No";
                             const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
                             
-                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://maps.google.com/?q=' + encodeURIComponent(ord.restaurant || ord.Shop_Pickup || ''));
-                            const btnMapText = currentLang === 'ar' ? '🗺️ انطلاق للموقع' : '🗺️ Navigate';
+                            // تجهيز رابط الخريطة الصحيح
+                            const mapLink = extractedUrls ? extractedUrls[0] : (ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://maps.google.com/?q=' + encodeURIComponent(cleanRestName)));
+                            
+                            // أيقونة السهم الاحترافية
+                            const arrowIconSVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`;
 
                             container.innerHTML += `
                                 <div class="order-card">
@@ -1070,8 +1085,8 @@
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span>🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
-                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${btnMapText}</a>
+                                        <span>🏪 ${cleanRestName}</span>
+                                        <a href="${mapLink}" target="_blank" class="btn-map-link" title="الاتجاهات للموقع">${arrowIconSVG}</a>
                                     </div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
@@ -1128,7 +1143,8 @@
         function updateUIProfile(data) {
             const masterId = data.company || data.Client_Master;
             if (masterId) {
-                get(ref(db, `users/${masterId}`)).then(snap => {
+                // جلب ديناميكي وحي لاسم الشركة الأم لتحديث المسمى فورا متى ما تغير
+                onValue(ref(db, `users/${masterId}`), (snap) => {
                     let mName = masterId;
                     if (snap.exists()) {
                         mName = snap.val().Client_Name || snap.val().name || masterId;
@@ -1263,7 +1279,7 @@
                     container.innerHTML += `
                         <div class="history-item">
                             <div class="h-row">
-                                <span>${lblDest} ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
+                                <span>${lblDest} ${ord.cleanRestName || ord.restaurant || (currentLang==='ar'?'المنشأة':'Shop')}</span>
                                 <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
                             </div>
                             <div class="h-row">
