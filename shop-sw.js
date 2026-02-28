@@ -43,14 +43,14 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// إشعارات المنشآت الرسمية (بدون ألقاب ودية)
+// إشعارات بوابة المنشآت الرسمية
 self.addEventListener('push', event => {
     const options = {
-        body: event.data ? event.data.text() : 'يوجد تحديث جديد في قائمة الطلبات 📋',
+        body: event.data ? event.data.text() : 'يوجد تحديث جديد في قائمة العمليات بانتظاركم 📋',
         icon: 'shop-logo.jpg',
         badge: 'shop-logo.jpg',
-        vibrate: [100, 50, 100],
-        tag: 'n-one-shop-notification',
+        vibrate: [100, 50, 100, 50, 100],
+        tag: 'n-one-shop-alert',
         renotify: true,
         requireInteraction: true,
         data: {
