@@ -41,6 +41,76 @@
             z-index: 0;
         }
 
+        /* شاشة الترحيب الذكية (Splash Screen) */
+        .pwa-splash {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e293b, #0f172a, #000000);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .pwa-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 30px;
+            border-radius: 30px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            border-top: 4px solid var(--gold);
+            width: 85%;
+            max-width: 380px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            animation: popIn 0.6s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pwa-logo {
+            width: 100px; height: 100px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3);
+            border: 2px solid var(--gold);
+        }
+
+        .pwa-title {
+            margin: 0 0 15px 0;
+            font-size: 32px; font-weight: 900; color: var(--text-main);
+        }
+
+        .pwa-text {
+            color: var(--text-muted);
+            font-size: 15px; font-weight: bold; line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn-install {
+            width: 100%; padding: 18px;
+            background: linear-gradient(135deg, #d4af37, #b48608);
+            color: var(--primary); border: none; border-radius: 15px;
+            font-size: 18px; font-weight: 900; cursor: pointer;
+            margin-bottom: 15px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-install:active { transform: scale(0.95); }
+
+        .btn-continue {
+            background: transparent; border: none; color: #94a3b8;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            text-decoration: underline; transition: 0.3s;
+        }
+
+        .btn-continue:hover { color: white; }
+
         .login-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -202,6 +272,16 @@
 </head>
 <body>
 
+    <div id="pwa-splash" class="pwa-splash">
+        <div class="pwa-content">
+            <img src="logo.jpg" alt="N One Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.px/100?text=N+One'">
+            <h2 class="pwa-title">N <span class="gold">One</span></h2>
+            <p class="pwa-text">للحصول على تجربة أسرع وأكثر أماناً حمّل تطبيق N One الرسمي الآن</p>
+            <button id="btn-install" class="btn-install">تثبيت التطبيق الآن 🚀</button>
+            <button id="btn-continue" class="btn-continue">المتابعة من المتصفح</button>
+        </div>
+    </div>
+
     <div class="login-card">
         <div class="brand">
             <h1>N <span class="gold">One</span></h1>
@@ -237,6 +317,42 @@
             Secure Access v4.3 Royal Validation (Firebase)
         </div>
     </div>
+
+    <script>
+        let deferredPrompt
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('pwa-splash')
+            const btnInstall = document.getElementById('btn-install')
+            const btnContinue = document.getElementById('btn-continue')
+
+            if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+                splash.style.display = 'none'
+            }
+
+            btnContinue.addEventListener('click', () => {
+                splash.style.opacity = '0'
+                splash.style.visibility = 'hidden'
+            })
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault()
+                deferredPrompt = e
+            })
+
+            btnInstall.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt()
+                    const { outcome } = await deferredPrompt.userChoice
+                    if (outcome === 'accepted') {
+                        splash.style.display = 'none'
+                    }
+                    deferredPrompt = null
+                } else {
+                    alert('يرجى إضافة التطبيق للشاشة الرئيسية من إعدادات المتصفح يا غالي 😊')
+                }
+            })
+        })
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -305,12 +421,12 @@
                 if (userRecord) {
                     
                     if (isCaptain && foundNode !== "captains") {
-                        showError("عذراً.. لا يوجد لديك حساب كابتن مسجل بهذا الرقم 😊");
+                        showError("عذراً لا يوجد لديك حساب كابتن مسجل بهذا الرقم 😊");
                         resetBtn();
                         return;
                     }
                     if (isShop && foundNode !== "shops") {
-                        showError("عذراً.. لا يوجد لديك حساب منشأة مسجل بهذا الرقم 😊");
+                        showError("عذراً لا يوجد لديك حساب منشأة مسجل بهذا الرقم 😊");
                         resetBtn();
                         return;
                     }
