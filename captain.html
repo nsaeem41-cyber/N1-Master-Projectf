@@ -146,6 +146,26 @@
             border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.3s;
         }
 
+        /* ================= النوافذ المنبثقة الملكية (Custom Confirm) ================= */
+        .custom-dialog-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 60000;
+        }
+        .custom-dialog-box {
+            background: white; width: 85%; max-width: 350px; border-radius: 20px;
+            padding: 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            border-top: 5px solid var(--gold); animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .custom-dialog-icon { font-size: 40px; margin-bottom: 15px; }
+        .custom-dialog-msg { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 25px; line-height: 1.5; }
+        .custom-dialog-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-dialog { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; color: white; font-size: 14px; }
+        .btn-dialog:active { transform: scale(0.95); }
+        .btn-dialog-ok { background: var(--success); }
+        .btn-dialog-cancel { background: var(--danger); }
+
         /* ================= المحتوى الداخلي ================= */
         .app-content { padding: 20px; flex: 1; overflow-y: auto; background: var(--bg); }
 
@@ -339,6 +359,17 @@
 <body id="app-body">
 
     <div id="toast-container" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
+
+    <div id="custom-confirm-overlay" class="custom-dialog-overlay">
+        <div class="custom-dialog-box">
+            <div class="custom-dialog-icon">❓</div>
+            <div id="custom-confirm-msg" class="custom-dialog-msg">هل أنت متأكد</div>
+            <div class="custom-dialog-actions">
+                <button class="btn-dialog btn-dialog-ok" onclick="executeAppConfirm()" id="lang_confirm_ok">تأكيد ✅</button>
+                <button class="btn-dialog btn-dialog-cancel" onclick="closeAppConfirm()" id="lang_confirm_no">إلغاء ❌</button>
+            </div>
+        </div>
+    </div>
 
     <div id="pwa-splash" class="pwa-splash">
         <div class="pwa-content">
@@ -669,6 +700,26 @@
                 setTimeout(() => toast.remove(), 400);
             }, 3000);
         };
+
+        // نظام التأكيد الملكي
+        let confirmCallback = null;
+        window.showAppConfirm = function(msg, callback) {
+            document.getElementById('custom-confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('custom-confirm-overlay').style.display = 'flex';
+        };
+
+        window.closeAppConfirm = function() {
+            document.getElementById('custom-confirm-overlay').style.display = 'none';
+            confirmCallback = null;
+        };
+
+        window.executeAppConfirm = function() {
+            document.getElementById('custom-confirm-overlay').style.display = 'none';
+            if(confirmCallback) confirmCallback();
+            confirmCallback = null;
+        };
+
     </script>
 
     <script type="module">
@@ -744,6 +795,8 @@
                 status_blocked: 'غير متاح (محظور مالياً)',
                 no_orders: 'لا توجد طلبات حالياً خليك قريب من النقاط الساخنة 📡',
                 no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن',
+                lang_confirm_ok: 'تأكيد ✅',
+                lang_confirm_no: 'إلغاء ❌',
                 dir: 'rtl'
             },
             'en': {
@@ -791,6 +844,8 @@
                 status_blocked: 'Offline (Blocked)',
                 no_orders: 'No active orders right now stay near hotspots 📡',
                 no_history: 'No completed orders in history yet',
+                lang_confirm_ok: 'Confirm ✅',
+                lang_confirm_no: 'Cancel ❌',
                 dir: 'ltr'
             }
         };
@@ -1424,8 +1479,6 @@
             updates[`captains/${capNodeKey}/Cap_Balance`] = newBal;
             updates[`captains/${capNodeKey}/balance`] = newBal;
             
-            updates[`captains/${capNodeKey}/is_busy`] = true;
-
             try {
                 await update(ref(db), updates);
             } catch (e) {
@@ -1436,24 +1489,22 @@
 
         window.rejectOrder = async function(orderId) {
             const msg = currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب؟ ❌" : "Are you sure you want to reject? ❌";
-            if(confirm(msg)) {
+            window.showAppConfirm(msg, async () => {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'rejected';
                 await update(ref(db), updates);
-            }
+            });
         };
 
         window.completeOrder = async function(orderId) {
             const msg = currentLang === 'ar' ? "تأكيد إتمام وتسليم الطلب للزبون؟ ✅" : "Confirm order completion? ✅";
-            if(confirm(msg)) {
+            window.showAppConfirm(msg, async () => {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'completed';
                 updates[`assigned_orders/${capNodeKey}/${orderId}/completed_at`] = Date.now();
                 
-                updates[`captains/${capNodeKey}/is_busy`] = false;
-                
                 await update(ref(db), updates);
-            }
+            });
         };
 
         window.openHistoryModal = function() {
