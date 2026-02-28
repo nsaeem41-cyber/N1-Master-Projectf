@@ -85,13 +85,13 @@
             background: #f8fafc; border-bottom: 1px solid #e2e8f0; 
         }
 
-        /* الجداول */
-        table { width: 100%; border-collapse: collapse; }
+        /* الجداول مع شبكة الأمان لمنع التمدد */
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         thead { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
-        th { padding: 15px 20px; text-align: right; font-weight: 700; color: #64748b; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-        td { padding: 15px 20px; text-align: right; border-bottom: 1px solid #f1f5f9; color: var(--primary); font-weight: 600; font-size: 14px; }
+        th { padding: 15px 20px; text-align: right; font-weight: 700; color: #64748b; border-bottom: 1px solid #e2e8f0; font-size: 13px; overflow-wrap: break-word; word-wrap: break-word; }
+        td { padding: 15px 20px; text-align: right; border-bottom: 1px solid #f1f5f9; color: var(--primary); font-weight: 600; font-size: 14px; overflow-wrap: break-word; word-wrap: break-word; }
         
-        .area-badge { background: var(--diamond); color: var(--info); padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 12px; border: 1px solid #bae6fd; }
+        .area-badge { background: var(--diamond); color: var(--info); padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 12px; border: 1px solid #bae6fd; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* الأنيميشن والنبض */
         @keyframes pulseBorder {
@@ -114,7 +114,7 @@
             animation: pulseRocket 1.5s infinite;
         }
 
-        .badge { padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+        .badge { padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
         .bg-money { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
         .bg-fee { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
         .bg-phone { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; font-family: monospace; }
@@ -141,11 +141,11 @@
         .btn-app { background: var(--app-color); color: white; margin-bottom: 10px; }
         .btn-print { background: #64748b; color: white; padding: 8px 15px; font-size: 12px; width: auto; }
 
-        .action-btns { display: flex; gap: 8px; align-items: center; }
+        .action-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .mini-circle-btn { 
             width: 35px; height: 35px; border-radius: 50%; border: none; 
             display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-            font-size: 14px;
+            font-size: 14px; flex-shrink: 0;
         }
 
         /* تنسيق بطاقة بيانات الكابتن للبحث الذكي */
@@ -191,9 +191,31 @@
         }
         .balance-card::after { content: '💎'; position: absolute; right: -10px; bottom: -10px; font-size: 80px; opacity: 0.1; }
 
+        /* ================= إشعارات النظام الموحدة ================= */
+        #n-one-toast {
+            position: fixed; top: -150px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
+            color: white; padding: 15px 25px; border-radius: 12px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10000; transition: top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            width: 90%; max-width: 400px; box-sizing: border-box; direction: rtl;
+        }
+        #n-one-toast.show { top: 20px; }
+        .toast-content { display: flex; flex-direction: column; text-align: right; width: 100%; }
+        .toast-title { font-size: 13px; font-weight: 900; color: #94a3b8; margin-bottom: 4px; }
+        .toast-message { font-size: 15px; font-weight: bold; line-height: 1.4; }
+
     </style>
 </head>
 <body onclick="enableSound()">
+
+    <div id="n-one-toast">
+        <div class="toast-content">
+            <div class="toast-title">إشعار إداري</div>
+            <div id="toast-msg" class="toast-message">رسالة النظام...</div>
+        </div>
+    </div>
 
     <audio id="notif-sound" preload="auto" loop>
         <source src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" type="audio/mpeg">
@@ -257,12 +279,12 @@
                         <table id="radar-table">
                             <thead>
                                 <tr>
-                                    <th>الوقت والتاريخ</th>
-                                    <th>المصدر (المنشأة)</th>
-                                    <th>منطقة التوصيل</th>
-                                    <th>الهاتف</th>
-                                    <th>المالية</th>
-                                    <th>التحكم</th>
+                                    <th style="width: 15%;">الوقت والتاريخ</th>
+                                    <th style="width: 25%;">المصدر (المنشأة)</th>
+                                    <th style="width: 15%;">منطقة التوصيل</th>
+                                    <th style="width: 15%;">الهاتف</th>
+                                    <th style="width: 15%;">المالية</th>
+                                    <th style="width: 15%;">التحكم</th>
                                 </tr>
                             </thead>
                             <tbody id="live-table-body">
@@ -283,12 +305,12 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>الوقت</th>
-                                <th>الكابتن</th>
-                                <th>المنشأة</th>
-                                <th>المنطقة</th>
-                                <th>العمولة</th>
-                                <th>الحالة</th>
+                                <th style="width: 15%;">الوقت</th>
+                                <th style="width: 20%;">الكابتن</th>
+                                <th style="width: 25%;">المنشأة</th>
+                                <th style="width: 15%;">العمولة</th>
+                                <th style="width: 15%;">الحالة</th>
+                                <th style="width: 10%;">حذف</th>
                             </tr>
                         </thead>
                         <tbody id="completed-table-body">
@@ -442,6 +464,7 @@
                     </div>
                     
                     <input type="hidden" id="linked_order_id" value="">
+                    <input type="hidden" id="man_hidden_url" value="">
                     
                     <button class="btn-royal btn-app" onclick="sendOrderViaApp()">
                         <span>إرسال عبر التطبيق</span> 📱
@@ -490,6 +513,10 @@
                     <label>الرقم السري</label>
                     <input type="text" id="edit_cap_pass">
                 </div>
+                <div class="form-group full-width">
+                    <label>معرف الشركة (ID)</label>
+                    <input type="text" id="edit_cap_company">
+                </div>
             </div>
             <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
         </div>
@@ -528,6 +555,24 @@
         
         let currentCaptainsFilter = 'active'; 
 
+        // دالة الإشعارات الإدارية المنبثقة
+        window.showAppNotification = function(msg, type = 'success') {
+            const toast = document.getElementById('n-one-toast');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.innerText = msg;
+            
+            if(type === 'error') {
+                toast.style.borderLeft = '4px solid #ef4444';
+            } else if(type === 'warning') {
+                toast.style.borderLeft = '4px solid #f59e0b';
+            } else {
+                toast.style.borderLeft = '4px solid #10b981';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        };
+
         function getActiveMasterId() {
             return persistentCompanyId || (currentUser ? (currentUser.Client_User || currentUser.user) : '');
         }
@@ -554,8 +599,8 @@
                 }
                 
             } else {
-                alert("يرجى إتمام تسجيل الدخول للمتابعة");
-                window.history.back();
+                showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
+                setTimeout(() => { window.history.back(); }, 1500);
                 return;
             }
             
@@ -716,16 +761,20 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("عذراً تم إيقاف النظام يرجى مراجعة الإدارة");
+                        showAppNotification("عذراً تم إيقاف النظام يرجى مراجعة الإدارة", "error");
+                        setTimeout(() => {
+                            localStorage.removeItem('current_company_user');
+                            localStorage.removeItem('currentUser');
+                            window.location.replace('index.html');
+                        }, 2000);
+                    }
+                } else {
+                    showAppNotification("تم حذف الحساب سيتم تسجيل الخروج", "error");
+                    setTimeout(() => {
                         localStorage.removeItem('current_company_user');
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
-                    }
-                } else {
-                    alert("تم حذف الحساب سيتم تسجيل الخروج");
-                    localStorage.removeItem('current_company_user');
-                    localStorage.removeItem('currentUser');
-                    window.location.replace('index.html');
+                    }, 2000);
                 }
             });
         }
@@ -810,6 +859,10 @@
             }
 
             tbody.innerHTML = '';
+            
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
+            const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
+
             pendingOrders.forEach(ord => {
                 const orderDate = new Date(ord.Shop_Date);
                 const timeStr = orderDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -817,7 +870,7 @@
                 
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
                 const phone = shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---';
-                const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
+                let area = shopData ? (shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
 
                 const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
                 
@@ -836,17 +889,21 @@
                     `;
                 }
 
+                let cleanShopName = ord.Shop_Name || '';
+                cleanShopName = cleanShopName.replace(urlRegex, badgeHtml);
+                area = area.replace(urlRegex, '📍');
+
                 tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ord.Shop_Ord_ID}">
                         <td>
                             <div style="font-size:13px; font-weight:800;">${timeStr}</div>
                             <div style="font-size:10px; color:#94a3b8;">${dateStr}</div>
                         </td>
-                        <td style="font-weight:900; color:var(--primary);">${ord.Shop_Name}</td>
+                        <td style="font-weight:900; color:var(--primary); line-height:1.5;">${cleanShopName}</td>
                         <td><span class="area-badge">${area}</span></td>
                         <td><span class="badge bg-phone">${phone}</span></td>
                         <td>
-                            <div style="display:flex; gap:5px;">
+                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
                                 <span class="badge bg-money">${ord.Shop_Val}</span>
                                 <span class="badge bg-fee">+${ord.Shop_Fee}</span>
                             </div>
@@ -880,7 +937,7 @@
             const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
 
             if(trulyPendingOrders.length === 0) {
-                if(!silent) alert("لا توجد طلبات جديدة للتوزيع");
+                if(!silent) showAppNotification("لا توجد طلبات جديدة للتوزيع", "warning");
                 return;
             }
 
@@ -903,7 +960,7 @@
             });
 
             if (availableCaptains.length === 0) {
-                if(!silent) alert("عذراً لا يوجد كابتن متاح حالياً");
+                if(!silent) showAppNotification("عذراً لا يوجد كابتن متاح حالياً", "warning");
                 return;
             }
 
@@ -949,12 +1006,12 @@
             if(dispatchedCount > 0) {
                 try {
                     await update(ref(db), updates);
-                    if(!silent) alert(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
+                    if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
                 } catch(e) {
-                    if(!silent) alert("حدث خطأ أثناء التوزيع التلقائي");
+                    if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
                 }
             } else {
-                if(!silent) alert("لم يتم توزيع أي طلب");
+                if(!silent) showAppNotification("لم يتم توزيع أي طلب", "warning");
             }
         };
 
@@ -965,10 +1022,19 @@
             const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
             const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || '') : '';
 
-            document.getElementById('man_rest_name').value = ord.Shop_Name + (area ? " - " + area : "");
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
+            let fullShopName = ord.Shop_Name || '';
+            
+            let extractedUrls = fullShopName.match(urlRegex);
+            let hiddenUrlStr = extractedUrls ? extractedUrls.join(' ') : '';
+            
+            let cleanShopName = fullShopName.replace(urlRegex, '').trim();
+
+            document.getElementById('man_rest_name').value = cleanShopName + (area ? " - " + area : "");
             document.getElementById('man_val').value = ord.Shop_Val;
             document.getElementById('man_fee').value = ord.Shop_Fee;
             document.getElementById('linked_order_id').value = orderId;
+            document.getElementById('man_hidden_url').value = hiddenUrlStr;
             
             document.querySelector('.side-content').scrollTop = 0;
         };
@@ -1029,29 +1095,30 @@
             const phone = document.getElementById('man_phone').value.trim();
             const capName = document.getElementById('man_cap_name').value.trim();
             const restInfo = document.getElementById('man_rest_name').value.trim();
+            const hiddenUrl = document.getElementById('man_hidden_url').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
             if (!phone || !restInfo || !fee) { 
-                alert("يرجى إكمال البيانات"); 
+                showAppNotification("يرجى إكمال البيانات", "warning"); 
                 return; 
             }
             
             if (!currentTargetCaptain) {
-                alert("الكابتن غير موجود بالنظام");
+                showAppNotification("الكابتن غير موجود بالنظام", "error");
                 return;
             }
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
             if (capStatus === 'paused' || capStatus === 'off') {
-                alert("حساب الكابتن مجمد");
+                showAppNotification("حساب الكابتن مجمد", "error");
                 return;
             }
 
             if (currentTargetCaptain.app_status === 'offline') {
-                alert("الكابتن أوفلاين");
+                showAppNotification("الكابتن أوفلاين", "error");
                 return;
             }
 
@@ -1074,9 +1141,14 @@
             const updates = {};
             const appOrderId = "APP_ORD_" + Date.now();
             
+            let finalRestInfo = restInfo;
+            if(hiddenUrl) {
+                finalRestInfo += " - " + hiddenUrl;
+            }
+            
             const orderData = {
                 id: appOrderId,
-                restaurant: restInfo,
+                restaurant: finalRestInfo,
                 value: val,
                 fee: fee,
                 status: 'assigned',
@@ -1091,15 +1163,16 @@
             
             try {
                 await update(ref(db), updates);
-                alert("تم الإرسال للتطبيق 🚀");
+                showAppNotification("تم الإرسال للتطبيق بنجاح");
                 
                 document.getElementById('man_rest_name').value = '';
+                document.getElementById('man_hidden_url').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
                 document.getElementById('linked_order_id').value = '';
 
             } catch (error) {
-                alert("خطأ في الإرسال");
+                showAppNotification("خطأ في الإرسال", "error");
             }
         };
 
@@ -1107,13 +1180,14 @@
             const phone = document.getElementById('man_phone').value.trim();
             const capName = document.getElementById('man_cap_name').value.trim();
             const restInfo = document.getElementById('man_rest_name').value.trim();
+            const hiddenUrl = document.getElementById('man_hidden_url').value.trim();
             const val = document.getElementById('man_val').value;
             const fee = document.getElementById('man_fee').value;
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
             if (!phone || !restInfo || !fee) { 
-                alert("يرجى إكمال البيانات"); 
+                showAppNotification("يرجى إكمال البيانات", "warning"); 
                 return; 
             }
 
@@ -1126,7 +1200,7 @@
 
             if (currentTargetCaptain) {
                 if (currentTargetCaptain.app_status === 'offline') {
-                    alert("الكابتن أوفلاين");
+                    showAppNotification("الكابتن أوفلاين", "error");
                     return;
                 }
 
@@ -1154,11 +1228,16 @@
                 await update(ref(db), updates);
             }
 
+            let finalRestInfo = restInfo;
+            if(hiddenUrl) {
+                finalRestInfo += " - " + hiddenUrl;
+            }
+
             const entry = {
                 orderId: linkedId || "MANUAL_" + Date.now(),
                 time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
                 cap: capName || "كابتن",
-                rest: restInfo,
+                rest: finalRestInfo,
                 comm: commission,
                 date: new Date().toISOString(),
                 via: "WhatsApp"
@@ -1169,9 +1248,11 @@
             let waPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
             if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
             
+            let urlText = hiddenUrl ? `📍 الموقع: ${hiddenUrl}%0a` : '';
             const msg = `*${currentUser.Client_Name || 'إمبراطورية N One'} | أوردر جديد* 🚀%0a` +
                         `-----------------------------%0a` +
                         `🏪 المنشأة: *${restInfo}*%0a` +
+                        urlText +
                         `🛵 التوصيل: *${fee} د.أ*%0a` +
                         `💰 القيمة: *${val} د.أ*%0a` +
                         `-----------------------------%0a` +
@@ -1180,6 +1261,7 @@
             window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank');
 
             document.getElementById('man_rest_name').value = '';
+            document.getElementById('man_hidden_url').value = '';
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
             document.getElementById('linked_order_id').value = '';
@@ -1205,13 +1287,20 @@
             }
 
             tbody.innerHTML = '';
+            
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
+            const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
+
             todayOrders.forEach(o => {
                 const methodIcon = o.via === 'App' ? '📱' : (o.via === 'Auto' ? '🤖' : '💬');
+                let cleanRestName = o.rest || '';
+                cleanRestName = cleanRestName.replace(urlRegex, badgeHtml);
+
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-size:11px; color:#64748b;">${o.time}</td>
                         <td style="font-weight:800;">${o.cap}</td>
-                        <td>${o.rest}</td>
+                        <td style="line-height:1.5;">${cleanRestName}</td>
                         <td><span class="badge bg-money" style="background:#f0fdf4;">${o.comm}</span></td>
                         <td><span class="badge" style="background:#dcfce7; color:#166534;">مكتمل ${methodIcon}</span></td>
                         <td><button class="mini-circle-btn" onclick="deleteFromArchive('${o.orderId}')">🗑️</button></td>
@@ -1262,7 +1351,7 @@
                 
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
-                    alert("تم تنظيف الرادار");
+                    showAppNotification("تم تنظيف الرادار");
                 }
             }
         };
@@ -1286,13 +1375,13 @@
             const companyId = getActiveMasterId();
 
             if(!name || !phone || !user || !pass || !region || !companyId) { 
-                alert("يرجى إكمال جميع البيانات الأساسية"); 
+                showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); 
                 return; 
             }
             
             const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             if(exists) {
-                alert("هذا الكابتن مسجل مسبقاً");
+                showAppNotification("هذا الكابتن مسجل مسبقاً", "error");
                 return;
             }
 
@@ -1316,7 +1405,7 @@
             };
             
             await set(ref(db, 'captains/' + user), capData);
-            alert("تم التوثيق بنجاح ✅");
+            showAppNotification("تم التوثيق بنجاح");
             
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
@@ -1353,9 +1442,9 @@
         };
 
         window.chargeCaptainBalance = async function() {
-            if (!activeSmartCaptain) { alert("أدخل رقم الكابتن أولاً"); return; }
+            if (!activeSmartCaptain) { showAppNotification("أدخل رقم الكابتن أولاً", "warning"); return; }
             const amount = parseFloat(document.getElementById('charge_amount').value);
-            if(isNaN(amount)) { alert("أدخل المبلغ بشكل صحيح"); return; }
+            if(isNaN(amount)) { showAppNotification("أدخل المبلغ بشكل صحيح", "error"); return; }
             
             const cap = activeSmartCaptain;
             const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
@@ -1365,7 +1454,7 @@
             updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
             
             await update(ref(db), updates);
-            alert(`تم إيداع الرصيد بنجاح 💰`);
+            showAppNotification("تم إيداع الرصيد بنجاح");
             
             document.getElementById('charge_amount').value = '';
             document.getElementById('smart_search_phone').value = '';
@@ -1502,7 +1591,7 @@
                     }
 
                     await update(ref(db), updates);
-                    alert("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح ✅");
+                    showAppNotification("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح");
                 }
             }
         };
@@ -1517,6 +1606,7 @@
                 document.getElementById('edit_cap_region').value = cap.Cap_Region || cap.Cap_Location || '';
                 document.getElementById('edit_cap_user').value = userKey;
                 document.getElementById('edit_cap_pass').value = cap.Cap_Pass || cap.password || cap.pass || '';
+                document.getElementById('edit_cap_company').value = cap.Company_ID || cap.company || cap.Client_Master || '';
                 
                 document.getElementById('edit-captain-modal').style.display = 'flex';
             }
@@ -1533,9 +1623,10 @@
             const car = document.getElementById('edit_cap_car').value.trim();
             const region = document.getElementById('edit_cap_region').value;
             const pass = document.getElementById('edit_cap_pass').value.trim();
+            const company = document.getElementById('edit_cap_company').value.trim();
 
             if(!name || !phone || !pass) {
-                alert("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري");
+                showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error");
                 return;
             }
 
@@ -1556,9 +1647,15 @@
                 updates[`${nodeFound}/${userKey}/Cap_Pass`] = pass;
                 updates[`${nodeFound}/${userKey}/pass`] = pass;
                 updates[`${nodeFound}/${userKey}/password`] = pass;
+                
+                if (company) {
+                    updates[`${nodeFound}/${userKey}/company`] = company;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = company;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = company;
+                }
 
                 await update(ref(db), updates);
-                alert("تم تحديث بيانات السجل بنجاح 💾");
+                showAppNotification("تم تحديث بيانات السجل بنجاح");
                 closeEditModal();
             }
         };
@@ -1587,7 +1684,7 @@
                 });
                 if (nodeFound) {
                     await remove(ref(db, `${nodeFound}/${user}`));
-                    alert("تم الحذف");
+                    showAppNotification("تم حذف السجل نهائياً");
                 }
             }
         };
