@@ -2,12 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | Diamond Ops Room 💎</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Captain Portal 💎</title>
     
     <style>
-        /* ================= تصميم Ops Diamond (Royal Navy & Diamond White) ================= */
+        /* ================= تصميم Captain App (Royal Navy & Diamond White) ================= */
         :root {
             --primary: #0f172a;    
             --accent: #1e293b;     
@@ -24,507 +23,501 @@
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--bg); margin: 0; padding: 0; 
-            color: var(--text); user-select: none; overflow-x: hidden; 
+            background-color: var(--primary); margin: 0; padding: 0; 
+            color: var(--text); user-select: none; overflow-x: hidden;
+            display: flex; justify-content: center; min-height: 100vh;
+            transition: all 0.3s ease;
         }
 
-        /* الهيدر الألماسي */
-        .navbar { 
-            background: var(--primary); height: 75px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 30px; 
-            box-shadow: 0 4px 25px rgba(15, 23, 42, 0.2); 
-            position: sticky; top: 0; z-index: 1000; 
-            border-bottom: 4px solid var(--gold); 
+        /* حاوية التطبيق (شكل الهاتف) */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--bg);
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
         }
-        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 15px; }
-        .gold-text { color: var(--gold); }
-        .company-name-badge { font-size: 13px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3); color: var(--gold); }
-        
-        /* التبويبات العلوية */
-        .nav-tabs { display: flex; gap: 10px; margin-right: 20px; align-items: center; }
-        .nav-tab-btn { 
-            background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);
-            padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s;
-        }
-        .nav-tab-btn.active { background: var(--gold); color: var(--primary); border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
-        
-        .btn-back { background: var(--accent); color: white; border: 1px solid #475569; display: flex; align-items: center; gap: 5px; }
-        .btn-back:hover { background: #334155; }
 
-        /* تعديل رشاقة: الإحصائيات (Compact Layout) */
-        .live-stats-bar { display: flex; gap: 10px; align-items: center; }
-        .stat-box { 
-            background: rgba(255,255,255,0.08); 
-            padding: 5px 12px; border-radius: 10px; 
-            text-align: center; border: 1px solid rgba(255,255,255,0.1); 
-            display: flex; flex-direction: column; justify-content: center;
-        }
-        .stat-val { font-weight: 900; font-size: 15px; color: var(--gold); line-height: 1.2; }
-        .stat-lbl { font-size: 9px; color: #94a3b8; font-weight: bold; }
-
-        .ops-container { display: grid; grid-template-columns: 1fr 350px; height: calc(100vh - 79px); }
-        
-        .main-content { padding: 25px; overflow-y: auto; background: #f1f5f9; }
-        .side-content { background: white; padding: 20px; overflow-y: auto; border-right: 1px solid #e2e8f0; box-shadow: -5px 0 20px rgba(0,0,0,0.02); }
-
-        .tab-panel { display: none; animation: fadeIn 0.4s ease-out; }
-        .tab-panel.active { display: block; }
+        /* ================= شاشات التطبيق ================= */
+        .screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.4s ease-out; }
+        .screen.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* الكروت */
-        .card { 
-            background: white; border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); 
-            margin-bottom: 25px; border: 1px solid #e2e8f0; overflow: hidden;
+        /* ================= شاشة تسجيل الدخول والتسجيل الذاتي ================= */
+        .login-wrapper {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 30px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white; text-align: center; overflow-y: auto;
         }
-        .card-header { 
-            padding: 18px 25px; font-size: 16px; font-weight: 800; 
-            color: var(--primary); 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: #f8fafc; border-bottom: 1px solid #e2e8f0; 
+        .login-logo { font-size: 34px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .login-sub { color: var(--gold); font-size: 14px; margin-bottom: 40px; font-weight: bold; }
+        .input-group { margin-bottom: 20px; text-align: right; position: relative; }
+        .input-group label { display: block; font-size: 12px; margin-bottom: 8px; color: #94a3b8; font-weight: bold; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 15px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px;
+            background: rgba(255,255,255,0.05); color: white; font-weight: bold; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s;
         }
-
-        /* الجداول مع شبكة الأمان لمنع التمدد */
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        thead { background: #f1f5f9; position: sticky; top: 0; z-index: 10; }
-        th { padding: 15px 20px; text-align: right; font-weight: 700; color: #64748b; border-bottom: 1px solid #e2e8f0; font-size: 13px; overflow-wrap: break-word; word-wrap: break-word; }
-        td { padding: 15px 20px; text-align: right; border-bottom: 1px solid #f1f5f9; color: var(--primary); font-weight: 600; font-size: 14px; overflow-wrap: break-word; word-wrap: break-word; }
+        .input-group select option { background: var(--primary); color: white; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
+        .btn-login {
+            width: 100%; padding: 15px; background: var(--gold); color: var(--primary);
+            border: none; border-radius: 12px; font-weight: 900; font-size: 16px; margin-top: 10px;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+        }
+        .btn-login:active { transform: scale(0.98); }
         
-        .area-badge { background: var(--diamond); color: var(--info); padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 12px; border: 1px solid #bae6fd; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-        /* الأنيميشن والنبض */
-        @keyframes pulseBorder {
-            0% { border-right: 5px solid var(--gold); background: white; }
-            50% { border-right: 5px solid #fbbf24; background: #fffbeb; }
-            100% { border-right: 5px solid var(--gold); background: white; }
+        .btn-link {
+            background: transparent; border: none; color: var(--diamond); font-size: 14px; font-weight: bold;
+            margin-top: 20px; cursor: pointer; text-decoration: underline; transition: 0.3s;
         }
-        .order-row-new { animation: pulseBorder 2s infinite; }
-        .order-row-urgent { border-right: 5px solid var(--danger); background: #fef2f2; }
-        .order-row-waiting { border-right: 5px solid #f59e0b; background: #fffbeb; opacity: 0.95; }
+        .btn-link:hover { color: var(--gold); }
 
-        /* أنيميشن الرادار اللانهائي */
-        @keyframes pulseRocket {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        /* حالة التحقق من المعرف */
+        .id-status-badge {
+            position: absolute; left: 15px; top: 40px; font-size: 12px; font-weight: bold;
+            padding: 4px 8px; border-radius: 8px; transition: 0.3s;
         }
-        .radar-active {
-            background: var(--success) !important;
-            animation: pulseRocket 1.5s infinite;
+        .id-status-badge.verifying { color: var(--info); background: rgba(14, 165, 233, 0.2); }
+        .id-status-badge.success { color: var(--success); background: rgba(16, 185, 129, 0.2); }
+        .id-status-badge.error { color: var(--danger); background: rgba(239, 68, 68, 0.2); }
+
+        /* ================= الهيدر الداخلي ================= */
+        .app-header {
+            background: var(--primary); padding: 20px; border-bottom: 4px solid var(--gold);
+            display: flex; justify-content: space-between; align-items: center; color: white;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-brand { font-size: 18px; font-weight: 900; display: flex; flex-direction: column; }
+        .header-company { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; width: fit-content; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .btn-action-top {
+            background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); color: var(--gold);
+            padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold;
+            transition: 0.3s; display: flex; align-items: center; gap: 4px;
+        }
+        .btn-action-top:active { transform: scale(0.95); background: var(--gold); color: var(--primary); }
+        
+        .btn-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+
+        /* ================= تصميم الإعلانات والتنبيهات ================= */
+        .app-ad-container { 
+            display: none; align-items: center; background: white; 
+            margin: 15px 20px 0; padding: 12px 15px; 
+            border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
+            border-right: 5px solid var(--primary); animation: slideDown 0.5s ease; 
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .ad-sender-badge { 
+            background: var(--gold); color: white; padding: 5px 12px; 
+            border-radius: 8px; font-size: 11px; font-weight: bold; 
+            margin-left: 10px; white-space: nowrap; box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
+        }
+        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
+        .ad-text-scroll { font-weight: bold; font-size: 14px; width: 100%; color: var(--text); }
+        .ad-type-news { border-right-color: var(--info); }
+        .ad-type-warning { border-right-color: var(--danger); background-color: #ffebee; }
+
+        .app-popup-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; 
+            backdrop-filter: blur(5px); 
+        }
+        .app-popup-box { 
+            background: white; padding: 30px; border-radius: 20px; text-align: center; 
+            max-width: 400px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+            border-top: 6px solid var(--danger); animation: slideUp 0.4s ease-out; 
+        }
+        .app-popup-icon { font-size: 50px; margin-bottom: 15px; }
+        .app-popup-msg { font-size: 18px; font-weight: bold; color: var(--text); line-height: 1.5; margin-bottom: 25px; }
+        .app-popup-btn { 
+            background: var(--danger); color: white; border: none; padding: 12px 30px; 
+            border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.3s;
         }
 
-        .badge { padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-        .bg-money { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
-        .bg-fee { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-        .bg-phone { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; font-family: monospace; }
+        /* ================= المحتوى الداخلي ================= */
+        .app-content { padding: 20px; flex: 1; overflow-y: auto; background: var(--bg); }
 
-        /* فورم الإدخال المنسق والمدمج */
-        .manual-form { padding: 20px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 0; position: relative; }
-        .form-group.full-width { grid-column: span 2; }
-        .form-group label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 800; color: #64748b; }
-        input, select { 
-            width: 100%; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 12px; 
-            outline: none; background: #f8fafc; transition: 0.3s; font-weight: 700; color: var(--primary); box-sizing: border-box;
+        /* كارت الكابتن (الرصيد والتقييم) */
+        .cap-profile-card {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 20px; padding: 20px; color: white; margin-bottom: 20px;
+            position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
         }
-        input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
+        .cap-profile-card::after { content: '💎'; position: absolute; left: -10px; bottom: -10px; font-size: 80px; opacity: 0.05; }
+        .cap-name { font-size: 20px; font-weight: 900; margin-bottom: 5px; }
+        .cap-car { font-size: 12px; color: #94a3b8; margin-bottom: 15px; }
+        .cap-stats-row { display: flex; justify-content: space-between; align-items: flex-end; }
+        .bal-title { font-size: 11px; color: #94a3b8; margin-bottom: 5px; }
+        .bal-amount { font-size: 28px; font-weight: 900; color: var(--gold); transition: color 0.3s; }
+        .bal-amount.negative { color: var(--danger); }
+        .rating-box { text-align: left; }
+        .stars { color: var(--gold); font-size: 14px; letter-spacing: 2px; }
+        .rating-text { font-size: 10px; color: #94a3b8; margin-top: 3px; }
 
-        .btn-royal {
-            width: 100%; padding: 12px 15px; border: none; border-radius: 12px; font-weight: 800;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
-            background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
+        /* زر الحالة الذكي */
+        .status-toggle-card {
+            background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
         }
-        .btn-royal:active { transform: scale(0.98); }
-        .btn-gold { background: var(--gold); color: var(--primary); }
-        .btn-app { background: var(--app-color); color: white; margin-bottom: 10px; }
-        .btn-print { background: #64748b; color: white; padding: 8px 15px; font-size: 12px; width: auto; }
+        .status-text { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; }
+        .status-indicator.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .status-indicator.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(26px); }
+        input:disabled + .slider { background-color: #e2e8f0; cursor: not-allowed; opacity: 0.5; }
 
-        .action-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .mini-circle-btn { 
-            width: 35px; height: 35px; border-radius: 50%; border: none; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-            font-size: 14px; flex-shrink: 0;
+        /* رسالة الرصيد السالب */
+        .warning-banner {
+            background: #fef2f2; border: 1px solid #fecaca; border-right: 4px solid var(--danger);
+            border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;
+            color: #991b1b; font-size: 13px; font-weight: bold; align-items: center; gap: 10px; animation: fadeIn 0.3s;
         }
 
-        /* تنسيق بطاقة بيانات الكابتن للبحث الذكي */
-        .smart-cap-card {
-            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-top: 10px; display: none; animation: fadeIn 0.3s;
+        /* الإنجاز اليومي */
+        .achievement-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; text-align: center;
         }
-        .smart-cap-info { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
+        .ach-title { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; }
+        .ach-number { font-size: 36px; font-weight: 900; color: var(--primary); }
+        .ach-subtitle { font-size: 11px; color: var(--success); font-weight: bold; margin-top: 5px; }
 
-        /* أزرار الفرز الذكية للسجلات (Smart Filter Buttons) */
-        .filter-group { display: flex; gap: 10px; background: #f1f5f9; padding: 5px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .btn-filter { 
-            padding: 8px 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 12px; 
-            cursor: pointer; background: transparent; color: #64748b; transition: 0.3s; 
+        /* الطلبات الحالية */
+        .section-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        
+        .order-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; border-right: 4px solid var(--info);
+            animation: fadeIn 0.3s; position: relative; overflow: hidden;
         }
-        .btn-filter.active { background: white; color: var(--primary); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .order-card.ringing { border-right: 4px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); animation: pulseAlert 1.5s infinite; }
+        @keyframes pulseAlert { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #64748b; font-weight: bold; }
+        .order-rest { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
+        .order-details { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+        .detail-box { text-align: center; flex: 1; }
+        .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+        .detail-val { font-size: 13px; font-weight: bold; color: var(--primary); }
+        
+        .action-buttons { display: flex; gap: 10px; }
+        .btn-action {
+            flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; 
+            cursor: pointer; transition: 0.3s; border: none; color: white;
+        }
+        .btn-accept { background: var(--success); }
+        .btn-reject { background: var(--danger); }
+        .btn-complete { background: var(--primary); width: 100%; }
+        .btn-action:active { transform: scale(0.95); }
 
-        /* المودال للتحرير الشامل (Global Edit) والشحن التلقائي */
+        /* زر التوجيه الجغرافي الألماسي الجديد */
+        .btn-map-link {
+            background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; 
+            padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; 
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; 
+            gap: 5px; transition: 0.3s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);
+        }
+        .btn-map-link:hover { background: #bae6fd; color: #0369a1; transform: scale(1.05); }
+
+        /* سجل الطلبات والإعدادات (Modals) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 5000;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: flex-end; z-index: 5000;
         }
-        .modal-box {
-            background: white; width: 90%; max-width: 500px; border-radius: 20px;
-            padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideDown 0.3s ease-out;
+        .modal-content {
+            background: white; width: 100%; max-width: 480px; height: 80vh;
+            border-top-left-radius: 25px; border-top-right-radius: 25px;
+            padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;
+            animation: slideUpModal 0.4s ease-out;
         }
-        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px; }
+        @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
         .modal-title { font-size: 18px; font-weight: 900; color: var(--primary); }
-        .btn-close { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--danger); font-weight: bold; cursor: pointer; }
+        .close-modal { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; color: var(--danger); cursor: pointer; }
+        
+        .history-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .history-item { 
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; 
+            padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .h-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
+        .h-val { color: var(--primary); }
+        .h-commission { color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 8px; font-size: 11px; border: 1px solid #fecaca; }
 
-        /* تنسيق الطباعة */
-        @media print {
-            .navbar, .side-content, .action-btns, .btn-print, .stats-grid, .nav-tabs, .filter-group { display: none !important; }
-            .main-content { width: 100%; padding: 0; }
-            .card { box-shadow: none; border: 1px solid #000; }
-            table { font-size: 12px; }
+        /* نموذج الإعدادات */
+        .settings-form { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .settings-group { margin-bottom: 20px; }
+        .settings-group label { display: block; font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .settings-group input { 
+            width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; 
+            font-size: 15px; background: #f8fafc; outline: none; transition: 0.3s; box-sizing: border-box; 
+        }
+        .settings-group input:focus { border-color: var(--gold); }
+        .lang-toggle { 
+            background: var(--primary); color: white; border: none; padding: 12px; 
+            border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        .btn-save-settings { 
+            background: var(--gold); color: var(--primary); border: none; padding: 15px; 
+            border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; 
         }
 
-        .balance-card {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; position: relative; overflow: hidden;
+        /* خريطة النقاط الساخنة */
+        .hotspots-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .hotspot-tag {
+            background: var(--diamond); color: var(--info); padding: 8px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; border: 1px solid #bae6fd; display: flex; align-items: center; gap: 5px;
         }
-        .balance-card::after { content: '💎'; position: absolute; right: -10px; bottom: -10px; font-size: 80px; opacity: 0.1; }
+        .hotspot-tag span { background: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--primary); }
 
-        /* ================= إشعارات النظام الموحدة ================= */
-        #n-one-toast {
-            position: fixed; top: -150px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
-            color: white; padding: 15px 25px; border-radius: 12px;
-            display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10000; transition: top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            width: 90%; max-width: 400px; box-sizing: border-box; direction: rtl;
+        /* شاشة الإيقاف والانتظار */
+        .blocked-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98); z-index: 9999;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 30px; box-sizing: border-box; backdrop-filter: blur(10px);
         }
-        #n-one-toast.show { top: 20px; }
-        .toast-content { display: flex; flex-direction: column; text-align: right; width: 100%; }
-        .toast-title { font-size: 13px; font-weight: 900; color: #94a3b8; margin-bottom: 4px; }
-        .toast-message { font-size: 15px; font-weight: bold; line-height: 1.4; }
+        .blocked-icon { font-size: 60px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .blocked-title { font-size: 24px; font-weight: 900; color: var(--danger); margin-bottom: 15px; }
+        .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
+
+        .pending-title { font-size: 24px; font-weight: 900; color: var(--gold); margin-bottom: 15px; }
+
+        #loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
+            z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--gold);
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(212, 175, 55, 0.3); border-top: 4px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     </style>
 </head>
-<body onclick="enableSound()">
+<body id="app-body">
 
-    <div id="n-one-toast">
-        <div class="toast-content">
-            <div class="toast-title">إشعار إداري</div>
-            <div id="toast-msg" class="toast-message">رسالة النظام...</div>
-        </div>
-    </div>
-
-    <audio id="notif-sound" preload="auto" loop>
-        <source src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" type="audio/mpeg">
+    <audio id="order-ringtone" loop preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
     </audio>
 
-    <nav class="navbar">
-        <div class="brand">
-            N <span class="gold-text">One</span> Diamond Ops 💎
-            <span id="header-company-name" class="company-name-badge">جاري التحميل...</span>
-        </div>
+    <div class="app-container">
         
-        <div class="nav-tabs">
-            <button class="nav-tab-btn active" onclick="switchMainTab('radar-tab', this)">📡 الرادار</button>
-            <button class="nav-tab-btn" onclick="switchMainTab('captains-tab', this)">🦸‍♂️ سجل الكباتن</button>
-            <button class="nav-tab-btn btn-back" onclick="goBackToCustomer()">🔙 عودة</button>
+        <div id="loader">
+            <div class="spinner"></div>
+            <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;" id="loader_dynamic_name">بوابة الكباتن</div>
+            <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;" id="lang_loader">جاري الاتصال بالنظام...</div>
         </div>
 
-        <div class="live-stats-bar">
-            <div class="stat-box">
-                <div class="stat-val" id="stat-cap-total">0</div>
-                <div class="stat-lbl">إجمالي الكباتن</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-val" id="stat-pending">0</div>
-                <div class="stat-lbl">الانتظار</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-val" id="stat-completed-total">0</div>
-                <div class="stat-lbl">المكتمل</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-val" id="stat-comm-total">0.00</div>
-                <div class="stat-lbl">العمولة</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-val" id="stat-cap-active" style="color: var(--success);">0</div>
-                <div class="stat-lbl">متاح</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-val" id="stat-cap-paused" style="color: var(--danger);">0</div>
-                <div class="stat-lbl">غير متاح</div>
+        <div id="app-popup-overlay" class="app-popup-overlay">
+            <div class="app-popup-box">
+                <div class="app-popup-icon">🚨</div>
+                <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
+                <button class="app-popup-btn" onclick="document.getElementById('app-popup-overlay').style.display='none'" id="lang_popup_btn">حسناً، فهمت</button>
             </div>
         </div>
-    </nav>
 
-    <div class="ops-container">
-        
-        <div class="main-content">
-            
-            <div id="radar-tab" class="tab-panel active">
-                <div class="card">
-                    <div class="card-header">
-                        <span>📡 طلبات قيد الانتظار (Live Feed)</span>
-                        <div class="action-btns">
-                            <button id="btn-auto-radar" class="btn-royal" style="background:var(--app-color); color:white; font-size:12px; padding:8px 15px; width:auto;" onclick="toggleAutoRadar()">🚀 تفعيل الرادار</button>
-                            <button class="btn-royal btn-print" onclick="window.print()">🖨️ طباعة الكشف</button>
-                            <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearLiveRadar()" title="مسح الرادار">🗑️</button>
-                        </div>
-                    </div>
-                    <div id="print-area">
-                        <table id="radar-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 15%;">الوقت والتاريخ</th>
-                                    <th style="width: 25%;">المصدر (المنشأة)</th>
-                                    <th style="width: 15%;">منطقة التوصيل</th>
-                                    <th style="width: 15%;">الهاتف</th>
-                                    <th style="width: 15%;">المالية</th>
-                                    <th style="width: 15%;">التحكم</th>
-                                </tr>
-                            </thead>
-                            <tbody id="live-table-body">
-                                <tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">جاري رصد الترددات... 📡</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+        <div id="history-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="lang_history_title">سجل الطلبات الألماسي 💎</div>
+                    <button class="close-modal" onclick="document.getElementById('history-modal').style.display='none'">✕</button>
                 </div>
-
-                <div class="card" style="border-top: 4px solid var(--success);">
-                    <div class="card-header">
-                        <span>✅ الطلبات المكتملة (Daily Archive)</span>
-                        <div class="action-btns">
-                            <button class="mini-circle-btn" style="background:#f59e0b; color:white; width:auto; padding:0 15px; border-radius:12px; font-weight:bold; font-size:12px;" onclick="resetDailyStats()">🔄 تصفير يومي</button>
-                            <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearCompletedOrders()" title="مسح الأرشيف كامل">🗑️</button>
-                        </div>
+                <div id="history-list-container" class="history-list">
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 15%;">الوقت</th>
-                                <th style="width: 20%;">الكابتن</th>
-                                <th style="width: 25%;">المنشأة</th>
-                                <th style="width: 15%;">العمولة</th>
-                                <th style="width: 15%;">الحالة</th>
-                                <th style="width: 10%;">حذف</th>
-                            </tr>
-                        </thead>
-                        <tbody id="completed-table-body">
-                            <tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد طلبات مكتملة اليوم</td></tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
-
-            <div id="captains-tab" class="tab-panel">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="card">
-                        <div class="card-header">
-                            <span>🦸‍♂️ إضافة كابتن جديد فوراً</span>
-                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 4px 12px; border-radius: 20px;">
-                                <span style="font-size: 11px; color: var(--gold); font-weight: bold;">معرف الشركة:</span>
-                                <input type="text" id="persistent_company_id" onchange="savePersistentId()" placeholder="أدخل المعرف يدويا..." style="background: white; border: 1px solid var(--gold); border-radius: 6px; color: var(--primary); font-weight: 900; font-size: 12px; outline: none; width: 120px; text-align: center; padding: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
-                            </div>
-                        </div>
-                        <div class="manual-form">
-                            <input type="hidden" id="new_cap_company_id" value="">
-
-                            <div class="form-grid">
-                                <div class="form-group full-width">
-                                    <label>الاسم الكامل</label>
-                                    <input type="text" id="new_cap_name" placeholder="الاسم الرباعي">
-                                </div>
-                                <div class="form-group">
-                                    <label>رقم الهاتف</label>
-                                    <input type="tel" id="new_cap_phone" placeholder="07xxxxxxxx">
-                                </div>
-                                <div class="form-group">
-                                    <label>رقم السيارة والنوع</label>
-                                    <input type="text" id="new_cap_car" placeholder="المركبة - لوحة الأرقام">
-                                </div>
-                                <div class="form-group full-width">
-                                    <label>المصدر المعتمد (المنطقة)</label>
-                                    <select id="new_cap_region">
-                                        <option value="">جاري تحميل المصادر المعتمدة...</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>اسم المستخدم (User ID)</label>
-                                    <input type="text" id="new_cap_user" placeholder="معرف الدخول">
-                                </div>
-                                <div class="form-group">
-                                    <label>كلمة المرور (Password)</label>
-                                    <input type="text" id="new_cap_pass" placeholder="رمز الدخول السري">
-                                </div>
-                                <div class="form-group full-width">
-                                    <label>الرصيد الافتتاحي (د.أ)</label>
-                                    <input type="number" id="new_cap_bal" placeholder="0.00" value="0">
-                                </div>
-                            </div>
-                            <button class="btn-royal btn-gold" onclick="addNewCaptain()">✅ توثيق وتفعيل الكابتن بالنظام</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">⚡ المحفظة والبحث السريع</div>
-                        <div class="manual-form">
-                            <div class="form-group">
-                                <label>رقم هاتف الكابتن</label>
-                                <input type="tel" id="smart_search_phone" placeholder="أدخل الرقم للاستعلام..." oninput="smartSearchCaptain()">
-                            </div>
-                            
-                            <div id="smart-cap-card" class="smart-cap-card">
-                                <div class="smart-cap-info"><span style="color:#64748b;">الاسم</span> <span id="s_cap_name" style="color:var(--primary);">---</span></div>
-                                <div class="smart-cap-info"><span style="color:#64748b;">المركبة</span> <span id="s_cap_car" style="color:var(--primary);">---</span></div>
-                                <div class="smart-cap-info"><span style="color:#64748b;">الرصيد الحالي</span> <span id="s_cap_bal" style="color:var(--success);">0.00 د.أ</span></div>
-                                <hr style="border:0; border-top:1px dashed #cbd5e1; margin:10px 0;">
-                                <div class="form-group">
-                                    <label>قيمة الشحن (د.أ)</label>
-                                    <input type="number" id="charge_amount" placeholder="0.00">
-                                </div>
-                                <button class="btn-royal" style="margin-top:10px; background:var(--success);" onclick="chargeCaptainBalance()">💰 إيداع الرصيد</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span>📋 السجل المركزي للكباتن</span>
-                        <div class="filter-group">
-                            <button class="btn-filter active" id="filter-btn-active" onclick="setCaptainsFilter('active')">✅ الكباتن المفعلة</button>
-                            <button class="btn-filter" id="filter-btn-pending" onclick="setCaptainsFilter('pending')">⏳ طلبات الانتظار</button>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>الاسم</th>
-                                <th>الهاتف</th>
-                                <th>بيانات الدخول</th>
-                                <th>المنطقة</th>
-                                <th>المركبة</th>
-                                <th id="th-balance">الرصيد</th>
-                                <th>الحالة</th>
-                                <th>إدارة السجل</th>
-                            </tr>
-                        </thead>
-                        <tbody id="captains-log-body">
-                            <tr><td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">جاري تحميل البيانات...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
 
-        <div class="side-content">
-            <div class="balance-card">
-                <div style="font-size:12px; opacity:0.8;">إجمالي تحصيل عمولات اليوم</div>
-                <div style="font-size:28px; font-weight:900; margin:10px 0;" id="side-total-comm">0.00 د.أ</div>
-                <div style="font-size:11px;">N One Diamond System 👑</div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">📲 توجيه الطلب السريع</div>
-                <div class="manual-form" style="padding: 15px;">
-                    <div class="form-grid" style="grid-template-columns: 1fr;">
-                        <div class="form-group">
-                            <label>رقم الكابتن</label>
-                            <input type="tel" id="man_phone" placeholder="07xxxxxxxx" oninput="checkCaptainMemory()">
-                            <div id="mem_hint" style="font-size:11px; color:var(--gold); margin-top:5px; display:none;">🦸‍♂️ <span id="mem_name"></span></div>
-                            <div id="cap_status_indicator" style="font-size:11px; font-weight:bold; margin-top:5px; display:none;"></div>
-                        </div>
-                        <div class="form-group">
-                            <label>اسم الكابتن</label>
-                            <input type="text" id="man_cap_name" placeholder="الاسم الظاهر">
-                        </div>
-                        <div class="form-group">
-                            <label>المنشأة والمنطقة</label>
-                            <input type="text" id="man_rest_name" placeholder="مثلاً ماكدونالدز الجبيهة">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div class="form-group">
-                                <label>السعر</label>
-                                <input type="number" id="man_val" placeholder="0.00">
-                            </div>
-                            <div class="form-group">
-                                <label>التوصيل</label>
-                                <input type="number" id="man_fee" placeholder="0.00">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>نسبة العمولة بالمئة</label>
-                            <input type="number" id="man_ratio" placeholder="10" onchange="saveRatio()">
-                        </div>
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="lang_settings_title">الإعدادات ⚙️</div>
+                    <button class="close-modal" onclick="document.getElementById('settings-modal').style.display='none'">✕</button>
+                </div>
+                <div class="settings-form">
+                    <div class="settings-group">
+                        <label id="lang_set_user">اسم المستخدم (يوزر الدخول)</label>
+                        <input type="text" id="set_user" autocomplete="off">
                     </div>
-                    
-                    <input type="hidden" id="linked_order_id" value="">
-                    <input type="hidden" id="man_hidden_url" value="">
-                    
-                    <button class="btn-royal btn-app" onclick="sendOrderViaApp()">
-                        <span>إرسال عبر التطبيق</span> 📱
-                    </button>
-                    
-                    <button class="btn-royal" style="background: #25D366; color: white; margin-top: 10px;" onclick="sendManualOrder()">
-                        <span>توثيق وإرسال واتساب</span> 💬
-                    </button>
+                    <div class="settings-group">
+                        <label id="lang_set_pass">كلمة المرور</label>
+                        <input type="password" id="set_pass">
+                    </div>
+                    <button class="lang-toggle" onclick="toggleLanguage()" id="lang_toggle_btn">🌐 Switch to English</button>
+                    <button class="btn-save-settings" onclick="saveSettings()" id="lang_save_btn">حفظ التعديلات ✅</button>
                 </div>
             </div>
         </div>
 
-    </div>
+        <div id="blocked-screen" class="blocked-screen">
+            <div class="blocked-icon">🛑</div>
+            <div class="blocked-title" id="lang_blocked_title">تم إيقاف حسابك</div>
+            <div class="blocked-text" id="lang_blocked_text">عذراً، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.</div>
+            <button class="btn-logout" style="margin-top: 30px; background: rgba(239, 68, 68, 0.2); border-color: var(--danger);" onclick="logout()" id="lang_blocked_btn">تسجيل الخروج</button>
+        </div>
 
-    <div id="edit-captain-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-title">تعديل شامل لبيانات الكابتن ⚙️</div>
-                <button class="btn-close" onclick="closeEditModal()">✕</button>
+        <div id="pending-screen" class="blocked-screen" style="background: rgba(15, 23, 42, 0.98);">
+            <div class="blocked-icon">⏳</div>
+            <div class="pending-title" id="lang_pending_title">حسابك قيد الانتظار</div>
+            <div class="blocked-text" id="lang_pending_text">لقد تم استلام طلب تسجيلك بنجاح.<br><br>الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات.</div>
+            <button class="btn-logout" style="margin-top: 30px; background: rgba(255, 255, 255, 0.2);" onclick="logout()" id="lang_pending_btn">العودة للرئيسية</button>
+        </div>
+
+        <div id="login-screen" class="screen">
+            <div class="login-wrapper">
+                <div class="login-logo">بوابة <span class="gold-text" style="color:var(--gold)">الكباتن</span></div>
+                <div class="login-sub" id="lang_login_sub">المنصة الألماسية 💎</div>
+                
+                <div class="input-group">
+                    <label id="lang_login_user_lbl">اسم المستخدم (User ID)</label>
+                    <input type="text" id="login_user" placeholder="أدخل اليوزر الخاص بك" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label id="lang_login_pass_lbl">كلمة المرور (Password)</label>
+                    <input type="password" id="login_pass" placeholder="أدخل كلمة المرور">
+                </div>
+                
+                <button class="btn-login" onclick="loginCaptain()" id="lang_login_btn">دخول آمن 🚀</button>
+                <button class="btn-link" onclick="openRegisterScreen()" id="lang_register_btn">تسجيل كابتن جديد 📝</button>
             </div>
-            <div class="form-grid">
-                <input type="hidden" id="edit_cap_key">
-                <div class="form-group full-width">
-                    <label>الاسم الكامل</label>
-                    <input type="text" id="edit_cap_name">
+        </div>
+
+        <div id="register-screen" class="screen">
+            <div class="login-wrapper" style="padding: 20px;">
+                <div class="login-logo" style="font-size: 24px; margin-bottom: 25px;" id="lang_reg_title">تسجيل كابتن جديد 📝</div>
+                
+                <div class="input-group">
+                    <label id="lang_reg_comp_id">معرف الشركة (Company ID)</label>
+                    <input type="text" id="reg_company_id" placeholder="أدخل كود الشركة المراد الانضمام إليها" oninput="verifyCompanyId()">
+                    <div id="company_status_badge" class="id-status-badge"></div>
+                    <input type="hidden" id="verified_company_name" value="">
                 </div>
-                <div class="form-group">
-                    <label>رقم الهاتف</label>
-                    <input type="tel" id="edit_cap_phone">
+
+                <div class="input-group">
+                    <label id="lang_reg_name">الاسم الشخصي</label>
+                    <input type="text" id="reg_name" placeholder="أدخل اسمك الكريم">
                 </div>
-                <div class="form-group">
-                    <label>المركبة</label>
-                    <input type="text" id="edit_cap_car">
+                <div class="input-group">
+                    <label id="lang_reg_phone">رقم الهاتف</label>
+                    <input type="tel" id="reg_phone" placeholder="مثال: 07xxxxxxxx">
                 </div>
-                <div class="form-group full-width">
-                    <label>المنطقة</label>
-                    <select id="edit_cap_region">
-                        <option value="">اختر المنطقة...</option>
+                <div class="input-group">
+                    <label id="lang_reg_car">السيارة (النوع والترميز)</label>
+                    <input type="text" id="reg_car" placeholder="مثال: كيا سيراتو - 50-12345">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_user">اسم المستخدم (User Name) للدخول</label>
+                    <input type="text" id="reg_user" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="input-group">
+                    <label id="lang_reg_pass">كلمة المرور (Password)</label>
+                    <input type="password" id="reg_pass" placeholder="اختر كلمة مرور آمنة">
+                </div>
+                
+                <div class="input-group">
+                    <label id="lang_reg_area">المنطقة (التابعة للشركة)</label>
+                    <select id="reg_area" disabled>
+                        <option value="">يرجى التحقق من معرف الشركة أولاً...</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>معرف الدخول</label>
-                    <input type="text" id="edit_cap_user" readonly style="background:#f1f5f9; cursor:not-allowed;" title="لا يمكن تعديل اليوزر بعد الإنشاء">
+                
+                <button class="btn-login" onclick="submitRegistration()" id="lang_reg_submit">إرسال الطلب 🚀</button>
+                <button class="btn-link" onclick="backToLogin()" id="lang_reg_back">عودة لشاشة الدخول</button>
+            </div>
+        </div>
+
+        <div id="main-screen" class="screen">
+            <div class="app-header">
+                <div class="header-brand">
+                    <div style="font-size: 16px;" id="lang_header_cap">كابتن 🦸‍♂️</div>
+                    <div id="ui_company_name" class="header-company">الشركة الأم</div>
                 </div>
-                <div class="form-group">
-                    <label>الرقم السري</label>
-                    <input type="text" id="edit_cap_pass">
-                </div>
-                <div class="form-group full-width">
-                    <label>معرف الشركة (ID)</label>
-                    <input type="text" id="edit_cap_company">
+                <div class="header-actions">
+                    <button class="btn-action-top" onclick="openSettingsModal()" id="lang_btn_set">⚙️</button>
+                    <button class="btn-action-top" onclick="openHistoryModal()" id="lang_btn_hist">📜</button>
+                    <button class="btn-logout" onclick="logout()" id="lang_btn_out">خروج 🔒</button>
                 </div>
             </div>
-            <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
+
+            <div id="smart-ad-container" class="app-ad-container">
+                <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
+                <div class="ad-content-wrapper">
+                    <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
+                </div>
+            </div>
+
+            <div class="app-content">
+                
+                <div id="balance-warning" class="warning-banner">
+                    <span style="font-size: 18px;">⚠️</span>
+                    <span id="lang_bal_warn">عذراً، وصل رصيدك للحد المانع (-1 د.أ). يرجى شحن رصيدك للاستمرار في استقبال الطلبات.</span>
+                </div>
+
+                <div class="cap-profile-card">
+                    <div class="cap-name" id="ui_cap_name">---</div>
+                    <div class="cap-car" id="ui_cap_car">---</div>
+                    <div class="cap-stats-row">
+                        <div>
+                            <div class="bal-title" id="lang_bal_title">الرصيد المالي الفعلي</div>
+                            <div class="bal-amount" id="ui_cap_bal">0.00 <span style="font-size:14px;">د.أ</span></div>
+                        </div>
+                        <div class="rating-box">
+                            <div class="stars">★★★★★</div>
+                            <div class="rating-text" id="lang_rating">تقييم ألماسي 💎</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-toggle-card">
+                    <div class="status-text">
+                        <div id="ui_status_indicator" class="status-indicator offline"></div>
+                        <span id="ui_status_text">غير متاح للطلبات</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle_status" onchange="toggleOnlineStatus()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="achievement-card">
+                        <div class="ach-title" id="lang_ach_title">إنجاز اليوم 🏆</div>
+                        <div class="ach-number" id="ui_today_count">0</div>
+                        <div class="ach-subtitle" id="lang_ach_sub">عمل ممتاز!</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="ach-title" id="lang_hot_title">نقاط ساخنة 🔥</div>
+                        <div id="ui_hotspots" class="hotspots-container" style="margin: 0; justify-content: center;">
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;" id="lang_hot_wait">جاري الرصد...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title" id="lang_sec_orders">📲 الطلبات الواردة</div>
+                <div id="active-orders-container">
+                    <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;" id="lang_no_orders">
+                        لا توجد طلبات حالياً، خليك قريب من النقاط الساخنة 📡
+                    </div>
+                </div>
+
+            </div>
         </div>
+
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -539,1162 +532,791 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let currentUser = null;
-        let persistentCompanyId = ''; 
-        let allOrders = [];
-        let globalUsers = [];
-        let allAssignedOrders = {};
-        let processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders') || '[]');
-        let completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders') || '[]');
-        let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
-        let soundEnabled = false;
-        let isAlarmPlaying = false;
-        let activeSmartCaptain = null;
-        let currentTargetCaptain = null;
-        let isAutoRadarActive = false;
+        let currentCaptain = null;
+        let capNodeKey = null;
+        let allCompletedOrders = [];
+        let ringtoneActive = false;
+        let currentLang = 'ar';
+        let globalPricesList = [];
+        let verifiedCompanyId = null; 
         
-        let currentCaptainsFilter = 'active'; 
+        const COMMISSION_RATE = 0.10; 
 
-        // دالة الإشعارات الإدارية المنبثقة
-        window.showAppNotification = function(msg, type = 'success') {
-            const toast = document.getElementById('n-one-toast');
-            const msgEl = document.getElementById('toast-msg');
-            msgEl.innerText = msg;
-            
-            if(type === 'error') {
-                toast.style.borderLeft = '4px solid #ef4444';
-            } else if(type === 'warning') {
-                toast.style.borderLeft = '4px solid #f59e0b';
-            } else {
-                toast.style.borderLeft = '4px solid #10b981';
+        const dict = {
+            'ar': {
+                lang_loader: 'جاري الاتصال بالنظام...',
+                lang_popup_btn: 'حسناً، فهمت',
+                lang_history_title: 'سجل الطلبات الألماسي 💎',
+                lang_settings_title: 'الإعدادات ⚙️',
+                lang_set_user: 'اسم المستخدم (يوزر الدخول)',
+                lang_set_pass: 'كلمة المرور',
+                lang_toggle_btn: '🌐 Switch to English',
+                lang_save_btn: 'حفظ التعديلات ✅',
+                lang_blocked_title: 'تم إيقاف حسابك',
+                lang_blocked_text: 'عذراً، لقد تم إيقاف أو تجميد حسابك من قبل الإدارة.<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت.',
+                lang_blocked_btn: 'تسجيل الخروج',
+                lang_pending_title: 'حسابك قيد الانتظار',
+                lang_pending_text: 'لقد تم استلام طلب تسجيلك بنجاح.<br><br>الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات.',
+                lang_pending_btn: 'العودة للرئيسية',
+                lang_login_sub: 'المنصة الألماسية 💎',
+                lang_login_user_lbl: 'اسم المستخدم (User ID)',
+                lang_login_pass_lbl: 'كلمة المرور (Password)',
+                lang_login_btn: 'دخول آمن 🚀',
+                lang_register_btn: 'تسجيل كابتن جديد 📝',
+                lang_reg_title: 'تسجيل كابتن جديد 📝',
+                lang_reg_comp_id: 'معرف الشركة (Company ID)',
+                lang_reg_name: 'الاسم الشخصي',
+                lang_reg_phone: 'رقم الهاتف',
+                lang_reg_car: 'السيارة (النوع والترميز)',
+                lang_reg_user: 'اسم المستخدم (User Name) للدخول',
+                lang_reg_pass: 'كلمة المرور (Password)',
+                lang_reg_area: 'المنطقة (التابعة للشركة)',
+                lang_reg_submit: 'إرسال الطلب 🚀',
+                lang_reg_back: 'عودة لشاشة الدخول',
+                lang_header_cap: 'كابتن 🦸‍♂️',
+                lang_btn_out: 'خروج 🔒',
+                lang_bal_warn: 'عذراً، وصل رصيدك للحد المانع (-1 د.أ). يرجى شحن رصيدك للاستمرار في استقبال الطلبات.',
+                lang_bal_title: 'الرصيد المالي الفعلي',
+                lang_rating: 'تقييم ألماسي 💎',
+                lang_ach_title: 'إنجاز اليوم 🏆',
+                lang_ach_sub: 'عمل ممتاز!',
+                lang_hot_title: 'نقاط ساخنة 🔥',
+                lang_sec_orders: '📲 الطلبات الواردة',
+                status_online: 'متاح وجاهز للطلبات 🟢',
+                status_offline: 'غير متاح للطلبات 🔴',
+                status_blocked: 'غير متاح (محظور مالياً)',
+                no_orders: 'لا توجد طلبات حالياً، خليك قريب من النقاط الساخنة 📡',
+                no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن.',
+                dir: 'rtl'
+            },
+            'en': {
+                lang_loader: 'Connecting to System...',
+                lang_popup_btn: 'Got it',
+                lang_history_title: 'Diamond History 💎',
+                lang_settings_title: 'Settings ⚙️',
+                lang_set_user: 'Username',
+                lang_set_pass: 'Password',
+                lang_toggle_btn: '🌐 التبديل للعربية',
+                lang_save_btn: 'Save Changes ✅',
+                lang_blocked_title: 'Account Blocked',
+                lang_blocked_text: 'Sorry, your account has been suspended.<br><br>Please contact your company management to reactivate.',
+                lang_blocked_btn: 'Logout',
+                lang_pending_title: 'Account Pending',
+                lang_pending_text: 'Your registration has been received successfully.<br><br>Please contact your company administration to activate the account.',
+                lang_pending_btn: 'Return to Home',
+                lang_login_sub: 'Diamond Portal 💎',
+                lang_login_user_lbl: 'Username',
+                lang_login_pass_lbl: 'Password',
+                lang_login_btn: 'Secure Login 🚀',
+                lang_register_btn: 'Register New Captain 📝',
+                lang_reg_title: 'Register New Captain 📝',
+                lang_reg_comp_id: 'Company ID',
+                lang_reg_name: 'Full Name',
+                lang_reg_phone: 'Phone Number',
+                lang_reg_car: 'Car (Type & Plate)',
+                lang_reg_user: 'Username',
+                lang_reg_pass: 'Password',
+                lang_reg_area: 'Approved Work Area',
+                lang_reg_submit: 'Submit Request 🚀',
+                lang_reg_back: 'Back to Login',
+                lang_header_cap: 'Captain 🦸‍♂️',
+                lang_btn_out: 'Logout 🔒',
+                lang_bal_warn: 'Warning, balance reached the limit (-1 JOD). Please recharge to receive orders.',
+                lang_bal_title: 'Actual Balance',
+                lang_rating: 'Diamond Rating 💎',
+                lang_ach_title: 'Today\'s Wins 🏆',
+                lang_ach_sub: 'Great Job!',
+                lang_hot_title: 'Hotspots 🔥',
+                lang_sec_orders: '📲 Incoming Orders',
+                status_online: 'Online & Ready 🟢',
+                status_offline: 'Offline 🔴',
+                status_blocked: 'Offline (Blocked)',
+                no_orders: 'No active orders right now, stay near hotspots 📡',
+                no_history: 'No completed orders in history yet.',
+                dir: 'ltr'
             }
-
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
-        function getActiveMasterId() {
-            return persistentCompanyId || (currentUser ? (currentUser.Client_User || currentUser.user) : '');
-        }
+        window.toggleLanguage = function() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            document.getElementById('app-body').dir = dict[currentLang].dir;
+            
+            for(const key in dict[currentLang]) {
+                const el = document.getElementById(key);
+                if(el) {
+                    if(key === 'lang_blocked_text' || key === 'lang_pending_text') el.innerHTML = dict[currentLang][key];
+                    else el.innerText = dict[currentLang][key];
+                }
+            }
+            if(currentCaptain) updateUIProfile(currentCaptain);
+        };
 
         window.onload = function() {
-            const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                checkSession();
+            }, 800);
+            
+            document.body.addEventListener('click', () => {
+                const audio = document.getElementById('order-ringtone');
+                if(audio.paused && ringtoneActive) {
+                    audio.play().catch(e => console.log(e));
+                }
+            }, { once: true });
+        };
+
+        function checkSession() {
+            const savedUser = localStorage.getItem('n1_captain_session');
             if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الإدارة";
+                currentCaptain = JSON.parse(savedUser);
+                capNodeKey = currentCaptain.Cap_User || currentCaptain.user;
                 
-                const savedId = localStorage.getItem('n1_company_id');
-                if (savedId) {
-                    persistentCompanyId = savedId;
-                } else {
-                    persistentCompanyId = currentUser.Client_User || currentUser.user;
-                    localStorage.setItem('n1_company_id', persistentCompanyId);
+                if (currentCaptain.app_access === 'pending' || currentCaptain.Cap_Status === 'pending') {
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('register-screen').classList.remove('active');
+                    document.getElementById('main-screen').classList.remove('active');
+                    document.getElementById('pending-screen').style.display = 'flex';
+                    return;
                 }
                 
-                if(document.getElementById('persistent_company_id')) {
-                    document.getElementById('persistent_company_id').value = persistentCompanyId;
-                }
-                if(document.getElementById('new_cap_company_id')) {
-                    document.getElementById('new_cap_company_id').value = persistentCompanyId;
-                }
-                
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('register-screen').classList.remove('active');
+                document.getElementById('main-screen').classList.add('active');
+                initRealtimeListeners();
+                setupAdsAndAlerts();
             } else {
-                showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
-                setTimeout(() => { window.history.back(); }, 1500);
-                return;
-            }
-            
-            document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
-            
-            fetchRegionsFromPrices();
-            fetchRadarStatus();
-            fetchAssignedOrders();
-            fetchLiveOrders();
-            fetchGlobalUsers();
-            renderCompletedOrders();
-            setupRealtimeFreezeListener();
-            setInterval(refreshDynamicElements, 1000);
-        };
-
-        window.savePersistentId = function() {
-            const newId = document.getElementById('persistent_company_id').value.trim();
-            persistentCompanyId = newId;
-            localStorage.setItem('n1_company_id', newId);
-            
-            if(document.getElementById('new_cap_company_id')) {
-                document.getElementById('new_cap_company_id').value = newId;
-            }
-            
-            fetchGlobalUsers();
-            fetchRegionsFromPrices();
-            fetchRadarStatus();
-        };
-
-        function fetchRadarStatus() {
-            if (!currentUser) return;
-            const myMaster = getActiveMasterId();
-            onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
-                isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
-                const btn = document.getElementById('btn-auto-radar');
-                if (isAutoRadarActive) {
-                    btn.classList.add('radar-active');
-                    btn.innerHTML = '🚀 الرادار يعمل...';
-                    triggerAutoRadarMaster(true);
-                } else {
-                    btn.classList.remove('radar-active');
-                    btn.innerHTML = '🚀 تفعيل الرادار';
-                }
-            });
-        }
-
-        function fetchAssignedOrders() {
-            onValue(ref(db, 'assigned_orders'), (snapshot) => {
-                allAssignedOrders = snapshot.exists() ? snapshot.val() : {};
-                checkAssignedOrdersStatus();
-                renderRadar();
-            });
-        }
-
-        function checkAssignedOrdersStatus() {
-            for (let capKey in allAssignedOrders) {
-                for (let appOrdId in allAssignedOrders[capKey]) {
-                    let ord = allAssignedOrders[capKey][appOrdId];
-                    
-                    if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
-                        const commission = ord.commission_amount || 0;
-                        if(commission > 0) {
-                            const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                            if(capData) {
-                                const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
-                                update(ref(db), {
-                                    [`${capData._node}/${capKey}/Cap_Balance`]: parseFloat(newBal),
-                                    [`${capData._node}/${capKey}/balance`]: parseFloat(newBal)
-                                });
-                            }
-                        }
-                        
-                        const entry = {
-                            orderId: ord.linkedRadarId || appOrdId,
-                            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                            cap: ord.cap_name || "كابتن",
-                            rest: ord.restaurant,
-                            comm: commission,
-                            date: new Date().toISOString(),
-                            via: ord.dispatch_method || "App"
-                        };
-                        completedOrders.unshift(entry);
-                        localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                        
-                        processedAppOrders.push(appOrdId);
-                        localStorage.setItem('n1_processed_app_orders', JSON.stringify(processedAppOrders));
-                        
-                        renderCompletedOrders();
-                    }
-                    else if (ord.status === 'rejected') {
-                        remove(ref(db, `assigned_orders/${capKey}/${appOrdId}`));
-                    }
-                }
+                document.getElementById('login-screen').classList.add('active');
             }
         }
 
-        function fetchRegionsFromPrices() {
-            if(!currentUser) return;
-            const myMaster = getActiveMasterId();
-            onValue(ref(db, 'prices'), (snapshot) => {
-                const selectNew = document.getElementById('new_cap_region');
-                const selectEdit = document.getElementById('edit_cap_region');
-                const optionsHtml = ['<option value="">اختر المنطقة...</option>'];
-                let sourcesAdded = new Set();
-                
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    Object.values(data).forEach(priceObj => {
-                        if (priceObj.Client_Master === myMaster || priceObj.company === myMaster) {
-                            const sourceName = priceObj.Price_Source;
-                            if (sourceName && !sourcesAdded.has(sourceName)) {
-                                sourcesAdded.add(sourceName);
-                                optionsHtml.push(`<option value="${sourceName}">${sourceName}</option>`);
-                            }
-                        }
-                    });
-                }
-                if (sourcesAdded.size === 0) {
-                     optionsHtml.push('<option value="عام">عام</option>');
-                }
-                
-                selectNew.innerHTML = optionsHtml.join('');
-                selectEdit.innerHTML = optionsHtml.join('');
-            });
-        }
-
-        window.toggleAutoRadar = function() {
-            const myMaster = getActiveMasterId();
-            const newState = !isAutoRadarActive;
-            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
-        };
-
-        window.saveRatio = function() {
-            localStorage.setItem('n1_commission_ratio', document.getElementById('man_ratio').value);
-        };
-
-        window.goBackToCustomer = function() {
-            if (document.referrer) {
-                window.history.back();
-            } else {
-                window.location.replace('index.html'); 
-            }
-        };
-
-        window.enableSound = function() {
-            if (!soundEnabled) {
-                const audio = document.getElementById('notif-sound');
-                audio.play().then(() => { audio.pause(); soundEnabled = true; }).catch(() => {});
-            }
-        };
-
-        function setupRealtimeFreezeListener() {
-            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
-            const username = currentUser.Client_User || currentUser.user;
-            const myRef = ref(db, `users/${username}`);
+        window.loginCaptain = async function() {
+            const user = document.getElementById('login_user').value.trim();
+            const pass = document.getElementById('login_pass').value.trim();
             
-            onValue(myRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        showAppNotification("عذراً تم إيقاف النظام يرجى مراجعة الإدارة", "error");
-                        setTimeout(() => {
-                            localStorage.removeItem('current_company_user');
-                            localStorage.removeItem('currentUser');
-                            window.location.replace('index.html');
-                        }, 2000);
-                    }
-                } else {
-                    showAppNotification("تم حذف الحساب سيتم تسجيل الخروج", "error");
-                    setTimeout(() => {
-                        localStorage.removeItem('current_company_user');
-                        localStorage.removeItem('currentUser');
-                        window.location.replace('index.html');
-                    }, 2000);
-                }
-            });
-        }
-
-        function fetchLiveOrders() {
-            onValue(ref(db, 'orders'), (snapshot) => {
-                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
-                renderRadar();
-                if(isAutoRadarActive) {
-                    triggerAutoRadarMaster(true);
-                }
-            });
-        }
-
-        function fetchGlobalUsers() {
-            onValue(ref(db), (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    globalUsers = [];
-                    const activeMasterId = getActiveMasterId();
-                    
-                    if(data.users) Object.values(data.users).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.master === activeMasterId || u.user === activeMasterId) { 
-                            u._node = 'users'; 
-                            globalUsers.push(u); 
-                        }
-                    });
-                    if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId) { 
-                            u._node = 'shops'; 
-                            globalUsers.push(u); 
-                        }
-                    });
-                    if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Company_ID === activeMasterId) { 
-                            u._node = 'captains'; 
-                            globalUsers.push(u); 
-                        }
-                    });
-                    
-                    renderRadar();
-                    renderCaptainsList();
-                }
-            });
-        }
-
-        window.renderRadar = function() {
-            if (!currentUser) return;
-            const tbody = document.getElementById('live-table-body');
-            const completedIDs = new Set(completedOrders.map(o => o.orderId));
+            if(!user || !pass) { alert(currentLang === 'ar' ? "يرجى إدخال اليوزر والباسورد" : "Please enter username and password"); return; }
             
-            const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
-            myShops.push(myMaster); 
-            
-            const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
-            
-            document.getElementById('stat-pending').innerText = pendingOrders.length;
-            if (pendingOrders.length > 0 && soundEnabled && !isAlarmPlaying) {
-                document.getElementById('notif-sound').play();
-                isAlarmPlaying = true;
-            } else if (pendingOrders.length === 0) {
-                document.getElementById('notif-sound').pause();
-                isAlarmPlaying = false;
-            }
-
-            if (pendingOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">الرادار هادئ حالياً 📡</td></tr>';
-                return;
-            }
-
-            let assignedInfoMap = {};
-            for(let capKey in allAssignedOrders) {
-                for(let ordKey in allAssignedOrders[capKey]) {
-                    if(allAssignedOrders[capKey][ordKey].status === 'assigned') {
-                        let radarId = allAssignedOrders[capKey][ordKey].linkedRadarId;
-                        if(radarId) {
-                            assignedInfoMap[radarId] = allAssignedOrders[capKey][ordKey].cap_name || "كابتن";
-                        }
-                    }
-                }
-            }
-
-            tbody.innerHTML = '';
-            
-            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
-            const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
-
-            pendingOrders.forEach(ord => {
-                const orderDate = new Date(ord.Shop_Date);
-                const timeStr = orderDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                const dateStr = orderDate.toLocaleDateString('en-GB');
-                
-                const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-                const phone = shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---';
-                let area = shopData ? (shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
-
-                const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
-                
-                let isWaiting = !!assignedInfoMap[ord.Shop_Ord_ID];
-                let rowStatusClass = isWaiting ? 'order-row-waiting' : (diffSec > 120 ? 'order-row-urgent' : 'order-row-new');
-                
-                let actionHtml = '';
-                if (isWaiting) {
-                    actionHtml = `<span class="badge" style="background:#fef3c7; color:#d97706; font-size:11px;">⏳ معلق عند ${assignedInfoMap[ord.Shop_Ord_ID]}</span>`;
-                } else {
-                    actionHtml = `
-                        <div class="action-btns">
-                            <button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="loadToManual('${ord.Shop_Ord_ID}')" title="توجيه">📲</button>
-                            <button class="mini-circle-btn" style="background:#e2e8f0; color:#64748b;" onclick="dismissOrder('${ord.Shop_Ord_ID}')" title="إخفاء">✕</button>
-                        </div>
-                    `;
-                }
-
-                let cleanShopName = ord.Shop_Name || '';
-                cleanShopName = cleanShopName.replace(urlRegex, badgeHtml);
-                area = area.replace(urlRegex, '📍');
-
-                tbody.innerHTML += `
-                    <tr class="${rowStatusClass}" id="row-${ord.Shop_Ord_ID}">
-                        <td>
-                            <div style="font-size:13px; font-weight:800;">${timeStr}</div>
-                            <div style="font-size:10px; color:#94a3b8;">${dateStr}</div>
-                        </td>
-                        <td style="font-weight:900; color:var(--primary); line-height:1.5;">${cleanShopName}</td>
-                        <td><span class="area-badge">${area}</span></td>
-                        <td><span class="badge bg-phone">${phone}</span></td>
-                        <td>
-                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                                <span class="badge bg-money">${ord.Shop_Val}</span>
-                                <span class="badge bg-fee">+${ord.Shop_Fee}</span>
-                            </div>
-                        </td>
-                        <td>${actionHtml}</td>
-                    </tr>
-                `;
-            });
-        };
-
-        window.triggerAutoRadarMaster = async function(silent = false) {
-            const completedIDs = new Set(completedOrders.map(o => o.orderId));
-            const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
-            myShops.push(myMaster);
-            
-            const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
-            
-            let activeLinkedIds = new Set();
-            for(let capKey in allAssignedOrders) {
-                for(let ordKey in allAssignedOrders[capKey]) {
-                    let st = allAssignedOrders[capKey][ordKey].status;
-                    if(st === 'assigned' || st === 'accepted') {
-                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
-                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
-                        }
-                    }
-                }
-            }
-            
-            const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
-
-            if(trulyPendingOrders.length === 0) {
-                if(!silent) showAppNotification("لا توجد طلبات جديدة للتوزيع", "warning");
-                return;
-            }
-
-            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster));
-            
-            let busyCaptains = new Set();
-            for(let capKey in allAssignedOrders) {
-                for(let ordKey in allAssignedOrders[capKey]) {
-                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
-                        busyCaptains.add(capKey);
-                        break;
-                    }
-                }
-            }
-
-            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
-            availableCaptains = availableCaptains.filter(c => {
-                const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
-                return !busyCaptains.has(k);
-            });
-
-            if (availableCaptains.length === 0) {
-                if(!silent) showAppNotification("عذراً لا يوجد كابتن متاح حالياً", "warning");
-                return;
-            }
-
-            let dispatchedCount = 0;
-            let updates = {};
-
-            for (let ord of trulyPendingOrders) {
-                if(availableCaptains.length === 0) break;
-
-                const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-                const orderRegion = shopData ? (shopData.Shop_Location || shopData.Client_Location || '').trim() : '';
-
-                let selectedIndex = availableCaptains.findIndex(c => (c.Cap_Region || '').trim() === orderRegion);
-                if(selectedIndex === -1) selectedIndex = 0; 
-
-                let selectedCaptain = availableCaptains[selectedIndex];
-                const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
-
-                availableCaptains.splice(selectedIndex, 1);
-
-                const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
-                const fee = parseFloat(ord.Shop_Fee || 0);
-                const commission = (fee * (ratio / 100)).toFixed(2);
-                
-                const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
-                const orderData = {
-                    id: appOrderId,
-                    restaurant: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
-                    value: ord.Shop_Val,
-                    fee: ord.Shop_Fee,
-                    status: 'assigned',
-                    timestamp: Date.now(),
-                    linkedRadarId: ord.Shop_Ord_ID,
-                    commission_amount: commission,
-                    cap_name: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
-                    dispatch_method: "Auto"
-                };
-                
-                updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
-                dispatchedCount++;
-            }
-
-            if(dispatchedCount > 0) {
-                try {
-                    await update(ref(db), updates);
-                    if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
-                } catch(e) {
-                    if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
-                }
-            } else {
-                if(!silent) showAppNotification("لم يتم توزيع أي طلب", "warning");
-            }
-        };
-
-        window.loadToManual = function(orderId) {
-            const ord = allOrders.find(o => o.Shop_Ord_ID === orderId);
-            if (!ord) return;
-            
-            const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-            const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || '') : '';
-
-            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
-            let fullShopName = ord.Shop_Name || '';
-            
-            let extractedUrls = fullShopName.match(urlRegex);
-            let hiddenUrlStr = extractedUrls ? extractedUrls.join(' ') : '';
-            
-            let cleanShopName = fullShopName.replace(urlRegex, '').trim();
-
-            document.getElementById('man_rest_name').value = cleanShopName + (area ? " - " + area : "");
-            document.getElementById('man_val').value = ord.Shop_Val;
-            document.getElementById('man_fee').value = ord.Shop_Fee;
-            document.getElementById('linked_order_id').value = orderId;
-            document.getElementById('man_hidden_url').value = hiddenUrlStr;
-            
-            document.querySelector('.side-content').scrollTop = 0;
-        };
-
-        window.dismissOrder = async function(orderId) {
-            if(confirm("هل تريد إخفاء الطلب؟")) {
-                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString() };
-                completedOrders.unshift(entry);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                renderRadar();
-            }
-        };
-
-        window.checkCaptainMemory = function() {
-            const phone = document.getElementById('man_phone').value.trim();
-            const hint = document.getElementById('mem_hint');
-            const statusIndicator = document.getElementById('cap_status_indicator');
-            
-            currentTargetCaptain = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
-            
-            if (currentTargetCaptain) {
-                hint.style.display = 'block';
-                document.getElementById('mem_name').innerText = currentTargetCaptain.Cap_Name || currentTargetCaptain.name;
-                document.getElementById('man_cap_name').value = currentTargetCaptain.Cap_Name || currentTargetCaptain.name;
-                
-                const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
-                const appStatus = currentTargetCaptain.app_status;
-                
-                statusIndicator.style.display = 'block';
-                if (capStatus === 'active') {
-                    if (appStatus === 'online') {
-                        statusIndicator.style.color = 'var(--success)';
-                        statusIndicator.innerText = '🟢 جاهز';
-                    } else {
-                        statusIndicator.style.color = 'var(--danger)';
-                        statusIndicator.innerText = '🔴 أوفلاين';
-                    }
-                } else {
-                    statusIndicator.style.color = 'var(--danger)';
-                    statusIndicator.innerText = '🔴 غير متاح';
-                }
-
-            } else if (captainMemory[phone]) {
-                hint.style.display = 'block';
-                document.getElementById('mem_name').innerText = captainMemory[phone];
-                document.getElementById('man_cap_name').value = captainMemory[phone];
-                statusIndicator.style.display = 'none';
-                currentTargetCaptain = null;
-            } else {
-                hint.style.display = 'none';
-                statusIndicator.style.display = 'none';
-                document.getElementById('man_cap_name').value = '';
-                currentTargetCaptain = null;
-            }
-        };
-
-        window.sendOrderViaApp = async function() {
-            const phone = document.getElementById('man_phone').value.trim();
-            const capName = document.getElementById('man_cap_name').value.trim();
-            const restInfo = document.getElementById('man_rest_name').value.trim();
-            const hiddenUrl = document.getElementById('man_hidden_url').value.trim();
-            const val = document.getElementById('man_val').value;
-            const fee = document.getElementById('man_fee').value;
-            const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
-            const linkedId = document.getElementById('linked_order_id').value;
-
-            if (!phone || !restInfo || !fee) { 
-                showAppNotification("يرجى إكمال البيانات", "warning"); 
-                return; 
-            }
-            
-            if (!currentTargetCaptain) {
-                showAppNotification("الكابتن غير موجود بالنظام", "error");
-                return;
-            }
-
-            const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
-            if (capStatus === 'paused' || capStatus === 'off') {
-                showAppNotification("حساب الكابتن مجمد", "error");
-                return;
-            }
-
-            if (currentTargetCaptain.app_status === 'offline') {
-                showAppNotification("الكابتن أوفلاين", "error");
-                return;
-            }
-
-            const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
-
-            let activeCount = 0;
-            for(let ordKey in allAssignedOrders[capKey]) {
-                if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
-                    activeCount++;
-                }
-            }
-
-            if (activeCount > 0) {
-                if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) {
-                    return; 
-                }
-            }
-
-            const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
-            const updates = {};
-            const appOrderId = "APP_ORD_" + Date.now();
-            
-            let finalRestInfo = restInfo;
-            if(hiddenUrl) {
-                finalRestInfo += " - " + hiddenUrl;
-            }
-            
-            const orderData = {
-                id: appOrderId,
-                restaurant: finalRestInfo,
-                value: val,
-                fee: fee,
-                status: 'assigned',
-                timestamp: Date.now(),
-                linkedRadarId: linkedId || null,
-                commission_amount: commission,
-                cap_name: capName || currentTargetCaptain.Cap_Name || currentTargetCaptain.name,
-                dispatch_method: "App"
-            };
-            
-            updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
+            document.getElementById('loader').style.display = 'flex';
             
             try {
-                await update(ref(db), updates);
-                showAppNotification("تم الإرسال للتطبيق بنجاح");
+                const capRef = ref(db, `captains/${user}`);
+                const snap = await get(capRef);
                 
-                document.getElementById('man_rest_name').value = '';
-                document.getElementById('man_hidden_url').value = '';
-                document.getElementById('man_val').value = '';
-                document.getElementById('man_fee').value = '';
-                document.getElementById('linked_order_id').value = '';
+                if (snap.exists() && (snap.val().Cap_Pass === pass || snap.val().pass === pass)) {
+                    const data = snap.val();
+                    
+                    if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('login-screen').classList.remove('active');
+                        document.getElementById('pending-screen').style.display = 'flex';
+                        localStorage.setItem('n1_captain_session', JSON.stringify(data));
+                        return;
+                    }
+                    
+                    if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('blocked-screen').style.display = 'flex';
+                        return;
+                    }
 
+                    localStorage.setItem('n1_captain_session', JSON.stringify(data));
+                    currentCaptain = data;
+                    capNodeKey = user;
+                    
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('main-screen').classList.add('active');
+                    
+                    initRealtimeListeners();
+                    setupAdsAndAlerts();
+                } else {
+                    document.getElementById('loader').style.display = 'none';
+                    alert(currentLang === 'ar' ? "بيانات الدخول غير صحيحة يرجى التأكد" : "Incorrect login details");
+                }
             } catch (error) {
-                showAppNotification("خطأ في الإرسال", "error");
+                document.getElementById('loader').style.display = 'none';
+                alert(currentLang === 'ar' ? "حدث خطأ في الاتصال" : "Connection Error");
             }
         };
 
-        window.sendManualOrder = async function() {
-            const phone = document.getElementById('man_phone').value.trim();
-            const capName = document.getElementById('man_cap_name').value.trim();
-            const restInfo = document.getElementById('man_rest_name').value.trim();
-            const hiddenUrl = document.getElementById('man_hidden_url').value.trim();
-            const val = document.getElementById('man_val').value;
-            const fee = document.getElementById('man_fee').value;
-            const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
-            const linkedId = document.getElementById('linked_order_id').value;
+        window.openRegisterScreen = async function() {
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('register-screen').classList.add('active');
+            
+            document.getElementById('reg_company_id').value = '';
+            document.getElementById('company_status_badge').className = 'id-status-badge';
+            document.getElementById('company_status_badge').innerText = '';
+            document.getElementById('verified_company_name').value = '';
+            
+            const areaSelect = document.getElementById('reg_area');
+            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى التحقق من معرف الشركة أولاً...' : 'Please verify Company ID first...'}</option>`;
+            areaSelect.disabled = true;
 
-            if (!phone || !restInfo || !fee) { 
-                showAppNotification("يرجى إكمال البيانات", "warning"); 
-                return; 
+            try {
+                const snap = await get(ref(db, 'prices'));
+                if(snap.exists()) {
+                    globalPricesList = Object.values(snap.val());
+                }
+            } catch(e) {
+                console.log("Error loading areas", e);
+            }
+        };
+
+        window.verifyCompanyId = async function() {
+            const compIdInput = document.getElementById('reg_company_id').value.trim();
+            const badge = document.getElementById('company_status_badge');
+            const areaSelect = document.getElementById('reg_area');
+            const hiddenCompName = document.getElementById('verified_company_name');
+            
+            if (compIdInput.length < 3) {
+                badge.className = 'id-status-badge';
+                badge.innerText = '';
+                areaSelect.disabled = true;
+                verifiedCompanyId = null;
+                hiddenCompName.value = '';
+                return;
             }
 
-            if (capName) {
-                captainMemory[phone] = capName;
-                localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
+            badge.className = 'id-status-badge verifying';
+            badge.innerText = currentLang === 'ar' ? 'جاري التحقق ⏳' : 'Verifying ⏳';
+
+            try {
+                const userSnap = await get(ref(db, `users/${compIdInput}`));
+                if (userSnap.exists() && (userSnap.val().role === 'client' || userSnap.val().type === 'client' || userSnap.val().role === 'admin')) {
+                    const compData = userSnap.val();
+                    const compName = compData.Client_Name || compData.name || compIdInput;
+                    
+                    badge.className = 'id-status-badge success';
+                    badge.innerText = `✅ ${compName}`;
+                    verifiedCompanyId = compIdInput;
+                    hiddenCompName.value = compName;
+                    
+                    areaSelect.disabled = false;
+                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة...' : 'Select Area...'}</option>`;
+                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => p.Price_Area))].filter(Boolean);
+                    
+                    if (areas.length > 0) {
+                        areas.forEach(a => {
+                            areaSelect.innerHTML += `<option value="${a}">${a}</option>`;
+                        });
+                    } else {
+                        areaSelect.innerHTML += `<option value="Main Area">${currentLang === 'ar' ? 'المنطقة الرئيسية' : 'Main Area'}</option>`;
+                    }
+                } else {
+                    badge.className = 'id-status-badge error';
+                    badge.innerText = currentLang === 'ar' ? 'معرف غير صالح ❌' : 'Invalid ID ❌';
+                    verifiedCompanyId = null;
+                    hiddenCompName.value = '';
+                    areaSelect.disabled = true;
+                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى إدخال معرف صحيح' : 'Please enter a valid ID'}</option>`;
+                }
+            } catch(e) {
+                badge.className = 'id-status-badge error';
+                badge.innerText = currentLang === 'ar' ? 'خطأ في الاتصال ❌' : 'Connection Error ❌';
+            }
+        };
+
+        window.submitRegistration = async function() {
+            const name = document.getElementById('reg_name').value.trim();
+            const phone = document.getElementById('reg_phone').value.trim();
+            const car = document.getElementById('reg_car').value.trim();
+            const user = document.getElementById('reg_user').value.trim();
+            const pass = document.getElementById('reg_pass').value.trim();
+            const area = document.getElementById('reg_area').value;
+
+            if(!verifiedCompanyId) {
+                alert(currentLang === 'ar' ? "يرجى إدخال معرف شركة صحيح أولاً" : "Please enter a valid Company ID first");
+                return;
             }
 
-            const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
+            if(!name || !phone || !car || !user || !pass || !area) {
+                alert(currentLang === 'ar' ? "يرجى تعبئة جميع الحقول بشكل صحيح" : "Please fill all fields correctly");
+                return;
+            }
 
-            if (currentTargetCaptain) {
-                if (currentTargetCaptain.app_status === 'offline') {
-                    showAppNotification("الكابتن أوفلاين", "error");
+            document.getElementById('loader').style.display = 'flex';
+
+            try {
+                const existing = await get(ref(db, `captains/${user}`));
+                if(existing.exists()) {
+                    document.getElementById('loader').style.display = 'none';
+                    alert(currentLang === 'ar' ? "اسم المستخدم مستخدم مسبقاً يرجى اختيار اسم آخر" : "Username already exists");
                     return;
                 }
 
-                const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
+                const newCaptain = {
+                    Cap_User: user,
+                    user: user,
+                    Cap_Name: name,
+                    name: name,
+                    Cap_Phone: phone,
+                    phone: phone,
+                    Cap_Pass: pass,
+                    pass: pass,
+                    Cap_Car: car,
+                    company: verifiedCompanyId,
+                    Client_Master: verifiedCompanyId,
+                    Cap_Location: area,
+                    Cap_Balance: 0,
+                    balance: 0,
+                    app_access: 'pending', 
+                    app_status: 'offline',
+                    Cap_Status: 'pending',
+                    created_at: Date.now()
+                };
+
+                await set(ref(db, `captains/${user}`), newCaptain);
                 
-                let activeCount = 0;
-                for(let ordKey in allAssignedOrders[capKey]) {
-                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
-                        activeCount++;
-                    }
-                }
-
-                if (activeCount > 0) {
-                    if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) {
-                        return; 
-                    }
-                }
-
-                const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
-                const newBal = (currentBal - parseFloat(commission)).toFixed(2);
+                localStorage.setItem('n1_captain_session', JSON.stringify(newCaptain));
+                currentCaptain = newCaptain;
+                capNodeKey = user;
                 
-                const updates = {};
-                updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
-                await update(ref(db), updates);
-            }
-
-            let finalRestInfo = restInfo;
-            if(hiddenUrl) {
-                finalRestInfo += " - " + hiddenUrl;
-            }
-
-            const entry = {
-                orderId: linkedId || "MANUAL_" + Date.now(),
-                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                cap: capName || "كابتن",
-                rest: finalRestInfo,
-                comm: commission,
-                date: new Date().toISOString(),
-                via: "WhatsApp"
-            };
-            completedOrders.unshift(entry);
-            localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-
-            let waPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
-            if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
-            
-            let urlText = hiddenUrl ? `📍 الموقع: ${hiddenUrl}%0a` : '';
-            const msg = `*${currentUser.Client_Name || 'إمبراطورية N One'} | أوردر جديد* 🚀%0a` +
-                        `-----------------------------%0a` +
-                        `🏪 المنشأة: *${restInfo}*%0a` +
-                        urlText +
-                        `🛵 التوصيل: *${fee} د.أ*%0a` +
-                        `💰 القيمة: *${val} د.أ*%0a` +
-                        `-----------------------------%0a` +
-                        `بالتوفيق ✅`;
-
-            window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank');
-
-            document.getElementById('man_rest_name').value = '';
-            document.getElementById('man_hidden_url').value = '';
-            document.getElementById('man_val').value = '';
-            document.getElementById('man_fee').value = '';
-            document.getElementById('linked_order_id').value = '';
-            renderRadar();
-            renderCompletedOrders();
-        };
-
-        window.renderCompletedOrders = function() {
-            const tbody = document.getElementById('completed-table-body');
-            
-            document.getElementById('stat-completed-total').innerText = completedOrders.length;
-            
-            const today = new Date().toDateString();
-            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض");
-            
-            let totalComm = todayOrders.reduce((sum, o) => sum + parseFloat(o.comm), 0);
-            document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
-            document.getElementById('side-total-comm').innerText = totalComm.toFixed(2) + " د.أ";
-
-            if (todayOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد طلبات مكتملة اليوم</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = '';
-            
-            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
-            const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
-
-            todayOrders.forEach(o => {
-                const methodIcon = o.via === 'App' ? '📱' : (o.via === 'Auto' ? '🤖' : '💬');
-                let cleanRestName = o.rest || '';
-                cleanRestName = cleanRestName.replace(urlRegex, badgeHtml);
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-size:11px; color:#64748b;">${o.time}</td>
-                        <td style="font-weight:800;">${o.cap}</td>
-                        <td style="line-height:1.5;">${cleanRestName}</td>
-                        <td><span class="badge bg-money" style="background:#f0fdf4;">${o.comm}</span></td>
-                        <td><span class="badge" style="background:#dcfce7; color:#166534;">مكتمل ${methodIcon}</span></td>
-                        <td><button class="mini-circle-btn" onclick="deleteFromArchive('${o.orderId}')">🗑️</button></td>
-                    </tr>
-                `;
-            });
-        };
-
-        window.resetDailyStats = function() {
-            if(confirm("تصفير العمولات والطلبات لليوم")) {
-                const today = new Date().toDateString();
-                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                renderCompletedOrders();
-            }
-        };
-
-        window.deleteFromArchive = function(id) {
-            if(confirm("حذف من الأرشيف")) {
-                completedOrders = completedOrders.filter(o => o.orderId !== id);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                renderCompletedOrders();
-                renderRadar();
-            }
-        };
-
-        window.clearCompletedOrders = function() {
-            if(confirm("مسح الأرشيف كاملاً")) {
-                completedOrders = [];
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                renderCompletedOrders();
-                renderRadar();
-            }
-        };
-
-        window.clearLiveRadar = async function() {
-            if(confirm("مسح الطلبات من الرادار")) {
-                const myMaster = getActiveMasterId();
-                const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
-                myShops.push(myMaster);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('register-screen').classList.remove('active');
                 
-                const updates = {};
-                allOrders.forEach(o => {
-                    if (o.Shop_Type === 'shop_order' && myShops.includes(o.Shop_User)) {
-                        updates[`orders/${o.Shop_Ord_ID}`] = null;
+                checkSession(); 
+                
+            } catch(e) {
+                document.getElementById('loader').style.display = 'none';
+                alert(currentLang === 'ar' ? "حدث خطأ أثناء التسجيل" : "Registration Error");
+            }
+        };
+
+        window.backToLogin = function() {
+            document.getElementById('register-screen').classList.remove('active');
+            document.getElementById('login-screen').classList.add('active');
+        };
+
+        window.logout = function() {
+            localStorage.removeItem('n1_captain_session');
+            window.location.reload();
+        };
+
+        function setupAdsAndAlerts() {
+            const master = currentCaptain.company || currentCaptain.Client_Master;
+            let activeAds = { admin: null, client: null };
+            let activeAlerts = { admin: null, client: null };
+            
+            let masterNameForAlerts = master || "N One";
+            if (master) {
+                get(ref(db, `users/${master}`)).then(snap => {
+                    if (snap.exists()) {
+                        masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
                     }
                 });
-                
-                if (Object.keys(updates).length > 0) {
-                    await update(ref(db), updates);
-                    showAppNotification("تم تنظيف الرادار");
+            }
+
+            const renderAd = () => {
+                const now = Date.now();
+                let displayAd = null;
+                let senderLabel = "Management";
+
+                if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) {
+                    displayAd = activeAds.client;
+                    senderLabel = masterNameForAlerts;
+                } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
+                    displayAd = activeAds.admin;
+                    senderLabel = currentLang === 'ar' ? "الإدارة العامة" : "General Admin";
                 }
-            }
-        };
 
-        window.switchMainTab = function(tabId, btn) {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
-        };
-
-        window.addNewCaptain = async function() {
-            const name = document.getElementById('new_cap_name').value.trim();
-            const phone = document.getElementById('new_cap_phone').value.trim();
-            const car = document.getElementById('new_cap_car').value.trim();
-            const region = document.getElementById('new_cap_region').value.trim();
-            const user = document.getElementById('new_cap_user').value.trim();
-            const pass = document.getElementById('new_cap_pass').value.trim();
-            const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
-            
-            const companyId = getActiveMasterId();
-
-            if(!name || !phone || !user || !pass || !region || !companyId) { 
-                showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); 
-                return; 
-            }
-            
-            const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
-            if(exists) {
-                showAppNotification("هذا الكابتن مسجل مسبقاً", "error");
-                return;
-            }
-
-            const capData = {
-                Cap_ID: "CAP_" + Date.now(),
-                Cap_Name: name,
-                Cap_Phone: phone,
-                Cap_User: user,
-                Cap_Pass: pass,
-                Cap_Car: car,
-                Cap_Region: region,
-                Cap_Status: "active",
-                Cap_Balance: bal,
-                role: "captain",
-                type: "captain",
-                company: companyId,       
-                Client_Master: companyId, 
-                app_sync_lock: false,
-                app_access: "granted",
-                app_status: "offline" 
-            };
-            
-            await set(ref(db, 'captains/' + user), capData);
-            showAppNotification("تم التوثيق بنجاح");
-            
-            document.getElementById('new_cap_name').value = '';
-            document.getElementById('new_cap_phone').value = '';
-            document.getElementById('new_cap_car').value = '';
-            document.getElementById('new_cap_region').value = '';
-            document.getElementById('new_cap_user').value = '';
-            document.getElementById('new_cap_pass').value = '';
-            document.getElementById('new_cap_bal').value = '0';
-        };
-
-        window.smartSearchCaptain = function() {
-            const phone = document.getElementById('smart_search_phone').value.trim();
-            const card = document.getElementById('smart-cap-card');
-            
-            if(!phone || phone.length < 9) { 
-                card.style.display = 'none'; 
-                activeSmartCaptain = null;
-                return; 
-            }
-            
-            const myMaster = getActiveMasterId();
-            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster));
-            
-            if (cap) {
-                document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
-                document.getElementById('s_cap_car').innerText = cap.Cap_Car || 'غير محدد';
-                document.getElementById('s_cap_bal').innerText = parseFloat(cap.Cap_Balance || cap.balance || 0).toFixed(2) + " د.أ";
-                card.style.display = 'block';
-                activeSmartCaptain = cap;
-            } else {
-                card.style.display = 'none';
-                activeSmartCaptain = null;
-            }
-        };
-
-        window.chargeCaptainBalance = async function() {
-            if (!activeSmartCaptain) { showAppNotification("أدخل رقم الكابتن أولاً", "warning"); return; }
-            const amount = parseFloat(document.getElementById('charge_amount').value);
-            if(isNaN(amount)) { showAppNotification("أدخل المبلغ بشكل صحيح", "error"); return; }
-            
-            const cap = activeSmartCaptain;
-            const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
-            const capKey = cap.Cap_User || cap.user || cap.Cap_Phone || cap.phone;
-            const updates = {};
-            updates[`${cap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-            updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
-            
-            await update(ref(db), updates);
-            showAppNotification("تم إيداع الرصيد بنجاح");
-            
-            document.getElementById('charge_amount').value = '';
-            document.getElementById('smart_search_phone').value = '';
-            document.getElementById('smart-cap-card').style.display = 'none';
-            activeSmartCaptain = null;
-        };
-
-        window.setCaptainsFilter = function(filterType) {
-            currentCaptainsFilter = filterType;
-            
-            document.getElementById('filter-btn-active').classList.remove('active');
-            document.getElementById('filter-btn-pending').classList.remove('active');
-            
-            if(filterType === 'active') {
-                document.getElementById('filter-btn-active').classList.add('active');
-                document.getElementById('th-balance').innerText = 'الرصيد';
-            } else {
-                document.getElementById('filter-btn-pending').classList.add('active');
-                document.getElementById('th-balance').innerText = 'تاريخ الطلب';
-            }
-            
-            renderCaptainsList();
-        };
-
-        window.renderCaptainsList = function() {
-            if (!currentUser) return;
-            const tbody = document.getElementById('captains-log-body');
-            const myMaster = getActiveMasterId();
-            
-            let allMyCaptains = globalUsers.filter(u => 
-                (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain' || u._node === 'captains') && 
-                (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster)
-            ).reverse();
-            
-            document.getElementById('stat-cap-total').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
-
-            const activeCount = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'active' && c.app_status === 'online').length;
-            const pausedCount = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'paused' || ((c.Cap_Status || c.status) === 'active' && c.app_status === 'offline')).length;
-            
-            document.getElementById('stat-cap-active').innerText = activeCount;
-            document.getElementById('stat-cap-paused').innerText = pausedCount;
-
-            let displayCaptains = [];
-            if (currentCaptainsFilter === 'active') {
-                displayCaptains = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true);
-            } else {
-                displayCaptains = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'pending' || c.is_pending === true);
-            }
-
-            if (displayCaptains.length === 0) {
-                const msg = currentCaptainsFilter === 'active' ? 'لا يوجد كباتن مفعلين' : 'لا توجد طلبات انتظار جديدة';
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">${msg}</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = '';
-            displayCaptains.forEach(cap => {
-                const capKey = cap.Cap_User || cap.user;
-                
-                if (currentCaptainsFilter === 'active') {
-                    const bal = parseFloat(cap.Cap_Balance || cap.balance || 0).toFixed(2);
-                    const isPaused = (cap.Cap_Status || cap.status) === 'paused';
-                    const statusBadge = isPaused ? '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ❄️</span>' : '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>';
-                    const toggleBtn = isPaused ? `<button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="toggleCapStatus('${capKey}', 'active')" title="تفعيل">▶️</button>` : `<button class="mini-circle-btn" style="background:#78909c; color:white;" onclick="toggleCapStatus('${capKey}', 'paused')" title="إيقاف">❄️</button>`;
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
-                            <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
-                            <td>
-                                <div style="font-size:11px; color:var(--primary); font-weight:bold;">U: ${capKey || '---'}</div>
-                                <div style="font-size:11px; color:var(--danger); font-weight:bold;">P: ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div>
-                            </td>
-                            <td><span class="area-badge" style="background:#f1f5f9; color:#64748b; border:none;">${cap.Cap_Region || cap.Cap_Location || 'عام'}</span></td>
-                            <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
-                            <td style="font-weight:bold; color:${bal < 0 ? 'var(--danger)' : 'var(--success)'};">${bal} د.أ</td>
-                            <td>${statusBadge}</td>
-                            <td>
-                                <div class="action-btns">
-                                    ${toggleBtn}
-                                    <button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="openGlobalEdit('${capKey}')" title="تعديل شامل">⚙️</button>
-                                    <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${capKey}')" title="حذف نهائي">✕</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                const adContainer = document.getElementById('smart-ad-container');
+                if (displayAd && displayAd.text) {
+                    document.getElementById('smart-ad-text').innerText = displayAd.text;
+                    document.getElementById('ad-sender-badge').innerText = currentLang === 'ar' ? `إشعار من ${senderLabel} 👑` : `Notice from ${senderLabel} 👑`;
+                    adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal');
+                    adContainer.style.display = 'flex';
                 } else {
-                    const reqDate = cap.created_at ? new Date(cap.created_at).toLocaleDateString('en-GB') : '---';
-                    tbody.innerHTML += `
-                        <tr style="background: #f8fafc;">
-                            <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
-                            <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
-                            <td>
-                                <div style="font-size:11px; color:var(--primary); font-weight:bold;">U: ${capKey || '---'}</div>
-                                <div style="font-size:11px; color:var(--danger); font-weight:bold;">P: ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div>
-                            </td>
-                            <td><span class="area-badge" style="background:#fef3c7; color:#d97706; border:none;">${cap.Cap_Region || cap.Cap_Location || 'غير محدد'}</span></td>
-                            <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
-                            <td style="font-size:12px; color:#64748b; font-weight:bold;">${reqDate}</td>
-                            <td><span class="badge" style="background:#e0e7ff; color:#4338ca;">بانتظار المراجعة</span></td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="btn-royal" style="background:var(--success); padding:6px 10px; font-size:11px; width:auto;" onclick="approvePendingCaptain('${capKey}')">تفعيل</button>
-                                    <button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="openGlobalEdit('${capKey}')" title="تعديل الطلب">⚙️</button>
-                                    <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${capKey}')" title="رفض وحذف">✕</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                    adContainer.style.display = 'none';
                 }
-            });
-        };
+            };
 
-        window.approvePendingCaptain = async function(userKey) {
-            if(confirm("تفعيل الحساب واعتماده رسمياً")) {
-                let nodeFound = null;
-                globalUsers.forEach(u => {
-                    if ((u.Cap_User === userKey || u.user === userKey) && u._node) { nodeFound = u._node; }
-                });
+            const renderAlert = () => {
+                let displayAlert = activeAlerts.client || activeAlerts.admin;
+                let senderLabel = activeAlerts.client ? masterNameForAlerts : (currentLang==='ar' ? "الإدارة العامة" : "General Admin");
 
-                if (nodeFound) {
-                    const updates = {};
-                    updates[`${nodeFound}/${userKey}/Cap_Status`] = 'active';
-                    updates[`${nodeFound}/${userKey}/status`] = 'active';
-                    updates[`${nodeFound}/${userKey}/is_pending`] = false;
-                    updates[`${nodeFound}/${userKey}/app_access`] = 'granted';
-                    
-                    if(confirm("تم التفعيل هل ترغب بإضافة رصيد افتتاحي لمحفظته الآن")) {
-                        let initBal = prompt("أدخل قيمة الرصيد الافتتاحي (د.أ)", "0.00");
-                        if(initBal && !isNaN(initBal)) {
-                            updates[`${nodeFound}/${userKey}/Cap_Balance`] = parseFloat(initBal);
-                            updates[`${nodeFound}/${userKey}/balance`] = parseFloat(initBal);
-                        }
+                if (displayAlert && displayAlert.message) {
+                    const lastSeen = localStorage.getItem('last_seen_alert_cap_' + capNodeKey) || 0;
+                    if (displayAlert.timestamp > lastSeen) {
+                        const lbl = currentLang === 'ar' ? "رسالة إدارية من" : "Administrative Message from";
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">${lbl} ${senderLabel}</div>${displayAlert.message}`;
+                        document.getElementById('app-popup-overlay').style.display = 'flex';
+                        localStorage.setItem('last_seen_alert_cap_' + capNodeKey, displayAlert.timestamp);
                     }
-
-                    await update(ref(db), updates);
-                    showAppNotification("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح");
                 }
-            }
-        };
+            };
 
-        window.openGlobalEdit = function(userKey) {
-            const cap = globalUsers.find(u => u.Cap_User === userKey || u.user === userKey);
-            if(cap) {
-                document.getElementById('edit_cap_key').value = userKey;
-                document.getElementById('edit_cap_name').value = cap.Cap_Name || cap.name || '';
-                document.getElementById('edit_cap_phone').value = cap.Cap_Phone || cap.phone || '';
-                document.getElementById('edit_cap_car').value = cap.Cap_Car || '';
-                document.getElementById('edit_cap_region').value = cap.Cap_Region || cap.Cap_Location || '';
-                document.getElementById('edit_cap_user').value = userKey;
-                document.getElementById('edit_cap_pass').value = cap.Cap_Pass || cap.password || cap.pass || '';
-                document.getElementById('edit_cap_company').value = cap.Company_ID || cap.company || cap.Client_Master || '';
-                
-                document.getElementById('edit-captain-modal').style.display = 'flex';
-            }
-        };
+            const extractData = (val) => {
+                if (!val) return null;
+                if (val.captains && val.captains[capNodeKey]) return val.captains[capNodeKey];
+                if (val.global) return val.global;
+                return null;
+            };
 
-        window.closeEditModal = function() {
-            document.getElementById('edit-captain-modal').style.display = 'none';
-        };
+            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractData(snap.val()); renderAd(); });
+            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractData(snap.val()); renderAlert(); });
 
-        window.saveGlobalEdit = async function() {
-            const userKey = document.getElementById('edit_cap_key').value;
-            const name = document.getElementById('edit_cap_name').value.trim();
-            const phone = document.getElementById('edit_cap_phone').value.trim();
-            const car = document.getElementById('edit_cap_car').value.trim();
-            const region = document.getElementById('edit_cap_region').value;
-            const pass = document.getElementById('edit_cap_pass').value.trim();
-            const company = document.getElementById('edit_cap_company').value.trim();
-
-            if(!name || !phone || !pass) {
-                showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error");
-                return;
-            }
-
-            let nodeFound = null;
-            globalUsers.forEach(u => {
-                if ((u.Cap_User === userKey || u.user === userKey) && u._node) { nodeFound = u._node; }
-            });
-
-            if (nodeFound) {
-                const updates = {};
-                updates[`${nodeFound}/${userKey}/Cap_Name`] = name;
-                updates[`${nodeFound}/${userKey}/name`] = name;
-                updates[`${nodeFound}/${userKey}/Cap_Phone`] = phone;
-                updates[`${nodeFound}/${userKey}/phone`] = phone;
-                updates[`${nodeFound}/${userKey}/Cap_Car`] = car;
-                updates[`${nodeFound}/${userKey}/Cap_Region`] = region;
-                updates[`${nodeFound}/${userKey}/Cap_Location`] = region;
-                updates[`${nodeFound}/${userKey}/Cap_Pass`] = pass;
-                updates[`${nodeFound}/${userKey}/pass`] = pass;
-                updates[`${nodeFound}/${userKey}/password`] = pass;
-                
-                if (company) {
-                    updates[`${nodeFound}/${userKey}/company`] = company;
-                    updates[`${nodeFound}/${userKey}/Company_ID`] = company;
-                    updates[`${nodeFound}/${userKey}/Client_Master`] = company;
-                }
-
-                await update(ref(db), updates);
-                showAppNotification("تم تحديث بيانات السجل بنجاح");
-                closeEditModal();
-            }
-        };
-
-        window.toggleCapStatus = async function(user, nextStatus) {
-            const msg = nextStatus === 'paused' ? "إيقاف الحساب" : "تفعيل الحساب";
-            if(confirm(msg)) {
-                const updates = {};
-                globalUsers.forEach(u => {
-                    if ((u.Cap_User === user || u.user === user) && u._node) {
-                        updates[`${u._node}/${user}/Cap_Status`] = nextStatus;
-                        updates[`${u._node}/${user}/status`] = nextStatus;
-                        updates[`${u._node}/${user}/app_sync_lock`] = nextStatus === 'paused' ? true : false;
-                        updates[`${u._node}/${user}/app_access`] = nextStatus === 'paused' ? 'denied' : 'granted';
-                    }
-                });
-                await update(ref(db), updates);
-            }
-        };
-
-        window.deleteCaptain = async function(user) {
-            if(confirm("حذف السجل نهائياً")) {
-                let nodeFound = null;
-                globalUsers.forEach(u => {
-                    if ((u.Cap_User === user || u.user === user) && u._node) { nodeFound = u._node; }
-                });
-                if (nodeFound) {
-                    await remove(ref(db, `${nodeFound}/${user}`));
-                    showAppNotification("تم حذف السجل نهائياً");
-                }
-            }
-        };
-
-        function refreshDynamicElements() {
-            renderRadar();
-            if (isAutoRadarActive) {
-                triggerAutoRadarMaster(true);
+            if(master) {
+                onValue(ref(db, `client_announcements/${master}/captains`), snap => { activeAds.client = extractData(snap.val()); renderAd(); });
+                onValue(ref(db, `client_alerts/${master}/captains`), snap => { activeAlerts.client = extractData(snap.val()); renderAlert(); });
             }
         }
+
+        function initRealtimeListeners() {
+            if(!capNodeKey) return;
+
+            const profileRef = ref(db, `captains/${capNodeKey}`);
+            onValue(profileRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    currentCaptain = data;
+                    
+                    if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
+                        document.getElementById('blocked-screen').style.display = 'none';
+                        document.getElementById('main-screen').classList.remove('active');
+                        document.getElementById('pending-screen').style.display = 'flex';
+                        return;
+                    }
+                    
+                    if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
+                        document.getElementById('pending-screen').style.display = 'none';
+                        document.getElementById('blocked-screen').style.display = 'flex';
+                        return;
+                    } else {
+                        document.getElementById('blocked-screen').style.display = 'none';
+                        document.getElementById('pending-screen').style.display = 'none';
+                    }
+
+                    updateUIProfile(data);
+                } else {
+                    document.getElementById('blocked-screen').style.display = 'flex';
+                    localStorage.removeItem('n1_captain_session');
+                }
+            });
+
+            const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
+            onValue(ordersRef, (snapshot) => {
+                const container = document.getElementById('active-orders-container');
+                let todayCount = 0;
+                let hasActive = false;
+                let hasNewRinging = false;
+                allCompletedOrders = [];
+                container.innerHTML = '';
+                
+                const todayStr = new Date().toDateString();
+
+                if (snapshot.exists()) {
+                    const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
+                    
+                    orders.forEach(ord => {
+                        if (ord.status === 'completed') {
+                            if (new Date(ord.timestamp).toDateString() === todayStr) todayCount++;
+                            allCompletedOrders.push(ord);
+                        }
+                        
+                        if (ord.status === 'assigned') {
+                            if(currentCaptain.app_status !== 'online') return;
+
+                            hasActive = true;
+                            hasNewRinging = true;
+                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                            
+                            const btnAccept = currentLang === 'ar' ? "قبول الطلب ✅" : "Accept ✅";
+                            const btnReject = currentLang === 'ar' ? "رفض ❌" : "Reject ❌";
+                            const lblVal = currentLang === 'ar' ? "قيمة الطلب" : "Order Val";
+                            const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
+                            const lblOrd = currentLang === 'ar' ? "رقم" : "No";
+                            const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
+
+                            container.innerHTML += `
+                                <div class="order-card ringing">
+                                    <div class="order-header">
+                                        <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
+                                        <span>${lblTime}: ${ordTime}</span>
+                                    </div>
+                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</div>
+                                    <div class="order-details">
+                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                            <div class="detail-lbl">${lblVal}</div>
+                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
+                                        </div>
+                                        <div class="detail-box">
+                                            <div class="detail-lbl">${lblFee}</div>
+                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
+                                        </div>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}')">${btnAccept}</button>
+                                        <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        else if (ord.status === 'accepted') {
+                            hasActive = true;
+                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                            
+                            const btnComp = currentLang === 'ar' ? "إتمام وتسليم الطلب ✅" : "Complete Order ✅";
+                            const lblVal = currentLang === 'ar' ? "قيمة الطلب" : "Order Val";
+                            const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
+                            const lblOrd = currentLang === 'ar' ? "رقم" : "No";
+                            const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
+                            
+                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://maps.google.com/?q=' + encodeURIComponent(ord.restaurant || ord.Shop_Pickup || ''));
+                            const btnMapText = currentLang === 'ar' ? '🗺️ انطلاق للموقع' : '🗺️ Navigate';
+
+                            container.innerHTML += `
+                                <div class="order-card">
+                                    <div class="order-header">
+                                        <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
+                                        <span>${lblTime}: ${ordTime}</span>
+                                    </div>
+                                    <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span>🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
+                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${btnMapText}</a>
+                                    </div>
+                                    <div class="order-details">
+                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                            <div class="detail-lbl">${lblVal}</div>
+                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
+                                        </div>
+                                        <div class="detail-box">
+                                            <div class="detail-lbl">${lblFee}</div>
+                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn-action btn-complete" onclick="completeOrder('${ord.id}')">${btnComp}</button>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                
+                document.getElementById('ui_today_count').innerText = todayCount;
+                
+                const audio = document.getElementById('order-ringtone');
+                if (hasNewRinging && currentCaptain.app_status === 'online') {
+                    ringtoneActive = true;
+                    audio.play().catch(e => console.log("تحتاج تفاعل"));
+                } else {
+                    ringtoneActive = false;
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+                
+                if (!hasActive) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">
+                            ${dict[currentLang].no_orders}
+                        </div>
+                    `;
+                }
+            });
+
+            const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
+            if(companyMaster) {
+                const globalOrdersRef = ref(db, 'orders');
+                onValue(globalOrdersRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const txt = currentLang === 'ar' ? 'النقاط الساخنة <span>🔥 مفعّلة</span>' : 'Hotspots <span>🔥 Active</span>';
+                        document.getElementById('ui_hotspots').innerHTML = `
+                            <div class="hotspot-tag">${txt}</div>
+                        `;
+                    }
+                });
+            }
+        }
+
+        function updateUIProfile(data) {
+            const masterId = data.company || data.Client_Master;
+            if (masterId) {
+                get(ref(db, `users/${masterId}`)).then(snap => {
+                    let mName = masterId;
+                    if (snap.exists()) {
+                        mName = snap.val().Client_Name || snap.val().name || masterId;
+                    }
+                    document.getElementById('ui_company_name').innerText = mName;
+                });
+            } else {
+                document.getElementById('ui_company_name').innerText = "N One";
+            }
+            
+            document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
+            document.getElementById('ui_cap_car').innerText = data.Cap_Car || (currentLang==='ar'?'السيارة غير محددة':'Car info missing');
+            
+            const bal = parseFloat(data.Cap_Balance || data.balance || 0);
+            const balEl = document.getElementById('ui_cap_bal');
+            balEl.innerHTML = `${bal.toFixed(2)} <span style="font-size:14px;">د.أ</span>`;
+            
+            const toggleBtn = document.getElementById('toggle_status');
+            const statusInd = document.getElementById('ui_status_indicator');
+            const statusTxt = document.getElementById('ui_status_text');
+            const warningBanner = document.getElementById('balance-warning');
+
+            if (bal <= -1) {
+                balEl.classList.add('negative');
+                warningBanner.style.display = 'flex';
+                
+                if (data.app_status === 'online') forceOffline();
+                
+                toggleBtn.checked = false;
+                toggleBtn.disabled = true;
+                statusInd.className = 'status-indicator offline';
+                statusTxt.innerText = dict[currentLang].status_blocked;
+                
+            } else {
+                balEl.classList.remove('negative');
+                warningBanner.style.display = 'none';
+                toggleBtn.disabled = false;
+                
+                if (data.app_status === 'online') {
+                    toggleBtn.checked = true;
+                    statusInd.className = 'status-indicator online';
+                    statusTxt.innerText = dict[currentLang].status_online;
+                } else {
+                    toggleBtn.checked = false;
+                    statusInd.className = 'status-indicator offline';
+                    statusTxt.innerText = dict[currentLang].status_offline;
+                }
+            }
+        }
+
+        window.toggleOnlineStatus = async function() {
+            const isOnline = document.getElementById('toggle_status').checked;
+            const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+            
+            if (isOnline && bal <= -1) {
+                const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online";
+                alert(msg);
+                document.getElementById('toggle_status').checked = false;
+                return;
+            }
+
+            const newStatus = isOnline ? 'online' : 'offline';
+            await update(ref(db, `captains/${capNodeKey}`), { app_status: newStatus });
+        };
+
+        async function forceOffline() {
+            await update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' });
+        }
+
+        window.acceptOrder = async function(orderId, fee) {
+            const actualFee = parseFloat(fee || 0);
+            const commissionAmount = actualFee * COMMISSION_RATE;
+            const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+            const newBal = currentBal - commissionAmount;
+
+            const updates = {};
+            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'accepted';
+            updates[`assigned_orders/${capNodeKey}/${orderId}/commission`] = commissionAmount;
+            updates[`captains/${capNodeKey}/Cap_Balance`] = newBal;
+            updates[`captains/${capNodeKey}/balance`] = newBal;
+            
+            updates[`captains/${capNodeKey}/is_busy`] = true;
+
+            try {
+                await update(ref(db), updates);
+            } catch (e) {
+                const msg = currentLang === 'ar' ? "حدث خطأ أثناء الربط المالي حاول مجدداً" : "Error in financial transaction, please retry";
+                alert(msg);
+            }
+        };
+
+        window.rejectOrder = async function(orderId) {
+            const msg = currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب؟ ❌" : "Are you sure you want to reject? ❌";
+            if(confirm(msg)) {
+                const updates = {};
+                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'rejected';
+                await update(ref(db), updates);
+            }
+        };
+
+        window.completeOrder = async function(orderId) {
+            const msg = currentLang === 'ar' ? "تأكيد إتمام وتسليم الطلب للزبون؟ ✅" : "Confirm order completion? ✅";
+            if(confirm(msg)) {
+                const updates = {};
+                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'completed';
+                updates[`assigned_orders/${capNodeKey}/${orderId}/completed_at`] = Date.now();
+                
+                updates[`captains/${capNodeKey}/is_busy`] = false;
+                
+                await update(ref(db), updates);
+            }
+        };
+
+        window.openHistoryModal = function() {
+            const container = document.getElementById('history-list-container');
+            container.innerHTML = '';
+            
+            if (allCompletedOrders.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
+            } else {
+                allCompletedOrders.sort((a,b) => b.completed_at - a.completed_at).forEach(ord => {
+                    const d = new Date(ord.completed_at || ord.timestamp);
+                    const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+                    const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                    const comm = parseFloat(ord.commission || 0).toFixed(2);
+                    
+                    const lblDest = currentLang === 'ar' ? "الوجهة:" : "Destination:";
+                    const lblVal = currentLang === 'ar' ? "قيمة الطلب:" : "Order Val:";
+                    const lblFee = currentLang === 'ar' ? "التوصيل:" : "Fee:";
+                    const lblComm = currentLang === 'ar' ? "نسبة الشركة المقتطعة:" : "Company Commission:";
+
+                    container.innerHTML += `
+                        <div class="history-item">
+                            <div class="h-row">
+                                <span>${lblDest} ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
+                                <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
+                            </div>
+                            <div class="h-row">
+                                <span>${lblVal} <span class="h-val">${ord.value || ord.Shop_Val} د.أ</span></span>
+                                <span>${lblFee} <span class="h-val" style="color:var(--success)">${ord.fee || ord.Shop_Fee} د.أ</span></span>
+                            </div>
+                            <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                                <span>${lblComm}</span>
+                                <span class="h-commission">-${comm} د.أ</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('history-modal').style.display = 'flex';
+        };
+
+        window.openSettingsModal = function() {
+            document.getElementById('set_user').value = currentCaptain.Cap_User || currentCaptain.user || '';
+            document.getElementById('set_pass').value = currentCaptain.Cap_Pass || currentCaptain.pass || '';
+            document.getElementById('settings-modal').style.display = 'flex';
+        };
+
+        window.saveSettings = async function() {
+            const newUser = document.getElementById('set_user').value.trim();
+            const newPass = document.getElementById('set_pass').value.trim();
+            const msgEmpty = currentLang === 'ar' ? "البيانات فارغة" : "Fields cannot be empty";
+            if(!newUser || !newPass) { alert(msgEmpty); return; }
+
+            try {
+                if(newUser !== capNodeKey) {
+                    const newData = { ...currentCaptain, Cap_User: newUser, user: newUser, Cap_Pass: newPass, pass: newPass };
+                    const updates = {};
+                    updates[`captains/${newUser}`] = newData;
+                    updates[`captains/${capNodeKey}`] = null;
+                    await update(ref(db), updates);
+                    
+                    capNodeKey = newUser;
+                    currentCaptain = newData;
+                    localStorage.setItem('n1_captain_session', JSON.stringify(newData));
+                } else {
+                    await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass });
+                    currentCaptain.Cap_Pass = newPass;
+                    currentCaptain.pass = newPass;
+                    localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
+                }
+                const msgOk = currentLang === 'ar' ? "تم التحديث بنجاح" : "Updated successfully";
+                alert(msgOk);
+                document.getElementById('settings-modal').style.display = 'none';
+            } catch(e) {
+                alert(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection Error");
+            }
+        };
 
     </script>
 </body>
