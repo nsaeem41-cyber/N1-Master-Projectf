@@ -1,7 +1,7 @@
 const CACHE_NAME = 'n-one-shop-v1-diamond';
 const urlsToCache = [
     './',
-    './index.html',
+    './shop.html',
     './manifest_shop.json',
     './logo_shop.jpg'
 ];
