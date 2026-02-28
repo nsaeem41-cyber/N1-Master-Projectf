@@ -228,14 +228,15 @@
         .btn-complete { background: var(--primary); width: 100%; }
         .btn-action:active { transform: scale(0.95); }
 
-        /* زر التوجيه الجغرافي الألماسي الجديد */
+        /* سهم الاتجاهات الألماسي (النسخة الراقية) */
         .btn-map-link {
             background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; 
-            padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; 
-            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; 
-            gap: 5px; transition: 0.3s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);
+            width: 40px; height: 40px; border-radius: 50%; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+            flex-shrink: 0;
         }
-        .btn-map-link:hover { background: #bae6fd; color: #0369a1; transform: scale(1.05); }
+        .btn-map-link:hover { transform: scale(1.1); background: #bae6fd; color: #0369a1; }
 
         /* سجل الطلبات والإعدادات (Modals) */
         .modal-overlay {
@@ -1079,6 +1080,13 @@
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
                     
                     orders.forEach(ord => {
+                        const cleanRestName = (name) => {
+                            if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
+                            let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
+                            return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
+                        };
+                        const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
+
                         if (ord.status === 'completed') {
                             if (new Date(ord.timestamp).toDateString() === todayStr) todayCount++;
                             allCompletedOrders.push(ord);
@@ -1104,7 +1112,7 @@
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</div>
+                                    <div class="order-rest" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${restName}</div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${lblVal}</div>
@@ -1133,7 +1141,7 @@
                             const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
                             
                             const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://maps.google.com/?q=' + encodeURIComponent(ord.restaurant || ord.Shop_Pickup || ''));
-                            const btnMapText = currentLang === 'ar' ? '🗺️ انطلاق للموقع' : '🗺️ Navigate';
+                            const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                             container.innerHTML += `
                                 <div class="order-card">
@@ -1142,8 +1150,8 @@
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span>🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
-                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${btnMapText}</a>
+                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">🏪 ${restName}</span>
+                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
                                     </div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
@@ -1197,16 +1205,21 @@
             }
         }
 
+        let masterListenerRef = null;
         function updateUIProfile(data) {
             const masterId = data.company || data.Client_Master;
             if (masterId) {
-                get(ref(db, `users/${masterId}`)).then(snap => {
-                    let mName = masterId;
-                    if (snap.exists()) {
-                        mName = snap.val().Client_Name || snap.val().name || masterId;
-                    }
-                    document.getElementById('ui_company_name').innerText = mName;
-                });
+                if (masterListenerRef !== masterId) {
+                    masterListenerRef = masterId;
+                    onValue(ref(db, `users/${masterId}`), snap => {
+                        let mName = masterId;
+                        if (snap.exists()) {
+                            mName = snap.val().Client_Name || snap.val().name || masterId;
+                        }
+                        const el = document.getElementById('ui_company_name');
+                        if (el) el.innerText = mName;
+                    });
+                }
             } else {
                 document.getElementById('ui_company_name').innerText = "N One";
             }
@@ -1327,6 +1340,13 @@
                     const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
                     const comm = parseFloat(ord.commission || 0).toFixed(2);
                     
+                    const cleanRestName = (name) => {
+                        if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
+                        let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
+                        return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
+                    };
+                    const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
+                    
                     const lblDest = currentLang === 'ar' ? "الوجهة:" : "Destination:";
                     const lblVal = currentLang === 'ar' ? "قيمة الطلب:" : "Order Val:";
                     const lblFee = currentLang === 'ar' ? "التوصيل:" : "Fee:";
@@ -1335,7 +1355,7 @@
                     container.innerHTML += `
                         <div class="history-item">
                             <div class="h-row">
-                                <span>${lblDest} ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
+                                <span>${lblDest} ${restName}</span>
                                 <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
                             </div>
                             <div class="h-row">
