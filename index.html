@@ -4,14 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | تسجيل الدخول</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="N One">
-    <link rel="apple-touch-icon" href="logo.jpg">
-
     <style>
         /* تصميم Diamond Pro عالمي ملكي بتأثيرات الزجاج المنقوش */
         :root {
@@ -48,76 +40,6 @@
             border-radius: 50%;
             z-index: 0;
         }
-
-        /* شاشة الترحيب الذكية (Splash Screen) */
-        .pwa-splash {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #1e293b, #0f172a, #000000);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        
-        .pwa-content {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 40px 30px;
-            border-radius: 30px;
-            text-align: center;
-            border: 1px solid var(--glass-border);
-            border-top: 4px solid var(--gold);
-            width: 85%;
-            max-width: 380px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            animation: popIn 0.6s ease-out;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .pwa-logo {
-            width: 100px; height: 100px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3);
-            border: 2px solid var(--gold);
-        }
-
-        .pwa-title {
-            margin: 0 0 15px 0;
-            font-size: 32px; font-weight: 900; color: var(--text-main);
-        }
-
-        .pwa-text {
-            color: var(--text-muted);
-            font-size: 15px; font-weight: bold; line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .btn-install {
-            width: 100%; padding: 18px;
-            background: linear-gradient(135deg, #d4af37, #b48608);
-            color: var(--primary); border: none; border-radius: 15px;
-            font-size: 18px; font-weight: 900; cursor: pointer;
-            margin-bottom: 15px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .btn-install:active { transform: scale(0.95); }
-
-        .btn-continue {
-            background: transparent; border: none; color: #94a3b8;
-            font-size: 14px; font-weight: bold; cursor: pointer;
-            text-decoration: underline; transition: 0.3s;
-        }
-
-        .btn-continue:hover { color: white; }
 
         .login-card {
             background: var(--glass-bg);
@@ -280,16 +202,6 @@
 </head>
 <body>
 
-    <div id="pwa-splash" class="pwa-splash">
-        <div class="pwa-content">
-            <img src="logo.jpg" alt="N One Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.px/100?text=N+One'">
-            <h2 class="pwa-title">N <span class="gold">One</span></h2>
-            <p class="pwa-text">للحصول على تجربة أسرع وأكثر أماناً حمّل تطبيق N One الرسمي الآن</p>
-            <button id="btn-install" class="btn-install">تثبيت التطبيق الآن 🚀</button>
-            <button id="btn-continue" class="btn-continue">المتابعة من المتصفح</button>
-        </div>
-    </div>
-
     <div class="login-card">
         <div class="brand">
             <h1>N <span class="gold">One</span></h1>
@@ -308,7 +220,7 @@
 
         <div class="shop-login-option">
             <input type="checkbox" id="is_shop" onchange="if(this.checked) document.getElementById('is_captain').checked = false;">
-            <label for="is_shop">تسجيل دخول كمنشأة تجارية (مطعم أو محل)</label>
+            <label for="is_shop">تسجيل دخول كمنشأة تجارية مطعم ومحل</label>
         </div>
 
         <div class="captain-login-option">
@@ -325,59 +237,6 @@
             Secure Access v4.3 Royal Validation (Firebase)
         </div>
     </div>
-
-    <script>
-        let deferredPrompt;
-        const splash = document.getElementById('pwa-splash');
-        const btnInstall = document.getElementById('btn-install');
-        const btnContinue = document.getElementById('btn-continue');
-
-        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
-            splash.style.display = 'none';
-        }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('التطبيق جاهز للتثبيت.');
-        });
-
-        btnInstall.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    console.log('تم تثبيت التطبيق بنجاح.');
-                    splash.style.display = 'none';
-                }
-                deferredPrompt = null;
-            } else {
-                alert('يرجى الضغط على القائمة (الثلاث نقاط) واختيار "إضافة إلى الشاشة الرئيسية" (Add to Home Screen) لتثبيت التطبيق بنجاح.');
-            }
-        });
-
-        btnContinue.addEventListener('click', () => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.visibility = 'hidden';
-            }, 500);
-        });
-
-        window.addEventListener('load', () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    reg.onupdatefound = () => {
-                        const installingWorker = reg.installing;
-                        installingWorker.onstatechange = () => {
-                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                window.location.reload();
-                            }
-                        };
-                    };
-                });
-            }
-        });
-    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -399,7 +258,7 @@
         window.onload = function() {
             localStorage.removeItem('currentUser');
             localStorage.removeItem('n1_captain_session');
-            console.log("Session Cleared. Ready for secure login.");
+            console.log("Session Cleared Ready for secure login");
         }
 
         window.loginNow = async function() {
@@ -413,7 +272,7 @@
             msgBox.style.display = 'none';
 
             if (!u || !p) {
-                showError("يرجى إدخال اسم المستخدم وكلمة المرور.");
+                showError("يرجى إدخال اسم المستخدم وكلمة المرور يا حبة السكر 😊");
                 return;
             }
 
@@ -446,12 +305,12 @@
                 if (userRecord) {
                     
                     if (isCaptain && foundNode !== "captains") {
-                        showError("عذراً، لا يوجد حساب كابتن مسجل بهذا الرقم.");
+                        showError("عذراً.. لا يوجد لديك حساب كابتن مسجل بهذا الرقم 😊");
                         resetBtn();
                         return;
                     }
                     if (isShop && foundNode !== "shops") {
-                        showError("عذراً، لا يوجد حساب منشأة مسجل بهذا الرقم.");
+                        showError("عذراً.. لا يوجد لديك حساب منشأة مسجل بهذا الرقم 😊");
                         resetBtn();
                         return;
                     }
@@ -464,7 +323,7 @@
                     if (dbPass === p || dbPass === encodedP) {
                         const status = userRecord.Client_Status || userRecord.status || userRecord.Cap_Status || userRecord.Shop_Status;
                         if (status !== 'active') {
-                            showError("عذراً، هذا الحساب موقوف. يرجى مراجعة الإدارة.");
+                            showError("عذرا هذا الحساب موقوف راجع الإدارة 😊");
                             resetBtn();
                             return;
                         }
@@ -494,17 +353,17 @@
                             window.location.replace('client.html');
                         }
                     } else {
-                        showError("اسم المستخدم أو كلمة المرور غير صحيحة.");
+                        showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة 😊");
                         resetBtn();
                     }
                 } else {
-                    showError("اسم المستخدم أو كلمة المرور غير صحيحة.");
+                    showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة 😊");
                     resetBtn();
                 }
 
             } catch (err) {
                 console.error(err);
-                showError("تعذر الاتصال بالنظام. يرجى التأكد من جودة الاتصال بالإنترنت.");
+                showError("تعذر الاتصال بالخزنة المركزية تأكد من الإنترنت 😊");
                 resetBtn();
             }
         }
