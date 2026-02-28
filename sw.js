@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v4-diamond';
+const CACHE_NAME = 'n-one-captain-v5-diamond';
 const urlsToCache = [
     './',
     './captain.html',
@@ -6,16 +6,19 @@ const urlsToCache = [
     './logo.jpg'
 ];
 
+// مرحلة التثبيت: تجهيز ملفات الكابتن في الذاكرة
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
+                console.log('Captain assets cached successfully');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
+// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -30,31 +33,39 @@ self.addEventListener('activate', event => {
     );
 });
 
+// إدارة الطلبات: استراتيجية (Network First) عشان نشوف التحديثات فوراً
 self.addEventListener('fetch', event => {
     event.respondWith(
-        fetch(event.request).then(response => {
-            return caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request.url, response.clone());
+        fetch(event.request)
+            .then(response => {
+                // إذا الاستجابة صحيحة نخزن نسخة ونرجعها
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
                 return response;
-            });
-        }).catch(() => {
-            return caches.match(event.request);
-        })
+            })
+            .catch(() => {
+                // في حال انقطع النت نرجع النسخة المخزنة
+                return caches.match(event.request);
+            })
     );
 });
 
-// التعديل الملكي هنا عشان يظهر اسم N One بوضوح
+// نظام الإشعارات الرسمي لإمبراطورية N One
 self.addEventListener('push', event => {
     const options = {
         body: event.data ? event.data.text() : 'لديك طلب جديد بانتظارك الآن 🔥',
         icon: 'logo.jpg',
         badge: 'logo.jpg',
-        vibrate: [200, 100, 200, 100, 200, 100, 200],
-        tag: 'n-one-order', // عشان ما تتراكم الإشعارات المزعجة
+        vibrate: [200, 100, 200, 100, 200],
+        tag: 'n-one-order',
         renotify: true,
         requireInteraction: true,
         data: {
-            url: './captain.html' // عشان لما يضغط يفتح صفحة الكابتن فوراً
+            url: './captain.html'
         }
     };
 
@@ -63,7 +74,7 @@ self.addEventListener('push', event => {
     );
 });
 
-// كود عشان لما يضغط على الإشعار يفتح التطبيق فوراً بدون تكرار الصفحات
+// فتح التطبيق فور النقر على الإشعار
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
