@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v2';
+const CACHE_NAME = 'n-one-captain-v4-diamond';
 const urlsToCache = [
     './',
     './captain.html',
@@ -63,10 +63,20 @@ self.addEventListener('push', event => {
     );
 });
 
-// كود عشان لما يضغط على الإشعار يفتح التطبيق فوراً
+// كود عشان لما يضغط على الإشعار يفتح التطبيق فوراً بدون تكرار الصفحات
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('./captain.html')
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            for (let i = 0; i < windowClients.length; i++) {
+                let client = windowClients[i];
+                if (client.url.includes('captain.html') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('./captain.html');
+            }
+        })
     );
 });
