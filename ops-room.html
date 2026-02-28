@@ -327,7 +327,7 @@
                             <span>🦸‍♂️ إضافة كابتن جديد فوراً</span>
                             <div style="display: flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 4px 12px; border-radius: 20px;">
                                 <span style="font-size: 11px; color: var(--gold); font-weight: bold;">معرف الشركة:</span>
-                                <input type="text" id="persistent_company_id" onchange="savePersistentId()" placeholder="أدخل المعرف يدويا..." style="background: white; border: 1px solid var(--gold); border-radius: 6px; color: var(--primary); font-weight: 900; font-size: 12px; outline: none; width: 120px; text-align: center; padding: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                                <input type="text" id="persistent_company_id" onchange="savePersistentId()" placeholder="أدخل المعرف يدويا..." style="background: white; border: 1px solid var(--gold); border-radius: 6px; color: var(--primary); font-weight: 900; font-size: 12px; outline: none; width: 120px; text-align: center; padding: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);" title="تغيير المعرف هنا ينطبق فقط على الكباتن الجدد ولا يمسح بياناتك الحالية">
                             </div>
                         </div>
                         <div class="manual-form">
@@ -573,8 +573,9 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
+        // الثبات الإداري: نستخرج المعرف الأصلي من بيانات الدخول دايماً عشان ما يضيع الكود
         function getActiveMasterId() {
-            return persistentCompanyId || (currentUser ? (currentUser.Client_User || currentUser.user) : '');
+            return currentUser ? (currentUser.Client_User || currentUser.user) : '';
         }
 
         window.onload = function() {
@@ -583,11 +584,13 @@
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الإدارة";
                 
+                const masterId = getActiveMasterId();
                 const savedId = localStorage.getItem('n1_company_id');
+                
                 if (savedId) {
                     persistentCompanyId = savedId;
                 } else {
-                    persistentCompanyId = currentUser.Client_User || currentUser.user;
+                    persistentCompanyId = masterId;
                     localStorage.setItem('n1_company_id', persistentCompanyId);
                 }
                 
@@ -616,18 +619,32 @@
             setInterval(refreshDynamicElements, 1000);
         };
 
-        window.savePersistentId = function() {
+        // دالة حفظ المعرف الذكية مع التنبيه وبدون ضياع البيانات
+        window.savePersistentId = async function() {
             const newId = document.getElementById('persistent_company_id').value.trim();
-            persistentCompanyId = newId;
-            localStorage.setItem('n1_company_id', newId);
+            const actualMaster = getActiveMasterId();
+            
+            if (newId && newId !== actualMaster) {
+                try {
+                    const snap = await get(ref(db, `users/${newId}`));
+                    if (snap.exists()) {
+                        showAppNotification("تنبيه: هذا المعرف مسجل لشركة أخرى مسبقاً بالنظام", "warning");
+                    } else {
+                        showAppNotification("تم تعيين المعرف الجديد بنجاح", "success");
+                    }
+                } catch(e) {}
+            } else if (newId === actualMaster) {
+                showAppNotification("هذا هو المعرف الأساسي لشركتك", "success");
+            }
+
+            persistentCompanyId = newId || actualMaster;
+            localStorage.setItem('n1_company_id', persistentCompanyId);
             
             if(document.getElementById('new_cap_company_id')) {
-                document.getElementById('new_cap_company_id').value = newId;
+                document.getElementById('new_cap_company_id').value = persistentCompanyId;
             }
             
             fetchGlobalUsers();
-            fetchRegionsFromPrices();
-            fetchRadarStatus();
         };
 
         function fetchRadarStatus() {
@@ -709,7 +726,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
-                        if (priceObj.Client_Master === myMaster || priceObj.company === myMaster) {
+                        if (priceObj.Client_Master === myMaster || priceObj.company === myMaster || priceObj.Client_Master === persistentCompanyId) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
@@ -789,6 +806,7 @@
             });
         }
 
+        // دالة الفلترة الألماسية اللي بتمنع ضياع الكباتن لما يتغير المعرف
         function fetchGlobalUsers() {
             onValue(ref(db), (snapshot) => {
                 if (snapshot.exists()) {
@@ -797,19 +815,19 @@
                     const activeMasterId = getActiveMasterId();
                     
                     if(data.users) Object.values(data.users).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.master === activeMasterId || u.user === activeMasterId) { 
+                        if(u.Client_Master === activeMasterId || u.master === activeMasterId || u.user === activeMasterId || u.Client_Master === persistentCompanyId) { 
                             u._node = 'users'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId) { 
+                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Client_Master === persistentCompanyId) { 
                             u._node = 'shops'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Company_ID === activeMasterId) { 
+                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Company_ID === activeMasterId || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId) { 
                             u._node = 'captains'; 
                             globalUsers.push(u); 
                         }
@@ -827,8 +845,9 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
             const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster); 
+            if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
@@ -917,8 +936,9 @@
         window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster);
+            if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
@@ -941,7 +961,7 @@
                 return;
             }
 
-            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster));
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId));
             
             let busyCaptains = new Set();
             for(let capKey in allAssignedOrders) {
@@ -1339,8 +1359,9 @@
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
                 const myMaster = getActiveMasterId();
-                const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster).map(u => u.Client_User || u.user || u.Shop_User);
+                const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
                 myShops.push(myMaster);
+                if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
                 
                 const updates = {};
                 allOrders.forEach(o => {
@@ -1372,7 +1393,7 @@
             const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            const companyId = getActiveMasterId();
+            const companyId = persistentCompanyId || getActiveMasterId();
 
             if(!name || !phone || !user || !pass || !region || !companyId) { 
                 showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); 
@@ -1427,7 +1448,7 @@
             }
             
             const myMaster = getActiveMasterId();
-            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster));
+            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId));
             
             if (cap) {
                 document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
@@ -1486,7 +1507,7 @@
             
             let allMyCaptains = globalUsers.filter(u => 
                 (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain' || u._node === 'captains') && 
-                (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster)
+                (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId)
             ).reverse();
             
             document.getElementById('stat-cap-total').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
