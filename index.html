@@ -300,7 +300,7 @@
 
         <div class="shop-login-option">
             <input type="checkbox" id="is_shop" onchange="if(this.checked) document.getElementById('is_captain').checked = false;">
-            <label for="is_shop">تسجيل دخول كمنشأة تجارية مطعم ومحل</label>
+            <label for="is_shop">تسجيل دخول كمنشأة تجارية (مطعم أو محل)</label>
         </div>
 
         <div class="captain-login-option">
@@ -319,39 +319,56 @@
     </div>
 
     <script>
-        let deferredPrompt
-        window.addEventListener('load', () => {
-            const splash = document.getElementById('pwa-splash')
-            const btnInstall = document.getElementById('btn-install')
-            const btnContinue = document.getElementById('btn-continue')
+        let deferredPrompt;
+        const splash = document.getElementById('pwa-splash');
+        const btnInstall = document.getElementById('btn-install');
+        const btnContinue = document.getElementById('btn-continue');
 
-            if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
-                splash.style.display = 'none'
-            }
+        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+            splash.style.display = 'none';
+        }
 
-            btnContinue.addEventListener('click', () => {
-                splash.style.opacity = '0'
-                splash.style.visibility = 'hidden'
-            })
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('التطبيق جاهز للتثبيت.');
+        });
 
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault()
-                deferredPrompt = e
-            })
-
-            btnInstall.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt()
-                    const { outcome } = await deferredPrompt.userChoice
-                    if (outcome === 'accepted') {
-                        splash.style.display = 'none'
-                    }
-                    deferredPrompt = null
-                } else {
-                    alert('يرجى إضافة التطبيق للشاشة الرئيسية من إعدادات المتصفح يا غالي 😊')
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('تم تثبيت التطبيق بنجاح.');
+                    splash.style.display = 'none';
                 }
-            })
-        })
+                deferredPrompt = null;
+            } else {
+                alert('يرجى الضغط على القائمة (الثلاث نقاط) واختيار "إضافة إلى الشاشة الرئيسية" (Add to Home Screen) لتثبيت التطبيق بنجاح.');
+            }
+        });
+
+        btnContinue.addEventListener('click', () => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.visibility = 'hidden';
+            }, 500);
+        });
+
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                window.location.reload();
+                            }
+                        };
+                    };
+                });
+            }
+        });
     </script>
 
     <script type="module">
@@ -374,7 +391,7 @@
         window.onload = function() {
             localStorage.removeItem('currentUser');
             localStorage.removeItem('n1_captain_session');
-            console.log("Session Cleared Ready for secure login");
+            console.log("Session Cleared. Ready for secure login.");
         }
 
         window.loginNow = async function() {
@@ -388,7 +405,7 @@
             msgBox.style.display = 'none';
 
             if (!u || !p) {
-                showError("يرجى إدخال اسم المستخدم وكلمة المرور يا حبة السكر 😊");
+                showError("يرجى إدخال اسم المستخدم وكلمة المرور.");
                 return;
             }
 
@@ -421,12 +438,12 @@
                 if (userRecord) {
                     
                     if (isCaptain && foundNode !== "captains") {
-                        showError("عذراً لا يوجد لديك حساب كابتن مسجل بهذا الرقم 😊");
+                        showError("عذراً، لا يوجد حساب كابتن مسجل بهذا الرقم.");
                         resetBtn();
                         return;
                     }
                     if (isShop && foundNode !== "shops") {
-                        showError("عذراً لا يوجد لديك حساب منشأة مسجل بهذا الرقم 😊");
+                        showError("عذراً، لا يوجد حساب منشأة مسجل بهذا الرقم.");
                         resetBtn();
                         return;
                     }
@@ -439,7 +456,7 @@
                     if (dbPass === p || dbPass === encodedP) {
                         const status = userRecord.Client_Status || userRecord.status || userRecord.Cap_Status || userRecord.Shop_Status;
                         if (status !== 'active') {
-                            showError("عذرا هذا الحساب موقوف راجع الإدارة 😊");
+                            showError("عذراً، هذا الحساب موقوف. يرجى مراجعة الإدارة.");
                             resetBtn();
                             return;
                         }
@@ -469,17 +486,17 @@
                             window.location.replace('client.html');
                         }
                     } else {
-                        showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة 😊");
+                        showError("اسم المستخدم أو كلمة المرور غير صحيحة.");
                         resetBtn();
                     }
                 } else {
-                    showError("اسم المستخدم أو كلمة المرور غير صحيحة يا بطة 😊");
+                    showError("اسم المستخدم أو كلمة المرور غير صحيحة.");
                     resetBtn();
                 }
 
             } catch (err) {
                 console.error(err);
-                showError("تعذر الاتصال بالخزنة المركزية تأكد من الإنترنت 😊");
+                showError("تعذر الاتصال بالنظام. يرجى التأكد من جودة الاتصال بالإنترنت.");
                 resetBtn();
             }
         }
