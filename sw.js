@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v1';
+const CACHE_NAME = 'n-one-captain-v2';
 const urlsToCache = [
     './',
     './captain.html',
@@ -7,6 +7,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
@@ -25,19 +26,20 @@ self.addEventListener('activate', event => {
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request);
-            })
+        fetch(event.request).then(response => {
+            return caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request.url, response.clone());
+                return response;
+            });
+        }).catch(() => {
+            return caches.match(event.request);
+        })
     );
 });
 
