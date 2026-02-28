@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Captain Portal 💎</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Captain App">
+    <link rel="apple-touch-icon" href="logo.jpg">
     <style>
         /* ================= تصميم Captain App (Royal Navy & Diamond White) ================= */
         :root {
@@ -27,6 +33,7 @@
             color: var(--text); user-select: none; overflow-x: hidden;
             display: flex; justify-content: center; min-height: 100vh;
             transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* حاوية التطبيق (شكل الهاتف) */
@@ -221,15 +228,14 @@
         .btn-complete { background: var(--primary); width: 100%; }
         .btn-action:active { transform: scale(0.95); }
 
-        /* زر التوجيه الجغرافي الألماسي الجديد (أيقونة سهم احترافية) */
+        /* زر التوجيه الجغرافي الألماسي الجديد */
         .btn-map-link {
-            background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; 
-            width: 38px; height: 38px; border-radius: 50%; font-size: 18px; 
-            display: inline-flex; justify-content: center; align-items: center; 
-            text-decoration: none; transition: 0.3s; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
-            flex-shrink: 0; outline: none;
+            background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; 
+            padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; 
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; 
+            gap: 5px; transition: 0.3s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);
         }
-        .btn-map-link:hover { background: #bae6fd; transform: scale(1.1); color: #0369a1; }
+        .btn-map-link:hover { background: #bae6fd; color: #0369a1; transform: scale(1.05); }
 
         /* سجل الطلبات والإعدادات (Modals) */
         .modal-overlay {
@@ -315,6 +321,7 @@
     <div class="app-container">
         
         <div id="loader">
+            <img id="loader-logo" src="logo.jpg" style="width:140px; height:140px; margin-bottom:20px; border-radius:20px; object-fit:contain; box-shadow:0 0 30px rgba(212,175,55,0.2); background:transparent; padding:0;">
             <div class="spinner"></div>
             <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;" id="loader_dynamic_name">بوابة الكباتن</div>
             <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;" id="lang_loader">جاري الاتصال بالنظام...</div>
@@ -354,6 +361,7 @@
                         <label id="lang_set_pass">كلمة المرور</label>
                         <input type="password" id="set_pass">
                     </div>
+                    <button class="btn-save-settings" style="background: var(--info); margin-top: 10px; color: white; box-shadow: 0 4px 10px rgba(14,165,233,0.3);" onclick="testNotification()" id="lang_test_notif">🔔 تجربة التنبيهات والرنة</button>
                     <button class="lang-toggle" onclick="toggleLanguage()" id="lang_toggle_btn">🌐 Switch to English</button>
                     <button class="btn-save-settings" onclick="saveSettings()" id="lang_save_btn">حفظ التعديلات ✅</button>
                 </div>
@@ -439,9 +447,12 @@
 
         <div id="main-screen" class="screen">
             <div class="app-header">
-                <div class="header-brand">
-                    <div style="font-size: 16px;" id="lang_header_cap">كابتن 🦸‍♂️</div>
-                    <div id="ui_company_name" class="header-company">الشركة الأم</div>
+                <div class="header-brand" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <img src="logo.jpg" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: transparent; padding: 0; border: 2px solid var(--gold);" id="header-logo" alt="N One">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="font-size: 16px;" id="lang_header_cap">كابتن 🦸‍♂️</div>
+                        <div id="ui_company_name" class="header-company">الشركة الأم</div>
+                    </div>
                 </div>
                 <div class="header-actions">
                     <button class="btn-action-top" onclick="openSettingsModal()" id="lang_btn_set">⚙️</button>
@@ -516,6 +527,35 @@
 
     </div>
 
+    <script>
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active');
+                }
+            } catch (err) {
+                console.log('Wake Lock error:', err);
+            }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registered successfully:', registration);
+                }).catch(error => {
+                    console.log('SW registration failed:', error);
+                });
+            });
+        }
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
@@ -543,9 +583,6 @@
         
         const COMMISSION_RATE = 0.10; 
 
-        // Regex لتنظيف الروابط الطويلة من النصوص
-        const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
-
         const dict = {
             'ar': {
                 lang_loader: 'جاري الاتصال بالنظام...',
@@ -554,6 +591,7 @@
                 lang_settings_title: 'الإعدادات ⚙️',
                 lang_set_user: 'اسم المستخدم (يوزر الدخول)',
                 lang_set_pass: 'كلمة المرور',
+                lang_test_notif: '🔔 تجربة التنبيهات والرنة',
                 lang_toggle_btn: '🌐 Switch to English',
                 lang_save_btn: 'حفظ التعديلات ✅',
                 lang_blocked_title: 'تم إيقاف حسابك',
@@ -600,6 +638,7 @@
                 lang_settings_title: 'Settings ⚙️',
                 lang_set_user: 'Username',
                 lang_set_pass: 'Password',
+                lang_test_notif: '🔔 Test Notifications',
                 lang_toggle_btn: '🌐 التبديل للعربية',
                 lang_save_btn: 'Save Changes ✅',
                 lang_blocked_title: 'Account Blocked',
@@ -656,6 +695,9 @@
         };
 
         window.onload = function() {
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
                 checkSession();
@@ -667,6 +709,30 @@
                     audio.play().catch(e => console.log(e));
                 }
             }, { once: true });
+        };
+
+        window.testNotification = function() {
+            const audio = document.getElementById('order-ringtone');
+            audio.play().catch(e => console.log(e));
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }, 3000);
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(currentLang === 'ar' ? 'N One - طلب تجريبي 🔥' : 'N One - Test Order 🔥', {
+                    body: currentLang === 'ar' ? 'هذا إشعار تجريبي لاختبار التنبيهات في الخلفية' : 'This is a test notification for background alerts',
+                    icon: 'logo.jpg'
+                });
+            } else if ('Notification' in window && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification('N One', { body: currentLang === 'ar' ? 'تم تفعيل التنبيهات بنجاح 💎' : 'Notifications enabled successfully 💎' });
+                    }
+                });
+            } else {
+                alert(currentLang === 'ar' ? "يرجى تفعيل التنبيهات من إعدادات المتصفح" : "Please enable notifications in browser settings");
+            }
         };
 
         function checkSession() {
@@ -686,6 +752,7 @@
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('register-screen').classList.remove('active');
                 document.getElementById('main-screen').classList.add('active');
+                requestWakeLock();
                 initRealtimeListeners();
                 setupAdsAndAlerts();
             } else {
@@ -730,6 +797,7 @@
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('main-screen').classList.add('active');
                     
+                    requestWakeLock();
                     initRealtimeListeners();
                     setupAdsAndAlerts();
                 } else {
@@ -796,7 +864,7 @@
                     
                     areaSelect.disabled = false;
                     areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة...' : 'Select Area...'}</option>`;
-                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => p.Price_Area))].filter(Boolean);
+                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => (p.Price_Area || '').trim()))].filter(Boolean);
                     
                     if (areas.length > 0) {
                         areas.forEach(a => {
@@ -902,11 +970,9 @@
             
             let masterNameForAlerts = master || "N One";
             if (master) {
-                // استماع ديناميكي لتغيير اسم الشركة بالرادار
-                onValue(ref(db, `users/${master}`), snap => {
+                get(ref(db, `users/${master}`)).then(snap => {
                     if (snap.exists()) {
                         masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
-                        renderAd(); // تحديث الإعلان لو الاسم تغير
                     }
                 });
             }
@@ -1013,15 +1079,9 @@
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
                     
                     orders.forEach(ord => {
-                        // تنظيف اسم المنشأة من الروابط المواسير الطويلة بالرادار
-                        let rawRestName = ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop');
-                        let extractedUrls = rawRestName.match(urlRegex);
-                        let cleanRestName = rawRestName.replace(urlRegex, '').trim().replace(/\s*-\s*$/, '');
-                        if(!cleanRestName) cleanRestName = currentLang === 'ar' ? 'الموقع 📍' : 'Location 📍';
-
                         if (ord.status === 'completed') {
                             if (new Date(ord.timestamp).toDateString() === todayStr) todayCount++;
-                            allCompletedOrders.push({...ord, cleanRestName});
+                            allCompletedOrders.push(ord);
                         }
                         
                         if (ord.status === 'assigned') {
@@ -1044,7 +1104,7 @@
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest">🏪 ${cleanRestName}</div>
+                                    <div class="order-rest">🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${lblVal}</div>
@@ -1072,11 +1132,8 @@
                             const lblOrd = currentLang === 'ar' ? "رقم" : "No";
                             const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
                             
-                            // تجهيز رابط الخريطة الصحيح
-                            const mapLink = extractedUrls ? extractedUrls[0] : (ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://maps.google.com/?q=' + encodeURIComponent(cleanRestName)));
-                            
-                            // أيقونة السهم الاحترافية
-                            const arrowIconSVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`;
+                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://maps.google.com/?q=' + encodeURIComponent(ord.restaurant || ord.Shop_Pickup || ''));
+                            const btnMapText = currentLang === 'ar' ? '🗺️ انطلاق للموقع' : '🗺️ Navigate';
 
                             container.innerHTML += `
                                 <div class="order-card">
@@ -1085,8 +1142,8 @@
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span>🏪 ${cleanRestName}</span>
-                                        <a href="${mapLink}" target="_blank" class="btn-map-link" title="الاتجاهات للموقع">${arrowIconSVG}</a>
+                                        <span>🏪 ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
+                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${btnMapText}</a>
                                     </div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
@@ -1143,8 +1200,7 @@
         function updateUIProfile(data) {
             const masterId = data.company || data.Client_Master;
             if (masterId) {
-                // جلب ديناميكي وحي لاسم الشركة الأم لتحديث المسمى فورا متى ما تغير
-                onValue(ref(db, `users/${masterId}`), (snap) => {
+                get(ref(db, `users/${masterId}`)).then(snap => {
                     let mName = masterId;
                     if (snap.exists()) {
                         mName = snap.val().Client_Name || snap.val().name || masterId;
@@ -1279,7 +1335,7 @@
                     container.innerHTML += `
                         <div class="history-item">
                             <div class="h-row">
-                                <span>${lblDest} ${ord.cleanRestName || ord.restaurant || (currentLang==='ar'?'المنشأة':'Shop')}</span>
+                                <span>${lblDest} ${ord.restaurant || ord.Shop_Pickup || (currentLang==='ar'?'المنشأة':'Shop')}</span>
                                 <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
                             </div>
                             <div class="h-row">
