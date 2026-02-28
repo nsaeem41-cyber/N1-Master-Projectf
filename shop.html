@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>بوابة المنشآت | N One</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest_shop.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Shop Portal">
-    <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo_shop.jpg">
 
     <style>
         :root {
@@ -255,6 +255,26 @@
         }
         .app-popup-btn:active { transform: scale(0.95); }
 
+        /* ================= النوافذ المنبثقة الملكية للتأكيد ================= */
+        .custom-dialog-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 60000;
+        }
+        .custom-dialog-box {
+            background: white; width: 85%; max-width: 350px; border-radius: 20px;
+            padding: 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            border-top: 5px solid var(--gold); animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .custom-dialog-icon { font-size: 40px; margin-bottom: 15px; }
+        .custom-dialog-msg { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 25px; line-height: 1.5; }
+        .custom-dialog-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-dialog { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; color: white; font-size: 14px; }
+        .btn-dialog:active { transform: scale(0.95); }
+        .btn-dialog-ok { background: var(--success); }
+        .btn-dialog-cancel { background: var(--danger); }
+
         /* ================= شاشة التثبيت PWA ================= */
         .pwa-splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -284,9 +304,9 @@
 
     <div id="pwa-splash" class="pwa-splash">
         <div class="pwa-content">
-            <img src="logo.jpg" alt="Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Shop'">
+            <img src="logo_shop.jpg" alt="Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Shop'">
             <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
-            <p class="pwa-text">لضمان وصول الطلبات والتحديثات الفورية، يرجى تثبيت التطبيق الخاص بالمنشآت التجارية.</p>
+            <p class="pwa-text">لضمان وصول الطلبات والتحديثات الفورية يرجى تثبيت التطبيق الخاص بالمنشآت التجارية</p>
             <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق 🚀</button>
             <button id="btn-continue-app" class="btn-continue-app">الاستمرار عبر المتصفح</button>
         </div>
@@ -302,9 +322,20 @@
         </div>
     </div>
 
+    <div id="custom-confirm-overlay" class="custom-dialog-overlay">
+        <div class="custom-dialog-box">
+            <div class="custom-dialog-icon">❓</div>
+            <div id="custom-confirm-msg" class="custom-dialog-msg">هل أنت متأكد</div>
+            <div class="custom-dialog-actions">
+                <button class="btn-dialog btn-dialog-ok" onclick="executeAppConfirm()">تأكيد ✅</button>
+                <button class="btn-dialog btn-dialog-cancel" onclick="closeAppConfirm()">إلغاء ❌</button>
+            </div>
+        </div>
+    </div>
+
     <div id="auth-section" class="auth-wrapper">
         <div id="login-card" class="auth-card">
-            <img src="logo.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
+            <img src="logo_shop.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
             <div class="auth-title">بوابة المنشآت</div>
             <div class="auth-subtitle">نظام الإدارة اللوجستية</div>
             
@@ -320,7 +351,7 @@
         </div>
 
         <div id="register-card" class="auth-card" style="display: none; border-top-color: var(--success);">
-            <img src="logo.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
+            <img src="logo_shop.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
             <div class="auth-title">طلب تسجيل منشأة</div>
             <div class="auth-subtitle">الانضمام لشبكة المزودين المعتمدين</div>
             
@@ -347,7 +378,7 @@
         <div id="suspended-card" class="suspended-card" style="display: none;">
             <div class="suspended-icon">🛑</div>
             <div class="suspended-title">إشعار إيقاف الحساب</div>
-            <div class="suspended-desc">تم تعليق حساب المنشأة لأسباب إدارية.<br>يرجى مراجعة الشركة المرجعية لتسوية الوضع المالي أو الإداري لإعادة التفعيل.</div>
+            <div class="suspended-desc">تم تعليق حساب المنشأة لأسباب إدارية يرجى مراجعة الشركة المرجعية لتسوية الوضع المالي أو الإداري لإعادة التفعيل</div>
             <button class="btn-logout" style="width:100%; justify-content:center; padding:15px; font-size:15px;" onclick="location.reload()">العودة للرئيسية</button>
         </div>
     </div>
@@ -356,7 +387,7 @@
         <header class="header">
             <div class="header-top">
                 <div class="brand" id="parent-company-brand">
-                    <img src="logo.jpg" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <img src="logo_shop.jpg" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
                     جاري التحميل...
                 </div>
                 <button class="btn-logout" onclick="logout()">
@@ -448,7 +479,7 @@
                     <div style="text-align:center; margin-bottom:25px;">
                         <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
                         <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
-                            الرصيد المتاح للتحويل: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
+                            الرصيد المتاح للتحويل <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
                         </p>
                     </div>
 
@@ -467,11 +498,11 @@
                     </button>
 
                     <div id="cap-check-result">
-                        <div class="check-info">الاسم المسجل: <b id="found-cap-name">---</b></div>
-                        <div class="check-info">الرصيد الحالي: <b id="found-cap-balance">---</b> د.أ</div>
+                        <div class="check-info">الاسم المسجل <b id="found-cap-name">---</b></div>
+                        <div class="check-info">الرصيد الحالي <b id="found-cap-balance">---</b> د.أ</div>
                         <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
                         <div style="font-size:12px; font-weight:bold; color:var(--primary);">
-                            الرصيد المتوقع بعد التحويل: <span id="future-cap-balance" style="color:var(--success);">---</span>
+                            الرصيد المتوقع بعد التحويل <span id="future-cap-balance" style="color:var(--success);">---</span>
                         </div>
                     </div>
 
@@ -537,7 +568,7 @@
                 }
                 deferredPrompt = null;
             } else {
-                alert('يرجى استخدام خيار التثبيت المتوفر في قائمة المتصفح.');
+                showCustomAlert('يرجى استخدام خيار التثبيت المتوفر في قائمة المتصفح');
             }
         });
 
@@ -550,7 +581,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
+                navigator.serviceWorker.register('sw_shop.js').then(reg => {
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
@@ -562,6 +593,34 @@
                 });
             });
         }
+        
+        // نظام النوافذ المنبثقة الملكية
+        window.showCustomAlert = function(msg) {
+            document.getElementById('app-popup-msg').innerHTML = msg;
+            document.getElementById('app-popup-overlay').style.display = 'flex';
+        };
+        
+        window.closeAppPopup = function() {
+            document.getElementById('app-popup-overlay').style.display = 'none';
+        };
+
+        let confirmCallback = null;
+        window.showCustomConfirm = function(msg, callback) {
+            document.getElementById('custom-confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('custom-confirm-overlay').style.display = 'flex';
+        };
+        
+        window.closeAppConfirm = function() {
+            document.getElementById('custom-confirm-overlay').style.display = 'none';
+            confirmCallback = null;
+        };
+        
+        window.executeAppConfirm = function() {
+            document.getElementById('custom-confirm-overlay').style.display = 'none';
+            if(confirmCallback) confirmCallback();
+            confirmCallback = null;
+        };
     </script>
 
     <script type="module">
@@ -591,7 +650,7 @@
         window.myNode = 'shops'; 
 
         window.onload = async function() {
-            const savedUser = localStorage.getItem('currentUser');
+            const savedUser = localStorage.getItem('n1_shop_session');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 initializePortal();
@@ -647,7 +706,7 @@
 
                         userData._node = foundNode;
                         currentUser = userData;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                         initializePortal();
                     } else {
                         showToast("بيانات الاعتماد غير صحيحة");
@@ -656,7 +715,7 @@
                     showToast("لم يتم العثور على سجل للمنشأة المطلوبة");
                 }
             } catch (e) {
-                showToast("تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً");
+                showToast("تعذر الاتصال بالخادم يرجى المحاولة لاحقا");
             } finally {
                 setLoading('btn-login', false, "تسجيل الدخول 🔒");
             }
@@ -678,7 +737,7 @@
                 const checkSnap2 = await get(child(ref(db), `users/${user}`));
                 
                 if (checkSnap1.exists() || checkSnap2.exists()) {
-                    showToast("المعرف المدخل مستخدم مسبقاً، يرجى تغييره");
+                    showToast("المعرف المدخل مستخدم مسبقا يرجى تغييره");
                     setLoading('btn-register', false, "إرسال الطلب 🚀");
                     return;
                 }
@@ -747,13 +806,13 @@
                 onValue(ref(db, `users/${myMaster}`), snap => {
                     if(snap.exists()) {
                         masterName = snap.val().name || snap.val().Client_Name || myMaster;
-                        document.getElementById('parent-company-brand').innerHTML = `<img src="logo.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`;
+                        document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`;
                     } else {
                         document.getElementById('parent-company-brand').innerText = myMaster;
                     }
                 });
             } else {
-                document.getElementById('parent-company-brand').innerHTML = `<img src="logo.jpg" class="brand-logo" onerror="this.style.display='none'"> الإدارة المركزية`;
+                document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> الإدارة المركزية`;
             }
         }
 
@@ -831,10 +890,6 @@
                 onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); });
                 onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); });
             }
-        }
-
-        window.closeAppPopup = function() {
-            document.getElementById('app-popup-overlay').style.display = 'none';
         }
 
         function setupLiveOrders() {
@@ -1051,7 +1106,7 @@
                 document.getElementById('star-feature-badge').style.display = 'none';
 
             } catch (e) {
-                showToast("حدث خطأ تقني، يرجى المحاولة لاحقاً");
+                showToast("حدث خطأ تقني يرجى المحاولة لاحقا");
             } finally {
                 setLoading('btn-send', false, "إرسال الطلب للعمليات 🚀");
             }
@@ -1065,7 +1120,7 @@
             if (amount <= 0) { showToast("الرقم المدخل غير صالح"); return; }
             
             if (myBalance < amount) { 
-                alert(`رصيد المنشأة المتاح لا يغطي العملية`); 
+                showCustomAlert(`رصيد المنشأة المتاح لا يغطي العملية`); 
                 return; 
             }
 
@@ -1094,7 +1149,7 @@
                     );
                     
                     if (!cap) {
-                        alert("لا توجد قيود للمستلم، يرجى مراجعة المعرف المدخل");
+                        showCustomAlert("لا توجد قيود للمستلم يرجى مراجعة المعرف المدخل");
                         verifiedCaptain = null;
                         document.getElementById('cap-check-result').style.display = 'none';
                         document.getElementById('btn-charge').style.display = 'none';
@@ -1121,55 +1176,55 @@
         window.executeTransfer = async function() {
             if (!verifiedCaptain) return;
             const amount = parseFloat(document.getElementById('charge_amount').value);
-            if (myBalance < amount) { alert("رصيد العمليات غير كافٍ"); return; }
+            if (myBalance < amount) { showCustomAlert("رصيد العمليات غير كافٍ"); return; }
 
-            if (!confirm(`تأكيد العملية المالية، سيتم خصم المبلغ من رصيد المنشأة وتحويله للمستلم المعتمد.`)) return;
+            showCustomConfirm("تأكيد العملية المالية سيتم خصم المبلغ من رصيد المنشأة وتحويله للمستلم المعتمد", async () => {
+                setLoading('btn-charge', true);
 
-            setLoading('btn-charge', true);
+                try {
+                    const currentCapBal = parseFloat(verifiedCaptain.Cap_Balance || verifiedCaptain.balance || 0);
+                    const newCapBal = currentCapBal + amount;
+                    const newShopBal = myBalance - amount;
 
-            try {
-                const currentCapBal = parseFloat(verifiedCaptain.Cap_Balance || verifiedCaptain.balance || 0);
-                const newCapBal = currentCapBal + amount;
-                const newShopBal = myBalance - amount;
+                    const capKey = String(verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone || verifiedCaptain.phone).trim();
+                    const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
+                    
+                    const capNode = verifiedCaptain._node || 'users';
 
-                const capKey = String(verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone || verifiedCaptain.phone).trim();
-                const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
-                
-                const capNode = verifiedCaptain._node || 'users';
+                    const updates = {};
+                    updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal;
+                    updates[`${capNode}/${capKey}/balance`] = newCapBal;
+                    
+                    updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
+                    updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
+                    updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
 
-                const updates = {};
-                updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal;
-                updates[`${capNode}/${capKey}/balance`] = newCapBal;
-                
-                updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
-                updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
-                updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
+                    await update(ref(db), updates);
 
-                await update(ref(db), updates);
+                    myBalance = newShopBal;
+                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                    
+                    showCustomAlert(`اكتملت المعاملة المالية وتم قيد الرصيد للمستلم بنجاح`);
+                    
+                    document.getElementById('cap_id').value = '';
+                    document.getElementById('charge_amount').value = '';
+                    document.getElementById('cap-check-result').style.display = 'none';
+                    document.getElementById('btn-charge').style.display = 'none';
+                    verifiedCaptain = null;
 
-                myBalance = newShopBal;
-                document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
-                
-                alert(`اكتملت المعاملة المالية وتم قيد الرصيد للمستلم بنجاح`);
-                
-                document.getElementById('cap_id').value = '';
-                document.getElementById('charge_amount').value = '';
-                document.getElementById('cap-check-result').style.display = 'none';
-                document.getElementById('btn-charge').style.display = 'none';
-                verifiedCaptain = null;
-
-            } catch (e) {
-                showToast("فشلت عملية التحويل المالي");
-            } finally {
-                setLoading('btn-charge', false, "تنفيذ عملية التحويل ✅");
-            }
+                } catch (e) {
+                    showToast("فشلت عملية التحويل المالي");
+                } finally {
+                    setLoading('btn-charge', false, "تنفيذ عملية التحويل ✅");
+                }
+            });
         }
 
         window.updateShopProfile = async function() {
             const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
             const newPass = document.getElementById('profile_pass').value;
 
-            if(!newPass) { alert("يتطلب إدخال بيانات التحديث لتنفيذ العملية"); return; }
+            if(!newPass) { showCustomAlert("يتطلب إدخال بيانات التحديث لتنفيذ العملية"); return; }
             
             setLoading('btn-save-settings', true);
 
@@ -1184,11 +1239,11 @@
                 currentUser.Shop_Pass = newPass;
                 currentUser.Client_Pass = newPass;
                 currentUser.pass = newPass;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                 
-                alert("تم تحديث بيانات الوصول للنظام بنجاح");
+                showCustomAlert("تم تحديث بيانات الوصول للنظام بنجاح");
             } catch(e) {
-                alert("تعذر حفظ التحديثات، يرجى إعادة المحاولة");
+                showCustomAlert("تعذر حفظ التحديثات يرجى إعادة المحاولة");
             } finally {
                 setLoading('btn-save-settings', false, "تحديث البيانات 💾");
             }
@@ -1202,10 +1257,10 @@
         }
 
         window.logout = function() {
-            if(confirm("تأكيد تسجيل الخروج من البوابة؟")) {
-                localStorage.removeItem('currentUser');
+            showCustomConfirm("تأكيد تسجيل الخروج من البوابة؟", () => {
+                localStorage.removeItem('n1_shop_session');
                 window.location.reload(); 
-            }
+            });
         }
 
         window.showToast = function(msg) {
