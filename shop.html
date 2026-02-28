@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Business Portal (Royal Edition)</title>
+    <title>بوابة المنشآت | N One</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shop Portal">
+    <link rel="apple-touch-icon" href="logo.jpg">
+
     <style>
         :root {
             --primary: #0f172a;
@@ -40,7 +47,7 @@
             text-align: center; position: relative; border-top: 5px solid var(--gold);
             animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .auth-logo { font-size: 50px; margin-bottom: 10px; }
+        .auth-logo { width: 70px; height: 70px; border-radius: 15px; margin-bottom: 15px; border: 2px solid var(--gold); }
         .auth-title { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
         .auth-subtitle { font-size: 13px; color: var(--text-light); margin-bottom: 30px; font-weight: bold; }
         
@@ -74,7 +81,8 @@
         }
 
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .brand { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 900; color: white; }
+        .brand-logo { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold); }
         .gold-text { color: var(--gold); }
         
         .btn-logout {
@@ -247,9 +255,42 @@
         }
         .app-popup-btn:active { transform: scale(0.95); }
 
+        /* ================= شاشة التثبيت PWA ================= */
+        .pwa-splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); z-index: 99999;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(10px); transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .pwa-content {
+            background: white; padding: 40px 30px; border-radius: 30px; text-align: center;
+            width: 85%; max-width: 380px; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            border-top: 5px solid var(--gold); animation: popIn 0.5s ease-out;
+        }
+        .pwa-logo { width: 100px; height: 100px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3); border: 2px solid var(--gold); }
+        .pwa-title { margin: 0 0 15px 0; font-size: 28px; font-weight: 900; color: var(--primary); }
+        .pwa-text { color: var(--text-main); font-size: 15px; font-weight: bold; line-height: 1.6; margin-bottom: 30px; }
+        .btn-install-app {
+            width: 100%; padding: 18px; background: linear-gradient(135deg, var(--gold), #b48608);
+            color: var(--primary); border: none; border-radius: 15px; font-size: 18px; font-weight: 900;
+            cursor: pointer; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); transition: all 0.3s ease;
+        }
+        .btn-install-app:active { transform: scale(0.95); }
+        .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
+
     </style>
 </head>
 <body>
+
+    <div id="pwa-splash" class="pwa-splash">
+        <div class="pwa-content">
+            <img src="logo.jpg" alt="Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Shop'">
+            <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
+            <p class="pwa-text">لضمان وصول الطلبات والتحديثات الفورية، يرجى تثبيت التطبيق الخاص بالمنشآت التجارية.</p>
+            <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق 🚀</button>
+            <button id="btn-continue-app" class="btn-continue-app">الاستمرار عبر المتصفح</button>
+        </div>
+    </div>
 
     <div id="loader"></div>
 
@@ -257,15 +298,15 @@
         <div class="app-popup-box">
             <div class="app-popup-icon">🚨</div>
             <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
-            <button class="app-popup-btn" onclick="closeAppPopup()">حسناً، فهمت</button>
+            <button class="app-popup-btn" onclick="closeAppPopup()">تأكيد القراءة</button>
         </div>
     </div>
 
     <div id="auth-section" class="auth-wrapper">
         <div id="login-card" class="auth-card">
-            <div class="auth-logo">💎</div>
+            <img src="logo.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
             <div class="auth-title">بوابة المنشآت</div>
-            <div class="auth-subtitle">تسجيل الدخول للنظام الألماسي</div>
+            <div class="auth-subtitle">نظام الإدارة اللوجستية</div>
             
             <div class="input-group">
                 <input type="text" id="login-user" placeholder="اسم المستخدم (User ID)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
@@ -274,39 +315,39 @@
                 <input type="password" id="login-pass" placeholder="كلمة المرور">
             </div>
             
-            <button class="btn-main btn-send" id="btn-login" onclick="executeLogin()">دخول آمن 🔒</button>
-            <div class="auth-link" onclick="toggleAuth('register')">منشأة جديدة؟ قدم طلب تسجيل هنا ✨</div>
+            <button class="btn-main btn-send" id="btn-login" onclick="executeLogin()">تسجيل الدخول 🔒</button>
+            <div class="auth-link" onclick="toggleAuth('register')">تقديم طلب تسجيل منشأة جديدة ✨</div>
         </div>
 
         <div id="register-card" class="auth-card" style="display: none; border-top-color: var(--success);">
-            <div class="auth-logo">📝</div>
-            <div class="auth-title">طلب تسجيل</div>
-            <div class="auth-subtitle">الانضمام للشبكة الألماسية</div>
+            <img src="logo.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
+            <div class="auth-title">طلب تسجيل منشأة</div>
+            <div class="auth-subtitle">الانضمام لشبكة المزودين المعتمدين</div>
             
             <div class="input-group">
-                <input type="text" id="reg-name" placeholder="اسم المنشأة التجارية أو المطعم">
+                <input type="text" id="reg-name" placeholder="الاسم التجاري للمنشأة">
             </div>
             <div class="input-group">
-                <input type="text" id="reg-user" placeholder="اسم المستخدم (بالإنجليزي)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                <input type="text" id="reg-user" placeholder="اسم المستخدم المطلوب (أحرف إنجليزية)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
             </div>
             <div class="input-group">
-                <input type="password" id="reg-pass" placeholder="اختر كلمة مرور">
+                <input type="password" id="reg-pass" placeholder="كلمة المرور المطلوبة">
             </div>
             <div class="input-group">
-                <input type="tel" id="reg-phone" placeholder="رقم الهاتف (7xxxxxxxx)" maxlength="9" style="direction:ltr; text-align:right;">
+                <input type="tel" id="reg-phone" placeholder="رقم الهاتف للتواصل (7xxxxxxxx)" maxlength="9" style="direction:ltr; text-align:right;">
             </div>
             <div class="input-group">
-                <input type="text" id="reg-master" placeholder="ID الاستقبال (رقم الشركة المرجعية)">
+                <input type="text" id="reg-master" placeholder="معرف الشركة المرجعية (إن وجد)">
             </div>
             
-            <button class="btn-main" id="btn-register" style="background: var(--success);" onclick="executeRegister()">إرسال طلب الانضمام 🚀</button>
-            <div class="auth-link" style="color:var(--text-light);" onclick="toggleAuth('login')">العودة لتسجيل الدخول 🔙</div>
+            <button class="btn-main" id="btn-register" style="background: var(--success);" onclick="executeRegister()">إرسال الطلب 🚀</button>
+            <div class="auth-link" style="color:var(--text-light);" onclick="toggleAuth('login')">العودة لصفحة الدخول 🔙</div>
         </div>
 
         <div id="suspended-card" class="suspended-card" style="display: none;">
             <div class="suspended-icon">🛑</div>
-            <div class="suspended-title">عذراً، الحساب موقوف</div>
-            <div class="suspended-desc">تم إيقاف أو تجميد حساب منشأتك مؤقتاً.<br>يرجى التواصل مع الإدارة المركزية أو الشركة الأم لمراجعة حالة الحساب وإعادة تفعيله.</div>
+            <div class="suspended-title">إشعار إيقاف الحساب</div>
+            <div class="suspended-desc">تم تعليق حساب المنشأة لأسباب إدارية.<br>يرجى مراجعة الشركة المرجعية لتسوية الوضع المالي أو الإداري لإعادة التفعيل.</div>
             <button class="btn-logout" style="width:100%; justify-content:center; padding:15px; font-size:15px;" onclick="location.reload()">العودة للرئيسية</button>
         </div>
     </div>
@@ -314,9 +355,12 @@
     <div id="app-container">
         <header class="header">
             <div class="header-top">
-                <div class="brand" id="parent-company-brand">جاري التحميل...</div>
+                <div class="brand" id="parent-company-brand">
+                    <img src="logo.jpg" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+                    جاري التحميل...
+                </div>
                 <button class="btn-logout" onclick="logout()">
-                    <span>🏃‍♂️</span> مغادرة
+                    <span>🔒</span> تسجيل خروج
                 </button>
             </div>
             
@@ -333,8 +377,8 @@
             </div>
 
             <div class="nav-tabs">
-                <button class="nav-tab active" onclick="switchTab('orders')">📦 إرسال طلب</button>
-                <button class="nav-tab" onclick="switchTab('charging')">⚡ شحن كابتن</button>
+                <button class="nav-tab active" onclick="switchTab('orders')">📦 تقديم طلب</button>
+                <button class="nav-tab" onclick="switchTab('charging')">⚡ عمليات الشحن</button>
                 <button class="nav-tab" onclick="switchTab('settings')">⚙️ الإعدادات</button>
             </div>
         </header>
@@ -354,47 +398,47 @@
                 
                 <div class="stats-grid">
                     <div class="stat-box gold-top">
-                        <span class="stat-label">إنجاز اليوم 🏆</span>
+                        <span class="stat-label">طلبات اليوم 📋</span>
                         <span class="stat-val gold" id="orders-today">0</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-label">الإجمالي العام 🚀</span>
+                        <span class="stat-label">إجمالي الطلبات 📊</span>
                         <span class="stat-val" id="orders-total">0</span>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="input-group">
-                        <label>📍 وجهة الطلب (اختر من القائمة المعتمدة)</label>
-                        <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة..." oninput="calculateFee()" onchange="calculateFee()">
+                        <label>📍 منطقة الوجهة (اختر من القائمة المعتمدة)</label>
+                        <input type="text" id="destination" list="areas-list" placeholder="أدخل الوجهة المطلوبة..." oninput="calculateFee()" onchange="calculateFee()">
                         <datalist id="areas-list"></datalist>
                     </div>
 
                     <div class="input-group">
-                        <label>💰 قيمة التحصيل (دينار)</label>
-                        <input type="number" id="order_val" placeholder="سعر الطلب (مثلاً 20.50)">
+                        <label>💰 قيمة الفاتورة المطلوب تحصيلها (دينار)</label>
+                        <input type="number" id="order_val" placeholder="0.00">
                     </div>
 
                     <div class="input-group">
                         <label>
-                            <span>🛵 سعر التوصيل (تلقائي)</span>
+                            <span>🛵 تكلفة التوصيل المحتسبة</span>
                             <div>
-                                <span id="star-feature-badge" class="star-feature-badge">⭐ سعر مميز</span>
-                                <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة ليلية (+0.50)</span>
+                                <span id="star-feature-badge" class="star-feature-badge">⭐ تسعيرة مخفضة</span>
+                                <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة مسائية مضافة</span>
                             </div>
                         </label>
-                        <input type="text" id="delivery_fee" placeholder="---" readonly>
+                        <input type="text" id="delivery_fee" placeholder="يتم الاحتساب تلقائياً..." readonly>
                     </div>
 
                     <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">
-                        🚀 إرسال للرادار فوراً
+                        إرسال الطلب للعمليات 🚀
                     </button>
                 </div>
 
                 <div class="card" style="padding: 20px;">
-                    <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 آخر الطلبات (الخاصة بك فقط)</div>
+                    <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 سجل الطلبات الحديثة</div>
                     <div id="history-list" class="history-list">
-                        <div style="text-align:center; color:#cbd5e1; padding:10px;">جاري سحب السجل...</div>
+                        <div style="text-align:center; color:#cbd5e1; padding:10px;">جاري المزامنة مع الخادم...</div>
                     </div>
                 </div>
             </div>
@@ -404,35 +448,35 @@
                     <div style="text-align:center; margin-bottom:25px;">
                         <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
                         <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
-                            رصيدك الحالي: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
+                            الرصيد المتاح للتحويل: <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
                         </p>
                     </div>
 
                     <div class="input-group">
-                        <label>🔍 كود الكابتن أو رقم الهاتف</label>
-                        <input type="text" id="cap_id" placeholder="مثلاً C-101 أو 07xxxxxxxx">
+                        <label>🔍 المعرف الخاص بالمستلم (الكابتن)</label>
+                        <input type="text" id="cap_id" placeholder="رقم الهاتف أو المعرف الوظيفي">
                     </div>
 
                     <div class="input-group">
-                        <label>💵 المبلغ المراد شحنه</label>
+                        <label>💵 قيمة الرصيد المطلوب تحويله</label>
                         <input type="number" id="charge_amount" placeholder="0.00">
                     </div>
 
                     <button class="btn-main btn-check" id="btn-check" onclick="verifyCaptain()">
-                        🔍 فحص الكابتن أولاً
+                        التحقق من بيانات المستلم 🔍
                     </button>
 
                     <div id="cap-check-result">
-                        <div class="check-info">تم العثور على الكابتن <b id="found-cap-name">---</b></div>
-                        <div class="check-info">رصيده الحالي <b id="found-cap-balance">---</b> د.أ</div>
+                        <div class="check-info">الاسم المسجل: <b id="found-cap-name">---</b></div>
+                        <div class="check-info">الرصيد الحالي: <b id="found-cap-balance">---</b> د.أ</div>
                         <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
                         <div style="font-size:12px; font-weight:bold; color:var(--primary);">
-                            سيصبح رصيده <span id="future-cap-balance" style="color:var(--success);">---</span>
+                            الرصيد المتوقع بعد التحويل: <span id="future-cap-balance" style="color:var(--success);">---</span>
                         </div>
                     </div>
 
                     <button class="btn-main btn-confirm" id="btn-charge" onclick="executeTransfer()">
-                        ✅ تأكيد وتحويل الرصيد
+                        تنفيذ عملية التحويل ✅
                     </button>
                 </div>
             </div>
@@ -440,25 +484,25 @@
             <div id="settings" class="section">
                 <div class="card" style="border-top: 4px solid var(--gold);">
                     <div style="text-align:center; margin-bottom:20px;">
-                        <h3 style="margin:0; color:var(--primary); font-size:18px;">⚙️ إعدادات الحساب</h3>
-                        <p style="font-size:12px; color:var(--text-light); margin-top:5px;">اسم المستخدم محمي ومثبت للرسمية</p>
+                        <h3 style="margin:0; color:var(--primary); font-size:18px;">⚙️ إعدادات حساب المنشأة</h3>
+                        <p style="font-size:12px; color:var(--text-light); margin-top:5px;">بيانات الحساب الأساسية</p>
                     </div>
 
                     <div class="input-group">
-                        <label>اسم المستخدم (User ID)</label>
-                        <input type="text" id="profile_user" readonly title="بيانات الهوية الأساسية مثبتة">
+                        <label>معرف المستخدم (User ID)</label>
+                        <input type="text" id="profile_user" readonly title="بيانات المعرف غير قابلة للتعديل">
                     </div>
 
                     <div class="input-group">
-                        <label>كلمة المرور الخاصة بالدخول</label>
+                        <label>كلمة مرور الوصول للنظام</label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور لتغييرها" style="width: 100%; padding-left: 45px;">
+                            <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور الجديدة" style="width: 100%; padding-left: 45px;">
                             <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 15px; cursor: pointer; font-size: 18px; color: #64748b;" title="إظهار/إخفاء">👁️</span>
                         </div>
                     </div>
 
                     <button class="btn-main" id="btn-save-settings" style="background: var(--gold); color: var(--primary);" onclick="updateShopProfile()">
-                        💾 حفظ التعديلات اللحظية
+                        تحديث البيانات 💾
                     </button>
                 </div>
             </div>
@@ -467,6 +511,58 @@
     </div>
 
     <div id="toast" class="toast">تمت العملية بنجاح</div>
+
+    <script>
+        // إعدادات PWA وتحديث Service Worker
+        let deferredPrompt;
+        const splash = document.getElementById('pwa-splash');
+        const btnInstall = document.getElementById('btn-install-app');
+        const btnContinue = document.getElementById('btn-continue-app');
+
+        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+            splash.style.display = 'none';
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    splash.style.display = 'none';
+                }
+                deferredPrompt = null;
+            } else {
+                alert('يرجى استخدام خيار التثبيت المتوفر في قائمة المتصفح.');
+            }
+        });
+
+        btnContinue.addEventListener('click', () => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.visibility = 'hidden';
+            }, 500);
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                window.location.reload();
+                            }
+                        };
+                    };
+                });
+            });
+        }
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -491,7 +587,7 @@
         let currentUser = null;
         let myBalance = 0;
         let verifiedCaptain = null;
-        let masterName = "الشركة الأم";
+        let masterName = "الإدارة العامة";
         window.myNode = 'shops'; 
 
         window.onload = async function() {
@@ -518,7 +614,7 @@
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value;
 
-            if(!user || !pass) { showToast("يرجى إدخال اسم المستخدم وكلمة المرور"); return; }
+            if(!user || !pass) { showToast("المعلومات المدخلة غير مكتملة"); return; }
             
             setLoading('btn-login', true);
 
@@ -541,11 +637,11 @@
                         if(status === 'paused') {
                             document.getElementById('login-card').style.display = 'none';
                             document.getElementById('suspended-card').style.display = 'block';
-                            setLoading('btn-login', false, "دخول آمن 🔒");
+                            setLoading('btn-login', false, "تسجيل الدخول 🔒");
                             return;
                         } else if (status === 'pending') {
-                            showToast("حسابك قيد المراجعة من قبل الإدارة، يرجى الانتظار");
-                            setLoading('btn-login', false, "دخول آمن 🔒");
+                            showToast("طلب تسجيل المنشأة قيد المعالجة الإدارية");
+                            setLoading('btn-login', false, "تسجيل الدخول 🔒");
                             return;
                         }
 
@@ -554,15 +650,15 @@
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
                         initializePortal();
                     } else {
-                        showToast("كلمة المرور غير صحيحة");
+                        showToast("بيانات الاعتماد غير صحيحة");
                     }
                 } else {
-                    showToast("اسم المستخدم غير موجود");
+                    showToast("لم يتم العثور على سجل للمنشأة المطلوبة");
                 }
             } catch (e) {
-                showToast("خطأ في الاتصال بقاعدة البيانات");
+                showToast("تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً");
             } finally {
-                setLoading('btn-login', false, "دخول آمن 🔒");
+                setLoading('btn-login', false, "تسجيل الدخول 🔒");
             }
         };
 
@@ -573,7 +669,7 @@
             const phone = document.getElementById('reg-phone').value.trim();
             const masterId = document.getElementById('reg-master').value.trim();
 
-            if(!name || !user || !pass || !phone || !masterId) { showToast("يرجى تعبئة كافة الحقول المطلوبة"); return; }
+            if(!name || !user || !pass || !phone || !masterId) { showToast("يرجى إكمال كافة المتطلبات الإلزامية"); return; }
 
             setLoading('btn-register', true);
 
@@ -582,8 +678,8 @@
                 const checkSnap2 = await get(child(ref(db), `users/${user}`));
                 
                 if (checkSnap1.exists() || checkSnap2.exists()) {
-                    showToast("اسم المستخدم محجوز، يرجى اختيار اسم آخر");
-                    setLoading('btn-register', false, "إرسال طلب الانضمام 🚀");
+                    showToast("المعرف المدخل مستخدم مسبقاً، يرجى تغييره");
+                    setLoading('btn-register', false, "إرسال الطلب 🚀");
                     return;
                 }
 
@@ -595,7 +691,7 @@
                     Client_Role: "shop", 
                     Client_Type: "shop", 
                     Client_Master: masterId, 
-                    Client_Status: "pending", // يذهب لسجل الطلبات
+                    Client_Status: "pending", 
                     Client_Phone: phone, 
                     name: name,
                     user: user,
@@ -608,7 +704,7 @@
 
                 await set(ref(db, `shops/${user}`), newShop);
                 
-                showToast("تم إرسال الطلب للإدارة بنجاح، يرجى انتظار التفعيل");
+                showToast("تم تحويل الطلب للجهات المختصة لمعالجته");
                 toggleAuth('login');
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-user').value = '';
@@ -617,9 +713,9 @@
                 document.getElementById('reg-master').value = '';
 
             } catch(e) {
-                showToast("حدث خطأ أثناء إرسال الطلب");
+                showToast("تعذر استكمال إجراءات الطلب");
             } finally {
-                setLoading('btn-register', false, "إرسال طلب الانضمام 🚀");
+                setLoading('btn-register', false, "إرسال الطلب 🚀");
             }
         };
 
@@ -627,16 +723,14 @@
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
 
-            const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "منشأة تجارية";
-            const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "غير متوفر";
-            const shopLocStr = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "المنطقة غير محددة";
+            const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "المنشأة";
+            const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "N/A";
+            const shopLocStr = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "البيانات الجغرافية غير متوفرة";
             
-            // تثبيت البيانات في الهيدر
             document.getElementById('hdr-shop-name').innerText = shopNameStr;
             document.getElementById('hdr-shop-user').innerText = shopUserStr;
             document.getElementById('hdr-shop-area').innerText = shopLocStr;
 
-            // تثبيت اسم المستخدم في الإعدادات
             document.getElementById('profile_user').value = shopUserStr;
             document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
             
@@ -653,13 +747,13 @@
                 onValue(ref(db, `users/${myMaster}`), snap => {
                     if(snap.exists()) {
                         masterName = snap.val().name || snap.val().Client_Name || myMaster;
-                        document.getElementById('parent-company-brand').innerText = masterName;
+                        document.getElementById('parent-company-brand').innerHTML = `<img src="logo.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`;
                     } else {
                         document.getElementById('parent-company-brand').innerText = myMaster;
                     }
                 });
             } else {
-                document.getElementById('parent-company-brand').innerText = "النظام الإداري";
+                document.getElementById('parent-company-brand').innerHTML = `<img src="logo.jpg" class="brand-logo" onerror="this.style.display='none'"> الإدارة المركزية`;
             }
         }
 
@@ -701,7 +795,7 @@
                 
                 if (displayAd && displayAd.text) {
                     adMarquee.innerText = displayAd.text;
-                    adBadge.innerText = `إشعار من ${senderLabel} 👑`;
+                    adBadge.innerText = `تعميم من ${senderLabel} 👑`;
                     adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal');
                     adContainer.style.display = 'flex';
                 } else {
@@ -723,7 +817,7 @@
                 if (displayAlert && displayAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
                     if (displayAlert.timestamp > lastSeen) {
-                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة من ${senderLabel}</div>${displayAlert.message}`;
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة رسمية - ${senderLabel}</div>${displayAlert.message}`;
                         document.getElementById('app-popup-overlay').style.display = 'flex';
                         localStorage.setItem('last_seen_alert_shop_' + myUser, displayAlert.timestamp);
                     }
@@ -764,7 +858,7 @@
                     const recentOrders = myOrders.reverse().slice(0, 20);
                     
                     if(recentOrders.length === 0) {
-                        list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد طلبات مسجلة في رصيدك بعد</div>';
+                        list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
                     } else {
                         recentOrders.forEach(item => {
                             const timeStr = new Date(item.Shop_Date || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -782,7 +876,7 @@
                 } else {
                     document.getElementById('orders-today').innerText = 0;
                     document.getElementById('orders-total').innerText = 0;
-                    list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد طلبات مسجلة في رصيدك بعد</div>';
+                    list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
                 }
             });
         }
@@ -835,7 +929,7 @@
                     }
                 }
             } catch (e) {
-                console.error("Fetch Data Error", e);
+                console.error("خطأ في المزامنة", e);
             }
         }
 
@@ -922,14 +1016,13 @@
             const val = document.getElementById('order_val').value;
             const fee = document.getElementById('delivery_fee').value;
 
-            if (!dest || !val || !fee) { showToast("يرجى تعبئة جميع الحقول وتحديد منطقة صحيحة"); return; }
-            if (pricingMatrix[dest] === undefined) { showToast("المنطقة المدخلة غير معتمدة في التسعيرة"); return; }
+            if (!dest || !val || !fee) { showToast("البيانات المدخلة للطلب غير مكتملة"); return; }
+            if (pricingMatrix[dest] === undefined) { showToast("لا توجد تسعيرة معتمدة للوجهة المحددة"); return; }
             
             setLoading('btn-send', true);
             
             const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone;
             const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name;
-            // الإخفاء الألماسي: الرابط الطويل يتم جلبه بصمت وإرساله في الخلفية للكابتن فقط
             const hiddenLocationLink = currentUser.Shop_Location || currentUser.Client_Location || currentUser.pickup || "";
 
             const orderId = "SHOP_ORD_" + Date.now();
@@ -938,8 +1031,8 @@
                 Shop_Type: "shop_order",
                 Shop_User: shopUserStr,
                 Shop_Name: shopNameStr,
-                Shop_Pickup: dest, // منطقة التوصيل
-                Shop_Location_Link: hiddenLocationLink, // الرابط الجغرافي المخفي
+                Shop_Pickup: dest, 
+                Shop_Location_Link: hiddenLocationLink, 
                 Shop_Val: val,
                 Shop_Fee: fee,
                 Shop_Date: new Date().toISOString(),
@@ -949,7 +1042,7 @@
 
             try {
                 await set(ref(db, `orders/${orderId}`), orderData);
-                showToast("تم إرسال الطلب للرادار بنجاح");
+                showToast("تم تحويل الطلب لعمليات التوصيل بنجاح");
                 
                 document.getElementById('destination').value = '';
                 document.getElementById('order_val').value = '';
@@ -958,9 +1051,9 @@
                 document.getElementById('star-feature-badge').style.display = 'none';
 
             } catch (e) {
-                showToast("خطأ في الاتصال");
+                showToast("حدث خطأ تقني، يرجى المحاولة لاحقاً");
             } finally {
-                setLoading('btn-send', false, "🚀 إرسال للرادار فوراً");
+                setLoading('btn-send', false, "إرسال الطلب للعمليات 🚀");
             }
         }
 
@@ -968,11 +1061,11 @@
             const capId = String(document.getElementById('cap_id').value).trim();
             const amount = parseFloat(document.getElementById('charge_amount').value);
 
-            if (!capId || !amount) { showToast("أدخل الكود أو الهاتف والمبلغ"); return; }
-            if (amount <= 0) { showToast("المبلغ غير صحيح"); return; }
+            if (!capId || !amount) { showToast("يجب إدخال المعرف والمبلغ للتحقق"); return; }
+            if (amount <= 0) { showToast("الرقم المدخل غير صالح"); return; }
             
             if (myBalance < amount) { 
-                alert(`رصيدك الحالي غير كاف لإتمام العملية`); 
+                alert(`رصيد المنشأة المتاح لا يغطي العملية`); 
                 return; 
             }
 
@@ -1001,13 +1094,13 @@
                     );
                     
                     if (!cap) {
-                        alert("الكابتن غير موجود، تأكد من الكود أو الهاتف");
+                        alert("لا توجد قيود للمستلم، يرجى مراجعة المعرف المدخل");
                         verifiedCaptain = null;
                         document.getElementById('cap-check-result').style.display = 'none';
                         document.getElementById('btn-charge').style.display = 'none';
                     } else {
                         verifiedCaptain = cap;
-                        const capName = cap.Cap_Name || cap.name || "كابتن";
+                        const capName = cap.Cap_Name || cap.name || "سائق معتمد";
                         const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0);
 
                         document.getElementById('found-cap-name').innerText = capName;
@@ -1019,18 +1112,18 @@
                     }
                 }
             } catch (e) {
-                showToast("خطأ في الاتصال");
+                showToast("تعذر إتمام التحقق");
             } finally {
-                setLoading('btn-check', false, "🔍 فحص الكابتن أولاً");
+                setLoading('btn-check', false, "التحقق من بيانات المستلم 🔍");
             }
         }
 
         window.executeTransfer = async function() {
             if (!verifiedCaptain) return;
             const amount = parseFloat(document.getElementById('charge_amount').value);
-            if (myBalance < amount) { alert("رصيدك نفذ"); return; }
+            if (myBalance < amount) { alert("رصيد العمليات غير كافٍ"); return; }
 
-            if (!confirm(`تأكيد نهائي: خصم المبلغ من رصيدك وشحنه للكابتن`)) return;
+            if (!confirm(`تأكيد العملية المالية، سيتم خصم المبلغ من رصيد المنشأة وتحويله للمستلم المعتمد.`)) return;
 
             setLoading('btn-charge', true);
 
@@ -1057,7 +1150,7 @@
                 myBalance = newShopBal;
                 document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 
-                alert(`تمت العملية بنجاح، الرصيد وصل للكابتن`);
+                alert(`اكتملت المعاملة المالية وتم قيد الرصيد للمستلم بنجاح`);
                 
                 document.getElementById('cap_id').value = '';
                 document.getElementById('charge_amount').value = '';
@@ -1066,9 +1159,9 @@
                 verifiedCaptain = null;
 
             } catch (e) {
-                showToast("حدث خطأ أثناء التحويل");
+                showToast("فشلت عملية التحويل المالي");
             } finally {
-                setLoading('btn-charge', false, "✅ تأكيد وتحويل الرصيد");
+                setLoading('btn-charge', false, "تنفيذ عملية التحويل ✅");
             }
         }
 
@@ -1076,7 +1169,7 @@
             const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
             const newPass = document.getElementById('profile_pass').value;
 
-            if(!newPass) { alert("يرجى إدخال كلمة المرور للتحديث"); return; }
+            if(!newPass) { alert("يتطلب إدخال بيانات التحديث لتنفيذ العملية"); return; }
             
             setLoading('btn-save-settings', true);
 
@@ -1093,11 +1186,11 @@
                 currentUser.pass = newPass;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                alert("تم حفظ كلمة المرور الجديدة بنجاح");
+                alert("تم تحديث بيانات الوصول للنظام بنجاح");
             } catch(e) {
-                alert("حدث خطأ أثناء حفظ التعديلات");
+                alert("تعذر حفظ التحديثات، يرجى إعادة المحاولة");
             } finally {
-                setLoading('btn-save-settings', false, "💾 حفظ التعديلات اللحظية");
+                setLoading('btn-save-settings', false, "تحديث البيانات 💾");
             }
         }
 
@@ -1109,7 +1202,7 @@
         }
 
         window.logout = function() {
-            if(confirm("هل تريد مغادرة النظام؟")) {
+            if(confirm("تأكيد تسجيل الخروج من البوابة؟")) {
                 localStorage.removeItem('currentUser');
                 window.location.reload(); 
             }
@@ -1127,7 +1220,7 @@
             const loader = document.getElementById('loader');
             if (isLoading) {
                 btn.dataset.text = btn.innerText;
-                btn.innerText = "جاري التنفيذ...";
+                btn.innerText = "معالجة...";
                 btn.style.opacity = 0.7;
                 btn.disabled = true;
                 loader.style.width = "100%";
