@@ -591,7 +591,8 @@
                 String(u.Client_Master || '').toLowerCase().trim(),
                 String(u.master || '').toLowerCase().trim(),
                 String(u.company || '').toLowerCase().trim(),
-                String(u.Company_ID || '').toLowerCase().trim()
+                String(u.Company_ID || '').toLowerCase().trim(),
+                String(u.Shop_Master || '').toLowerCase().trim()
             ];
             return vals.includes(activeCompany);
         }
@@ -970,11 +971,17 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
             const myMaster = getActiveMasterId();
-            const currentComp = persistentCompanyId || myMaster;
+            const currentCompStr = String(persistentCompanyId || myMaster).toLowerCase().trim();
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
-            myShops.push(currentComp); 
             
-            const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
+            const pendingOrders = allOrders.filter(o => {
+                if (o.Shop_Type !== 'shop_order' || completedIDs.has(o.Shop_Ord_ID)) return false;
+                
+                const orderComp = String(o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                if (orderComp && orderComp === currentCompStr) return true;
+                
+                return myShops.includes(o.Shop_User);
+            }).reverse();
             
             document.getElementById('stat-pending').innerText = pendingOrders.length;
             if (pendingOrders.length > 0 && soundEnabled && !isAlarmPlaying) {
@@ -1066,11 +1073,17 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
             
-            const currentComp = persistentCompanyId || myMaster;
+            const currentCompStr = String(persistentCompanyId || myMaster).toLowerCase().trim();
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
-            myShops.push(currentComp);
             
-            const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
+            const pendingOrders = allOrders.filter(o => {
+                if (o.Shop_Type !== 'shop_order' || completedIDs.has(o.Shop_Ord_ID)) return false;
+                
+                const orderComp = String(o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                if (orderComp && orderComp === currentCompStr) return true;
+                
+                return myShops.includes(o.Shop_User);
+            }).reverse();
             
             let activeLinkedIds = new Set();
             let busyCaptains = new Set();
@@ -1534,14 +1547,16 @@
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
                 const myMaster = getActiveMasterId();
-                const currentComp = persistentCompanyId || myMaster;
+                const currentCompStr = String(persistentCompanyId || myMaster).toLowerCase().trim();
                 const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
-                myShops.push(currentComp);
                 
                 const updates = {};
                 allOrders.forEach(o => {
-                    if (o.Shop_Type === 'shop_order' && myShops.includes(o.Shop_User)) {
-                        updates[`orders/${o.Shop_Ord_ID}`] = null;
+                    if (o.Shop_Type === 'shop_order') {
+                        const orderComp = String(o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                        if ((orderComp && orderComp === currentCompStr) || myShops.includes(o.Shop_User)) {
+                            updates[`orders/${o.Shop_Ord_ID}`] = null;
+                        }
                     }
                 });
                 
