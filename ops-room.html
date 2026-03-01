@@ -555,6 +555,19 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
 
+        // دالة ذكية للمطابقة وتجاهل حساسية الأحرف
+        function checkCompanyMatch(u, master1, master2) {
+            const m1 = String(master1 || '').toLowerCase().trim();
+            const m2 = String(master2 || '').toLowerCase().trim();
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim()
+            ];
+            return vals.includes(m1) || vals.includes(m2);
+        }
+
         window.showAppNotification = function(msg, type = 'success') {
             const toast = document.getElementById('n-one-toast');
             const msgEl = document.getElementById('toast-msg');
@@ -628,7 +641,7 @@
             const newId = document.getElementById('persistent_company_id').value.trim();
             const actualMaster = getActiveMasterId();
             
-            if (newId && newId !== actualMaster) {
+            if (newId && newId.toLowerCase() !== actualMaster.toLowerCase()) {
                 try {
                     const snap = await get(ref(db, `users/${newId}`));
                     if (snap.exists()) {
@@ -637,7 +650,7 @@
                         showAppNotification("تم تعيين المعرف الجديد بنجاح", "success");
                     }
                 } catch(e) {}
-            } else if (newId === actualMaster) {
+            } else if (newId.toLowerCase() === actualMaster.toLowerCase()) {
                 showAppNotification("هذا هو المعرف الأساسي لشركتك", "success");
             }
 
@@ -676,6 +689,7 @@
             });
         }
 
+        // الرادار القناص: فحص التطبيق إذا كان أوفلاين يتم سحب الطلب فوراً
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -686,7 +700,11 @@
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
                     if (ord.status === 'assigned' && ord.dispatch_method === 'Auto') {
-                        if (now - ord.timestamp > 12000) { 
+                        const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
+
+                        // إذا العداد خلص أو الكابتن أوفلاين بنسحب الطلب فوراً
+                        if (now - ord.timestamp > 12000 || isAppClosed) { 
                             updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                             if(ord.linkedRadarId) {
                                 updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
@@ -752,7 +770,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
-                        if (priceObj.Client_Master === myMaster || priceObj.company === myMaster || priceObj.Client_Master === persistentCompanyId) {
+                        if (checkCompanyMatch(priceObj, myMaster, persistentCompanyId)) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
@@ -840,19 +858,19 @@
                     const activeMasterId = getActiveMasterId();
                     
                     if(data.users) Object.values(data.users).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.master === activeMasterId || u.user === activeMasterId || u.Client_Master === persistentCompanyId) { 
+                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
                             u._node = 'users'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Client_Master === persistentCompanyId) { 
+                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
                             u._node = 'shops'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(u.Client_Master === activeMasterId || u.company === activeMasterId || u.Company_ID === activeMasterId || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId) { 
+                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
                             u._node = 'captains'; 
                             globalUsers.push(u); 
                         }
@@ -870,7 +888,7 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
             const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster); 
             if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
@@ -965,7 +983,7 @@
         window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
-            const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.company === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster);
             if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
@@ -992,7 +1010,7 @@
                 return;
             }
 
-            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId));
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, myMaster, persistentCompanyId));
             
             let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
@@ -1401,7 +1419,7 @@
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
                 const myMaster = getActiveMasterId();
-                const myShops = globalUsers.filter(u => u.Client_Master === myMaster || u.master === myMaster || u.Client_Master === persistentCompanyId).map(u => u.Client_User || u.user || u.Shop_User);
+                const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
                 myShops.push(myMaster);
                 if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
                 
@@ -1490,7 +1508,7 @@
             }
             
             const myMaster = getActiveMasterId();
-            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId));
+            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && checkCompanyMatch(u, myMaster, persistentCompanyId));
             
             if (cap) {
                 document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
@@ -1549,7 +1567,7 @@
             
             let allMyCaptains = globalUsers.filter(u => 
                 (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain' || u._node === 'captains') && 
-                (u.Client_Master === myMaster || u.company === myMaster || u.Company_ID === myMaster || u.Client_Master === persistentCompanyId || u.Company_ID === persistentCompanyId)
+                checkCompanyMatch(u, myMaster, persistentCompanyId)
             ).reverse();
             
             document.getElementById('stat-cap-total').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
@@ -1631,6 +1649,7 @@
             });
         };
 
+        // تفعيل الكابتن وتثبيته دائماً مع الشركة الأساسية (Master)
         window.approvePendingCaptain = async function(userKey) {
             if(confirm("تفعيل الحساب واعتماده رسميا")) {
                 let nodeFound = null;
@@ -1640,10 +1659,17 @@
 
                 if (nodeFound) {
                     const updates = {};
+                    const mainCompany = getActiveMasterId(); // المسمى الثابت للشركة
+
                     updates[`${nodeFound}/${userKey}/Cap_Status`] = 'active';
                     updates[`${nodeFound}/${userKey}/status`] = 'active';
                     updates[`${nodeFound}/${userKey}/is_pending`] = false;
                     updates[`${nodeFound}/${userKey}/app_access`] = 'granted';
+                    
+                    // حفظ الارتباط بالشركة الرئيسية بشكل دائم
+                    updates[`${nodeFound}/${userKey}/company`] = mainCompany;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = mainCompany;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = mainCompany;
                     
                     if(confirm("تم التفعيل هل ترغب بإضافة رصيد افتتاحي لمحفظته الآن")) {
                         let initBal = prompt("أدخل قيمة الرصيد الافتتاحي", "0.00");
