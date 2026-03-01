@@ -794,16 +794,20 @@
 
         function fetchRegionsFromPrices() {
             if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            
             onValue(ref(db, 'prices'), (snapshot) => {
                 const selectNew = document.getElementById('new_cap_region');
                 const selectEdit = document.getElementById('edit_cap_region');
-                const optionsHtml = ['<option value="">اختر المنطقة</option>'];
+                const optionsHtml = ['<option value="">اختر المصدر المعتمد</option>'];
                 let sourcesAdded = new Set();
                 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
-                        if (checkCompanyMatch(priceObj, activeCompanyName)) {
+                        const priceMaster = String(priceObj.Client_Master || '').toLowerCase().trim();
+                        const myMasterStr = String(myMaster).toLowerCase().trim();
+                        if (priceMaster === myMasterStr || checkCompanyMatch(priceObj, activeCompanyName)) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
