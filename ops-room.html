@@ -586,15 +586,14 @@
         }
 
         function checkCompanyMatch(u, master1, master2) {
-            const m1 = String(master1 || '').toLowerCase().trim();
-            const m2 = String(master2 || '').toLowerCase().trim();
+            const activeCompany = String(master2 || master1 || '').toLowerCase().trim();
             const vals = [
                 String(u.Client_Master || '').toLowerCase().trim(),
                 String(u.master || '').toLowerCase().trim(),
                 String(u.company || '').toLowerCase().trim(),
                 String(u.Company_ID || '').toLowerCase().trim()
             ];
-            return vals.includes(m1) || vals.includes(m2);
+            return vals.includes(activeCompany);
         }
 
         window.showAppNotification = function(msg, type = 'success') {
@@ -732,9 +731,6 @@
             });
         }
 
-        // =========================================================================
-        // 🛠️ قسم الفحص المزدوج والتتبع الحي لحركة الكابتن مع العزل الذكي
-        // =========================================================================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -777,7 +773,6 @@
                         }
                     }
                     
-                    // 3️⃣ قسم معالجة القبول وخصم العمولة الأولي
                     if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
                         const commission = ord.commission_amount || 0;
                         if(commission > 0) {
@@ -800,7 +795,8 @@
                             comm: commission,
                             date: new Date().toISOString(),
                             via: ord.dispatch_method || "App",
-                            live_status: 'accepted'
+                            live_status: 'accepted',
+                            companyId: persistentCompanyId || getActiveMasterId()
                         };
                         completedOrders.unshift(entry);
                         processedAppOrders.push(appOrdId);
@@ -808,7 +804,6 @@
                         
                         renderCompletedOrders();
                     }
-                    // 🌟 قسم التتبع الحي لتحديثات الكابتن 🌟
                     else if (processedAppOrders.includes(appOrdId)) {
                         let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
                         if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
@@ -822,7 +817,6 @@
                             hasUpdates = true;
                         }
                     }
-                    // 4️⃣ قسم معالجة الرفض الصريح وتجاوز الوقت
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                         delete allAssignedOrders[capKey][appOrdId]; 
@@ -976,9 +970,9 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
             const myMaster = getActiveMasterId();
+            const currentComp = persistentCompanyId || myMaster;
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
-            myShops.push(myMaster); 
-            if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
+            myShops.push(currentComp); 
             
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
@@ -1072,9 +1066,9 @@
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
             
+            const currentComp = persistentCompanyId || myMaster;
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
-            myShops.push(myMaster);
-            if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
+            myShops.push(currentComp);
             
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
@@ -1218,7 +1212,7 @@
 
         window.dismissOrder = async function(orderId) {
             if(confirm("هل تريد إخفاء الطلب")) {
-                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual' };
+                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual', companyId: persistentCompanyId || getActiveMasterId() };
                 completedOrders.unshift(entry);
                 saveIsolatedData();
                 renderRadar();
@@ -1418,7 +1412,8 @@
                 comm: commission,
                 date: new Date().toISOString(),
                 via: "WhatsApp",
-                live_status: 'manual'
+                live_status: 'manual',
+                companyId: persistentCompanyId || getActiveMasterId()
             };
             completedOrders.unshift(entry);
             saveIsolatedData();
@@ -1450,10 +1445,11 @@
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             
-            document.getElementById('stat-completed-total').innerText = completedOrders.length;
-            
+            const currentComp = persistentCompanyId || getActiveMasterId();
             const today = new Date().toDateString();
-            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض");
+            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === currentComp));
+            
+            document.getElementById('stat-completed-total').innerText = todayOrders.length;
             
             let totalComm = todayOrders.reduce((sum, o) => sum + parseFloat(o.comm), 0);
             document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
@@ -1509,7 +1505,8 @@
         window.resetDailyStats = function() {
             if(confirm("تصفير العمولات والطلبات لليوم")) {
                 const today = new Date().toDateString();
-                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today);
+                const currentComp = persistentCompanyId || getActiveMasterId();
+                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today || (o.companyId && o.companyId !== currentComp));
                 saveIsolatedData();
                 renderCompletedOrders();
             }
@@ -1526,7 +1523,8 @@
 
         window.clearCompletedOrders = function() {
             if(confirm("مسح الأرشيف كاملا")) {
-                completedOrders = [];
+                const currentComp = persistentCompanyId || getActiveMasterId();
+                completedOrders = completedOrders.filter(o => o.companyId && o.companyId !== currentComp);
                 saveIsolatedData();
                 renderCompletedOrders();
                 renderRadar();
@@ -1536,9 +1534,9 @@
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
                 const myMaster = getActiveMasterId();
+                const currentComp = persistentCompanyId || myMaster;
                 const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
-                myShops.push(myMaster);
-                if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
+                myShops.push(currentComp);
                 
                 const updates = {};
                 allOrders.forEach(o => {
