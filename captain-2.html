@@ -137,6 +137,11 @@
             background: var(--danger);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
         }
+        
+        .btn-success {
+            background: var(--success);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
 
         /* نظام الإشعارات الداخلي */
         #toast-container {
@@ -157,6 +162,27 @@
         </div>
 
         <div class="content-wrapper">
+            
+            <div class="control-card" style="border-right-color: var(--success);">
+                <div class="card-title">⏳ نظام الانقضاض السريع (عداد الطلبات)</div>
+                <div class="input-group">
+                    <label>مدة قبول الطلب (بالثواني)</label>
+                    <input type="number" id="timer_val" value="10" min="5" max="60">
+                </div>
+                <button class="btn-action btn-success" onclick="updateTimer()">تحديث وقت العداد ⏱️</button>
+            </div>
+
+            <div class="control-card" style="border-right-color: var(--danger);">
+                <div class="card-title">🛡️ درع الحماية (كاشف الـ VPN)</div>
+                <button class="btn-action" style="background: var(--danger);" onclick="toggleVPN(true)">تفعيل كاشف الـ VPN 🔒</button>
+                <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleVPN(false)">إيقاف الكاشف 🔓</button>
+            </div>
+
+            <div class="control-card" style="border-right-color: var(--gold);">
+                <div class="card-title">📍 تثبيت منطقة العمل (Zone Lock)</div>
+                <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleZoneLock(true)">إجبار الكابتن على منطقته ✅</button>
+                <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleZoneLock(false)">السماح بالتنقل الحر ❌</button>
+            </div>
             
             <div class="control-card" style="border-right-color: var(--info);">
                 <div class="card-title">📢 بث إعلان شريطي (لجميع الكباتن)</div>
@@ -233,6 +259,43 @@
             
             setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
             setTimeout(() => { toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+        };
+
+        window.updateTimer = async function() {
+            const timeVal = document.getElementById('timer_val').value;
+            if(!timeVal || timeVal < 5) { window.showToast("يرجى إدخال وقت صحيح لا يقل عن 5 ثواني", true); return; }
+            try {
+                await set(ref(db, 'settings/order_timer'), { seconds: parseInt(timeVal), timestamp: Date.now() });
+                window.showToast("تم تحديث وقت العداد بنجاح ⏱️");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التحديث", true);
+            }
+        };
+
+        window.toggleVPN = async function(isActive) {
+            try {
+                await set(ref(db, 'settings/anti_vpn'), { active: isActive, timestamp: Date.now() });
+                if(isActive) {
+                    window.showToast("تم تفعيل كاشف الـ VPN بنجاح 🔒");
+                } else {
+                    window.showToast("تم إيقاف كاشف الـ VPN 🔓");
+                }
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التعديل", true);
+            }
+        };
+
+        window.toggleZoneLock = async function(isActive) {
+            try {
+                await set(ref(db, 'settings/zone_lock'), { active: isActive, timestamp: Date.now() });
+                if(isActive) {
+                    window.showToast("تم إجبار الكباتن على مناطقهم ✅");
+                } else {
+                    window.showToast("تم السماح بالتنقل الحر للمناطق ❌");
+                }
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التعديل", true);
+            }
         };
 
         window.sendAnnouncement = async function() {
