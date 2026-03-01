@@ -710,10 +710,9 @@
                         if (ord.status === 'assigned') {
                             if (elapsed > 5000 || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                                delete allAssignedOrders[capKey][appOrdId]; // التطهير المحلي الفوري
+                                delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                                    // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
                                     if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
                                     radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
@@ -725,10 +724,9 @@
                         else if (ord.status === 'received' || ord.status === 'ringing') {
                             if (elapsed > 10000 || isAppClosed) {
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                                delete allAssignedOrders[capKey][appOrdId]; // التطهير المحلي الفوري
+                                delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                                    // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
                                     if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
                                     radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
@@ -771,10 +769,9 @@
                     // 4️⃣ قسم معالجة الرفض الصريح وتجاوز الوقت
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                        delete allAssignedOrders[capKey][appOrdId]; // التطهير المحلي الفوري
+                        delete allAssignedOrders[capKey][appOrdId]; 
                         if(ord.linkedRadarId) {
                             updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                            // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
                             if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
                             radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                         }
@@ -1834,6 +1831,7 @@
         };
 
         function refreshDynamicElements() {
+            checkAssignedOrdersStatus();
             renderRadar();
             if (isAutoRadarActive) {
                 triggerAutoRadarMaster(true);
