@@ -707,10 +707,10 @@
                         const elapsed = now - ord.timestamp;
 
                         // 1️⃣ المرحلة الأولى فحص نبض الجهاز (التعليق أو الزومبي) بنعطيه 5 ثواني
-                        // إذا الطلب مرسل بس لسه ما استلمه التطبيق التقني
                         if (ord.status === 'assigned') {
                             if (elapsed > 5000 || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                delete allAssignedOrders[capKey][appOrdId]; // التطهير المحلي الفوري
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                     // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
@@ -722,10 +722,10 @@
                             }
                         }
                         // 2️⃣ المرحلة الثانية وقت اتخاذ القرار الذهبي بنعطيه 10 ثواني
-                        // إذا الجهاز استلم الإشارة وبيرن عند الكابتن بنعطيه وقته يفكر
                         else if (ord.status === 'received' || ord.status === 'ringing') {
                             if (elapsed > 10000 || isAppClosed) {
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                delete allAssignedOrders[capKey][appOrdId]; // التطهير المحلي الفوري
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                     // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
@@ -771,6 +771,7 @@
                     // 4️⃣ قسم معالجة الرفض الصريح وتجاوز الوقت
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                        delete allAssignedOrders[capKey][appOrdId]; // التطهير المحلي الفوري
                         if(ord.linkedRadarId) {
                             updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                             // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
