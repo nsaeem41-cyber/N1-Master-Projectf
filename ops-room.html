@@ -338,10 +338,6 @@
                     <div class="card">
                         <div class="card-header">
                             <span>🦸‍♂️ إضافة كابتن جديد فورا</span>
-                            <div style="display: flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 4px 12px; border-radius: 20px;">
-                                <span style="font-size: 11px; color: var(--gold); font-weight: bold;">معرف الشركة</span>
-                                <input type="text" id="persistent_company_id" onchange="savePersistentId()" placeholder="أدخل المعرف يدويا" style="background: white; border: 1px solid var(--gold); border-radius: 6px; color: var(--primary); font-weight: 900; font-size: 12px; outline: none; width: 120px; text-align: center; padding: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
-                            </div>
                         </div>
                         <div class="manual-form">
                             <input type="hidden" id="new_cap_company_id" value="">
@@ -527,7 +523,7 @@
                     <input type="text" id="edit_cap_pass">
                 </div>
                 <div class="form-group full-width">
-                    <label>معرف الشركة</label>
+                    <label>اسم الشركة المرجعي</label>
                     <input type="text" id="edit_cap_company">
                 </div>
             </div>
@@ -553,7 +549,7 @@
         const db = getDatabase(app);
 
         let currentUser = null;
-        let persistentCompanyId = ''; 
+        let activeCompanyName = ''; 
         let allOrders = [];
         let globalUsers = [];
         let allAssignedOrders = {};
@@ -572,29 +568,31 @@
         let remoteOrderTimer = 10000;
 
         function loadIsolatedData() {
-            const compId = persistentCompanyId || 'default';
+            const compId = activeCompanyName || 'default';
             processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
             completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders_' + compId) || '[]');
             captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
         }
 
         function saveIsolatedData() {
-            const compId = persistentCompanyId || 'default';
+            const compId = activeCompanyName || 'default';
             localStorage.setItem('n1_processed_app_orders_' + compId, JSON.stringify(processedAppOrders));
             localStorage.setItem('n1_completed_orders_' + compId, JSON.stringify(completedOrders));
             localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
         }
 
-        function checkCompanyMatch(u, master1, master2) {
-            const activeCompany = String(master2 || master1 || '').toLowerCase().trim();
+        function checkCompanyMatch(u, compName) {
+            const active = String(compName).toLowerCase().trim();
+            if(!active) return false;
             const vals = [
                 String(u.Client_Master || '').toLowerCase().trim(),
                 String(u.master || '').toLowerCase().trim(),
                 String(u.company || '').toLowerCase().trim(),
                 String(u.Company_ID || '').toLowerCase().trim(),
-                String(u.Shop_Master || '').toLowerCase().trim()
+                String(u.Shop_Master || '').toLowerCase().trim(),
+                String(u.Client_Name || '').toLowerCase().trim()
             ];
-            return vals.includes(activeCompany);
+            return vals.includes(active);
         }
 
         window.showAppNotification = function(msg, type = 'success') {
@@ -614,31 +612,19 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
-        function getActiveMasterId() {
-            return currentUser ? (currentUser.Client_User || currentUser.user) : '';
+        function getActiveCompanyName() {
+            return currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : '';
         }
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الإدارة";
+                activeCompanyName = getActiveCompanyName();
+                document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 
-                const masterId = getActiveMasterId();
-                const savedId = localStorage.getItem('n1_company_id');
-                
-                if (savedId) {
-                    persistentCompanyId = savedId;
-                } else {
-                    persistentCompanyId = masterId;
-                    localStorage.setItem('n1_company_id', persistentCompanyId);
-                }
-                
-                if(document.getElementById('persistent_company_id')) {
-                    document.getElementById('persistent_company_id').value = persistentCompanyId;
-                }
                 if(document.getElementById('new_cap_company_id')) {
-                    document.getElementById('new_cap_company_id').value = persistentCompanyId;
+                    document.getElementById('new_cap_company_id').value = activeCompanyName;
                 }
                 
                 loadIsolatedData();
@@ -668,39 +654,9 @@
             });
         }
 
-        window.savePersistentId = async function() {
-            const newId = document.getElementById('persistent_company_id').value.trim();
-            const actualMaster = getActiveMasterId();
-            
-            if (newId && newId.toLowerCase() !== actualMaster.toLowerCase()) {
-                try {
-                    const snap = await get(ref(db, `users/${newId}`));
-                    if (snap.exists()) {
-                        showAppNotification("تنبيه هذا المعرف مسجل لشركة أخرى مسبقا بالنظام", "warning");
-                    } else {
-                        showAppNotification("تم تعيين المعرف الجديد بنجاح", "success");
-                    }
-                } catch(e) {}
-            } else if (newId.toLowerCase() === actualMaster.toLowerCase()) {
-                showAppNotification("هذا هو المعرف الأساسي لشركتك", "success");
-            }
-
-            persistentCompanyId = newId || actualMaster;
-            localStorage.setItem('n1_company_id', persistentCompanyId);
-            
-            if(document.getElementById('new_cap_company_id')) {
-                document.getElementById('new_cap_company_id').value = persistentCompanyId;
-            }
-            
-            loadIsolatedData();
-            fetchGlobalUsers();
-            renderCompletedOrders();
-            renderRadar();
-        };
-
         function fetchRadarStatus() {
             if (!currentUser) return;
-            const myMaster = getActiveMasterId();
+            const myMaster = currentUser.Client_User || currentUser.user;
             
             onValue(ref(db, `settings/${myMaster}/order_timer`), (snapshot) => {
                 if(snapshot.exists()) {
@@ -797,7 +753,7 @@
                             date: new Date().toISOString(),
                             via: ord.dispatch_method || "App",
                             live_status: 'accepted',
-                            companyId: persistentCompanyId || getActiveMasterId()
+                            companyId: activeCompanyName
                         };
                         completedOrders.unshift(entry);
                         processedAppOrders.push(appOrdId);
@@ -838,7 +794,6 @@
 
         function fetchRegionsFromPrices() {
             if(!currentUser) return;
-            const myMaster = getActiveMasterId();
             onValue(ref(db, 'prices'), (snapshot) => {
                 const selectNew = document.getElementById('new_cap_region');
                 const selectEdit = document.getElementById('edit_cap_region');
@@ -848,7 +803,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
-                        if (checkCompanyMatch(priceObj, myMaster, persistentCompanyId)) {
+                        if (checkCompanyMatch(priceObj, activeCompanyName)) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
@@ -867,7 +822,7 @@
         }
 
         window.toggleAutoRadar = function() {
-            const myMaster = getActiveMasterId();
+            const myMaster = currentUser.Client_User || currentUser.user;
             const newState = !isAutoRadarActive;
             set(ref(db, `settings/${myMaster}/autoRadar`), newState);
         };
@@ -937,22 +892,21 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     globalUsers = [];
-                    const activeMasterId = getActiveMasterId();
                     
                     if(data.users) Object.values(data.users).forEach(u => { 
-                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
                             u._node = 'users'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
                             u._node = 'shops'; 
                             globalUsers.push(u); 
                         }
                     });
                     if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(checkCompanyMatch(u, activeMasterId, persistentCompanyId)) { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
                             u._node = 'captains'; 
                             globalUsers.push(u); 
                         }
@@ -970,15 +924,13 @@
             const tbody = document.getElementById('live-table-body');
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
-            const myMaster = getActiveMasterId();
-            const currentCompStr = String(persistentCompanyId || myMaster).toLowerCase().trim();
-            const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
             
             const pendingOrders = allOrders.filter(o => {
                 if (o.Shop_Type !== 'shop_order' || completedIDs.has(o.Shop_Ord_ID)) return false;
                 
                 const orderComp = String(o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                if (orderComp && orderComp === currentCompStr) return true;
+                if (orderComp && orderComp === activeCompanyName.toLowerCase()) return true;
                 
                 return myShops.includes(o.Shop_User);
             }).reverse();
@@ -1071,16 +1023,14 @@
 
         window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
-            const myMaster = getActiveMasterId();
             
-            const currentCompStr = String(persistentCompanyId || myMaster).toLowerCase().trim();
-            const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
             
             const pendingOrders = allOrders.filter(o => {
                 if (o.Shop_Type !== 'shop_order' || completedIDs.has(o.Shop_Ord_ID)) return false;
                 
                 const orderComp = String(o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                if (orderComp && orderComp === currentCompStr) return true;
+                if (orderComp && orderComp === activeCompanyName.toLowerCase()) return true;
                 
                 return myShops.includes(o.Shop_User);
             }).reverse();
@@ -1107,7 +1057,7 @@
                 return;
             }
 
-            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, myMaster, persistentCompanyId));
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
             
             let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
@@ -1225,7 +1175,7 @@
 
         window.dismissOrder = async function(orderId) {
             if(confirm("هل تريد إخفاء الطلب")) {
-                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual', companyId: persistentCompanyId || getActiveMasterId() };
+                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual', companyId: activeCompanyName };
                 completedOrders.unshift(entry);
                 saveIsolatedData();
                 renderRadar();
@@ -1426,7 +1376,7 @@
                 date: new Date().toISOString(),
                 via: "WhatsApp",
                 live_status: 'manual',
-                companyId: persistentCompanyId || getActiveMasterId()
+                companyId: activeCompanyName
             };
             completedOrders.unshift(entry);
             saveIsolatedData();
@@ -1458,9 +1408,8 @@
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             
-            const currentComp = persistentCompanyId || getActiveMasterId();
             const today = new Date().toDateString();
-            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === currentComp));
+            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName));
             
             document.getElementById('stat-completed-total').innerText = todayOrders.length;
             
@@ -1518,8 +1467,7 @@
         window.resetDailyStats = function() {
             if(confirm("تصفير العمولات والطلبات لليوم")) {
                 const today = new Date().toDateString();
-                const currentComp = persistentCompanyId || getActiveMasterId();
-                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today || (o.companyId && o.companyId !== currentComp));
+                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today || (o.companyId && o.companyId !== activeCompanyName));
                 saveIsolatedData();
                 renderCompletedOrders();
             }
@@ -1536,8 +1484,7 @@
 
         window.clearCompletedOrders = function() {
             if(confirm("مسح الأرشيف كاملا")) {
-                const currentComp = persistentCompanyId || getActiveMasterId();
-                completedOrders = completedOrders.filter(o => o.companyId && o.companyId !== currentComp);
+                completedOrders = completedOrders.filter(o => o.companyId && o.companyId !== activeCompanyName);
                 saveIsolatedData();
                 renderCompletedOrders();
                 renderRadar();
@@ -1546,15 +1493,13 @@
 
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
-                const myMaster = getActiveMasterId();
-                const currentCompStr = String(persistentCompanyId || myMaster).toLowerCase().trim();
-                const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
+                const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
                 
                 const updates = {};
                 allOrders.forEach(o => {
                     if (o.Shop_Type === 'shop_order') {
                         const orderComp = String(o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                        if ((orderComp && orderComp === currentCompStr) || myShops.includes(o.Shop_User)) {
+                        if ((orderComp && orderComp === activeCompanyName.toLowerCase()) || myShops.includes(o.Shop_User)) {
                             updates[`orders/${o.Shop_Ord_ID}`] = null;
                         }
                     }
@@ -1583,9 +1528,7 @@
             const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            const companyId = persistentCompanyId || getActiveMasterId();
-
-            if(!name || !phone || !user || !pass || !region || !companyId) { 
+            if(!name || !phone || !user || !pass || !region) { 
                 showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); 
                 return; 
             }
@@ -1608,8 +1551,8 @@
                 Cap_Balance: bal,
                 role: "captain",
                 type: "captain",
-                company: companyId,       
-                Client_Master: companyId, 
+                company: activeCompanyName,       
+                Client_Master: activeCompanyName, 
                 app_sync_lock: false,
                 app_access: "granted",
                 app_status: "offline" 
@@ -1637,8 +1580,7 @@
                 return; 
             }
             
-            const myMaster = getActiveMasterId();
-            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && checkCompanyMatch(u, myMaster, persistentCompanyId));
+            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && checkCompanyMatch(u, activeCompanyName));
             
             if (cap) {
                 document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
@@ -1693,11 +1635,10 @@
         window.renderCaptainsList = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('captains-log-body');
-            const myMaster = getActiveMasterId();
             
             let allMyCaptains = globalUsers.filter(u => 
                 (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain' || u._node === 'captains') && 
-                checkCompanyMatch(u, myMaster, persistentCompanyId)
+                checkCompanyMatch(u, activeCompanyName)
             ).reverse();
             
             document.getElementById('stat-cap-total').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
@@ -1788,16 +1729,15 @@
 
                 if (nodeFound) {
                     const updates = {};
-                    const mainCompany = getActiveMasterId(); 
 
                     updates[`${nodeFound}/${userKey}/Cap_Status`] = 'active';
                     updates[`${nodeFound}/${userKey}/status`] = 'active';
                     updates[`${nodeFound}/${userKey}/is_pending`] = false;
                     updates[`${nodeFound}/${userKey}/app_access`] = 'granted';
                     
-                    updates[`${nodeFound}/${userKey}/company`] = mainCompany;
-                    updates[`${nodeFound}/${userKey}/Company_ID`] = mainCompany;
-                    updates[`${nodeFound}/${userKey}/Client_Master`] = mainCompany;
+                    updates[`${nodeFound}/${userKey}/company`] = activeCompanyName;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = activeCompanyName;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = activeCompanyName;
                     
                     if(confirm("تم التفعيل هل ترغب بإضافة رصيد افتتاحي لمحفظته الآن")) {
                         let initBal = prompt("أدخل قيمة الرصيد الافتتاحي", "0.00");
