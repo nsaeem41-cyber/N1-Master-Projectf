@@ -713,6 +713,9 @@
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                    // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
+                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
                                 hasUpdates = true;
                                 continue;
@@ -725,6 +728,9 @@
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                    // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
+                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
                                 hasUpdates = true;
                                 continue;
@@ -767,6 +773,9 @@
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                         if(ord.linkedRadarId) {
                             updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                            // التحديث المحلي الفوري عشان الرادار ما يستنى الفايربيس
+                            if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                            radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                         }
                         hasUpdates = true;
                     }
@@ -1066,13 +1075,19 @@
                 
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
-                // 9️⃣ فلترة الكباتن الموجودين في نفس منطقة المنشأة لضمان السرعة
+                // 9️⃣ فلترة الكباتن الموجودين في نفس منطقة المنشأة لضمان السرعة مع تنبيه المنطقة الميتة
                 let eligibleCaptains = availableCaptains.filter(c => {
                      const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
                      return cRegion === shopOriginArea;
                 });
 
-                if (eligibleCaptains.length === 0) continue;
+                if (eligibleCaptains.length === 0) {
+                    if (!ord.deadZoneAlertShown) {
+                        showAppNotification(`تنبيه المنطقة الميتة لا يوجد كباتن متاحين في منطقة ${shopOriginArea || 'غير محددة'} لطلب ${ord.Shop_Name}`, "warning");
+                        ord.deadZoneAlertShown = true;
+                    }
+                    continue;
+                }
 
                 // 🔟 التأكد من أن الكابتن لم يرفض أو يتجاهل هذا الطلب مسبقا
                 let unskippedCaptains = eligibleCaptains.filter(c => {
@@ -1081,9 +1096,10 @@
                      return !hasSkipped;
                 });
 
-                // إذا كل الكباتن بالمنطقة رفضوا الطلب بنعمل تصفير للذاكرة وبنرجع نبعثه من جديد
+                // قاعدة إعادة التدوير اللانهائي المحدثة والمنقذة عشان الطلب ما يوقف أبدا
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ord.Shop_Ord_ID}`] = null;
+                     delete radarMemory[ord.Shop_Ord_ID]; // المسح الفوري من الذاكرة المحلية عشان الرادار يلف فورا بدون ما يستنى تحديث الفايربيس
                      unskippedCaptains = eligibleCaptains;
                 }
 
