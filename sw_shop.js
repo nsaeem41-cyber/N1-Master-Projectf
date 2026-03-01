@@ -6,7 +6,7 @@ const urlsToCache = [
     './logo_shop.jpg'
 ];
 
-// مرحلة التثبيت: تجهيز ملفات المنشأة في الذاكرة
+// مرحلة التثبيت تجهيز ملفات المنشأة في الذاكرة
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
@@ -18,7 +18,7 @@ self.addEventListener('install', event => {
     );
 });
 
-// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة الخاصة بالمنشأة
+// مرحلة التفعيل مسح أي كاش قديم وتنظيف الذاكرة الخاصة بالمنشأة
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -33,7 +33,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// إدارة الطلبات: استراتيجية (Network First) لضمان رؤية الطلبات فوراً
+// إدارة الطلبات استراتيجية Network First لضمان رؤية الطلبات فورا
 self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(event.request)
@@ -65,7 +65,7 @@ self.addEventListener('push', event => {
         renotify: true,
         requireInteraction: true,
         data: {
-            url: './index.html'
+            url: './shop.html'
         }
     };
 
@@ -81,12 +81,12 @@ self.addEventListener('notificationclick', event => {
         clients.matchAll({ type: 'window' }).then(windowClients => {
             for (let i = 0; i < windowClients.length; i++) {
                 let client = windowClients[i];
-                if (client.url.includes('index.html') && 'focus' in client) {
+                if (client.url.includes('shop.html') && 'focus' in client) {
                     return client.focus();
                 }
             }
             if (clients.openWindow) {
-                return clients.openWindow('./index.html');
+                return clients.openWindow('./shop.html');
             }
         })
     );
