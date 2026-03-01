@@ -220,6 +220,15 @@
     <audio id="notif-sound" preload="auto" loop>
         <source src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" type="audio/mpeg">
     </audio>
+    <audio id="sound-picked" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sound-onway" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sound-delivered" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg">
+    </audio>
 
     <nav class="navbar">
         <div class="brand">
@@ -296,7 +305,7 @@
 
                 <div class="card" style="border-top: 4px solid var(--success);">
                     <div class="card-header">
-                        <span>✅ الطلبات المكتملة</span>
+                        <span>✅ سجل العمليات والطلبات المكتملة</span>
                         <div class="action-btns">
                             <button class="mini-circle-btn" style="background:#f59e0b; color:white; width:auto; padding:0 15px; border-radius:12px; font-weight:bold; font-size:12px;" onclick="resetDailyStats()">🔄 تصفير يومي</button>
                             <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="clearCompletedOrders()" title="مسح الأرشيف كامل">🗑️</button>
@@ -305,16 +314,17 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 15%;">الوقت</th>
-                                <th style="width: 20%;">الكابتن</th>
+                                <th style="width: 10%;">الوقت</th>
+                                <th style="width: 15%;">الكابتن</th>
                                 <th style="width: 25%;">المنشأة</th>
-                                <th style="width: 15%;">العمولة</th>
-                                <th style="width: 15%;">الحالة</th>
+                                <th style="width: 10%;">العمولة</th>
+                                <th style="width: 15%;">التوثيق</th>
+                                <th style="width: 15%;">مسار الطلب</th>
                                 <th style="width: 10%;">حذف</th>
                             </tr>
                         </thead>
                         <tbody id="completed-table-body">
-                            <tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد طلبات مكتملة اليوم</td></tr>
+                            <tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد طلبات مسجلة اليوم</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -555,7 +565,6 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
 
-        // دالة ذكية للمطابقة وتجاهل حساسية الأحرف
         function checkCompanyMatch(u, master1, master2) {
             const m1 = String(master1 || '').toLowerCase().trim();
             const m2 = String(master2 || '').toLowerCase().trim();
@@ -690,7 +699,7 @@
         }
 
         // =========================================================================
-        // 🛠️ قسم الفحص المزدوج (Double-Check Algorithm) للرادار القناص
+        // 🛠️ قسم الفحص المزدوج والتتبع الحي لحركة الكابتن
         // =========================================================================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
@@ -706,7 +715,6 @@
                         const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
                         const elapsed = now - ord.timestamp;
 
-                        // 1️⃣ المرحلة الأولى فحص نبض الجهاز (التعليق أو الزومبي) بنعطيه 5 ثواني
                         if (ord.status === 'assigned') {
                             if (elapsed > 5000 || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
@@ -720,7 +728,6 @@
                                 continue;
                             }
                         }
-                        // 2️⃣ المرحلة الثانية وقت اتخاذ القرار الذهبي بنعطيه 10 ثواني
                         else if (ord.status === 'received' || ord.status === 'ringing') {
                             if (elapsed > 10000 || isAppClosed) {
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
@@ -736,7 +743,7 @@
                         }
                     }
                     
-                    // 3️⃣ قسم معالجة القبول وخصم العمولة
+                    // 3️⃣ قسم معالجة القبول وخصم العمولة الأولي
                     if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
                         const commission = ord.commission_amount || 0;
                         if(commission > 0) {
@@ -751,12 +758,14 @@
                         
                         const entry = {
                             orderId: ord.linkedRadarId || appOrdId,
+                            appOrdId: appOrdId,
                             time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
                             cap: ord.cap_name || "كابتن",
                             rest: ord.restaurant,
                             comm: commission,
                             date: new Date().toISOString(),
-                            via: ord.dispatch_method || "App"
+                            via: ord.dispatch_method || "App",
+                            live_status: 'accepted'
                         };
                         completedOrders.unshift(entry);
                         localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
@@ -765,6 +774,31 @@
                         localStorage.setItem('n1_processed_app_orders', JSON.stringify(processedAppOrders));
                         
                         renderCompletedOrders();
+                    }
+                    // 🌟 قسم التتبع الحي لتحديثات الكابتن 🌟
+                    else if (processedAppOrders.includes(appOrdId)) {
+                        let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
+                        if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'delivered'].includes(ord.status)) {
+                            existingEntry.live_status = ord.status;
+                            localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                            
+                            if (soundEnabled) {
+                                if (ord.status === 'picked_up') document.getElementById('sound-picked').play().catch(()=>{});
+                                else if (ord.status === 'on_way') document.getElementById('sound-onway').play().catch(()=>{});
+                                else if (ord.status === 'delivered') document.getElementById('sound-delivered').play().catch(()=>{});
+                            }
+                            
+                            let sName = ord.restaurant ? ord.restaurant.split('-')[0].trim() : "الطلب";
+                            let msg = ord.status === 'picked_up' ? `الكابتن استلم ${sName}` : (ord.status === 'on_way' ? `الكابتن في الطريق لتسليم ${sName}` : `تم تسليم ${sName} بنجاح`);
+                            showAppNotification(msg, "success");
+                            
+                            renderCompletedOrders();
+                        }
+                        
+                        if (ord.status === 'delivered') {
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                            hasUpdates = true;
+                        }
                     }
                     // 4️⃣ قسم معالجة الرفض الصريح وتجاوز الوقت
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
@@ -835,8 +869,11 @@
 
         window.enableSound = function() {
             if (!soundEnabled) {
-                const audio = document.getElementById('notif-sound');
-                audio.play().then(() => { audio.pause(); soundEnabled = true; }).catch(() => {});
+                document.getElementById('notif-sound').play().then(() => { document.getElementById('notif-sound').pause(); }).catch(() => {});
+                document.getElementById('sound-picked').play().then(() => { document.getElementById('sound-picked').pause(); }).catch(() => {});
+                document.getElementById('sound-onway').play().then(() => { document.getElementById('sound-onway').pause(); }).catch(() => {});
+                document.getElementById('sound-delivered').play().then(() => { document.getElementById('sound-delivered').pause(); }).catch(() => {});
+                soundEnabled = true;
             }
         };
 
@@ -1007,26 +1044,19 @@
             });
         };
 
-        // =========================================================================
-        // 🚀 قسم التوزيع الذكي (Auto Dispatch Engine) - قلب الرادار
-        // =========================================================================
         window.triggerAutoRadarMaster = async function(silent = false) {
-            // 1️⃣ استخراج الطلبات المكتملة عشان ما نرجع نبعثها لكباتن ثانيين
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
             
-            // 2️⃣ تحديد منشآت الشركة الحالية عشان نضمن خصوصية الداتا بين الشركات
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster);
             if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
-            // 3️⃣ تصفية الطلبات المعلقة والجديدة الخاصة بشركتنا فقط
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
             let activeLinkedIds = new Set();
             let busyCaptains = new Set();
             
-            // 4️⃣ الفحص العميق للكباتن المشغولين بطلبات حالية لمنع التكدس
             for(let capKey in allAssignedOrders) {
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
@@ -1039,7 +1069,6 @@
                 }
             }
             
-            // 5️⃣ الطلبات اللي فعلا بتحتاج توجيه فوري
             const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
 
             if(trulyPendingOrders.length === 0) {
@@ -1047,10 +1076,8 @@
                 return;
             }
 
-            // 6️⃣ جلب قائمة الكباتن الخاصة بالشركة وتحضيرهم
             let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, myMaster, persistentCompanyId));
             
-            // 7️⃣ استخراج الكباتن الأونلاين والمتاحين فقط واستبعاد المشغولين
             let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
                 const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
@@ -1065,7 +1092,6 @@
             let dispatchedCount = 0;
             let updates = {};
 
-            // 8️⃣ الدوران على الطلبات وتوزيعها بناء على خوارزمية التطابق والمناطق
             for (let ord of trulyPendingOrders) {
                 if(availableCaptains.length === 0) break;
 
@@ -1073,7 +1099,6 @@
                 
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
-                // 9️⃣ فلترة الكباتن الموجودين في نفس منطقة المنشأة لضمان السرعة مع تنبيه المنطقة الميتة
                 let eligibleCaptains = availableCaptains.filter(c => {
                      const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
                      return cRegion === shopOriginArea;
@@ -1087,23 +1112,20 @@
                     continue;
                 }
 
-                // 🔟 التأكد من أن الكابتن لم يرفض أو يتجاهل هذا الطلب مسبقا
                 let unskippedCaptains = eligibleCaptains.filter(c => {
                      const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
                      const hasSkipped = radarMemory[ord.Shop_Ord_ID] && radarMemory[ord.Shop_Ord_ID].skipped && radarMemory[ord.Shop_Ord_ID].skipped[cKey];
                      return !hasSkipped;
                 });
 
-                // قاعدة إعادة التدوير اللانهائي المحدثة والمنقذة عشان الطلب ما يوقف أبدا
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ord.Shop_Ord_ID}`] = null;
-                     delete radarMemory[ord.Shop_Ord_ID]; // المسح الفوري من الذاكرة المحلية عشان الرادار يلف فورا بدون ما يستنى تحديث الفايربيس
+                     delete radarMemory[ord.Shop_Ord_ID]; 
                      unskippedCaptains = eligibleCaptains;
                 }
 
                 if (unskippedCaptains.length === 0) continue;
 
-                // اختيار الكابتن الأنسب وتجهيز الطلب للطبخ 🍳
                 let selectedCaptain = unskippedCaptains[0];
                 const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
 
@@ -1134,7 +1156,6 @@
                 dispatchedCount++;
             }
 
-            // تنفيذ أوامر التوزيع بقاعدة البيانات بلمحة بصر
             if(Object.keys(updates).length > 0) {
                 try {
                     await update(ref(db), updates);
@@ -1173,7 +1194,7 @@
 
         window.dismissOrder = async function(orderId) {
             if(confirm("هل تريد إخفاء الطلب")) {
-                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString() };
+                const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual' };
                 completedOrders.unshift(entry);
                 localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                 renderRadar();
@@ -1372,7 +1393,8 @@
                 rest: finalRestInfo,
                 comm: commission,
                 date: new Date().toISOString(),
-                via: "WhatsApp"
+                via: "WhatsApp",
+                live_status: 'manual'
             };
             completedOrders.unshift(entry);
             localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
@@ -1414,7 +1436,7 @@
             document.getElementById('side-total-comm').innerText = totalComm.toFixed(2) + " د.أ";
 
             if (todayOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد طلبات مكتملة اليوم</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">لا توجد طلبات مسجلة اليوم</td></tr>';
                 return;
             }
 
@@ -1428,13 +1450,21 @@
                 let cleanRestName = o.rest || '';
                 cleanRestName = cleanRestName.replace(urlRegex, badgeHtml);
 
+                let liveStatusBadge = '';
+                if (o.live_status === 'accepted') liveStatusBadge = '<span class="badge" style="background:#e0f2fe; color:#0284c7;">تمت الموافقة ⚡</span>';
+                else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="badge" style="background:#ffedd5; color:#ea580c;">تم الاستلام 🏃‍♂️</span>';
+                else if (o.live_status === 'on_way') liveStatusBadge = '<span class="badge" style="background:#fef9c3; color:#ca8a04;">في الطريق 🛵</span>';
+                else if (o.live_status === 'delivered') liveStatusBadge = '<span class="badge" style="background:#dcfce7; color:#166534;">تم التسليم 💎</span>';
+                else liveStatusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">مكتمل ✅</span>';
+
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-size:11px; color:#64748b;">${o.time}</td>
                         <td style="font-weight:800;">${o.cap}</td>
                         <td style="line-height:1.5;">${cleanRestName}</td>
                         <td><span class="badge bg-money" style="background:#f0fdf4;">${o.comm}</span></td>
-                        <td><span class="badge" style="background:#dcfce7; color:#166534;">مكتمل ${methodIcon}</span></td>
+                        <td><span class="badge" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1;">مسجل ${methodIcon}</span></td>
+                        <td>${liveStatusBadge}</td>
                         <td><button class="mini-circle-btn" onclick="deleteFromArchive('${o.orderId}')">🗑️</button></td>
                     </tr>
                 `;
@@ -1701,7 +1731,6 @@
             });
         };
 
-        // تفعيل الكابتن وتثبيته دائماً مع الشركة الأساسية (Master)
         window.approvePendingCaptain = async function(userKey) {
             if(confirm("تفعيل الحساب واعتماده رسميا")) {
                 let nodeFound = null;
@@ -1711,14 +1740,13 @@
 
                 if (nodeFound) {
                     const updates = {};
-                    const mainCompany = getActiveMasterId(); // المسمى الثابت للشركة
+                    const mainCompany = getActiveMasterId(); 
 
                     updates[`${nodeFound}/${userKey}/Cap_Status`] = 'active';
                     updates[`${nodeFound}/${userKey}/status`] = 'active';
                     updates[`${nodeFound}/${userKey}/is_pending`] = false;
                     updates[`${nodeFound}/${userKey}/app_access`] = 'granted';
                     
-                    // حفظ الارتباط بالشركة الرئيسية بشكل دائم
                     updates[`${nodeFound}/${userKey}/company`] = mainCompany;
                     updates[`${nodeFound}/${userKey}/Company_ID`] = mainCompany;
                     updates[`${nodeFound}/${userKey}/Client_Master`] = mainCompany;
