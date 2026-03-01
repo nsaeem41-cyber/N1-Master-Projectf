@@ -913,8 +913,10 @@
                 const dateStr = orderDate.toLocaleDateString('en-GB');
                 
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                
+                const shopOriginArea = shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
+                const destinationArea = ord.Shop_Pickup || 'غير محدد';
                 const phone = shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---';
-                let area = shopData ? (shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
 
                 const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
                 
@@ -935,7 +937,6 @@
 
                 let cleanShopName = ord.Shop_Name || '';
                 cleanShopName = cleanShopName.replace(urlRegex, badgeHtml);
-                area = area.replace(urlRegex, '📍');
 
                 tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ord.Shop_Ord_ID}">
@@ -943,8 +944,11 @@
                             <div style="font-size:13px; font-weight:800;">${timeStr}</div>
                             <div style="font-size:10px; color:#94a3b8;">${dateStr}</div>
                         </td>
-                        <td style="font-weight:900; color:var(--primary); line-height:1.5;">${cleanShopName}</td>
-                        <td><span class="area-badge">${area}</span></td>
+                        <td style="font-weight:900; color:var(--primary); line-height:1.5;">
+                            ${cleanShopName}
+                            <div style="font-size:11px; color:#64748b; margin-top:4px;">📍 فرع ${shopOriginArea}</div>
+                        </td>
+                        <td><span class="area-badge">${destinationArea}</span></td>
                         <td><span class="badge bg-phone">${phone}</span></td>
                         <td>
                             <div style="display:flex; gap:5px; flex-wrap:wrap;">
@@ -1008,11 +1012,12 @@
                 if(availableCaptains.length === 0) break;
 
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-                const orderRegion = (ord.Shop_Location || (shopData ? (shopData.Shop_Location || shopData.Client_Location) : '') || '').trim();
+                
+                const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
                 let eligibleCaptains = availableCaptains.filter(c => {
                      const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
-                     return cRegion === orderRegion;
+                     return cRegion === shopOriginArea;
                 });
 
                 if (eligibleCaptains.length === 0) continue;
@@ -1045,7 +1050,7 @@
                 const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
                 const orderData = {
                     id: appOrderId,
-                    restaurant: ord.Shop_Name + (orderRegion ? " - " + orderRegion : ""),
+                    restaurant: ord.Shop_Name + (shopOriginArea ? " - " + shopOriginArea : ""),
                     value: ord.Shop_Val,
                     fee: ord.Shop_Fee,
                     status: 'assigned',
@@ -1077,7 +1082,7 @@
             if (!ord) return;
             
             const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-            const area = shopData ? (shopData.Shop_Location || shopData.Client_Location || '') : '';
+            const shopOriginArea = shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location || '') : '';
 
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             let fullShopName = ord.Shop_Name || '';
@@ -1087,7 +1092,7 @@
             
             let cleanShopName = fullShopName.replace(urlRegex, '').trim();
 
-            document.getElementById('man_rest_name').value = cleanShopName + (area ? " - " + area : "");
+            document.getElementById('man_rest_name').value = cleanShopName + (shopOriginArea ? " - " + shopOriginArea : "");
             document.getElementById('man_val').value = ord.Shop_Val;
             document.getElementById('man_fee').value = ord.Shop_Fee;
             document.getElementById('linked_order_id').value = orderId;
