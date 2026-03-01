@@ -780,7 +780,7 @@
         
         // إعدادات لوحة التحكم المركزية (Captain 2)
         let systemSettings = {
-            order_timer: 10, // القيمة الافتراضية
+            order_timer: 10, 
             anti_vpn: false,
             zone_lock: false
         };
@@ -956,7 +956,7 @@
                 // فحص المنطقة الزمنية كدليل بسيط على تغيير الموقع
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
                 if(tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1) {
-                    return true; // احتمال استخدام VPN خارج المنطقة
+                    return true; 
                 }
             } catch(e) { console.log(e); }
             return false;
@@ -1274,7 +1274,6 @@
             onValue(ref(db, 'settings/anti_vpn'), (snap) => {
                 if(snap.exists()) {
                     systemSettings.anti_vpn = snap.val().active === true;
-                    // تفعيل الفحص فوراً إذا تم تشغيله
                     if(systemSettings.anti_vpn && currentCaptain && currentCaptain.app_status === 'online') {
                         if(checkVPNStatus()) {
                             forceOffline();
@@ -1300,10 +1299,13 @@
             });
         }
 
+        // --- فلتر منع التكرار وبناء الطلبات ---
         function initRealtimeListeners() {
             if(!capNodeKey) return;
             
-            // تشغيل الاستماع لإعدادات Captain 2
+            if (window.realtimeListenersActive) return;
+            window.realtimeListenersActive = true;
+            
             listenToSystemSettings();
 
             const profileRef = ref(db, `captains/${capNodeKey}`);
@@ -1335,7 +1337,6 @@
                         document.getElementById('pending-screen').style.display = 'none';
                     }
 
-                    // تحديث واجهة المنطقة إذا كانت مقفلة
                     if(systemSettings.zone_lock && data.Cap_Location) {
                         document.getElementById('ui_cap_zone').innerText = data.Cap_Location;
                     }
@@ -1354,7 +1355,8 @@
                 let hasActive = false;
                 let hasNewRinging = false;
                 allCompletedOrders = [];
-                container.innerHTML = '';
+                
+                let htmlStr = '';
                 
                 const todayStr = new Date().toDateString();
                 const nowTime = Date.now();
@@ -1378,20 +1380,17 @@
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
-                            // --- منطق عداد الطلب (10 ثواني) ---
                             let timeLeft = systemSettings.order_timer;
                             if(ord.assigned_at) {
                                 const elapsed = Math.floor((nowTime - ord.assigned_at) / 1000);
                                 timeLeft = systemSettings.order_timer - elapsed;
                             } else {
-                                // إذا لم يكن هناك وقت تعيين مسجل، نقوم بتسجيله
                                 update(ref(db, `assigned_orders/${capNodeKey}/${ord.id}`), { assigned_at: nowTime });
                             }
 
                             if(timeLeft <= 0) {
-                                // انتهى الوقت، رفض تلقائي للرادار
                                 rejectOrderAuto(ord.id);
-                                return; // لا تعرض الطلب
+                                return;
                             }
 
                             hasActive = true;
@@ -1404,9 +1403,9 @@
                             const lblFee = currentLang === 'ar' ? "رسوم التوصيل" : "Delivery Fee";
                             const lblOrd = currentLang === 'ar' ? "رقم" : "No";
                             const lblTime = currentLang === 'ar' ? "الوقت" : "Time";
-                            const lblSec = currentLang === 'ar' ? "ثانية متبقية للقبول" : "sec left to accept";
+                            const lblSec = currentLang === 'ar' ? "ثانية للقبول" : "sec left";
 
-                            container.innerHTML += `
+                            htmlStr += `
                                 <div class="order-card ringing" id="card_${ord.id}">
                                     <div class="order-header">
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
@@ -1432,8 +1431,7 @@
                                 </div>
                             `;
 
-                            // تشغيل العداد المرئي
-                            startVisualTimer(ord.id, timeLeft, systemSettings.order_timer);
+                            setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
                         }
                         else if (ord.status === 'accepted') {
                             hasActive = true;
@@ -1452,7 +1450,7 @@
                             const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery));
                             const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
-                            container.innerHTML += `
+                            htmlStr += `
                                 <div class="order-card">
                                     <div class="order-header">
                                         <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
@@ -1492,12 +1490,14 @@
                 }
                 
                 if (!hasActive) {
-                    container.innerHTML = `
+                    htmlStr = `
                         <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">
                             ${dict[currentLang].no_orders}
                         </div>
                     `;
                 }
+
+                container.innerHTML = htmlStr;
             });
 
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
@@ -1522,23 +1522,23 @@
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
             
-            const bar = document.getElementById(`bar_timer_${orderId}`);
-            const text = document.getElementById(`text_timer_${orderId}`);
-            if(!bar || !text) return;
-
             const lblSec = currentLang === 'ar' ? "ثانية للقبول" : "sec left";
 
             orderTimers[orderId] = setInterval(() => {
                 timeLeft--;
+                
+                const bar = document.getElementById(`bar_timer_${orderId}`);
+                const text = document.getElementById(`text_timer_${orderId}`);
+                
                 if(timeLeft <= 0) {
                     clearInterval(orderTimers[orderId]);
-                    rejectOrderAuto(orderId); // رفض تلقائي عند الانتهاء
+                    rejectOrderAuto(orderId); 
                 } else {
                     if(text) text.innerText = `${timeLeft} ${lblSec} ⏳`;
                     if(bar) {
                         const percent = (timeLeft / totalTime) * 100;
                         bar.style.width = `${percent}%`;
-                        if(percent < 30) bar.style.background = '#991b1b'; // لون أحمر غامق بالثواني الأخيرة
+                        if(percent < 30) bar.style.background = '#991b1b'; 
                     }
                 }
             }, 1000);
@@ -1608,7 +1608,6 @@
             const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
             
             if (isOnline) {
-                // فحص الرصيد
                 if (bal <= -1) {
                     const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online";
                     window.showToast(msg, true);
@@ -1616,7 +1615,6 @@
                     return;
                 }
 
-                // فحص الـ VPN
                 if (systemSettings.anti_vpn && checkVPNStatus()) {
                     document.getElementById('vpn-warning').style.display = 'flex';
                     window.showToast(dict[currentLang].lang_vpn_warn, true);
@@ -1635,7 +1633,7 @@
         }
 
         window.acceptOrder = async function(orderId, fee) {
-            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]); // إيقاف العداد
+            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]); 
             
             const actualFee = parseFloat(fee || 0);
             const commissionAmount = actualFee * COMMISSION_RATE;
@@ -1661,16 +1659,15 @@
             window.showAppConfirm(msg, async () => {
                 if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
                 const updates = {};
-                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'rejected_by_cap'; // إشارة للرادار
+                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'rejected_by_cap'; 
                 await update(ref(db), updates);
             });
         };
 
-        // دالة الرفض التلقائي (بسبب انتهاء العداد)
         window.rejectOrderAuto = async function(orderId) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
             const updates = {};
-            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'timeout'; // إشارة للرادار انه نام
+            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'timeout'; 
             await update(ref(db), updates);
             window.showToast(currentLang === 'ar' ? "انتهى الوقت! تم سحب الطلب ⏳" : "Time out! Order reassigned ⏳", true);
         };
