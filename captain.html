@@ -778,8 +778,6 @@
         
         let systemSettings = { order_timer: 10, anti_vpn: false };
         let orderTimers = {};
-        
-        // قفل الاتصال السحري والذاكرة المحلية الذكية
         let isListenerActive = false;
         let localOrderSeen = {};
         
@@ -1245,6 +1243,29 @@
             }
         }
 
+        // مستشعر الـ VPN الدولي الجديد
+        let isVpnDetected = false;
+        async function detectVPN() {
+            if(!systemSettings.anti_vpn) {
+                isVpnDetected = false;
+                return;
+            }
+            try {
+                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                const data = await response.json();
+                if (data.country && data.country !== 'JO' && data.country !== 'JOR') {
+                    isVpnDetected = true;
+                } else {
+                    isVpnDetected = false;
+                }
+            } catch(e) {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1);
+            }
+        }
+        
+        setInterval(detectVPN, 5000); 
+
         function listenToSystemSettings() {
             onValue(ref(db, 'settings/order_timer'), (snap) => {
                 if(snap.exists() && snap.val().seconds) {
@@ -1252,34 +1273,28 @@
                 }
             });
 
-            onValue(ref(db, 'settings/anti_vpn'), (snap) => {
+            const handleVpnSnap = (snap) => {
                 if(snap.exists()) {
-                    systemSettings.anti_vpn = snap.val().active === true;
+                    systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
+                    if(systemSettings.anti_vpn) detectVPN();
                 }
-            });
-        }
+            };
 
-        function checkVPNStatus() {
-            if(!systemSettings.anti_vpn) return false;
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                if(tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1) {
-                    return true; 
-                }
-            } catch(e) { console.log(e); }
-            return false;
+            onValue(ref(db, 'settings/anti_vpn'), handleVpnSnap);
+            onValue(ref(db, 'settings/vpn_active'), handleVpnSnap);
+            onValue(ref(db, 'settings/vpn'), handleVpnSnap);
         }
 
         setInterval(() => {
             if (currentCaptain) {
                 const vpnWarning = document.getElementById('vpn-warning');
-                if (systemSettings.anti_vpn && checkVPNStatus()) {
+                if (systemSettings.anti_vpn && isVpnDetected) {
                     vpnWarning.style.display = 'flex';
                 } else {
                     vpnWarning.style.display = 'none';
                 }
             }
-        }, 3000);
+        }, 2000);
 
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
@@ -1388,7 +1403,6 @@
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
-                            // العداد الذكي المحلي بدون ما نكتب بالفايربيس
                             if(!localOrderSeen[ord.id]) {
                                 localOrderSeen[ord.id] = Date.now();
                             }
