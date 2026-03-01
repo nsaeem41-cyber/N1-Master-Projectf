@@ -677,9 +677,24 @@
         }
 
         function checkAssignedOrdersStatus() {
+            const now = Date.now();
+            let hasUpdates = false;
+            const updates = {};
+
             for (let capKey in allAssignedOrders) {
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
+                    
+                    if (ord.status === 'assigned' && ord.dispatch_method === 'Auto') {
+                        if (now - ord.timestamp > 12000) { 
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                            if(ord.linkedRadarId) {
+                                updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                            }
+                            hasUpdates = true;
+                            continue;
+                        }
+                    }
                     
                     if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
                         const commission = ord.commission_amount || 0;
@@ -687,10 +702,9 @@
                             const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                             if(capData) {
                                 const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
-                                update(ref(db), {
-                                    [`${capData._node}/${capKey}/Cap_Balance`]: parseFloat(newBal),
-                                    [`${capData._node}/${capKey}/balance`]: parseFloat(newBal)
-                                });
+                                updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                                updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
+                                hasUpdates = true;
                             }
                         }
                         
@@ -712,14 +726,17 @@
                         renderCompletedOrders();
                     }
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
-                        const updates = {};
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                         if(ord.linkedRadarId) {
                             updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                         }
-                        update(ref(db), updates);
+                        hasUpdates = true;
                     }
                 }
+            }
+            
+            if (hasUpdates) {
+                update(ref(db), updates);
             }
         }
 
@@ -991,19 +1008,29 @@
                 if(availableCaptains.length === 0) break;
 
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-                const orderRegion = shopData ? (shopData.Shop_Location || shopData.Client_Location || '').trim() : '';
+                const orderRegion = (ord.Shop_Location || (shopData ? (shopData.Shop_Location || shopData.Client_Location) : '') || '').trim();
 
                 let eligibleCaptains = availableCaptains.filter(c => {
                      const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
-                     const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
-                     const isSameRegion = cRegion === orderRegion;
-                     const hasSkipped = radarMemory[ord.Shop_Ord_ID] && radarMemory[ord.Shop_Ord_ID].skipped && radarMemory[ord.Shop_Ord_ID].skipped[cKey];
-                     return isSameRegion && !hasSkipped;
+                     return cRegion === orderRegion;
                 });
 
                 if (eligibleCaptains.length === 0) continue;
 
-                let selectedCaptain = eligibleCaptains[0];
+                let unskippedCaptains = eligibleCaptains.filter(c => {
+                     const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                     const hasSkipped = radarMemory[ord.Shop_Ord_ID] && radarMemory[ord.Shop_Ord_ID].skipped && radarMemory[ord.Shop_Ord_ID].skipped[cKey];
+                     return !hasSkipped;
+                });
+
+                if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
+                     updates[`radar_memory/${ord.Shop_Ord_ID}`] = null;
+                     unskippedCaptains = eligibleCaptains;
+                }
+
+                if (unskippedCaptains.length === 0) continue;
+
+                let selectedCaptain = unskippedCaptains[0];
                 const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
 
                 availableCaptains = availableCaptains.filter(c => {
@@ -1033,7 +1060,7 @@
                 dispatchedCount++;
             }
 
-            if(dispatchedCount > 0) {
+            if(Object.keys(updates).length > 0) {
                 try {
                     await update(ref(db), updates);
                     if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
