@@ -226,6 +226,9 @@
     <audio id="sound-onway" preload="auto">
         <source src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" type="audio/mpeg">
     </audio>
+    <audio id="sound-arrived" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3" type="audio/mpeg">
+    </audio>
     <audio id="sound-delivered" preload="auto">
         <source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg">
     </audio>
@@ -564,6 +567,7 @@
         let isAutoRadarActive = false;
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
+        let remoteOrderTimer = 10000;
 
         function checkCompanyMatch(u, master1, master2) {
             const m1 = String(master1 || '').toLowerCase().trim();
@@ -676,6 +680,15 @@
         function fetchRadarStatus() {
             if (!currentUser) return;
             const myMaster = getActiveMasterId();
+            
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snapshot) => {
+                if(snapshot.exists()) {
+                    remoteOrderTimer = parseInt(snapshot.val()) * 1000;
+                } else {
+                    remoteOrderTimer = 10000;
+                }
+            });
+
             onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
                 isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
                 const btn = document.getElementById('btn-auto-radar');
@@ -716,7 +729,7 @@
                         const elapsed = now - ord.timestamp;
 
                         if (ord.status === 'assigned') {
-                            if (elapsed > 5000 || isAppClosed) { 
+                            if (elapsed > remoteOrderTimer || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
@@ -729,7 +742,7 @@
                             }
                         }
                         else if (ord.status === 'received' || ord.status === 'ringing') {
-                            if (elapsed > 10000 || isAppClosed) {
+                            if (elapsed > (remoteOrderTimer + 2000) || isAppClosed) {
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
@@ -778,19 +791,25 @@
                     // 🌟 قسم التتبع الحي لتحديثات الكابتن 🌟
                     else if (processedAppOrders.includes(appOrdId)) {
                         let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
-                        if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'delivered'].includes(ord.status)) {
+                        if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
                             existingEntry.live_status = ord.status;
                             localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
                             
                             if (soundEnabled) {
                                 if (ord.status === 'picked_up') document.getElementById('sound-picked').play().catch(()=>{});
                                 else if (ord.status === 'on_way') document.getElementById('sound-onway').play().catch(()=>{});
+                                else if (ord.status === 'arrived') document.getElementById('sound-arrived').play().catch(()=>{});
                                 else if (ord.status === 'delivered') document.getElementById('sound-delivered').play().catch(()=>{});
                             }
                             
                             let sName = ord.restaurant ? ord.restaurant.split('-')[0].trim() : "الطلب";
-                            let msg = ord.status === 'picked_up' ? `الكابتن استلم ${sName}` : (ord.status === 'on_way' ? `الكابتن في الطريق لتسليم ${sName}` : `تم تسليم ${sName} بنجاح`);
-                            showAppNotification(msg, "success");
+                            let msg = '';
+                            if(ord.status === 'picked_up') msg = `الكابتن استلم ${sName}`;
+                            else if(ord.status === 'on_way') msg = `الكابتن في الطريق لتسليم ${sName}`;
+                            else if(ord.status === 'arrived') msg = `الكابتن وصل لموقع العميل لتسليم ${sName}`;
+                            else if(ord.status === 'delivered') msg = `تم تسليم ${sName} بنجاح`;
+                            
+                            if(msg !== '') showAppNotification(msg, "success");
                             
                             renderCompletedOrders();
                         }
@@ -872,6 +891,7 @@
                 document.getElementById('notif-sound').play().then(() => { document.getElementById('notif-sound').pause(); }).catch(() => {});
                 document.getElementById('sound-picked').play().then(() => { document.getElementById('sound-picked').pause(); }).catch(() => {});
                 document.getElementById('sound-onway').play().then(() => { document.getElementById('sound-onway').pause(); }).catch(() => {});
+                if(document.getElementById('sound-arrived')) document.getElementById('sound-arrived').play().then(() => { document.getElementById('sound-arrived').pause(); }).catch(() => {});
                 document.getElementById('sound-delivered').play().then(() => { document.getElementById('sound-delivered').pause(); }).catch(() => {});
                 soundEnabled = true;
             }
@@ -1454,6 +1474,7 @@
                 if (o.live_status === 'accepted') liveStatusBadge = '<span class="badge" style="background:#e0f2fe; color:#0284c7;">تمت الموافقة ⚡</span>';
                 else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="badge" style="background:#ffedd5; color:#ea580c;">تم الاستلام 🏃‍♂️</span>';
                 else if (o.live_status === 'on_way') liveStatusBadge = '<span class="badge" style="background:#fef9c3; color:#ca8a04;">في الطريق 🛵</span>';
+                else if (o.live_status === 'arrived') liveStatusBadge = '<span class="badge" style="background:#cffafe; color:#0369a1;">وصل للعميل 📍</span>';
                 else if (o.live_status === 'delivered') liveStatusBadge = '<span class="badge" style="background:#dcfce7; color:#166534;">تم التسليم 💎</span>';
                 else liveStatusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">مكتمل ✅</span>';
 
