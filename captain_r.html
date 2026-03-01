@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Captain 2 - Smart Controller 💎</title>
+    <title>N One | Smart Controller 💎</title>
     <meta name="theme-color" content="#0f172a">
     <style>
         :root {
@@ -37,7 +37,7 @@
 
         .admin-header {
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            padding: 30px 20px;
+            padding: 30px 20px 20px;
             text-align: center;
             color: white;
             border-bottom: 5px solid var(--gold);
@@ -56,10 +56,53 @@
             font-weight: bold;
         }
 
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            padding: 15px 25px 0;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px 15px 0 0;
+            font-weight: 900;
+            font-size: 14px;
+            cursor: pointer;
+            background: #e2e8f0;
+            color: #64748b;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            border-top: 3px solid var(--gold);
+        }
+
         .content-wrapper {
-            padding: 25px;
             flex: 1;
             overflow-y: auto;
+            position: relative;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
 
         .control-card {
@@ -127,6 +170,10 @@
             transition: 0.3s;
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
             margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-action:active {
@@ -143,6 +190,34 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
 
+        /* تفاصيل المنشأة بعد البحث */
+        .shop-details-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .sd-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .sd-row:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 1px dashed #cbd5e1;
+        }
+        
+        .sd-label { color: #64748b; }
+        .sd-val { color: var(--primary); font-weight: 900; }
+
         /* نظام الإشعارات الداخلي */
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -157,66 +232,134 @@
 
     <div class="admin-container">
         <div class="admin-header">
-            <div class="admin-logo">Captain 2 <span style="color:var(--gold)">Core</span></div>
-            <div class="admin-sub">المحرك الذكي لإدارة تطبيق الكابتن 💎</div>
+            <div class="admin-logo">N One <span style="color:var(--gold)">Diamond</span></div>
+            <div class="admin-sub">التحكم المركزي للكباتن والمنشآت 💎</div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchMainTab('captains-tab', this)">🦸‍♂️ ريموت الكباتن</button>
+            <button class="tab-btn" onclick="switchMainTab('shops-tab', this)">🏪 ريموت المنشآت</button>
         </div>
 
         <div class="content-wrapper">
             
-            <div class="control-card" style="border-right-color: var(--success);">
-                <div class="card-title">⏳ نظام الانقضاض السريع (عداد الطلبات)</div>
-                <div class="input-group">
-                    <label>مدة قبول الطلب (بالثواني)</label>
-                    <input type="number" id="timer_val" value="10" min="5" max="60">
+            <div id="captains-tab" class="tab-content active">
+                
+                <div class="control-card" style="border-right-color: var(--success);">
+                    <div class="card-title">⏳ نظام الانقضاض السريع (عداد الطلبات)</div>
+                    <div class="input-group">
+                        <label>مدة قبول الطلب (بالثواني)</label>
+                        <input type="number" id="timer_val" value="10" min="5" max="60">
+                    </div>
+                    <button class="btn-action btn-success" onclick="updateTimer()">تحديث وقت العداد ⏱️</button>
                 </div>
-                <button class="btn-action btn-success" onclick="updateTimer()">تحديث وقت العداد ⏱️</button>
+
+                <div class="control-card" style="border-right-color: var(--danger);">
+                    <div class="card-title">🛡️ درع الحماية (كاشف الـ VPN)</div>
+                    <button class="btn-action" style="background: var(--danger);" onclick="toggleVPN(true)">تفعيل كاشف الـ VPN 🔒</button>
+                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleVPN(false)">إيقاف الكاشف 🔓</button>
+                </div>
+
+                <div class="control-card" style="border-right-color: var(--gold);">
+                    <div class="card-title">📍 تثبيت منطقة العمل (Zone Lock)</div>
+                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleZoneLock(true)">إجبار الكابتن على منطقته ✅</button>
+                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleZoneLock(false)">السماح بالتنقل الحر ❌</button>
+                </div>
+                
+                <div class="control-card" style="border-right-color: var(--info);">
+                    <div class="card-title">📢 بث إعلان شريطي (لجميع الكباتن)</div>
+                    <div class="input-group">
+                        <label>نص الإعلان</label>
+                        <input type="text" id="ad_text" placeholder="اكتب الخبر أو الإعلان هنا...">
+                    </div>
+                    <div class="input-group">
+                        <label>نوع الإعلان</label>
+                        <select id="ad_type">
+                            <option value="normal">عادي (أزرق)</option>
+                            <option value="warning">تحذير (أحمر)</option>
+                        </select>
+                    </div>
+                    <button class="btn-action" style="background: var(--info);" onclick="sendAnnouncement()">بث الإعلان الآن 🚀</button>
+                    <button class="btn-action btn-danger" style="margin-top: 10px;" onclick="clearAnnouncement()">إيقاف الإعلان الحالي ❌</button>
+                </div>
+
+                <div class="control-card" style="border-right-color: var(--danger);">
+                    <div class="card-title">🚨 إرسال نافذة تنبيه إدارية (Popup)</div>
+                    <div class="input-group">
+                        <label>نص الرسالة الإدارية</label>
+                        <textarea id="alert_text" rows="3" placeholder="اكتب الرسالة التي ستظهر بنصف الشاشة..."></textarea>
+                    </div>
+                    <button class="btn-action btn-danger" onclick="sendAdminAlert()">إرسال التنبيه الفوري 🔔</button>
+                </div>
+
+                <div class="control-card">
+                    <div class="card-title">🔥 التحكم بالنقاط الساخنة (Hotspots)</div>
+                    <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
+                        تفعيل هذا الخيار سيقوم بإنشاء نقطة وهمية في قاعدة البيانات ليقرأها تطبيق الكابتن ويظهر شارة "النقاط الساخنة مفعّلة".
+                    </p>
+                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleHotspots(true)">تفعيل النقاط الساخنة ✅</button>
+                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleHotspots(false)">إلغاء التفعيل ❌</button>
+                </div>
+
             </div>
 
-            <div class="control-card" style="border-right-color: var(--danger);">
-                <div class="card-title">🛡️ درع الحماية (كاشف الـ VPN)</div>
-                <button class="btn-action" style="background: var(--danger);" onclick="toggleVPN(true)">تفعيل كاشف الـ VPN 🔒</button>
-                <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleVPN(false)">إيقاف الكاشف 🔓</button>
-            </div>
+            <div id="shops-tab" class="tab-content">
+                
+                <div class="control-card" style="border-right-color: var(--info);">
+                    <div class="card-title">🔍 البحث والاستعلام عن منشأة</div>
+                    <div class="input-group">
+                        <label>رقم الهاتف أو معرف المنشأة</label>
+                        <input type="text" id="shop_search_query" placeholder="أدخل البيانات للبحث...">
+                    </div>
+                    <button class="btn-action" style="background: var(--info);" onclick="searchRemoteShop()">البحث في السجلات 🔎</button>
 
-            <div class="control-card" style="border-right-color: var(--gold);">
-                <div class="card-title">📍 تثبيت منطقة العمل (Zone Lock)</div>
-                <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleZoneLock(true)">إجبار الكابتن على منطقته ✅</button>
-                <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleZoneLock(false)">السماح بالتنقل الحر ❌</button>
-            </div>
-            
-            <div class="control-card" style="border-right-color: var(--info);">
-                <div class="card-title">📢 بث إعلان شريطي (لجميع الكباتن)</div>
-                <div class="input-group">
-                    <label>نص الإعلان</label>
-                    <input type="text" id="ad_text" placeholder="اكتب الخبر أو الإعلان هنا...">
+                    <div id="shop_details_area" class="shop-details-box" style="margin-top: 15px;">
+                        <div class="sd-row">
+                            <span class="sd-label">الاسم التجاري</span>
+                            <span class="sd-val" id="rs_name">---</span>
+                        </div>
+                        <div class="sd-row">
+                            <span class="sd-label">رقم التواصل</span>
+                            <span class="sd-val" id="rs_phone" style="font-family: monospace;">---</span>
+                        </div>
+                        <div class="sd-row">
+                            <span class="sd-label">حالة الحساب</span>
+                            <span class="sd-val" id="rs_status">---</span>
+                        </div>
+                        <div class="sd-row">
+                            <span class="sd-label">الرصيد المتاح</span>
+                            <span class="sd-val" id="rs_balance" style="color: var(--success); font-size: 16px;">0.00 د.أ</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>نوع الإعلان</label>
-                    <select id="ad_type">
-                        <option value="normal">عادي (أزرق)</option>
-                        <option value="warning">تحذير (أحمر)</option>
-                    </select>
-                </div>
-                <button class="btn-action" style="background: var(--info);" onclick="sendAnnouncement()">بث الإعلان الآن 🚀</button>
-                <button class="btn-action btn-danger" style="margin-top: 10px;" onclick="clearAnnouncement()">إيقاف الإعلان الحالي ❌</button>
-            </div>
 
-            <div class="control-card" style="border-right-color: var(--danger);">
-                <div class="card-title">🚨 إرسال نافذة تنبيه إدارية (Popup)</div>
-                <div class="input-group">
-                    <label>نص الرسالة الإدارية</label>
-                    <textarea id="alert_text" rows="3" placeholder="اكتب الرسالة التي ستظهر بنصف الشاشة..."></textarea>
+                <div class="control-card" style="border-right-color: var(--danger);">
+                    <div class="card-title">🛑 التحكم بحالة المنشأة</div>
+                    <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
+                        تجميد الحساب سيمنع المنشأة من الدخول للنظام وإرسال الطلبات فورا
+                    </p>
+                    <button id="btn_freeze_shop" class="btn-action btn-danger" onclick="toggleRemoteShopStatus('paused')">تجميد حساب المنشأة ❄️</button>
+                    <button id="btn_unfreeze_shop" class="btn-action btn-success" style="display: none;" onclick="toggleRemoteShopStatus('active')">إعادة تفعيل الحساب ✅</button>
                 </div>
-                <button class="btn-action btn-danger" onclick="sendAdminAlert()">إرسال التنبيه الفوري 🔔</button>
-            </div>
 
-            <div class="control-card">
-                <div class="card-title">🔥 التحكم بالنقاط الساخنة (Hotspots)</div>
-                <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
-                    تفعيل هذا الخيار سيقوم بإنشاء نقطة وهمية في قاعدة البيانات ليقرأها تطبيق الكابتن ويظهر شارة "النقاط الساخنة مفعّلة".
-                </p>
-                <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleHotspots(true)">تفعيل النقاط الساخنة ✅</button>
-                <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleHotspots(false)">إلغاء التفعيل ❌</button>
+                <div class="control-card" style="border-right-color: var(--success);">
+                    <div class="card-title">💰 إدارة رصيد المنشأة</div>
+                    <div class="input-group">
+                        <label>قيمة الإيداع / الخصم (للقيمة السالبة استخدم علامة -)</label>
+                        <input type="number" id="rs_charge_val" placeholder="0.00">
+                    </div>
+                    <button class="btn-action btn-success" onclick="chargeRemoteShop()">تنفيذ الحركة المالية 💵</button>
+                </div>
+
+                <div class="control-card" style="border-right-color: var(--gold);">
+                    <div class="card-title">📩 إرسال تنبيه خاص للمنشأة</div>
+                    <div class="input-group">
+                        <label>الرسالة الإدارية</label>
+                        <textarea id="rs_alert_text" rows="3" placeholder="اكتب الرسالة لتظهر كإشعار إجباري للمنشأة المحددة..."></textarea>
+                    </div>
+                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="sendSpecificShopAlert()">إرسال التنبيه للمنشأة 🚀</button>
+                </div>
+
             </div>
 
         </div>
@@ -224,7 +367,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, update, set, remove, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -238,6 +381,11 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+
+        // متغيرات للتحكم بالمنشآت
+        let currentTargetShop = null;
+        let currentShopNode = 'shops';
+        let currentShopKey = '';
 
         window.showToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -260,6 +408,15 @@
             setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
             setTimeout(() => { toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
         };
+
+        window.switchMainTab = function(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        };
+
+        // ================== أوامر الكباتن ==================
 
         window.updateTimer = async function() {
             const timeVal = document.getElementById('timer_val').value;
@@ -356,6 +513,153 @@
                 }
             } catch(e) {
                 window.showToast("حدث خطأ أثناء التعديل", true);
+            }
+        };
+
+        // ================== أوامر المنشآت ==================
+
+        window.searchRemoteShop = async function() {
+            const query = document.getElementById('shop_search_query').value.trim();
+            if(!query) { window.showToast("يرجى إدخال معرف أو هاتف المنشأة", true); return; }
+
+            try {
+                const snap = await get(ref(db));
+                if(snap.exists()) {
+                    const data = snap.val();
+                    let foundShop = null;
+                    let foundNode = null;
+                    let foundKey = null;
+
+                    const searchInNode = (nodeData, nodeName) => {
+                        if(!nodeData) return;
+                        for(let key in nodeData) {
+                            const s = nodeData[key];
+                            if((s.Shop_User === query) || (s.user === query) || (s.Client_User === query) || (s.Shop_Phone === query) || (s.phone === query) || (s.Client_Phone === query)) {
+                                foundShop = s;
+                                foundNode = nodeName;
+                                foundKey = key;
+                                return true;
+                            }
+                        }
+                    };
+
+                    searchInNode(data.shops, 'shops');
+                    if(!foundShop) searchInNode(data.users, 'users');
+
+                    if(foundShop) {
+                        currentTargetShop = foundShop;
+                        currentShopNode = foundNode;
+                        currentShopKey = foundKey;
+                        renderShopDetails();
+                        window.showToast("تم العثور على المنشأة بنجاح");
+                    } else {
+                        window.showToast("لم يتم العثور على منشأة بهذا المعرف", true);
+                        document.getElementById('shop_details_area').style.display = 'none';
+                        currentTargetShop = null;
+                    }
+                }
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء البحث", true);
+            }
+        };
+
+        function renderShopDetails() {
+            const area = document.getElementById('shop_details_area');
+            area.style.display = 'block';
+            document.getElementById('rs_name').innerText = currentTargetShop.Shop_Name || currentTargetShop.name || currentTargetShop.Client_Name || "غير محدد";
+            document.getElementById('rs_phone').innerText = currentTargetShop.Shop_Phone || currentTargetShop.phone || currentTargetShop.Client_Phone || "غير محدد";
+            
+            const bal = parseFloat(currentTargetShop.Shop_Balance || currentTargetShop.balance || currentTargetShop.Client_Balance || 0).toFixed(2);
+            document.getElementById('rs_balance').innerText = bal + " د.أ";
+
+            const status = currentTargetShop.Client_Status || currentTargetShop.status || "active";
+            const statusEl = document.getElementById('rs_status');
+            
+            if(status === 'paused') {
+                statusEl.innerText = "مجمد ❄️";
+                statusEl.style.color = "var(--danger)";
+                document.getElementById('btn_freeze_shop').style.display = 'none';
+                document.getElementById('btn_unfreeze_shop').style.display = 'flex';
+            } else {
+                statusEl.innerText = "نشط ✅";
+                statusEl.style.color = "var(--success)";
+                document.getElementById('btn_freeze_shop').style.display = 'flex';
+                document.getElementById('btn_unfreeze_shop').style.display = 'none';
+            }
+        }
+
+        window.toggleRemoteShopStatus = async function(newStatus) {
+            if(!currentTargetShop) return;
+            try {
+                const updates = {};
+                updates[`${currentShopNode}/${currentShopKey}/Client_Status`] = newStatus;
+                updates[`${currentShopNode}/${currentShopKey}/status`] = newStatus;
+                await update(ref(db), updates);
+                
+                currentTargetShop.Client_Status = newStatus;
+                currentTargetShop.status = newStatus;
+                renderShopDetails();
+                
+                if(newStatus === 'paused') window.showToast("تم تجميد حساب المنشأة ❄️");
+                else window.showToast("تم تفعيل حساب المنشأة ✅");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التحديث", true);
+            }
+        };
+
+        window.chargeRemoteShop = async function() {
+            if(!currentTargetShop) return;
+            const amount = parseFloat(document.getElementById('rs_charge_val').value);
+            if(isNaN(amount) || document.getElementById('rs_charge_val').value === '') { 
+                window.showToast("يرجى إدخال مبلغ صحيح", true); 
+                return; 
+            }
+
+            try {
+                const currentBal = parseFloat(currentTargetShop.Shop_Balance || currentTargetShop.balance || currentTargetShop.Client_Balance || 0);
+                const newBal = currentBal + amount;
+                
+                const updates = {};
+                updates[`${currentShopNode}/${currentShopKey}/Shop_Balance`] = newBal;
+                updates[`${currentShopNode}/${currentShopKey}/balance`] = newBal;
+                updates[`${currentShopNode}/${currentShopKey}/Client_Balance`] = newBal;
+                
+                await update(ref(db), updates);
+                
+                currentTargetShop.Shop_Balance = newBal;
+                currentTargetShop.balance = newBal;
+                currentTargetShop.Client_Balance = newBal;
+                
+                renderShopDetails();
+                document.getElementById('rs_charge_val').value = '';
+                window.showToast(`تم تعديل رصيد المنشأة بنجاح 💰`);
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء تعديل الرصيد", true);
+            }
+        };
+
+        window.sendSpecificShopAlert = async function() {
+            if(!currentTargetShop) return;
+            const text = document.getElementById('rs_alert_text').value.trim();
+            if(!text) { window.showToast("يرجى كتابة نص التنبيه", true); return; }
+            
+            try {
+                const alertData = {
+                    message: text,
+                    timestamp: Date.now(),
+                    sender: "الإدارة المركزية"
+                };
+                
+                // إضافة التنبيه لخانة المنشأة مباشرة ليقرأه التطبيق
+                const updates = {};
+                updates[`alerts/users/${currentShopKey}`] = alertData;
+                
+                await update(ref(db), updates);
+                
+                window.showToast("تم إرسال التنبيه للمنشأة بنجاح 🔔");
+                document.getElementById('rs_alert_text').value = '';
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء الإرسال", true);
             }
         };
 
