@@ -689,7 +689,9 @@
             });
         }
 
-        // الرادار القناص: فحص التطبيق إذا كان أوفلاين يتم سحب الطلب فوراً
+        // =========================================================================
+        // 🛠️ قسم الفحص المزدوج (Double-Check Algorithm) للرادار القناص
+        // =========================================================================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -699,21 +701,38 @@
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
-                    if (ord.status === 'assigned' && ord.dispatch_method === 'Auto') {
+                    if (ord.dispatch_method === 'Auto') {
                         const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
+                        const elapsed = now - ord.timestamp;
 
-                        // إذا العداد خلص أو الكابتن أوفلاين بنسحب الطلب فوراً
-                        if (now - ord.timestamp > 12000 || isAppClosed) { 
-                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                            if(ord.linkedRadarId) {
-                                updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                        // 1️⃣ المرحلة الأولى فحص نبض الجهاز (التعليق أو الزومبي) بنعطيه 5 ثواني
+                        // إذا الطلب مرسل بس لسه ما استلمه التطبيق التقني
+                        if (ord.status === 'assigned') {
+                            if (elapsed > 5000 || isAppClosed) { 
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                if(ord.linkedRadarId) {
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                }
+                                hasUpdates = true;
+                                continue;
                             }
-                            hasUpdates = true;
-                            continue;
+                        }
+                        // 2️⃣ المرحلة الثانية وقت اتخاذ القرار الذهبي بنعطيه 10 ثواني
+                        // إذا الجهاز استلم الإشارة وبيرن عند الكابتن بنعطيه وقته يفكر
+                        else if (ord.status === 'received' || ord.status === 'ringing') {
+                            if (elapsed > 10000 || isAppClosed) {
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                if(ord.linkedRadarId) {
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                }
+                                hasUpdates = true;
+                                continue;
+                            }
                         }
                     }
                     
+                    // 3️⃣ قسم معالجة القبول وخصم العمولة
                     if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
                         const commission = ord.commission_amount || 0;
                         if(commission > 0) {
@@ -743,6 +762,7 @@
                         
                         renderCompletedOrders();
                     }
+                    // 4️⃣ قسم معالجة الرفض الصريح وتجاوز الوقت
                     else if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                         if(ord.linkedRadarId) {
@@ -980,17 +1000,26 @@
             });
         };
 
+        // =========================================================================
+        // 🚀 قسم التوزيع الذكي (Auto Dispatch Engine) - قلب الرادار
+        // =========================================================================
         window.triggerAutoRadarMaster = async function(silent = false) {
+            // 1️⃣ استخراج الطلبات المكتملة عشان ما نرجع نبعثها لكباتن ثانيين
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myMaster = getActiveMasterId();
+            
+            // 2️⃣ تحديد منشآت الشركة الحالية عشان نضمن خصوصية الداتا بين الشركات
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, myMaster, persistentCompanyId)).map(u => u.Client_User || u.user || u.Shop_User);
             myShops.push(myMaster);
             if(persistentCompanyId !== myMaster) myShops.push(persistentCompanyId);
             
+            // 3️⃣ تصفية الطلبات المعلقة والجديدة الخاصة بشركتنا فقط
             const pendingOrders = allOrders.filter(o => o.Shop_Type === 'shop_order' && !completedIDs.has(o.Shop_Ord_ID) && myShops.includes(o.Shop_User)).reverse();
             
             let activeLinkedIds = new Set();
             let busyCaptains = new Set();
+            
+            // 4️⃣ الفحص العميق للكباتن المشغولين بطلبات حالية لمنع التكدس
             for(let capKey in allAssignedOrders) {
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
@@ -1003,6 +1032,7 @@
                 }
             }
             
+            // 5️⃣ الطلبات اللي فعلا بتحتاج توجيه فوري
             const trulyPendingOrders = pendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID));
 
             if(trulyPendingOrders.length === 0) {
@@ -1010,8 +1040,10 @@
                 return;
             }
 
+            // 6️⃣ جلب قائمة الكباتن الخاصة بالشركة وتحضيرهم
             let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, myMaster, persistentCompanyId));
             
+            // 7️⃣ استخراج الكباتن الأونلاين والمتاحين فقط واستبعاد المشغولين
             let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
                 const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
@@ -1026,6 +1058,7 @@
             let dispatchedCount = 0;
             let updates = {};
 
+            // 8️⃣ الدوران على الطلبات وتوزيعها بناء على خوارزمية التطابق والمناطق
             for (let ord of trulyPendingOrders) {
                 if(availableCaptains.length === 0) break;
 
@@ -1033,6 +1066,7 @@
                 
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
+                // 9️⃣ فلترة الكباتن الموجودين في نفس منطقة المنشأة لضمان السرعة
                 let eligibleCaptains = availableCaptains.filter(c => {
                      const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
                      return cRegion === shopOriginArea;
@@ -1040,12 +1074,14 @@
 
                 if (eligibleCaptains.length === 0) continue;
 
+                // 🔟 التأكد من أن الكابتن لم يرفض أو يتجاهل هذا الطلب مسبقا
                 let unskippedCaptains = eligibleCaptains.filter(c => {
                      const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
                      const hasSkipped = radarMemory[ord.Shop_Ord_ID] && radarMemory[ord.Shop_Ord_ID].skipped && radarMemory[ord.Shop_Ord_ID].skipped[cKey];
                      return !hasSkipped;
                 });
 
+                // إذا كل الكباتن بالمنطقة رفضوا الطلب بنعمل تصفير للذاكرة وبنرجع نبعثه من جديد
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ord.Shop_Ord_ID}`] = null;
                      unskippedCaptains = eligibleCaptains;
@@ -1053,6 +1089,7 @@
 
                 if (unskippedCaptains.length === 0) continue;
 
+                // اختيار الكابتن الأنسب وتجهيز الطلب للطبخ 🍳
                 let selectedCaptain = unskippedCaptains[0];
                 const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
 
@@ -1083,6 +1120,7 @@
                 dispatchedCount++;
             }
 
+            // تنفيذ أوامر التوزيع بقاعدة البيانات بلمحة بصر
             if(Object.keys(updates).length > 0) {
                 try {
                     await update(ref(db), updates);
