@@ -557,9 +557,11 @@
         let allOrders = [];
         let globalUsers = [];
         let allAssignedOrders = {};
-        let processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders') || '[]');
-        let completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders') || '[]');
-        let captainMemory = JSON.parse(localStorage.getItem('n1_captains') || '{}');
+        
+        let processedAppOrders = [];
+        let completedOrders = [];
+        let captainMemory = {};
+
         let soundEnabled = false;
         let isAlarmPlaying = false;
         let activeSmartCaptain = null;
@@ -568,6 +570,20 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
         let remoteOrderTimer = 10000;
+
+        function loadIsolatedData() {
+            const compId = persistentCompanyId || 'default';
+            processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
+            completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders_' + compId) || '[]');
+            captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
+        }
+
+        function saveIsolatedData() {
+            const compId = persistentCompanyId || 'default';
+            localStorage.setItem('n1_processed_app_orders_' + compId, JSON.stringify(processedAppOrders));
+            localStorage.setItem('n1_completed_orders_' + compId, JSON.stringify(completedOrders));
+            localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
+        }
 
         function checkCompanyMatch(u, master1, master2) {
             const m1 = String(master1 || '').toLowerCase().trim();
@@ -625,6 +641,8 @@
                     document.getElementById('new_cap_company_id').value = persistentCompanyId;
                 }
                 
+                loadIsolatedData();
+                
             } else {
                 showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
                 setTimeout(() => { window.history.back(); }, 1500);
@@ -674,7 +692,10 @@
                 document.getElementById('new_cap_company_id').value = persistentCompanyId;
             }
             
+            loadIsolatedData();
             fetchGlobalUsers();
+            renderCompletedOrders();
+            renderRadar();
         };
 
         function fetchRadarStatus() {
@@ -712,7 +733,7 @@
         }
 
         // =========================================================================
-        // 🛠️ قسم الفحص المزدوج والتتبع الحي لحركة الكابتن
+        // 🛠️ قسم الفحص المزدوج والتتبع الحي لحركة الكابتن مع العزل الذكي
         // =========================================================================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
@@ -774,6 +795,7 @@
                             appOrdId: appOrdId,
                             time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
                             cap: ord.cap_name || "كابتن",
+                            capKey: capKey,
                             rest: ord.restaurant,
                             comm: commission,
                             date: new Date().toISOString(),
@@ -781,10 +803,8 @@
                             live_status: 'accepted'
                         };
                         completedOrders.unshift(entry);
-                        localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                        
                         processedAppOrders.push(appOrdId);
-                        localStorage.setItem('n1_processed_app_orders', JSON.stringify(processedAppOrders));
+                        saveIsolatedData();
                         
                         renderCompletedOrders();
                     }
@@ -793,24 +813,7 @@
                         let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
                         if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
                             existingEntry.live_status = ord.status;
-                            localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
-                            
-                            if (soundEnabled) {
-                                if (ord.status === 'picked_up') document.getElementById('sound-picked').play().catch(()=>{});
-                                else if (ord.status === 'on_way') document.getElementById('sound-onway').play().catch(()=>{});
-                                else if (ord.status === 'arrived') document.getElementById('sound-arrived').play().catch(()=>{});
-                                else if (ord.status === 'delivered') document.getElementById('sound-delivered').play().catch(()=>{});
-                            }
-                            
-                            let sName = ord.restaurant ? ord.restaurant.split('-')[0].trim() : "الطلب";
-                            let msg = '';
-                            if(ord.status === 'picked_up') msg = `الكابتن استلم ${sName}`;
-                            else if(ord.status === 'on_way') msg = `الكابتن في الطريق لتسليم ${sName}`;
-                            else if(ord.status === 'arrived') msg = `الكابتن وصل لموقع العميل لتسليم ${sName}`;
-                            else if(ord.status === 'delivered') msg = `تم تسليم ${sName} بنجاح`;
-                            
-                            if(msg !== '') showAppNotification(msg, "success");
-                            
+                            saveIsolatedData();
                             renderCompletedOrders();
                         }
                         
@@ -962,6 +965,7 @@
                     
                     renderRadar();
                     renderCaptainsList();
+                    renderCompletedOrders();
                 }
             });
         }
@@ -1216,7 +1220,7 @@
             if(confirm("هل تريد إخفاء الطلب")) {
                 const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual' };
                 completedOrders.unshift(entry);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                saveIsolatedData();
                 renderRadar();
             }
         };
@@ -1366,7 +1370,7 @@
 
             if (capName) {
                 captainMemory[phone] = capName;
-                localStorage.setItem('n1_captains', JSON.stringify(captainMemory));
+                saveIsolatedData();
             }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
@@ -1417,7 +1421,7 @@
                 live_status: 'manual'
             };
             completedOrders.unshift(entry);
-            localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+            saveIsolatedData();
 
             let waPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
             if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
@@ -1475,13 +1479,23 @@
                 else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="badge" style="background:#ffedd5; color:#ea580c;">تم الاستلام 🏃‍♂️</span>';
                 else if (o.live_status === 'on_way') liveStatusBadge = '<span class="badge" style="background:#fef9c3; color:#ca8a04;">في الطريق 🛵</span>';
                 else if (o.live_status === 'arrived') liveStatusBadge = '<span class="badge" style="background:#cffafe; color:#0369a1;">وصل للعميل 📍</span>';
-                else if (o.live_status === 'delivered') liveStatusBadge = '<span class="badge" style="background:#dcfce7; color:#166534;">تم التسليم 💎</span>';
+                else if (o.live_status === 'delivered') liveStatusBadge = '<span class="badge" style="background:#dcfce7; color:#166534;">تم اكتمال الطلب 💎</span>';
                 else liveStatusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">مكتمل ✅</span>';
+
+                let liveDot = '';
+                if (o.capKey || o.cap) {
+                    let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Name === o.cap || u.name === o.cap);
+                    if (cData) {
+                        liveDot = cData.app_status === 'online' ? '<span style="font-size:10px; color:var(--success);" title="أونلاين">🟢</span>' : '<span style="font-size:10px; color:var(--danger);" title="أوفلاين">🔴</span>';
+                    } else {
+                        liveDot = '<span style="font-size:10px; color:#cbd5e1;">⚪</span>';
+                    }
+                }
 
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-size:11px; color:#64748b;">${o.time}</td>
-                        <td style="font-weight:800;">${o.cap}</td>
+                        <td style="font-weight:800;">${o.cap} ${liveDot}</td>
                         <td style="line-height:1.5;">${cleanRestName}</td>
                         <td><span class="badge bg-money" style="background:#f0fdf4;">${o.comm}</span></td>
                         <td><span class="badge" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1;">مسجل ${methodIcon}</span></td>
@@ -1496,7 +1510,7 @@
             if(confirm("تصفير العمولات والطلبات لليوم")) {
                 const today = new Date().toDateString();
                 completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                saveIsolatedData();
                 renderCompletedOrders();
             }
         };
@@ -1504,7 +1518,7 @@
         window.deleteFromArchive = function(id) {
             if(confirm("حذف من الأرشيف")) {
                 completedOrders = completedOrders.filter(o => o.orderId !== id);
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                saveIsolatedData();
                 renderCompletedOrders();
                 renderRadar();
             }
@@ -1513,7 +1527,7 @@
         window.clearCompletedOrders = function() {
             if(confirm("مسح الأرشيف كاملا")) {
                 completedOrders = [];
-                localStorage.setItem('n1_completed_orders', JSON.stringify(completedOrders));
+                saveIsolatedData();
                 renderCompletedOrders();
                 renderRadar();
             }
