@@ -733,14 +733,17 @@
                     
                     if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
                         const commission = ord.commission_amount || 0;
-                        if(commission > 0) {
-                            const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                            if(capData) {
-                                const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
-                                updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                                updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
-                                hasUpdates = true;
-                            }
+                        const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        
+                        if(capData && ord.linkedRadarId) {
+                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = capData.Cap_Name || capData.name || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = capData.Cap_Phone || capData.phone || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = capData.Cap_CarType || capData.Cap_Car || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = capData.Cap_CarCode || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
+                            updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
+                            updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'frozen';
+                            hasUpdates = true;
                         }
                         
                         const entry = {
@@ -764,6 +767,25 @@
                     }
                     else if (processedAppOrders.includes(appOrdId)) {
                         let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
+                        
+                        if (!ord.is_commission_deducted && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
+                            const commission = ord.commission_amount || 0;
+                            if(commission > 0) {
+                                const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                                if(capData) {
+                                    const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
+                                    updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                                    updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
+                                }
+                            }
+                            updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
+                            if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                            }
+                            hasUpdates = true;
+                        }
+
                         if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
                             existingEntry.live_status = ord.status;
                             saveIsolatedData();
@@ -1384,6 +1406,27 @@
                 const updates = {};
                 updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                 updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
+                
+                if (linkedId) {
+                    updates[`orders/${linkedId}/Cap_Name`] = capName || (currentTargetCaptain ? (currentTargetCaptain.Cap_Name || currentTargetCaptain.name) : '');
+                    updates[`orders/${linkedId}/Cap_Phone`] = phone;
+                    if (currentTargetCaptain) {
+                        updates[`orders/${linkedId}/Cap_CarType`] = currentTargetCaptain.Cap_CarType || currentTargetCaptain.Cap_Car || '';
+                        updates[`orders/${linkedId}/Cap_CarCode`] = currentTargetCaptain.Cap_CarCode || '';
+                    }
+                    updates[`orders/${linkedId}/Cap_Commission`] = commission;
+                    updates[`orders/${linkedId}/OrderStatus`] = 'accepted';
+                    updates[`orders/${linkedId}/FinancialStatus`] = 'confirmed';
+                }
+
+                await update(ref(db), updates);
+            } else if (linkedId) {
+                const updates = {};
+                updates[`orders/${linkedId}/Cap_Name`] = capName || '';
+                updates[`orders/${linkedId}/Cap_Phone`] = phone;
+                updates[`orders/${linkedId}/Cap_Commission`] = commission;
+                updates[`orders/${linkedId}/OrderStatus`] = 'accepted';
+                updates[`orders/${linkedId}/FinancialStatus`] = 'confirmed';
                 await update(ref(db), updates);
             }
 
