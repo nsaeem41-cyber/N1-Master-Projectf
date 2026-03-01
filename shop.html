@@ -188,14 +188,14 @@
         .check-info { font-size: 14px; color: #064e3b; margin-bottom: 5px; }
         .check-balance { font-size: 18px; font-weight: 900; color: var(--success); }
 
-        .history-list { margin-top: 10px; max-height: 400px; overflow-y: auto; }
+        .history-list { margin-top: 10px; max-height: 250px; overflow-y: auto; }
         .history-item {
-            display: flex; flex-direction: column; align-items: flex-start;
+            display: flex; justify-content: space-between; align-items: center;
             padding: 15px; border-bottom: 1px solid #f1f5f9;
         }
         .history-item:last-child { border-bottom: none; }
         .h-dest { font-weight: bold; color: var(--primary); font-size: 14px; }
-        .h-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .h-time { font-size: 11px; color: #94a3b8; }
         .h-price { font-weight: 900; color: var(--gold); }
 
         .toast {
@@ -892,22 +892,8 @@
             }
         }
 
-        window.cancelOrder = function(orderId) {
-            showCustomConfirm("هل تود فعلا إلغاء هذا الطلب بشكل نهائي", async () => {
-                try {
-                    await update(ref(db, `orders/${orderId}`), {
-                        Shop_Status: 'cancelled'
-                    });
-                    showToast("تم إلغاء الطلب بنجاح");
-                } catch (e) {
-                    showToast("تعذر إلغاء الطلب يرجى المحاولة لاحقا");
-                }
-            });
-        };
-
         function setupLiveOrders() {
             const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
-            const myMaster = currentUser.Client_Master || currentUser.master || "الإدارة العامة";
             const ordersRef = ref(db, 'orders');
             
             onValue(ordersRef, (snapshot) => {
@@ -916,7 +902,7 @@
                 
                 if(snapshot.exists()) {
                     const allOrders = Object.values(snapshot.val());
-                    const myOrders = allOrders.filter(o => o.Shop_User === myUser && o.Master_ID === myMaster);
+                    const myOrders = allOrders.filter(o => o.Shop_User === myUser);
                     
                     const todayStr = new Date().toDateString();
                     const todayCount = myOrders.filter(o => new Date(o.Shop_Date || Date.now()).toDateString() === todayStr).length;
@@ -929,39 +915,15 @@
                     if(recentOrders.length === 0) {
                         list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
                     } else {
-                        const statusMap = {
-                            'new': { text: 'قيد الانتظار', color: '#f59e0b' },
-                            'accepted': { text: 'تم الاستلام', color: '#3b82f6' },
-                            'picked_up': { text: 'في الطريق', color: '#8b5cf6' },
-                            'on_way': { text: 'في الطريق', color: '#8b5cf6' },
-                            'arrived': { text: 'الكابتن بالانتظار', color: '#ec4899' },
-                            'delivered': { text: 'تم التوصيل', color: '#10b981' },
-                            'cancelled': { text: 'ملغي', color: '#ef4444' }
-                        };
-
                         recentOrders.forEach(item => {
                             const timeStr = new Date(item.Shop_Date || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            const currentStatus = item.Shop_Status || 'new';
-                            const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8' };
-                            
-                            let cancelBtnHtml = '';
-                            if(currentStatus === 'new') {
-                                cancelBtnHtml = `<button onclick="cancelOrder('${item.Shop_Ord_ID}')" style="background:#fee2e2; color:#ef4444; border:1px solid #fca5a5; padding:6px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:8px; width:100%; transition:0.3s;">إلغاء الطلب ❌</button>`;
-                            }
-
                             list.innerHTML += `
                                 <div class="history-item">
-                                    <div style="display:flex; justify-content:space-between; width:100%;">
-                                        <div>
-                                            <div class="h-dest">📍 ${item.Shop_Pickup}</div>
-                                            <div class="h-time">🕐 ${timeStr}</div>
-                                        </div>
-                                        <div style="text-align:left;">
-                                            <div class="h-price">${item.Shop_Val} د.أ</div>
-                                            <div style="color:${statusInfo.color}; font-size:12px; font-weight:bold; margin-top:4px;">${statusInfo.text}</div>
-                                        </div>
+                                    <div>
+                                        <div class="h-dest">📍 ${item.Shop_Pickup}</div>
+                                        <div class="h-time">🕐 ${timeStr}</div>
                                     </div>
-                                    ${cancelBtnHtml}
+                                    <div class="h-price">${item.Shop_Val} د.أ</div>
                                 </div>
                             `;
                         });
@@ -1117,7 +1079,6 @@
             const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone;
             const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name;
             const hiddenLocationLink = currentUser.Shop_Location || currentUser.Client_Location || currentUser.pickup || "";
-            const myMaster = currentUser.Client_Master || currentUser.master || "الإدارة العامة";
 
             const orderId = "SHOP_ORD_" + Date.now();
             const orderData = {
@@ -1131,8 +1092,7 @@
                 Shop_Fee: fee,
                 Shop_Date: new Date().toISOString(),
                 Shop_IsEmergency: "false", 
-                Shop_Status: "new",
-                Master_ID: myMaster
+                Shop_Status: "new"
             };
 
             try {
@@ -1181,11 +1141,11 @@
                     addWithNode(data.captains, 'captains');
 
                     const cap = flatData.find(c => 
-                        (String(c.Cap_User || "").trim() === capId || 
+                        String(c.Cap_User || "").trim() === capId || 
                         String(c.user || "").trim() === capId || 
                         String(c.Cap_Phone || "").trim() === capId || 
                         String(c.Client_Phone || "").trim() === capId || 
-                        String(c.phone || "").trim() === capId)
+                        String(c.phone || "").trim() === capId
                     );
                     
                     if (!cap) {
@@ -1297,7 +1257,7 @@
         }
 
         window.logout = function() {
-            showCustomConfirm("تأكيد تسجيل الخروج من البوابة", () => {
+            showCustomConfirm("تأكيد تسجيل الخروج من البوابة؟", () => {
                 localStorage.removeItem('n1_shop_session');
                 window.location.reload(); 
             });
