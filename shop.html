@@ -902,7 +902,8 @@
             showCustomConfirm("هل تود فعلا إلغاء هذا الطلب بشكل نهائي", async () => {
                 try {
                     await update(ref(db, `orders/${orderId}`), {
-                        Shop_Status: 'cancelled'
+                        Shop_Status: 'cancelled',
+                        OrderStatus: 'cancelled'
                     });
                     showToast("تم إلغاء الطلب بنجاح");
                 } catch (e) {
@@ -947,7 +948,9 @@
 
                         recentOrders.forEach(item => {
                             const timeStr = new Date(item.Shop_Date || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            const currentStatus = item.Shop_Status || 'new';
+                            
+                            // توحيد قراءة الحالة لتتوافق مع تعديلات الكابتن
+                            const currentStatus = item.OrderStatus || item.Shop_Status || 'new';
                             const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8' };
                             
                             if (orderStatesHistory[item.Shop_Ord_ID] && orderStatesHistory[item.Shop_Ord_ID] !== currentStatus) {
@@ -1158,6 +1161,7 @@
                 Shop_Date: new Date().toISOString(),
                 Shop_IsEmergency: "false", 
                 Shop_Status: "new",
+                OrderStatus: "new",
                 Master_ID: myMaster
             };
 
