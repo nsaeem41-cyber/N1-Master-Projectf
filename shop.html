@@ -153,6 +153,12 @@
         }
         input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
         input[readonly] { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+        textarea {
+            width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
+            font-size: 15px; background: var(--input-bg); outline: none; transition: 0.3s;
+            color: var(--primary); font-weight: 700; box-sizing: border-box; font-family: inherit; resize: vertical;
+        }
+        textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
 
         .night-fee-badge {
             display: none; background: var(--night); color: white;
@@ -196,7 +202,6 @@
         .history-item:last-child { border-bottom: none; }
         .h-dest { font-weight: bold; color: var(--primary); font-size: 14px; }
         .h-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
-        .h-price { font-weight: 900; color: var(--gold); }
         
         .btn-call-cap {
             background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
@@ -214,9 +219,14 @@
             max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
             border-top: 6px solid var(--info); animation: slideUp 0.4s ease-out;
         }
-        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 20px 0; direction: ltr; }
+        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
         .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
         .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
+        .rating-feedback { display: none; margin-top: 15px; text-align: right; }
+        .rating-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .quick-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        .tag { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; color: var(--text-light); transition: 0.3s; }
+        .tag.active { background: var(--info); color: white; border-color: var(--info); }
         
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -355,8 +365,9 @@
 
     <div id="rating-modal" class="custom-dialog-overlay">
         <div class="rating-modal-box">
-            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">تقييم الكابتن 💎</div>
-            <div style="font-size: 13px; color: #64748b;">كيف كان أداء الكابتن في هذا الطلب؟</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px;">تقييم الكابتن 💎</div>
+            <div id="rating_title_desc" style="font-size: 13px; color: #64748b; font-weight: bold;">كيف كان أداء الكابتن في هذا الطلب؟</div>
+            
             <div class="gems-container" id="gems-container">
                 <span class="gem" onclick="setRating(1)">💎</span>
                 <span class="gem" onclick="setRating(2)">💎</span>
@@ -364,9 +375,19 @@
                 <span class="gem" onclick="setRating(4)">💎</span>
                 <span class="gem" onclick="setRating(5)">💎</span>
             </div>
+            
+            <div id="rating-feedback" class="rating-feedback">
+                <div id="dynamic-question" class="rating-title">ما هي المشكلة التي واجهتك؟</div>
+                <div class="quick-tags" id="quick-tags">
+                    </div>
+                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+            </div>
+
             <input type="hidden" id="current_rating_val" value="0">
             <input type="hidden" id="rating_cap_id" value="">
-            <button class="btn-main btn-send" style="background: var(--info); color: white;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <input type="hidden" id="selected_tag" value="">
+            
+            <button class="btn-main btn-send" style="background: var(--info); color: white; margin-top: 15px;" onclick="submitRating()">إرسال التقييم 🚀</button>
             <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px;" onclick="closeRatingModal()">تخطي</button>
         </div>
     </div>
@@ -660,11 +681,15 @@
             confirmCallback = null;
         };
         
-        // نظام التقييم
+        // نظام التقييم الألماسي الذكي
         window.openRatingModal = function(capId) {
             document.getElementById('rating_cap_id').value = capId;
             document.getElementById('current_rating_val').value = "0";
+            document.getElementById('selected_tag').value = "";
+            document.getElementById('rating_notes').value = "";
             document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
+            document.getElementById('rating-feedback').style.display = 'none';
+            document.getElementById('rating_title_desc').innerText = "كيف كان أداء الكابتن في هذا الطلب؟";
             document.getElementById('rating-modal').style.display = 'flex';
         };
         
@@ -679,6 +704,67 @@
                 if(index < val) g.classList.add('active');
                 else g.classList.remove('active');
             });
+            
+            const feedbackSection = document.getElementById('rating-feedback');
+            const question = document.getElementById('dynamic-question');
+            const tagsContainer = document.getElementById('quick-tags');
+            const desc = document.getElementById('rating_title_desc');
+            
+            feedbackSection.style.display = 'block';
+            document.getElementById('selected_tag').value = "";
+            
+            if (val === 1) {
+                desc.innerText = "ضعيف جداً ⚠️";
+                desc.style.color = "var(--danger)";
+                question.innerText = "نأسف لسماع ذلك، ما هي المشكلة؟";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تأخير كبير</span>
+                    <span class="tag" onclick="selectTag(this)">أسلوب غير لائق</span>
+                    <span class="tag" onclick="selectTag(this)">لم يستلم الطلب</span>
+                    <span class="tag" onclick="selectTag(this)">الطلب تضرر</span>
+                `;
+            } else if (val === 2) {
+                desc.innerText = "سيء 😟";
+                desc.style.color = "#d97706";
+                question.innerText = "ما الذي أزعجك في أداء الكابتن؟";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">بطء في الوصول</span>
+                    <span class="tag" onclick="selectTag(this)">عدم الرد على الهاتف</span>
+                    <span class="tag" onclick="selectTag(this)">تصرفات غير مهنية</span>
+                `;
+            } else if (val === 3) {
+                desc.innerText = "متوسط - نص نص 😐";
+                desc.style.color = "#8b5cf6";
+                question.innerText = "كيف يمكن للكابتن التحسن؟";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">السرعة</span>
+                    <span class="tag" onclick="selectTag(this)">التعامل</span>
+                    <span class="tag" onclick="selectTag(this)">الاهتمام بالطلب</span>
+                `;
+            } else if (val === 4) {
+                desc.innerText = "جيد جداً 🙂";
+                desc.style.color = "var(--info)";
+                question.innerText = "هل هناك ملاحظة بسيطة؟";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">كل شيء جيد</span>
+                    <span class="tag" onclick="selectTag(this)">أسرع قليلاً المرة القادمة</span>
+                `;
+            } else if (val === 5) {
+                desc.innerText = "ألماسي ممتاز 🌟";
+                desc.style.color = "var(--success)";
+                question.innerText = "شكراً لتعاونكم مع أبطالنا";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">سريع جداً</span>
+                    <span class="tag" onclick="selectTag(this)">أسلوب راقي</span>
+                    <span class="tag" onclick="selectTag(this)">كابتن بطل</span>
+                `;
+            }
+        };
+
+        window.selectTag = function(element) {
+            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('selected_tag').value = element.innerText;
         };
     </script>
 
@@ -1068,10 +1154,11 @@
                             if (currentStatus !== 'new' && currentStatus !== 'cancelled' && item.Cap_Name) {
                                 capDetailsHtml = `
                                     <div style="background:#f8fafc; padding:10px; border-radius:12px; margin-top:10px; border:1px solid #e2e8f0; width:100%;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
                                             <div style="font-size:13px; font-weight:bold; color:var(--primary);">👤 ${item.Cap_Name}</div>
                                             <div style="display:flex; align-items:center;">${phoneHtml}</div>
                                         </div>
+                                        <div style="font-size:11px; color:#64748b;">نوع المركبة</div>
                                         <div style="font-size:12px; font-weight:bold; color:var(--info);">🚗 ${item.Cap_CarType || 'مركبة'} - الترميز: ${item.Cap_CarCode || '-'}</div>
                                     </div>
                                 `;
@@ -1088,10 +1175,13 @@
                                         <div>
                                             <div class="h-dest">📍 ${item.Shop_Pickup}</div>
                                             <div class="h-time">🕐 ${timeStr}</div>
-                                        </div>
-                                        <div style="text-align:left;">
-                                            <div class="h-price">${item.Shop_Val} د.أ</div>
                                             <div style="color:${statusInfo.color}; font-size:12px; font-weight:bold; margin-top:4px;">${statusInfo.text}</div>
+                                        </div>
+                                        <div style="text-align:left; background:#f8fafc; padding:8px 12px; border-radius:12px; border:1px solid #e2e8f0;">
+                                            <div style="font-size:10px; color:#64748b; margin-bottom:2px;">تكلفة الطلب</div>
+                                            <div style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:5px;">${item.Shop_Val} د.أ</div>
+                                            <div style="font-size:10px; color:#64748b; margin-bottom:2px;">قيمة التوصيل</div>
+                                            <div style="font-size:13px; font-weight:900; color:var(--success);">${item.Shop_Fee || item.fee || '0.00'} د.أ</div>
                                         </div>
                                     </div>
                                     ${capDetailsHtml}
@@ -1111,6 +1201,8 @@
         window.submitRating = async function() {
             const val = parseInt(document.getElementById('current_rating_val').value);
             const capId = document.getElementById('rating_cap_id').value;
+            const selectedTag = document.getElementById('selected_tag').value;
+            const notes = document.getElementById('rating_notes').value.trim();
             
             if(val === 0) {
                 window.showToast("الرجاء اختيار التقييم أولاً");
@@ -1123,6 +1215,8 @@
                 await set(newRatingRef, {
                     shopId: shopKey,
                     rating: val,
+                    reason: selectedTag,
+                    notes: notes,
                     timestamp: Date.now()
                 });
                 
