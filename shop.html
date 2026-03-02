@@ -197,7 +197,27 @@
         .h-dest { font-weight: bold; color: var(--primary); font-size: 14px; }
         .h-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
         .h-price { font-weight: 900; color: var(--gold); }
+        
+        .btn-call-cap {
+            background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
+            width: 30px; height: 30px; border-radius: 50%; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            text-decoration: none; transition: 0.3s; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
+            flex-shrink: 0; margin-right: 5px;
+        }
+        .btn-call-cap:hover { transform: scale(1.1); background: #d1fae5; }
+        .hidden-phone-badge { font-size: 10px; color: var(--danger); background: #fef2f2; padding: 2px 6px; border-radius: 8px; border: 1px solid #fecaca; margin-right: 5px;}
 
+        /* نافذة تقييم الجواهر للمنشأة */
+        .rating-modal-box {
+            background: white; padding: 30px; border-radius: 20px; text-align: center; 
+            max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+            border-top: 6px solid var(--info); animation: slideUp 0.4s ease-out;
+        }
+        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 20px 0; direction: ltr; }
+        .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
+        .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
+        
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: var(--primary); color: white; padding: 12px 30px; border-radius: 30px;
@@ -330,6 +350,24 @@
                 <button class="btn-dialog btn-dialog-ok" onclick="executeAppConfirm()">تأكيد ✅</button>
                 <button class="btn-dialog btn-dialog-cancel" onclick="closeAppConfirm()">إلغاء ❌</button>
             </div>
+        </div>
+    </div>
+
+    <div id="rating-modal" class="custom-dialog-overlay">
+        <div class="rating-modal-box">
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">تقييم الكابتن 💎</div>
+            <div style="font-size: 13px; color: #64748b;">كيف كان أداء الكابتن في هذا الطلب؟</div>
+            <div class="gems-container" id="gems-container">
+                <span class="gem" onclick="setRating(1)">💎</span>
+                <span class="gem" onclick="setRating(2)">💎</span>
+                <span class="gem" onclick="setRating(3)">💎</span>
+                <span class="gem" onclick="setRating(4)">💎</span>
+                <span class="gem" onclick="setRating(5)">💎</span>
+            </div>
+            <input type="hidden" id="current_rating_val" value="0">
+            <input type="hidden" id="rating_cap_id" value="">
+            <button class="btn-main btn-send" style="background: var(--info); color: white;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px;" onclick="closeRatingModal()">تخطي</button>
         </div>
     </div>
 
@@ -621,11 +659,32 @@
             if(confirmCallback) confirmCallback();
             confirmCallback = null;
         };
+        
+        // نظام التقييم
+        window.openRatingModal = function(capId) {
+            document.getElementById('rating_cap_id').value = capId;
+            document.getElementById('current_rating_val').value = "0";
+            document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
+            document.getElementById('rating-modal').style.display = 'flex';
+        };
+        
+        window.closeRatingModal = function() {
+            document.getElementById('rating-modal').style.display = 'none';
+        };
+        
+        window.setRating = function(val) {
+            document.getElementById('current_rating_val').value = val;
+            const gems = document.querySelectorAll('.gem');
+            gems.forEach((g, index) => {
+                if(index < val) g.classList.add('active');
+                else g.classList.remove('active');
+            });
+        };
     </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, get, set, child, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, set, child, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -648,12 +707,15 @@
         let verifiedCaptain = null;
         let masterName = "الإدارة العامة";
         window.myNode = 'shops'; 
+        
+        let systemSettings = { show_phone_numbers: false };
 
         const snd_accept = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
         const snd_pickup = new Audio('https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3');
         const snd_arrive = new Audio('https://assets.mixkit.co/active_storage/sfx/2868/2868-preview.mp3');
         const snd_deliver = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         let orderStatesHistory = {};
+        let askedToRate = {};
 
         window.onload = async function() {
             const savedUser = localStorage.getItem('n1_shop_session');
@@ -764,7 +826,8 @@
                     role: "shop",
                     type: "shop",
                     status: "pending",
-                    requestDate: new Date().toISOString()
+                    requestDate: new Date().toISOString(),
+                    hide_phone: false 
                 };
 
                 await set(ref(db, `shops/${user}`), newShop);
@@ -801,9 +864,31 @@
             
             fetchMasterInfo();
             setupAdsAndAlerts();
+            listenToSystemSettings();
             setupLiveOrders();
             await fetchAllData(); 
             attachBalanceListener();
+        }
+
+        function listenToSystemSettings() {
+            const masterId = currentUser.Client_Master || currentUser.master || "الإدارة العامة";
+            
+            if (masterId) {
+                onValue(ref(db, `settings/${masterId}/show_phone_numbers`), (snap) => {
+                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
+                });
+            } else {
+                onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => {
+                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
+                });
+            }
+            
+            const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+            onValue(ref(db, `${window.myNode}/${shopKey}/hide_phone`), (snap) => {
+                if(snap.exists()) {
+                    currentUser.hide_phone = snap.val();
+                }
+            });
         }
 
         function fetchMasterInfo() {
@@ -948,8 +1033,6 @@
 
                         recentOrders.forEach(item => {
                             const timeStr = new Date(item.Shop_Date || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            
-                            // توحيد قراءة الحالة لتتوافق مع تعديلات الكابتن
                             const currentStatus = item.OrderStatus || item.Shop_Status || 'new';
                             const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8' };
                             
@@ -957,16 +1040,38 @@
                                 if (currentStatus === 'accepted') { snd_accept.play().catch(e=>{}); showToast('كابتن بطل وافق على الطلب'); }
                                 if (currentStatus === 'picked_up') { snd_pickup.play().catch(e=>{}); showToast('الكابتن استلم الطلب وطلع'); }
                                 if (currentStatus === 'arrived') { snd_arrive.play().catch(e=>{}); showToast('الكابتن وصل عند العميل'); }
-                                if (currentStatus === 'delivered') { snd_deliver.play().catch(e=>{}); showToast('تم تسليم الطلب بنجاح وقبضنا'); }
+                                if (currentStatus === 'delivered') { 
+                                    snd_deliver.play().catch(e=>{}); 
+                                    showToast('تم تسليم الطلب بنجاح وقبضنا'); 
+                                    
+                                    // إظهار نافذة التقييم إذا لم يتم التقييم مسبقاً
+                                    if(!askedToRate[item.Shop_Ord_ID] && item.Cap_Phone) {
+                                        setTimeout(() => { openRatingModal(item.Cap_Phone); }, 1500);
+                                        askedToRate[item.Shop_Ord_ID] = true;
+                                    }
+                                }
                             }
                             orderStatesHistory[item.Shop_Ord_ID] = currentStatus;
+
+                            // تطبيق ريموت إخفاء الأرقام
+                            let isPhoneHidden = currentUser.hide_phone === true || !systemSettings.show_phone_numbers;
+                            let phoneHtml = '';
+                            if (item.Cap_Phone) {
+                                if (isPhoneHidden) {
+                                    phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
+                                } else {
+                                    phoneHtml = `<a href="tel:${item.Cap_Phone}" class="btn-call-cap" title="اتصال بالكابتن">📞</a><span style="direction:ltr; text-align:right; font-size:12px; color:var(--text-main);">${item.Cap_Phone}</span>`;
+                                }
+                            }
 
                             let capDetailsHtml = '';
                             if (currentStatus !== 'new' && currentStatus !== 'cancelled' && item.Cap_Name) {
                                 capDetailsHtml = `
                                     <div style="background:#f8fafc; padding:10px; border-radius:12px; margin-top:10px; border:1px solid #e2e8f0; width:100%;">
-                                        <div style="font-size:13px; font-weight:bold; color:var(--primary); margin-bottom:4px;">👤 ${item.Cap_Name}</div>
-                                        <div style="font-size:12px; color:var(--text-main); margin-bottom:4px; direction:ltr; text-align:right;">📱 ${item.Cap_Phone || 'غير متوفر'}</div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                            <div style="font-size:13px; font-weight:bold; color:var(--primary);">👤 ${item.Cap_Name}</div>
+                                            <div style="display:flex; align-items:center;">${phoneHtml}</div>
+                                        </div>
                                         <div style="font-size:12px; font-weight:bold; color:var(--info);">🚗 ${item.Cap_CarType || 'مركبة'} - الترميز: ${item.Cap_CarCode || '-'}</div>
                                     </div>
                                 `;
@@ -1002,6 +1107,32 @@
                 }
             });
         }
+
+        window.submitRating = async function() {
+            const val = parseInt(document.getElementById('current_rating_val').value);
+            const capId = document.getElementById('rating_cap_id').value;
+            
+            if(val === 0) {
+                window.showToast("الرجاء اختيار التقييم أولاً");
+                return;
+            }
+            
+            try {
+                const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+                const newRatingRef = push(ref(db, `ratings/captains/${capId}`));
+                await set(newRatingRef, {
+                    shopId: shopKey,
+                    rating: val,
+                    timestamp: Date.now()
+                });
+                
+                window.showToast("شكراً لتقييمك! 💎");
+                closeRatingModal();
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء إرسال التقييم");
+                closeRatingModal();
+            }
+        };
 
         window.fetchAllData = async function() {
             try {
@@ -1162,7 +1293,8 @@
                 Shop_IsEmergency: "false", 
                 Shop_Status: "new",
                 OrderStatus: "new",
-                Master_ID: myMaster
+                Master_ID: myMaster,
+                shop_phone: currentUser.Shop_Phone || currentUser.phone || ''
             };
 
             try {
