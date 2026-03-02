@@ -443,22 +443,6 @@
         }
         .btn-install-app:active { transform: scale(0.95); }
         .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
-        
-        /* تنسيق الأماكن الحرارية */
-        .hotspot-tag {
-            display: inline-block;
-            background: #fff0f2;
-            color: var(--danger);
-            border: 1px solid #ffccd5;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            margin: 4px;
-            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2);
-            animation: pulseAlert 2s infinite;
-        }
-
     </style>
 </head>
 <body id="app-body">
@@ -512,11 +496,7 @@
             <img src="logo.jpg" alt="Captain Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Captain'">
             <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
             <p class="pwa-text">للحصول على تجربة أسرع ولضمان وصول الطلبات والتحديثات فوراً حمّل تطبيق الكابتن الرسمي الآن</p>
-            
-            <a href="https://nsaeem41-cyber.github.io/N1-Master-Projectf/captain.html" style="text-decoration: none; display: block; width: 100%;">
-                <button id="btn-install-app" class="btn-install-app">انضم إلى أسطول N One 🚀</button>
-            </a>
-            
+            <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق الآن 🚀</button>
             <button id="btn-continue-app" class="btn-continue-app">المتابعة من المتصفح</button>
         </div>
     </div>
@@ -769,7 +749,7 @@
                 }
                 deferredPrompt = null;
             } else {
-                // إذا لم يكن PWA مدعوماً، سيتم فتح الرابط بشكل طبيعي
+                window.showToast('يرجى الضغط على القائمة واختيار إضافة إلى الشاشة الرئيسية لتثبيت التطبيق', true);
             }
         });
 
@@ -1107,10 +1087,6 @@
             if ('Notification' in window && Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
-            
-            // --- دالة تصفير العداد التلقائية الساعة 12 بالليل ---
-            checkAndResetDailyCounter();
-
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
                 checkSession();
@@ -1123,34 +1099,6 @@
                 }
             }, { once: true });
         };
-
-        // --- وظيفة تصفير الإنجازات اليومية ---
-        function checkAndResetDailyCounter() {
-            const now = new Date();
-            const resetTime = new Date();
-            resetTime.setHours(0, 0, 0, 0); // ضبط الوقت على منتصف الليل
-
-            // إذا كان الوقت الحالي قد تجاوز منتصف الليل اليوم
-            // نحتاج لحساب الوقت المتبقي لمنتصف الليل القادم
-            if (now > resetTime) {
-                resetTime.setDate(resetTime.getDate() + 1);
-            }
-
-            const timeUntilReset = resetTime.getTime() - now.getTime();
-
-            // ضبط مؤقت لتصفير العداد عندما يحين منتصف الليل
-            setTimeout(() => {
-                // تصفير العداد المرئي
-                const todayCountEl = document.getElementById('ui_today_count');
-                if(todayCountEl) todayCountEl.innerText = '0';
-                
-                // تفريغ المصفوفة الداخلية
-                allCompletedOrders = [];
-
-                // إعادة تشغيل المؤقت لليوم التالي
-                checkAndResetDailyCounter();
-            }, timeUntilReset);
-        }
 
         window.testNotification = function() {
             const audio = document.getElementById('order-ringtone');
@@ -1800,42 +1748,15 @@
                 }
             });
 
-            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
                 const globalOrdersRef = ref(db, 'orders');
                 onValue(globalOrdersRef, (snapshot) => {
                     if (snapshot.exists()) {
-                        const allOrders = snapshot.val();
-                        const areaCounts = {};
-                        
-                        // نجمع الطلبات حسب المنطقة
-                        for(let key in allOrders) {
-                            const ord = allOrders[key];
-                            // نفترض أن المنطقة مسجلة في OrderArea أو Shop_Area
-                            const area = ord.OrderArea || ord.Shop_Area; 
-                            if(area) {
-                                areaCounts[area] = (areaCounts[area] || 0) + 1;
-                            }
-                        }
-
-                        // ترتيب المناطق حسب عدد الطلبات (الأكثر سخونة)
-                        const sortedAreas = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
-                        
-                        const hotspotsContainer = document.getElementById('ui_hotspots');
-                        hotspotsContainer.innerHTML = ''; // تفريغ الحاوية
-
-                        if(sortedAreas.length > 0) {
-                            // عرض أعلى 3 مناطق ساخنة
-                            sortedAreas.slice(0, 3).forEach(areaName => {
-                                hotspotsContainer.innerHTML += `<div class="hotspot-tag">${areaName} 🔥</div>`;
-                            });
-                        } else {
-                            const txt = currentLang === 'ar' ? 'لا يوجد طلبات حالياً' : 'No Active Hotspots';
-                            hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${txt}</div>`;
-                        }
-                    } else {
-                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد طلبات حالياً</div>`;
+                        const txt = currentLang === 'ar' ? 'النقاط الساخنة <span>🔥 مفعّلة</span>' : 'Hotspots <span>🔥 Active</span>';
+                        document.getElementById('ui_hotspots').innerHTML = `
+                            <div class="hotspot-tag">${txt}</div>
+                        `;
                     }
                 });
             }
