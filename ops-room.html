@@ -118,6 +118,7 @@
         .bg-money { background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; }
         .bg-fee { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
         .bg-phone { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; font-family: monospace; }
+        .bg-rating { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
 
         /* فورم الإدخال المنسق والمدمج */
         .manual-form { padding: 20px; }
@@ -205,6 +206,19 @@
         .toast-content { display: flex; flex-direction: column; text-align: right; width: 100%; }
         .toast-title { font-size: 13px; font-weight: 900; color: #94a3b8; margin-bottom: 4px; }
         .toast-message { font-size: 15px; font-weight: bold; line-height: 1.4; }
+
+        /* مفتاح تحكم الريموت */
+        .remote-switch-container {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        .remote-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .remote-switch input { opacity: 0; width: 0; height: 0; }
+        .remote-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .remote-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .remote-switch input:checked + .remote-slider { background-color: var(--success); }
+        .remote-switch input:checked + .remote-slider:before { transform: translateX(22px); }
 
     </style>
 </head>
@@ -413,6 +427,7 @@
                         <thead>
                             <tr>
                                 <th>الاسم</th>
+                                <th>التقييم 💎</th>
                                 <th>الهاتف</th>
                                 <th>بيانات الدخول</th>
                                 <th>المنطقة</th>
@@ -423,7 +438,7 @@
                             </tr>
                         </thead>
                         <tbody id="captains-log-body">
-                            <tr><td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">جاري تحميل البيانات</td></tr>
+                            <tr><td colspan="9" style="text-align:center; padding:20px; color:#94a3b8;">جاري تحميل البيانات</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -436,6 +451,20 @@
                 <div style="font-size:12px; opacity:0.8;">إجمالي تحصيل عمولات اليوم</div>
                 <div style="font-size:28px; font-weight:900; margin:10px 0;" id="side-total-comm">0.00</div>
                 <div style="font-size:11px;">N One Diamond System 👑</div>
+            </div>
+
+            <div class="card" style="padding: 15px;">
+                <div style="font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 10px;">🛡️ ريموت الحماية وإخفاء الأرقام</div>
+                <div class="remote-switch-container">
+                    <div>
+                        <div style="font-size: 13px; font-weight: bold; color: var(--primary);">إظهار أرقام الهواتف</div>
+                        <div style="font-size: 10px; color: var(--text-light);">يتحكم في ظهور أرقام الكباتن للمنشآت والعكس</div>
+                    </div>
+                    <label class="remote-switch">
+                        <input type="checkbox" id="global_phone_toggle" onchange="toggleGlobalPhones()">
+                        <span class="remote-slider"></span>
+                    </label>
+                </div>
             </div>
 
             <div class="card">
@@ -526,6 +555,15 @@
                     <label>اسم الشركة المرجعي</label>
                     <input type="text" id="edit_cap_company">
                 </div>
+                
+                <div class="form-group full-width" style="background:#fef2f2; padding:10px; border-radius:10px; border:1px solid #fecaca; margin-top:10px;">
+                    <label style="color:var(--danger); display:flex; justify-content:space-between; margin:0;">
+                        <span>حجب رقم هذا الكابتن 🛡️</span>
+                        <input type="checkbox" id="edit_cap_hide_phone" style="width:20px; height:20px;">
+                    </label>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:5px;">سيتم إخفاء رقمه عن المنشآت حتى لو كان المسموح عاماً إظهار الأرقام.</div>
+                </div>
+
             </div>
             <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
         </div>
@@ -553,6 +591,7 @@
         let allOrders = [];
         let globalUsers = [];
         let allAssignedOrders = {};
+        let captainRatings = {}; 
         
         let processedAppOrders = [];
         let completedOrders = [];
@@ -644,6 +683,7 @@
             fetchAssignedOrders();
             fetchLiveOrders();
             fetchGlobalUsers();
+            fetchRatings();
             renderCompletedOrders();
             setupRealtimeFreezeListener();
             setInterval(refreshDynamicElements, 1000);
@@ -652,6 +692,28 @@
         function fetchRadarMemory() {
             onValue(ref(db, 'radar_memory'), (snapshot) => {
                 radarMemory = snapshot.exists() ? snapshot.val() : {};
+            });
+        }
+        
+        function fetchRatings() {
+            onValue(ref(db, 'ratings/captains'), (snapshot) => {
+                if(snapshot.exists()) {
+                    const data = snapshot.val();
+                    captainRatings = {};
+                    
+                    for(let capPhone in data) {
+                        let total = 0;
+                        let count = 0;
+                        for(let ratingKey in data[capPhone]) {
+                            total += parseInt(data[capPhone][ratingKey].rating || 0);
+                            count++;
+                        }
+                        if(count > 0) {
+                            captainRatings[capPhone] = (total / count).toFixed(1);
+                        }
+                    }
+                    renderCaptainsList(); 
+                }
             });
         }
 
@@ -679,7 +741,19 @@
                     btn.innerHTML = '🚀 تفعيل الرادار';
                 }
             });
+            
+            onValue(ref(db, `settings/${myMaster}/show_phone_numbers`), (snapshot) => {
+                const isShowing = snapshot.exists() ? snapshot.val() : false;
+                document.getElementById('global_phone_toggle').checked = isShowing;
+            });
         }
+
+        window.toggleGlobalPhones = async function() {
+            const isShowing = document.getElementById('global_phone_toggle').checked;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            await set(ref(db, `settings/${myMaster}/show_phone_numbers`), isShowing);
+            showAppNotification(isShowing ? "تم تفعيل إظهار الأرقام للجميع" : "تم حجب الأرقام عن الجميع", "success");
+        };
 
         function fetchAssignedOrders() {
             onValue(ref(db, 'assigned_orders'), (snapshot) => {
@@ -1630,7 +1704,8 @@
                 Client_Master: activeCompanyName, 
                 app_sync_lock: false,
                 app_access: "granted",
-                app_status: "offline" 
+                app_status: "offline",
+                hide_phone: false
             };
             
             await set(ref(db, 'captains/' + user), capData);
@@ -1733,13 +1808,14 @@
 
             if (displayCaptains.length === 0) {
                 const msg = currentCaptainsFilter === 'active' ? 'لا يوجد كباتن مفعلين' : 'لا توجد طلبات انتظار جديدة';
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#94a3b8;">${msg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#94a3b8;">${msg}</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = '';
             displayCaptains.forEach(cap => {
                 const capKey = cap.Cap_User || cap.user;
+                const phoneKey = cap.Cap_Phone || cap.phone;
                 
                 if (currentCaptainsFilter === 'active') {
                     const bal = parseFloat(cap.Cap_Balance || cap.balance || 0).toFixed(2);
@@ -1747,9 +1823,13 @@
                     const statusBadge = isPaused ? '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ❄️</span>' : '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>';
                     const toggleBtn = isPaused ? `<button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="toggleCapStatus('${capKey}', 'active')" title="تفعيل">▶️</button>` : `<button class="mini-circle-btn" style="background:#78909c; color:white;" onclick="toggleCapStatus('${capKey}', 'paused')" title="إيقاف">❄️</button>`;
 
+                    const ratingVal = captainRatings[phoneKey] || "جديد";
+                    const ratingHtml = ratingVal === "جديد" ? `<span style="font-size:11px; color:#94a3b8;">جديد</span>` : `<span class="badge bg-rating">💎 ${ratingVal}</span>`;
+
                     tbody.innerHTML += `
                         <tr>
                             <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
+                            <td>${ratingHtml}</td>
                             <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
                             <td>
                                 <div style="font-size:11px; color:var(--primary); font-weight:bold;">U ${capKey || '---'}</div>
@@ -1773,6 +1853,7 @@
                     tbody.innerHTML += `
                         <tr style="background: #f8fafc;">
                             <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
+                            <td><span style="font-size:11px; color:#94a3b8;">جديد</span></td>
                             <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
                             <td>
                                 <div style="font-size:11px; color:var(--primary); font-weight:bold;">U ${capKey || '---'}</div>
@@ -1839,6 +1920,7 @@
                 document.getElementById('edit_cap_user').value = userKey;
                 document.getElementById('edit_cap_pass').value = cap.Cap_Pass || cap.password || cap.pass || '';
                 document.getElementById('edit_cap_company').value = cap.Company_ID || cap.company || cap.Client_Master || '';
+                document.getElementById('edit_cap_hide_phone').checked = cap.hide_phone === true;
                 
                 document.getElementById('edit-captain-modal').style.display = 'flex';
             }
@@ -1856,6 +1938,7 @@
             const region = document.getElementById('edit_cap_region').value;
             const pass = document.getElementById('edit_cap_pass').value.trim();
             const company = document.getElementById('edit_cap_company').value.trim();
+            const hidePhone = document.getElementById('edit_cap_hide_phone').checked;
 
             if(!name || !phone || !pass) {
                 showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error");
@@ -1879,6 +1962,7 @@
                 updates[`${nodeFound}/${userKey}/Cap_Pass`] = pass;
                 updates[`${nodeFound}/${userKey}/pass`] = pass;
                 updates[`${nodeFound}/${userKey}/password`] = pass;
+                updates[`${nodeFound}/${userKey}/hide_phone`] = hidePhone;
                 
                 if (company) {
                     updates[`${nodeFound}/${userKey}/company`] = company;
