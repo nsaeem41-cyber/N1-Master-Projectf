@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Captain Portal 💎</title>
     
+    <meta property="og:title" content="انضم إلى أسطول N One 💎">
+    <meta property="og:description" content="سجل الآن ككابتن في الإمبراطورية وابدأ رحلة النجاح النفاث 🚀">
+    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/logo.jpg">
+    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/captain.html">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -436,6 +442,7 @@
         .pwa-logo { width: 100px; height: 100px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3); border: 2px solid var(--gold); }
         .pwa-title { margin: 0 0 15px 0; font-size: 28px; font-weight: 900; color: var(--primary); }
         .pwa-text { color: var(--text); font-size: 15px; font-weight: bold; line-height: 1.6; margin-bottom: 30px; }
+        
         .btn-install-app {
             width: 100%; padding: 18px; background: linear-gradient(135deg, var(--gold), #b48608);
             color: var(--primary); border: none; border-radius: 15px; font-size: 18px; font-weight: 900;
@@ -443,6 +450,22 @@
         }
         .btn-install-app:active { transform: scale(0.95); }
         .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
+        
+        /* تنسيق الأماكن الحرارية */
+        .hotspot-tag {
+            display: inline-block;
+            background: #fff0f2;
+            color: var(--danger);
+            border: 1px solid #ffccd5;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 4px;
+            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2);
+            animation: pulseAlert 2s infinite;
+        }
+
     </style>
 </head>
 <body id="app-body">
@@ -496,7 +519,9 @@
             <img src="logo.jpg" alt="Captain Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Captain'">
             <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
             <p class="pwa-text">للحصول على تجربة أسرع ولضمان وصول الطلبات والتحديثات فوراً حمّل تطبيق الكابتن الرسمي الآن</p>
+            
             <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق الآن 🚀</button>
+            
             <button id="btn-continue-app" class="btn-continue-app">المتابعة من المتصفح</button>
         </div>
     </div>
@@ -749,7 +774,7 @@
                 }
                 deferredPrompt = null;
             } else {
-                window.showToast('يرجى الضغط على القائمة واختيار إضافة إلى الشاشة الرئيسية لتثبيت التطبيق', true);
+                // إذا لم يكن PWA مدعوماً
             }
         });
 
@@ -1087,6 +1112,10 @@
             if ('Notification' in window && Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
+            
+            // --- دالة تصفير العداد التلقائية الساعة 12 بالليل ---
+            checkAndResetDailyCounter();
+
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
                 checkSession();
@@ -1099,6 +1128,34 @@
                 }
             }, { once: true });
         };
+
+        // --- وظيفة تصفير الإنجازات اليومية ---
+        function checkAndResetDailyCounter() {
+            const now = new Date();
+            const resetTime = new Date();
+            resetTime.setHours(0, 0, 0, 0); // ضبط الوقت على منتصف الليل
+
+            // إذا كان الوقت الحالي قد تجاوز منتصف الليل اليوم
+            // نحتاج لحساب الوقت المتبقي لمنتصف الليل القادم
+            if (now > resetTime) {
+                resetTime.setDate(resetTime.getDate() + 1);
+            }
+
+            const timeUntilReset = resetTime.getTime() - now.getTime();
+
+            // ضبط مؤقت لتصفير العداد عندما يحين منتصف الليل
+            setTimeout(() => {
+                // تصفير العداد المرئي
+                const todayCountEl = document.getElementById('ui_today_count');
+                if(todayCountEl) todayCountEl.innerText = '0';
+                
+                // تفريغ المصفوفة الداخلية
+                allCompletedOrders = [];
+
+                // إعادة تشغيل المؤقت لليوم التالي
+                checkAndResetDailyCounter();
+            }, timeUntilReset);
+        }
 
         window.testNotification = function() {
             const audio = document.getElementById('order-ringtone');
@@ -1748,15 +1805,42 @@
                 }
             });
 
+            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
                 const globalOrdersRef = ref(db, 'orders');
                 onValue(globalOrdersRef, (snapshot) => {
                     if (snapshot.exists()) {
-                        const txt = currentLang === 'ar' ? 'النقاط الساخنة <span>🔥 مفعّلة</span>' : 'Hotspots <span>🔥 Active</span>';
-                        document.getElementById('ui_hotspots').innerHTML = `
-                            <div class="hotspot-tag">${txt}</div>
-                        `;
+                        const allOrders = snapshot.val();
+                        const areaCounts = {};
+                        
+                        // نجمع الطلبات حسب المنطقة
+                        for(let key in allOrders) {
+                            const ord = allOrders[key];
+                            // نفترض أن المنطقة مسجلة في OrderArea أو Shop_Area
+                            const area = ord.OrderArea || ord.Shop_Area; 
+                            if(area) {
+                                areaCounts[area] = (areaCounts[area] || 0) + 1;
+                            }
+                        }
+
+                        // ترتيب المناطق حسب عدد الطلبات (الأكثر سخونة)
+                        const sortedAreas = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
+                        
+                        const hotspotsContainer = document.getElementById('ui_hotspots');
+                        hotspotsContainer.innerHTML = ''; // تفريغ الحاوية
+
+                        if(sortedAreas.length > 0) {
+                            // عرض أعلى 3 مناطق ساخنة
+                            sortedAreas.slice(0, 3).forEach(areaName => {
+                                hotspotsContainer.innerHTML += `<div class="hotspot-tag">${areaName} 🔥</div>`;
+                            });
+                        } else {
+                            const txt = currentLang === 'ar' ? 'لا يوجد طلبات حالياً' : 'No Active Hotspots';
+                            hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${txt}</div>`;
+                        }
+                    } else {
+                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد طلبات حالياً</div>`;
                     }
                 });
             }
