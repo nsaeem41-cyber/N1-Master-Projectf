@@ -186,7 +186,7 @@
         .stars { color: var(--gold); font-size: 14px; letter-spacing: 2px; }
         .rating-text { font-size: 10px; color: #94a3b8; margin-top: 3px; }
 
-        /* زر الحالة الذكي */
+        /* زر الحالة الذكي و الأنيميشن */
         .status-toggle-card {
             background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
@@ -197,6 +197,11 @@
         .status-indicator.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
         .status-indicator.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
         
+        .online-spinner {
+            display: none; width: 14px; height: 14px; border: 2px solid rgba(16, 185, 129, 0.2);
+            border-top: 2px solid var(--success); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 5px;
+        }
+
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
@@ -217,6 +222,13 @@
             background: #fffbeb; border: 1px solid #fde68a; border-right: 4px solid var(--gold);
             border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;
             color: #b45309; font-size: 13px; font-weight: bold; align-items: center; gap: 10px; animation: fadeIn 0.3s;
+        }
+        
+        /* رسالة انقطاع الإنترنت (المجس الحيوي) */
+        .offline-banner {
+            position: fixed; top: 0; left: 0; width: 100%; background: var(--danger); color: white;
+            text-align: center; padding: 12px; font-weight: bold; font-size: 13px; z-index: 999999;
+            display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: slideDown 0.3s ease;
         }
 
         /* الإنجاز اليومي */
@@ -387,7 +399,9 @@
 </head>
 <body id="app-body">
 
-    <div id="toast-container" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
+    <div id="offline-banner" class="offline-banner">📡 لا يوجد اتصال بالإنترنت يرجى الاتصال لتلقي الطلبات</div>
+
+    <div id="toast-container" style="position:fixed; top:40px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
 
     <div id="custom-confirm-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
@@ -595,6 +609,7 @@
                     <div class="status-text">
                         <div id="ui_status_indicator" class="status-indicator offline"></div>
                         <span id="ui_status_text">غير متاح للطلبات</span>
+                        <span id="online_spinner" class="online-spinner"></span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle_status" onchange="toggleOnlineStatus()">
@@ -904,6 +919,14 @@
             }
             if(currentCaptain) updateUIProfile(currentCaptain);
         };
+
+        // مستشعر الإنترنت المباشر
+        window.addEventListener('offline', () => {
+            document.getElementById('offline-banner').style.display = 'block';
+        });
+        window.addEventListener('online', () => {
+            document.getElementById('offline-banner').style.display = 'none';
+        });
 
         window.onload = function() {
             if ('Notification' in window && Notification.permission !== 'granted') {
@@ -1451,7 +1474,7 @@
                                     <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${lblSec} ⏳</div>
                                     <div class="order-timer-bar" id="bar_timer_${ord.id}" style="width: 100%;"></div>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}')">${btnAccept}</button>
+                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}', '${ord.linkedRadarId}')">${btnAccept}</button>
                                         <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
                                     </div>
                                 </div>
@@ -1482,19 +1505,19 @@
                             if (ord.status === 'accepted') {
                                 btnClass = 'btn-status-picked';
                                 btnText = currentLang === 'ar' ? 'استلمت من المنشأة 🥡' : 'Picked Up 🥡';
-                                nextAction = `updateOrderStatus('${ord.id}', 'picked_up')`;
+                                nextAction = `updateOrderStatus('${ord.id}', 'picked_up', '${ord.linkedRadarId}', '${ord.fee || ord.Shop_Fee}')`;
                             } else if (ord.status === 'picked_up') {
                                 btnClass = 'btn-status-onway';
                                 btnText = currentLang === 'ar' ? 'أنا في الطريق للعميل 🚗' : 'On the Way 🚗';
-                                nextAction = `updateOrderStatus('${ord.id}', 'on_way')`;
+                                nextAction = `updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', '${ord.fee || ord.Shop_Fee}')`;
                             } else if (ord.status === 'on_way') {
                                 btnClass = 'btn-status-arrived';
                                 btnText = currentLang === 'ar' ? 'وصلت عند العميل 📍' : 'Arrived 📍';
-                                nextAction = `updateOrderStatus('${ord.id}', 'arrived')`;
+                                nextAction = `updateOrderStatus('${ord.id}', 'arrived', '${ord.linkedRadarId}', '${ord.fee || ord.Shop_Fee}')`;
                             } else if (ord.status === 'arrived') {
                                 btnClass = 'btn-status-completed';
                                 btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
-                                nextAction = `completeOrder('${ord.id}')`;
+                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}')`;
                             }
 
                             container.innerHTML += `
@@ -1589,6 +1612,7 @@
             const statusInd = document.getElementById('ui_status_indicator');
             const statusTxt = document.getElementById('ui_status_text');
             const warningBanner = document.getElementById('balance-warning');
+            const spinner = document.getElementById('online_spinner');
 
             if (bal <= -1) {
                 balEl.classList.add('negative');
@@ -1600,6 +1624,7 @@
                 toggleBtn.disabled = true;
                 statusInd.className = 'status-indicator offline';
                 statusTxt.innerText = dict[currentLang].status_blocked;
+                spinner.style.display = 'none';
                 
             } else {
                 balEl.classList.remove('negative');
@@ -1610,10 +1635,12 @@
                     toggleBtn.checked = true;
                     statusInd.className = 'status-indicator online';
                     statusTxt.innerText = dict[currentLang].status_online;
+                    spinner.style.display = 'inline-block';
                 } else {
                     toggleBtn.checked = false;
                     statusInd.className = 'status-indicator offline';
                     statusTxt.innerText = dict[currentLang].status_offline;
+                    spinner.style.display = 'none';
                 }
             }
         }
@@ -1637,24 +1664,25 @@
             await update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' });
         }
 
-        window.acceptOrder = async function(orderId, fee) {
-            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
-            const actualFee = parseFloat(fee || 0);
-            const commissionAmount = actualFee * COMMISSION_RATE;
-            const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
-            const newBal = currentBal - commissionAmount;
-
-            const updates = {};
-            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'accepted';
-            updates[`assigned_orders/${capNodeKey}/${orderId}/commission`] = commissionAmount;
-            updates[`captains/${capNodeKey}/Cap_Balance`] = newBal;
-            updates[`captains/${capNodeKey}/balance`] = newBal;
+        window.acceptOrder = async function(appOrdId, fee, radarOrdId) {
+            if(orderTimers[appOrdId]) clearInterval(orderTimers[appOrdId]);
             
+            const updates = {};
+            updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted';
+            
+            if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
+                updates[`orders/${radarOrdId}/Cap_Name`] = currentCaptain.Cap_Name || currentCaptain.name || '';
+                updates[`orders/${radarOrdId}/Cap_Phone`] = currentCaptain.Cap_Phone || currentCaptain.phone || '';
+                updates[`orders/${radarOrdId}/Cap_CarType`] = currentCaptain.Cap_Car || '';
+                updates[`orders/${radarOrdId}/OrderStatus`] = 'accepted';
+                updates[`orders/${radarOrdId}/FinancialStatus`] = 'frozen';
+            }
+
             try {
                 await update(ref(db), updates);
+                window.showToast(currentLang === 'ar' ? "تم قبول الطلب وجاري التجهيز 🚀" : "Order accepted 🚀", false);
             } catch (e) {
-                const msg = currentLang === 'ar' ? "حدث خطأ أثناء الربط المالي حاول مجدداً" : "Error in financial transaction please retry";
-                window.showToast(msg, true);
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال حاول مجدداً" : "Connection error please retry", true);
             }
         };
 
@@ -1668,25 +1696,49 @@
             });
         };
 
-        // دالة تحديث الحالة بدون أسئلة
-        window.updateOrderStatus = async function(orderId, newStatus) {
+        window.updateOrderStatus = async function(appOrdId, newStatus, radarOrdId, fee) {
             try {
                 const updates = {};
-                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = newStatus;
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
+                
+                if (newStatus === 'picked_up') {
+                    const actualFee = parseFloat(fee || 0);
+                    const commissionAmount = actualFee * COMMISSION_RATE;
+                    const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+                    const newBal = currentBal - commissionAmount;
+
+                    updates[`captains/${capNodeKey}/Cap_Balance`] = newBal;
+                    updates[`captains/${capNodeKey}/balance`] = newBal;
+                    updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true;
+                    updates[`assigned_orders/${capNodeKey}/${appOrdId}/commission_amount`] = commissionAmount;
+
+                    if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
+                        updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed';
+                        updates[`orders/${radarOrdId}/Cap_Commission`] = commissionAmount;
+                    }
+                }
+                
+                if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
+                    updates[`orders/${radarOrdId}/OrderStatus`] = newStatus;
+                }
+
                 await update(ref(db), updates);
-                // رسالة خفيفة للكابتن عشان يتأكد إنه الكبسة اشتغلت بدون ما تزعجه
                 window.showToast(currentLang === 'ar' ? "تم تحديث الحالة بنجاح 🚀" : "Status updated 🚀", false);
             } catch (e) {
                 window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
             }
         };
 
-        // دالة التسليم النهائي بدون أسئلة لتسريع الشغل
-        window.completeOrder = async function(orderId) {
+        window.completeOrder = async function(appOrdId, radarOrdId) {
             try {
                 const updates = {};
-                updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'completed';
-                updates[`assigned_orders/${capNodeKey}/${orderId}/completed_at`] = Date.now();
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
+                
+                if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
+                    updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered';
+                }
+
                 await update(ref(db), updates);
                 window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false);
             } catch (e) {
