@@ -80,7 +80,7 @@
             border-bottom: 3px solid var(--gold);
         }
 
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .brand { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 900; color: white; }
         .brand-logo { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold); }
         .gold-text { color: var(--gold); }
@@ -94,19 +94,34 @@
         }
         .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
 
+        /* تعديل ترتيب الباجات للهاتف */
         .badges-container {
-            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;
+            display: flex; flex-direction: column; gap: 10px; align-items: center; margin-bottom: 15px;
+        }
+        .badge-row-1 {
+            width: 100%; display: flex; justify-content: center;
+        }
+        .badge-row-2 {
+            width: 100%; display: flex; justify-content: center; gap: 8px; flex-wrap: nowrap;
         }
         
         .shop-info-badge { 
             background: rgba(255, 255, 255, 0.1); color: var(--gold);
-            padding: 8px 15px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;
-            font-size: 13px; font-weight: bold; border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap;
+            padding: 8px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+            font-size: 12px; font-weight: bold; border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        
+        .badge-row-2 .shop-info-badge {
+            max-width: 50%; /* لمنع التمدد وتخريب الشاشة */
+        }
+        
+        .user-badge {
+            background: rgba(2, 136, 209, 0.15); color: #bae6fd; border-color: rgba(2, 136, 209, 0.3);
         }
 
         .nav-tabs {
-            display: flex; justify-content: center; gap: 8px; margin-top: 10px;
+            display: flex; justify-content: center; gap: 8px; margin-top: 15px;
             background: rgba(255,255,255,0.05); padding: 6px; border-radius: 20px; overflow-x: auto;
         }
         .nav-tab {
@@ -448,14 +463,18 @@
             </div>
             
             <div class="badges-container">
-                <div class="shop-info-badge">
-                    🏪 <span id="hdr-shop-name">...</span>
+                <div class="user-row">
+                    <div class="shop-info-badge user-badge">
+                        👤 <span id="hdr-shop-user">...</span>
+                    </div>
                 </div>
-                <div class="shop-info-badge">
-                    📍 <span id="hdr-shop-area">غير محدد</span>
-                </div>
-                <div class="shop-info-badge">
-                    👤 <span id="hdr-shop-user">...</span>
+                <div class="location-shop-row">
+                    <div class="shop-info-badge location-badge">
+                        📍 <span id="hdr-shop-area">غير محدد</span>
+                    </div>
+                    <div class="shop-info-badge name-badge">
+                        🏪 <span id="hdr-shop-name">...</span>
+                    </div>
                 </div>
             </div>
 
@@ -1147,12 +1166,13 @@
                             let capDetailsHtml = '';
                             if (currentStatus !== 'new' && currentStatus !== 'cancelled' && item.Cap_Name) {
                                 capDetailsHtml = `
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                        <div>
-                                            <div style="font-size:13px; font-weight:bold; color:var(--primary); margin-bottom:4px;">👤 ${item.Cap_Name}</div>
-                                            <div style="font-size:11px; color:var(--text-light);">🚗 ${item.Cap_CarType || 'مركبة'} - ${item.Cap_CarCode || '-'}</div>
+                                    <div style="background:#f8fafc; padding:10px; border-radius:12px; margin-top:10px; border:1px solid #e2e8f0; width:100%;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
+                                            <div style="font-size:13px; font-weight:bold; color:var(--primary);">👤 ${item.Cap_Name}</div>
+                                            <div style="display:flex; align-items:center;">${phoneHtml}</div>
                                         </div>
-                                        <div style="display:flex; align-items:center;">${phoneHtml}</div>
+                                        <div style="font-size:11px; color:#64748b;">نوع المركبة</div>
+                                        <div style="font-size:12px; font-weight:bold; color:var(--info);">🚗 ${item.Cap_CarType || 'مركبة'} - الترميز: ${item.Cap_CarCode || '-'}</div>
                                     </div>
                                 `;
                             }
@@ -1176,7 +1196,7 @@
 
                                     ${capDetailsHtml}
 
-                                    <div style="display:flex; justify-content:space-between; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9;">
+                                    <div style="display:flex; justify-content:space-between; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9; margin-top:10px;">
                                         <div style="text-align:center; flex:1; border-left:1px solid #e2e8f0;">
                                             <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">تكلفة الطلب</div>
                                             <div style="font-size:14px; font-weight:900; color:var(--primary);">${item.Shop_Val} د.أ</div>
