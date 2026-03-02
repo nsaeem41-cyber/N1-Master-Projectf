@@ -94,10 +94,34 @@
 
         /* ================= الهيدر الداخلي ================= */
         .app-header {
-            background: var(--primary); padding: 20px; border-bottom: 4px solid var(--gold);
+            background: var(--primary); padding: 20px; 
             display: flex; justify-content: space-between; align-items: center; color: white;
             position: sticky; top: 0; z-index: 100;
         }
+        /* شريط الطاقة الذهبي المتحرك */
+        .energy-bar {
+            height: 4px;
+            width: 100%;
+            background: #475569;
+            position: sticky; top: 85px; z-index: 100;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+        .energy-bar-fill {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            transform: translateX(-100%);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .energy-bar.active { background: #334155; }
+        .energy-bar.active .energy-bar-fill {
+            opacity: 1;
+            animation: slideGlow 1.5s infinite linear;
+        }
+        @keyframes slideGlow { 0% { transform: translateX(200%); } 100% { transform: translateX(-100%); } }
+
         .header-brand { font-size: 18px; font-weight: 900; display: flex; flex-direction: column; }
         .header-company { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; width: fit-content; }
         .header-actions { display: flex; gap: 8px; align-items: center; }
@@ -186,7 +210,7 @@
         .stars { color: var(--gold); font-size: 14px; letter-spacing: 2px; }
         .rating-text { font-size: 10px; color: #94a3b8; margin-top: 3px; }
 
-        /* زر الحالة الذكي و الأنيميشن */
+        /* زر الحالة الذكي */
         .status-toggle-card {
             background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
@@ -197,11 +221,6 @@
         .status-indicator.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
         .status-indicator.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
         
-        .online-spinner {
-            display: none; width: 14px; height: 14px; border: 2px solid rgba(16, 185, 129, 0.2);
-            border-top: 2px solid var(--success); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 5px;
-        }
-
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
@@ -299,6 +318,16 @@
             flex-shrink: 0;
         }
         .btn-map-link:hover { transform: scale(1.1); background: #bae6fd; color: #0369a1; }
+        
+        .btn-call-shop {
+            background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
+            width: 40px; height: 40px; border-radius: 50%; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            flex-shrink: 0;
+        }
+        .btn-call-shop:hover { transform: scale(1.1); background: #d1fae5; }
+        .hidden-phone-badge { font-size: 11px; color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 10px; border: 1px solid #fecaca; }
 
         /* سجل الطلبات والإعدادات (Modals) */
         .modal-overlay {
@@ -344,6 +373,16 @@
             border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; 
         }
 
+        /* نافذة تقييم الجواهر */
+        .rating-modal-box {
+            background: white; padding: 30px; border-radius: 20px; text-align: center; 
+            max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+            border-top: 6px solid var(--info); animation: slideUp 0.4s ease-out;
+        }
+        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 20px 0; direction: ltr; }
+        .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
+        .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
+        
         /* خريطة النقاط الساخنة */
         .hotspots-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .hotspot-tag {
@@ -411,6 +450,24 @@
                 <button class="btn-dialog btn-dialog-ok" onclick="executeAppConfirm()" id="lang_confirm_ok">تأكيد ✅</button>
                 <button class="btn-dialog btn-dialog-cancel" onclick="closeAppConfirm()" id="lang_confirm_no">إلغاء ❌</button>
             </div>
+        </div>
+    </div>
+    
+    <div id="rating-modal" class="custom-dialog-overlay">
+        <div class="rating-modal-box">
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">تقييم المنشأة 💎</div>
+            <div style="font-size: 13px; color: #64748b;">كيف كانت تجربتك في استلام هذا الطلب؟</div>
+            <div class="gems-container" id="gems-container">
+                <span class="gem" onclick="setRating(1)">💎</span>
+                <span class="gem" onclick="setRating(2)">💎</span>
+                <span class="gem" onclick="setRating(3)">💎</span>
+                <span class="gem" onclick="setRating(4)">💎</span>
+                <span class="gem" onclick="setRating(5)">💎</span>
+            </div>
+            <input type="hidden" id="current_rating_val" value="0">
+            <input type="hidden" id="rating_shop_id" value="">
+            <button class="btn-login" style="background: var(--info); color: white;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <button class="btn-link" style="color: #94a3b8;" onclick="closeRatingModal()">تخطي</button>
         </div>
     </div>
 
@@ -570,6 +627,10 @@
                     <button class="btn-logout" onclick="logout()" id="lang_btn_out">خروج 🔒</button>
                 </div>
             </div>
+            
+            <div id="energy-bar" class="energy-bar">
+                <div class="energy-bar-fill"></div>
+            </div>
 
             <div id="smart-ad-container" class="app-ad-container">
                 <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
@@ -609,7 +670,6 @@
                     <div class="status-text">
                         <div id="ui_status_indicator" class="status-indicator offline"></div>
                         <span id="ui_status_text">غير متاح للطلبات</span>
-                        <span id="online_spinner" class="online-spinner"></span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle_status" onchange="toggleOnlineStatus()">
@@ -691,7 +751,6 @@
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // فرض التحديث فوراً عند توفر نسخة جديدة وإعادة تحميل الصفحة
                                 window.location.reload();
                             }
                         };
@@ -768,12 +827,33 @@
             if(confirmCallback) confirmCallback();
             confirmCallback = null;
         };
+        
+        // نظام التقييم الألماسي
+        window.openRatingModal = function(shopId) {
+            document.getElementById('rating_shop_id').value = shopId;
+            document.getElementById('current_rating_val').value = "0";
+            document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
+            document.getElementById('rating-modal').style.display = 'flex';
+        };
+        
+        window.closeRatingModal = function() {
+            document.getElementById('rating-modal').style.display = 'none';
+        };
+        
+        window.setRating = function(val) {
+            document.getElementById('current_rating_val').value = val;
+            const gems = document.querySelectorAll('.gem');
+            gems.forEach((g, index) => {
+                if(index < val) g.classList.add('active');
+                else g.classList.remove('active');
+            });
+        };
 
     </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -796,7 +876,7 @@
         let globalPricesList = [];
         let verifiedCompanyId = null; 
         
-        let systemSettings = { order_timer: 10, anti_vpn: false };
+        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false };
         let orderTimers = {};
         let isListenerActive = false;
         let localOrderSeen = {};
@@ -1295,11 +1375,24 @@
         setInterval(detectVPN, 5000); 
 
         function listenToSystemSettings() {
+            const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
+            
             onValue(ref(db, 'settings/order_timer'), (snap) => {
                 if(snap.exists() && snap.val().seconds) {
                     systemSettings.order_timer = parseInt(snap.val().seconds);
                 }
             });
+            
+            // قراءة إعدادات حجب الأرقام (ريموت الأمان)
+            if (master) {
+                onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
+                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
+                });
+            } else {
+                onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => {
+                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
+                });
+            }
 
             const handleVpnSnap = (snap) => {
                 if(snap.exists()) {
@@ -1497,6 +1590,18 @@
                             
                             const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery));
                             const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+                            const callSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+
+                            // تطبيق ريموت إخفاء الأرقام
+                            let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
+                            let phoneHtml = '';
+                            if (ord.shop_phone) {
+                                if (isPhoneHidden) {
+                                    phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
+                                } else {
+                                    phoneHtml = `<a href="tel:${ord.shop_phone}" class="btn-call-shop" title="اتصال بالمنشأة">${callSvg}</a>`;
+                                }
+                            }
 
                             let btnClass = '';
                             let btnText = '';
@@ -1517,7 +1622,7 @@
                             } else if (ord.status === 'arrived') {
                                 btnClass = 'btn-status-completed';
                                 btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
-                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}')`;
+                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}', '${ord.shop_id || ord.Shop_User || ''}')`;
                             }
 
                             container.innerHTML += `
@@ -1527,8 +1632,11 @@
                                         <span>${lblTime}: ${ordTime}</span>
                                     </div>
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">🏪 ${restName}</span>
-                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
+                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">🏪 ${restName}</span>
+                                        <div style="display:flex; gap:8px;">
+                                            ${phoneHtml}
+                                            <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
+                                        </div>
                                     </div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
@@ -1612,7 +1720,7 @@
             const statusInd = document.getElementById('ui_status_indicator');
             const statusTxt = document.getElementById('ui_status_text');
             const warningBanner = document.getElementById('balance-warning');
-            const spinner = document.getElementById('online_spinner');
+            const energyBar = document.getElementById('energy-bar');
 
             if (bal <= -1) {
                 balEl.classList.add('negative');
@@ -1624,7 +1732,7 @@
                 toggleBtn.disabled = true;
                 statusInd.className = 'status-indicator offline';
                 statusTxt.innerText = dict[currentLang].status_blocked;
-                spinner.style.display = 'none';
+                energyBar.classList.remove('active');
                 
             } else {
                 balEl.classList.remove('negative');
@@ -1635,12 +1743,12 @@
                     toggleBtn.checked = true;
                     statusInd.className = 'status-indicator online';
                     statusTxt.innerText = dict[currentLang].status_online;
-                    spinner.style.display = 'inline-block';
+                    energyBar.classList.add('active');
                 } else {
                     toggleBtn.checked = false;
                     statusInd.className = 'status-indicator offline';
                     statusTxt.innerText = dict[currentLang].status_offline;
-                    spinner.style.display = 'none';
+                    energyBar.classList.remove('active');
                 }
             }
         }
@@ -1729,7 +1837,7 @@
             }
         };
 
-        window.completeOrder = async function(appOrdId, radarOrdId) {
+        window.completeOrder = async function(appOrdId, radarOrdId, shopId) {
             try {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
@@ -1741,8 +1849,38 @@
 
                 await update(ref(db), updates);
                 window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false);
+                
+                if(shopId && shopId !== 'undefined' && shopId !== 'null') {
+                    setTimeout(() => { openRatingModal(shopId); }, 1000);
+                }
+                
             } catch (e) {
                 window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
+            }
+        };
+
+        window.submitRating = async function() {
+            const val = parseInt(document.getElementById('current_rating_val').value);
+            const shopId = document.getElementById('rating_shop_id').value;
+            
+            if(val === 0) {
+                window.showToast("الرجاء اختيار التقييم أولاً", true);
+                return;
+            }
+            
+            try {
+                const newRatingRef = push(ref(db, `ratings/shops/${shopId}`));
+                await set(newRatingRef, {
+                    captainId: capNodeKey,
+                    rating: val,
+                    timestamp: Date.now()
+                });
+                
+                window.showToast("شكراً لتقييمك! 💎", false);
+                closeRatingModal();
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء إرسال التقييم", true);
+                closeRatingModal();
             }
         };
 
