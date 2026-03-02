@@ -194,14 +194,7 @@
         .check-info { font-size: 14px; color: #064e3b; margin-bottom: 5px; }
         .check-balance { font-size: 18px; font-weight: 900; color: var(--success); }
 
-        .history-list { margin-top: 10px; max-height: 400px; overflow-y: auto; }
-        .history-item {
-            display: flex; flex-direction: column; align-items: flex-start;
-            padding: 15px; border-bottom: 1px solid #f1f5f9;
-        }
-        .history-item:last-child { border-bottom: none; }
-        .h-dest { font-weight: bold; color: var(--primary); font-size: 14px; }
-        .h-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .history-list { margin-top: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
         
         .btn-call-cap {
             background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
@@ -1108,19 +1101,22 @@
                         list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
                     } else {
                         const statusMap = {
-                            'new': { text: 'قيد الانتظار', color: '#f59e0b' },
-                            'accepted': { text: 'تم القبول (جاري التجهيز)', color: '#3b82f6' },
-                            'picked_up': { text: 'تم الاستلام من المنشأة', color: '#8b5cf6' },
-                            'on_way': { text: 'في الطريق', color: '#8b5cf6' },
-                            'arrived': { text: 'الكابتن عند العميل', color: '#ec4899' },
-                            'delivered': { text: 'تم التسليم بنجاح', color: '#10b981' },
-                            'cancelled': { text: 'ملغي', color: '#ef4444' }
+                            'new': { text: 'قيد الانتظار', color: '#d97706', bg: '#fef3c7' },
+                            'accepted': { text: 'تم القبول (جاري التجهيز)', color: '#2563eb', bg: '#dbeafe' },
+                            'picked_up': { text: 'تم الاستلام من المنشأة', color: '#7c3aed', bg: '#ede9fe' },
+                            'on_way': { text: 'في الطريق', color: '#7c3aed', bg: '#ede9fe' },
+                            'arrived': { text: 'الكابتن عند العميل', color: '#db2777', bg: '#fce7f3' },
+                            'delivered': { text: 'تم التسليم بنجاح', color: '#059669', bg: '#d1fae5' },
+                            'cancelled': { text: 'ملغي', color: '#dc2626', bg: '#fee2e2' }
                         };
 
                         recentOrders.forEach(item => {
-                            const timeStr = new Date(item.Shop_Date || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            const fullDateObj = new Date(item.Shop_Date || Date.now());
+                            const timeStr = fullDateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            const dateStr = fullDateObj.toLocaleDateString('en-GB'); 
+                            
                             const currentStatus = item.OrderStatus || item.Shop_Status || 'new';
-                            const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8' };
+                            const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8', bg: '#f1f5f9' };
                             
                             if (orderStatesHistory[item.Shop_Ord_ID] && orderStatesHistory[item.Shop_Ord_ID] !== currentStatus) {
                                 if (currentStatus === 'accepted') { snd_accept.play().catch(e=>{}); showToast('كابتن بطل وافق على الطلب'); }
@@ -1130,7 +1126,6 @@
                                     snd_deliver.play().catch(e=>{}); 
                                     showToast('تم تسليم الطلب بنجاح وقبضنا'); 
                                     
-                                    // إظهار نافذة التقييم إذا لم يتم التقييم مسبقاً
                                     if(!askedToRate[item.Shop_Ord_ID] && item.Cap_Phone) {
                                         setTimeout(() => { openRatingModal(item.Cap_Phone); }, 1500);
                                         askedToRate[item.Shop_Ord_ID] = true;
@@ -1139,52 +1134,59 @@
                             }
                             orderStatesHistory[item.Shop_Ord_ID] = currentStatus;
 
-                            // تطبيق ريموت إخفاء الأرقام
                             let isPhoneHidden = currentUser.hide_phone === true || !systemSettings.show_phone_numbers;
                             let phoneHtml = '';
                             if (item.Cap_Phone) {
                                 if (isPhoneHidden) {
                                     phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
                                 } else {
-                                    phoneHtml = `<a href="tel:${item.Cap_Phone}" class="btn-call-cap" title="اتصال بالكابتن">📞</a><span style="direction:ltr; text-align:right; font-size:12px; color:var(--text-main);">${item.Cap_Phone}</span>`;
+                                    phoneHtml = `<span style="direction:ltr; text-align:right; font-size:12px; font-weight:bold; color:var(--text-main); margin-left:8px;">${item.Cap_Phone}</span><a href="tel:${item.Cap_Phone}" class="btn-call-cap" title="اتصال بالكابتن">📞</a>`;
                                 }
                             }
 
                             let capDetailsHtml = '';
                             if (currentStatus !== 'new' && currentStatus !== 'cancelled' && item.Cap_Name) {
                                 capDetailsHtml = `
-                                    <div style="background:#f8fafc; padding:10px; border-radius:12px; margin-top:10px; border:1px solid #e2e8f0; width:100%;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
-                                            <div style="font-size:13px; font-weight:bold; color:var(--primary);">👤 ${item.Cap_Name}</div>
-                                            <div style="display:flex; align-items:center;">${phoneHtml}</div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                        <div>
+                                            <div style="font-size:13px; font-weight:bold; color:var(--primary); margin-bottom:4px;">👤 ${item.Cap_Name}</div>
+                                            <div style="font-size:11px; color:var(--text-light);">🚗 ${item.Cap_CarType || 'مركبة'} - ${item.Cap_CarCode || '-'}</div>
                                         </div>
-                                        <div style="font-size:11px; color:#64748b;">نوع المركبة</div>
-                                        <div style="font-size:12px; font-weight:bold; color:var(--info);">🚗 ${item.Cap_CarType || 'مركبة'} - الترميز: ${item.Cap_CarCode || '-'}</div>
+                                        <div style="display:flex; align-items:center;">${phoneHtml}</div>
                                     </div>
                                 `;
                             }
 
                             let cancelBtnHtml = '';
                             if(currentStatus === 'new' || currentStatus === 'accepted') {
-                                cancelBtnHtml = `<button onclick="cancelOrder('${item.Shop_Ord_ID}')" style="background:#fee2e2; color:#ef4444; border:1px solid #fca5a5; padding:6px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:8px; width:100%; transition:0.3s;">إلغاء الطلب ❌</button>`;
+                                cancelBtnHtml = `<button onclick="cancelOrder('${item.Shop_Ord_ID}')" style="background:#fee2e2; color:#ef4444; border:1px solid #fca5a5; padding:8px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%; transition:0.3s;">إلغاء الطلب ❌</button>`;
                             }
 
                             list.innerHTML += `
-                                <div class="history-item">
-                                    <div style="display:flex; justify-content:space-between; width:100%;">
-                                        <div>
-                                            <div class="h-dest">📍 ${item.Shop_Pickup}</div>
-                                            <div class="h-time">🕐 ${timeStr}</div>
-                                            <div style="color:${statusInfo.color}; font-size:12px; font-weight:bold; margin-top:4px;">${statusInfo.text}</div>
+                                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                                    
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #cbd5e1; padding-bottom:10px; margin-bottom:12px;">
+                                        <div style="font-size:11px; color:#64748b; font-weight:bold;">📅 ${dateStr} &nbsp; 🕐 ${timeStr}</div>
+                                        <div style="background:${statusInfo.bg}; color:${statusInfo.color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${statusInfo.text}</div>
+                                    </div>
+
+                                    <div style="font-size:14px; font-weight:900; color:var(--primary); margin-bottom:15px;">
+                                        📍 الوجهة: <span style="color:var(--info);">${item.Shop_Pickup}</span>
+                                    </div>
+
+                                    ${capDetailsHtml}
+
+                                    <div style="display:flex; justify-content:space-between; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9;">
+                                        <div style="text-align:center; flex:1; border-left:1px solid #e2e8f0;">
+                                            <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">تكلفة الطلب</div>
+                                            <div style="font-size:14px; font-weight:900; color:var(--primary);">${item.Shop_Val} د.أ</div>
                                         </div>
-                                        <div style="text-align:left; background:#f8fafc; padding:8px 12px; border-radius:12px; border:1px solid #e2e8f0;">
-                                            <div style="font-size:10px; color:#64748b; margin-bottom:2px;">تكلفة الطلب</div>
-                                            <div style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:5px;">${item.Shop_Val} د.أ</div>
-                                            <div style="font-size:10px; color:#64748b; margin-bottom:2px;">قيمة التوصيل</div>
-                                            <div style="font-size:13px; font-weight:900; color:var(--success);">${item.Shop_Fee || item.fee || '0.00'} د.أ</div>
+                                        <div style="text-align:center; flex:1;">
+                                            <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">قيمة التوصيل</div>
+                                            <div style="font-size:14px; font-weight:900; color:var(--success);">${item.Shop_Fee || item.fee || '0.00'} د.أ</div>
                                         </div>
                                     </div>
-                                    ${capDetailsHtml}
+
                                     ${cancelBtnHtml}
                                 </div>
                             `;
