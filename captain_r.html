@@ -123,7 +123,8 @@
             margin-bottom: 15px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: space-between; /* Adjusted to fit toggle next to title */
+            gap: 8px;
         }
 
         .input-group {
@@ -191,17 +192,6 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
 
-        /* أنيميشن الرادار اللانهائي */
-        @keyframes pulseRocket {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-        .radar-active {
-            background: var(--success) !important;
-            animation: pulseRocket 1.5s infinite;
-        }
-
         /* تفاصيل المنشأة بعد البحث */
         .shop-details-box {
             background: #f8fafc;
@@ -254,6 +244,31 @@
             gap: 5px;
         }
         .btn-back:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* أنيميشن الرادار اللانهائي (مستورد من الرادار) */
+        @keyframes pulseRocket {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .radar-active {
+            background: var(--success) !important;
+            animation: pulseRocket 1.5s infinite;
+        }
+
+        /* تنسيقات الميزات الجديدة للريموت الماستر */
+        .header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;}
+        .diamond-toggle { display: flex; align-items: center; gap: 6px; background: white; padding: 6px 12px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); font-size: 12px; font-weight: 800; color: var(--text); cursor: pointer; transition: 0.3s; }
+        .diamond-toggle:hover { border-color: var(--gold); }
+        .diamond-toggle input { display: none; }
+        .toggle-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
+        .diamond-toggle input:checked + .toggle-dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #f8fafc; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-val { font-weight: 900; font-size: 18px; color: var(--primary); }
+        .stat-lbl { font-size: 10px; color: #64748b; font-weight: bold; }
+
     </style>
 </head>
 <body>
@@ -296,15 +311,36 @@
                 </div>
 
                 <div class="control-card" style="border-right-color: var(--danger);">
-                    <div class="card-title">🛡️ درع الحماية (كاشف الـ VPN)</div>
-                    <button class="btn-action" style="background: var(--danger);" onclick="toggleVPN(true)">تفعيل كاشف الـ VPN 🔒</button>
-                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleVPN(false)">إيقاف الكاشف 🔓</button>
+                    <div class="card-title">
+                        <span>🛡️ درع الحماية (كاشف الـ VPN)</span>
+                        <label class="diamond-toggle" title="منع استقبال الطلبات بمشغل VPN">
+                            <input type="checkbox" id="toggle_anti_vpn" onchange="toggleVPN(this.checked)">
+                            <div class="toggle-dot"></div> تفعيل
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; font-weight: bold;">يمنع الكباتن من استقبال الطلبات في حال تفعيلهم لبرامج الـ VPN لتغيير الموقع.</p>
                 </div>
 
                 <div class="control-card" style="border-right-color: var(--gold);">
-                    <div class="card-title">📍 تثبيت منطقة العمل (Zone Lock)</div>
-                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleZoneLock(true)">إجبار الكابتن على منطقته ✅</button>
-                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleZoneLock(false)">السماح بالتنقل الحر ❌</button>
+                    <div class="card-title">
+                        <span>📍 تثبيت منطقة العمل (Zone Lock)</span>
+                        <label class="diamond-toggle" title="حصر الطلبات بكباتن المنطقة فقط">
+                            <input type="checkbox" id="toggle_fix_area" onchange="toggleZoneLock(this.checked)">
+                            <div class="toggle-dot"></div> تفعيل
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; font-weight: bold;">إجبار الكابتن على استقبال طلبات منطقته المحددة فقط وعدم التنقل بين المناطق.</p>
+                </div>
+
+                <div class="control-card">
+                    <div class="card-title">
+                        <span>🔥 التحكم بالنقاط الساخنة (Hotspots)</span>
+                        <label class="diamond-toggle" title="تفعيل خريطة ضغط العمل للكباتن">
+                            <input type="checkbox" id="toggle_hotspots" onchange="toggleHotspots(this.checked)">
+                            <div class="toggle-dot"></div> تفعيل
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; font-weight: bold;">تفعيل هذا الخيار سيقوم بإنشاء نقطة وهمية ليقرأها تطبيق الكابتن ويظهر شارة "النقاط الساخنة مفعّلة".</p>
                 </div>
                 
                 <div class="control-card" style="border-right-color: var(--info);">
@@ -331,15 +367,6 @@
                         <textarea id="alert_text" rows="3" placeholder="اكتب الرسالة التي ستظهر بنصف الشاشة..."></textarea>
                     </div>
                     <button class="btn-action btn-danger" onclick="sendAdminAlert()">إرسال التنبيه الفوري 🔔</button>
-                </div>
-
-                <div class="control-card">
-                    <div class="card-title">🔥 التحكم بالنقاط الساخنة (Hotspots)</div>
-                    <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
-                        تفعيل هذا الخيار سيقوم بإنشاء نقطة وهمية في قاعدة البيانات ليقرأها تطبيق الكابتن ويظهر شارة "النقاط الساخنة مفعّلة".
-                    </p>
-                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleHotspots(true)">تفعيل النقاط الساخنة ✅</button>
-                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleHotspots(false)">إلغاء التفعيل ❌</button>
                 </div>
 
             </div>
@@ -474,7 +501,7 @@
             }
         };
 
-        // ================== محرك الرادار الألماسي ==================
+        // ================== تهيئة السوبر ريموت والدمج مع الرادار ==================
         
         function getActiveCompanyName() {
             return currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : '';
@@ -497,7 +524,22 @@
                     }
                 });
 
-                // جلب حالة محرك الرادار
+                // جلب حالة الـ VPN
+                onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
+                    document.getElementById('toggle_anti_vpn').checked = snap.exists() ? snap.val() : false;
+                });
+
+                // جلب حالة تثبيت المنطقة
+                onValue(ref(db, `settings/${myMaster}/fix_area`), (snap) => {
+                    document.getElementById('toggle_fix_area').checked = snap.exists() ? snap.val() : false;
+                });
+
+                // جلب حالة النقاط الساخنة
+                onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
+                    document.getElementById('toggle_hotspots').checked = snap.exists() ? snap.val() : false;
+                });
+
+                // جلب حالة محرك الرادار التلقائي
                 onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
                     isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
                     const btn = document.getElementById('btn-auto-radar');
@@ -515,27 +557,18 @@
                 fetchLiveOrders();
                 fetchAssignedOrders();
                 fetchRadarMemory();
-                setInterval(refreshDynamicElements, 1000); // النبض المستمر
+                setInterval(refreshDynamicElements, 1000); // النبض المستمر لقراءة الطلبات
             }
         });
-
-        window.toggleAutoRadar = function() {
-            const myMaster = currentUser.Client_User || currentUser.user;
-            const newState = !isAutoRadarActive;
-            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
-            window.showToast(newState ? "تم تشغيل محرك التوزيع التلقائي 🚀" : "تم إيقاف محرك التوزيع 🛑");
-        };
 
         function fetchGlobalUsers() {
             onValue(ref(db), (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     globalUsers = [];
-                    
                     const addWithNode = (obj, nodeName) => {
                         if(obj) Object.values(obj).forEach(item => { item._node = nodeName; globalUsers.push(item); });
                     };
-                    
                     addWithNode(data.users, 'users');
                     addWithNode(data.shops, 'shops');
                     addWithNode(data.captains, 'captains');
@@ -580,7 +613,7 @@
             return (activeName && vals.includes(activeName)) || (activeUser && vals.includes(activeUser));
         }
 
-        // --- نواة الرادار المدمجة ---
+        // --- محرك الرادار المدمج الذي يعمل في الخلفية ---
         window.triggerAutoRadarMaster = async function() {
             if(!currentUser) return;
 
@@ -589,7 +622,7 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId) return false;
-                if (o.OrderStatus !== 'new' && o.Shop_Status !== 'new') return false; // فقط الطلبات الجديدة
+                if (o.OrderStatus !== 'new' && o.Shop_Status !== 'new') return false; 
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
@@ -862,6 +895,14 @@
                     window.showToast("تم إيقاف مؤشر النقاط الساخنة ❌");
                 }
             } catch(e) { window.showToast("حدث خطأ أثناء التعديل", true); }
+        };
+
+        window.toggleAutoRadar = function() {
+            const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+            const myMaster = savedUser.Client_User || savedUser.user;
+            const newState = !isAutoRadarActive;
+            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
+            window.showToast(newState ? "تم تشغيل محرك التوزيع التلقائي 🚀" : "تم إيقاف محرك التوزيع 🛑");
         };
 
         // ================== أوامر المنشآت ==================
