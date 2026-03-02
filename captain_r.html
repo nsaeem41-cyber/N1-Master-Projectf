@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>N One | Smart Master Controller 💎</title>
+    <title>N One | Smart Controller 💎</title>
     <meta name="theme-color" content="#0f172a">
     <style>
-        /* ================= تصميم Master Diamond (Royal Navy & Gold Theme) المدمج والرشيق ================= */
+        /* ================= تصميم Client Diamond (Royal Navy & Gold Theme) المدمج والرشيق ================= */
         :root {
             --primary: #0f172a;    
             --accent: #1e293b;     
@@ -17,7 +17,6 @@
             --danger: #ef4444;     
             --info: #0ea5e9;
             --diamond: #e0f2fe;
-            --app-color: #6366f1;
         }
 
         body { 
@@ -124,7 +123,7 @@
             margin-bottom: 15px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: space-between; /* Adjusted to fit toggle next to title */
             gap: 8px;
         }
 
@@ -155,6 +154,11 @@
             font-family: inherit;
         }
 
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            border-color: var(--gold);
+            background: white;
+        }
+
         .btn-action {
             width: 100%;
             padding: 14px;
@@ -174,12 +178,22 @@
             gap: 8px;
         }
 
-        .btn-action:active { transform: scale(0.98); }
+        .btn-action:active {
+            transform: scale(0.98);
+        }
 
-        .btn-danger { background: var(--danger); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
-        .btn-success { background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-danger {
+            background: var(--danger);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
 
-        .search-details-box {
+        /* تفاصيل المنشأة بعد البحث */
+        .shop-details-box {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
@@ -197,25 +211,64 @@
             font-weight: bold;
         }
         
-        .sd-row:last-child { margin-bottom: 0; padding-top: 10px; border-top: 1px dashed #cbd5e1; }
+        .sd-row:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 1px dashed #cbd5e1;
+        }
+        
         .sd-label { color: #64748b; }
         .sd-val { color: var(--primary); font-weight: 900; }
 
+        /* نظام الإشعارات الداخلي */
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 999999; display: flex; flex-direction: column; gap: 10px;
             pointer-events: none; width: 90%; max-width: 400px;
         }
 
+        /* زر العودة الألماسي */
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-back:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* أنيميشن الرادار اللانهائي (مستورد من الرادار) */
+        @keyframes pulseRocket {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .radar-active {
+            background: var(--success) !important;
+            animation: pulseRocket 1.5s infinite;
+        }
+
+        /* تنسيقات الميزات الجديدة للريموت الماستر */
+        .header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;}
         .diamond-toggle { display: flex; align-items: center; gap: 6px; background: white; padding: 6px 12px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); font-size: 12px; font-weight: 800; color: var(--text); cursor: pointer; transition: 0.3s; }
-        .toggle-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
+        .diamond-toggle:hover { border-color: var(--gold); }
         .diamond-toggle input { display: none; }
+        .toggle-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
         .diamond-toggle input:checked + .toggle-dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
 
-        .btn-back { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 8px 15px; border-radius: 10px; font-weight: bold; font-size: 13px; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 5px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #f8fafc; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-val { font-weight: 900; font-size: 18px; color: var(--primary); }
+        .stat-lbl { font-size: 10px; color: #64748b; font-weight: bold; }
 
-        @keyframes pulseRocket { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-        .radar-active { background: var(--success) !important; animation: pulseRocket 1.5s infinite; }
     </style>
 </head>
 <body>
@@ -224,14 +277,14 @@
 
     <div class="admin-container">
         <div class="admin-header">
-            <div class="admin-logo">N One <span style="color:var(--gold)">Diamond Master</span></div>
-            <div class="admin-sub">التحكم المركزي الشامل للإمبراطورية 👑</div>
-            <button class="btn-back" onclick="goBackToHome()">🔙 عودة للرئيسية</button>
+            <div class="admin-logo">N One <span style="color:var(--gold)">Diamond</span></div>
+            <div class="admin-sub">التحكم المركزي (الريموت الألماسي) 💎</div>
+            <button class="btn-back" onclick="goBackToHome()">🔙 عودة للصفحة الرئيسية</button>
         </div>
 
         <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchMainTab('captains-tab', this)">🦸‍♂️ الكباتن والرادار</button>
-            <button class="tab-btn" onclick="switchMainTab('shops-tab', this)">🏪 المنشآت</button>
+            <button class="tab-btn active" onclick="switchMainTab('captains-tab', this)">🦸‍♂️ ريموت الكباتن والرادار</button>
+            <button class="tab-btn" onclick="switchMainTab('shops-tab', this)">🏪 ريموت المنشآت</button>
         </div>
 
         <div class="content-wrapper">
@@ -239,85 +292,142 @@
             <div id="captains-tab" class="tab-content active">
                 
                 <div class="control-card" style="border-right-color: var(--info);">
-                    <div class="card-title">🔍 الاستعلام والتحكم بالكابتن</div>
-                    <div class="input-group">
-                        <label>رقم هاتف الكابتن أو المعرف</label>
-                        <input type="text" id="cap_search_query" placeholder="أدخل البيانات للبحث...">
+                    <div class="card-title">
+                        <span>📡 محرك الرادار التلقائي</span>
                     </div>
-                    <button class="btn-action" style="background: var(--info);" onclick="searchRemoteCaptain()">بحث وتحكم 🔎</button>
-
-                    <div id="cap_details_area" class="search-details-box" style="margin-top: 15px;">
-                        <div class="sd-row"><span class="sd-label">الاسم</span><span class="sd-val" id="rc_name">---</span></div>
-                        <div class="sd-row"><span class="sd-label">الحالة</span><span class="sd-val" id="rc_status">---</span></div>
-                        <div class="sd-row"><span class="sd-label">التطبيق</span><span class="sd-val" id="rc_app">---</span></div>
-                        <div class="sd-row"><span class="sd-label">الرصيد</span><span class="sd-val" id="rc_balance">0.00 د.أ</span></div>
-                        <div class="sd-row" style="border-top: 1px dashed #cbd5e1; padding-top:10px;">
-                            <span class="sd-label">حماية الرقم</span>
-                            <label class="diamond-toggle">
-                                <input type="checkbox" id="rc_hide_phone" onchange="toggleCapPhonePrivacy(this.checked)">
-                                <div class="toggle-dot"></div> إخفاء رقمه
-                            </label>
-                        </div>
-                        <button id="btn_freeze_cap" class="btn-action btn-danger" onclick="toggleRemoteCapStatus('paused')">تجميد الكابتن ❄️</button>
-                        <button id="btn_unfreeze_cap" class="btn-action btn-success" style="display:none;" onclick="toggleRemoteCapStatus('active')">تفعيل الكابتن ✅</button>
-                    </div>
-                </div>
-
-                <div class="control-card" style="border-right-color: var(--app-color);">
-                    <div class="card-title">🚀 محرك التوزيع التلقائي (Radar)</div>
-                    <button id="btn-auto-radar" class="btn-action" style="background:var(--app-color);" onclick="toggleAutoRadar()">تشغيل محرك الرادار</button>
+                    <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
+                        تفعيل هذا المحرك سيجعل الريموت يقرأ الطلبات الجديدة ويوزعها تلقائياً على الكباتن المتاحين في مناطقهم.
+                    </p>
+                    <button id="btn-auto-radar" class="btn-action" style="background:var(--app-color);" onclick="toggleAutoRadar()">🚀 تفعيل محرك الرادار</button>
                 </div>
 
                 <div class="control-card" style="border-right-color: var(--success);">
-                    <div class="card-title">⏳ عداد قبول الطلبات</div>
+                    <div class="card-title">⏳ نظام الانقضاض السريع (عداد الطلبات)</div>
                     <div class="input-group">
-                        <label>الوقت المسموح (ثانية)</label>
-                        <input type="number" id="timer_val" value="10" min="5">
+                        <label>مدة قبول الطلب (بالثواني)</label>
+                        <input type="number" id="timer_val" value="10" min="5" max="60">
                     </div>
-                    <button class="btn-action btn-success" onclick="updateTimer()">تحديث العداد ⏱️</button>
+                    <button class="btn-action btn-success" onclick="updateTimer()">تحديث وقت العداد ⏱️</button>
                 </div>
 
                 <div class="control-card" style="border-right-color: var(--danger);">
-                    <div class="card-title">🛡️ كاشف الـ VPN العالمي</div>
-                    <button id="btn_vpn_on" class="btn-action btn-danger" onclick="toggleVPN(true)">تفعيل الحماية القصوى 🔒</button>
-                    <button id="btn_vpn_off" class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleVPN(false)">إيقاف الحماية 🔓</button>
+                    <div class="card-title">
+                        <span>🛡️ درع الحماية (كاشف الـ VPN)</span>
+                        <label class="diamond-toggle" title="منع استقبال الطلبات بمشغل VPN">
+                            <input type="checkbox" id="toggle_anti_vpn" onchange="toggleVPN(this.checked)">
+                            <div class="toggle-dot"></div> تفعيل
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; font-weight: bold;">يمنع الكباتن من استقبال الطلبات في حال تفعيلهم لبرامج الـ VPN لتغيير الموقع.</p>
                 </div>
 
                 <div class="control-card" style="border-right-color: var(--gold);">
-                    <div class="card-title">📍 تثبيت النطاق الجغرافي</div>
-                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="toggleZoneLock(true)">تثبيت الكباتن بمناطقهم ✅</button>
-                    <button class="btn-action" style="background: #cbd5e1; color: var(--text); margin-top: 10px;" onclick="toggleZoneLock(false)">فتح الحدود الجغرافية ❌</button>
+                    <div class="card-title">
+                        <span>📍 تثبيت منطقة العمل (Zone Lock)</span>
+                        <label class="diamond-toggle" title="حصر الطلبات بكباتن المنطقة فقط">
+                            <input type="checkbox" id="toggle_fix_area" onchange="toggleZoneLock(this.checked)">
+                            <div class="toggle-dot"></div> تفعيل
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; font-weight: bold;">إجبار الكابتن على استقبال طلبات منطقته المحددة فقط وعدم التنقل بين المناطق.</p>
+                </div>
+
+                <div class="control-card">
+                    <div class="card-title">
+                        <span>🔥 التحكم بالنقاط الساخنة (Hotspots)</span>
+                        <label class="diamond-toggle" title="تفعيل خريطة ضغط العمل للكباتن">
+                            <input type="checkbox" id="toggle_hotspots" onchange="toggleHotspots(this.checked)">
+                            <div class="toggle-dot"></div> تفعيل
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; font-weight: bold;">تفعيل هذا الخيار سيقوم بإنشاء نقطة وهمية ليقرأها تطبيق الكابتن ويظهر شارة "النقاط الساخنة مفعّلة".</p>
+                </div>
+                
+                <div class="control-card" style="border-right-color: var(--info);">
+                    <div class="card-title">📢 بث إعلان شريطي (لجميع الكباتن)</div>
+                    <div class="input-group">
+                        <label>نص الإعلان</label>
+                        <input type="text" id="ad_text" placeholder="اكتب الخبر أو الإعلان هنا...">
+                    </div>
+                    <div class="input-group">
+                        <label>نوع الإعلان</label>
+                        <select id="ad_type">
+                            <option value="normal">عادي (أزرق)</option>
+                            <option value="warning">تحذير (أحمر)</option>
+                        </select>
+                    </div>
+                    <button class="btn-action" style="background: var(--info);" onclick="sendAnnouncement()">بث الإعلان الآن 🚀</button>
+                    <button class="btn-action btn-danger" style="margin-top: 10px;" onclick="clearAnnouncement()">إيقاف الإعلان الحالي ❌</button>
+                </div>
+
+                <div class="control-card" style="border-right-color: var(--danger);">
+                    <div class="card-title">🚨 إرسال نافذة تنبيه إدارية (Popup)</div>
+                    <div class="input-group">
+                        <label>نص الرسالة الإدارية</label>
+                        <textarea id="alert_text" rows="3" placeholder="اكتب الرسالة التي ستظهر بنصف الشاشة..."></textarea>
+                    </div>
+                    <button class="btn-action btn-danger" onclick="sendAdminAlert()">إرسال التنبيه الفوري 🔔</button>
                 </div>
 
             </div>
 
             <div id="shops-tab" class="tab-content">
+                
                 <div class="control-card" style="border-right-color: var(--info);">
-                    <div class="card-title">🔍 استعلام المنشآت</div>
-                    <div class="input-group"><input type="text" id="shop_search_query" placeholder="أدخل اسم أو هاتف المنشأة..."></div>
-                    <button class="btn-action" style="background: var(--info);" onclick="searchRemoteShop()">بحث 🔎</button>
+                    <div class="card-title">🔍 البحث والاستعلام عن منشأة</div>
+                    <div class="input-group">
+                        <label>رقم الهاتف أو معرف المنشأة</label>
+                        <input type="text" id="shop_search_query" placeholder="أدخل البيانات للبحث...">
+                    </div>
+                    <button class="btn-action" style="background: var(--info);" onclick="searchRemoteShop()">البحث في السجلات 🔎</button>
 
-                    <div id="shop_details_area" class="search-details-box" style="margin-top: 15px;">
-                        <div class="sd-row"><span class="sd-label">الاسم</span><span class="sd-val" id="rs_name">---</span></div>
-                        <div class="sd-row"><span class="sd-label">الرصيد</span><span class="sd-val" id="rs_balance">0.00 د.أ</span></div>
-                        <div class="input-group" style="margin-top:15px;">
-                            <label>شحن / خصم رصيد</label>
-                            <input type="number" id="rs_charge_val" placeholder="0.00">
+                    <div id="shop_details_area" class="shop-details-box" style="margin-top: 15px;">
+                        <div class="sd-row">
+                            <span class="sd-label">الاسم التجاري</span>
+                            <span class="sd-val" id="rs_name">---</span>
                         </div>
-                        <button class="btn-action btn-success" onclick="chargeRemoteShop()">تنفيذ العملية 💵</button>
-                        <button id="btn_freeze_shop" class="btn-action btn-danger" onclick="toggleRemoteShopStatus('paused')">تجميد المنشأة ❄️</button>
-                        <button id="btn_unfreeze_shop" class="btn-action btn-success" style="display:none;" onclick="toggleRemoteShopStatus('active')">تفعيل المنشأة ✅</button>
+                        <div class="sd-row">
+                            <span class="sd-label">رقم التواصل</span>
+                            <span class="sd-val" id="rs_phone" style="font-family: monospace;">---</span>
+                        </div>
+                        <div class="sd-row">
+                            <span class="sd-label">حالة الحساب</span>
+                            <span class="sd-val" id="rs_status">---</span>
+                        </div>
+                        <div class="sd-row">
+                            <span class="sd-label">الرصيد المتاح</span>
+                            <span class="sd-val" id="rs_balance" style="color: var(--success); font-size: 16px;">0.00 د.أ</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="control-card" style="border-right-color: var(--night);">
-                    <div class="card-title">🛡️ إظهار/إخفاء الأرقام للجميع</div>
-                    <label class="diamond-toggle" style="width: 100%; justify-content: space-between; padding: 15px;">
-                        <span>السماح برؤية أرقام الهواتف</span>
-                        <input type="checkbox" id="global_phone_toggle" onchange="toggleGlobalPhones(this.checked)">
-                        <div class="toggle-dot" style="width:20px; height:20px;"></div>
-                    </label>
+                <div class="control-card" style="border-right-color: var(--danger);">
+                    <div class="card-title">🛑 التحكم بحالة المنشأة</div>
+                    <p style="font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; line-height: 1.6;">
+                        تجميد الحساب سيمنع المنشأة من الدخول للنظام وإرسال الطلبات فورا
+                    </p>
+                    <button id="btn_freeze_shop" class="btn-action btn-danger" onclick="toggleRemoteShopStatus('paused')">تجميد حساب المنشأة ❄️</button>
+                    <button id="btn_unfreeze_shop" class="btn-action btn-success" style="display: none;" onclick="toggleRemoteShopStatus('active')">إعادة تفعيل الحساب ✅</button>
                 </div>
+
+                <div class="control-card" style="border-right-color: var(--success);">
+                    <div class="card-title">💰 إدارة رصيد المنشأة</div>
+                    <div class="input-group">
+                        <label>قيمة الإيداع / الخصم (للقيمة السالبة استخدم علامة -)</label>
+                        <input type="number" id="rs_charge_val" placeholder="0.00">
+                    </div>
+                    <button class="btn-action btn-success" onclick="chargeRemoteShop()">تنفيذ الحركة المالية 💵</button>
+                </div>
+
+                <div class="control-card" style="border-right-color: var(--gold);">
+                    <div class="card-title">📩 إرسال تنبيه خاص للمنشأة</div>
+                    <div class="input-group">
+                        <label>الرسالة الإدارية</label>
+                        <textarea id="rs_alert_text" rows="3" placeholder="اكتب الرسالة لتظهر كإشعار إجباري للمنشأة المحددة..."></textarea>
+                    </div>
+                    <button class="btn-action" style="background: var(--gold); color: var(--primary);" onclick="sendSpecificShopAlert()">إرسال التنبيه للمنشأة 🚀</button>
+                </div>
+
             </div>
 
         </div>
@@ -340,71 +450,451 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let currentTargetShop = null; let currentShopKey = '';
-        let currentTargetCap = null; let currentCapKey = '';
-        let currentUser = null; let isAutoRadarActive = false;
-        let globalUsers = []; let allOrders = []; let allAssignedOrders = {};
+        // متغيرات للتحكم بالمنشآت والرادار
+        let currentTargetShop = null;
+        let currentShopNode = 'shops';
+        let currentShopKey = '';
+        let currentUser = null;
+        let activeCompanyName = ''; 
+        let allOrders = [];
+        let globalUsers = [];
+        let allAssignedOrders = {};
+        let isAutoRadarActive = false;
+        let radarMemory = {};
+        let remoteOrderTimer = 10000;
 
         window.showToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
-            toast.style.color = 'white'; toast.style.padding = '15px 20px'; toast.style.borderRadius = '15px';
-            toast.style.fontWeight = 'bold'; toast.innerText = msg;
+            toast.style.color = 'white';
+            toast.style.padding = '15px 20px';
+            toast.style.borderRadius = '15px';
+            toast.style.fontWeight = 'bold';
+            toast.style.fontSize = '14px';
+            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            toast.style.textAlign = 'center';
+            toast.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            toast.style.transform = 'translateY(-50px)';
+            toast.style.opacity = '0';
+            toast.innerText = msg;
+            
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            
+            setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+            setTimeout(() => { toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
         };
 
         window.switchMainTab = function(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active'); btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
         };
 
-        // ================== محرك الرادار والتحكم بالكباتن ==================
+        // زر العودة الذكي
+        window.goBackToHome = function() {
+            if (document.referrer && document.referrer.includes(window.location.host)) {
+                window.history.back();
+            } else {
+                window.location.replace('index.html'); 
+            }
+        };
 
-        window.searchRemoteCaptain = async function() {
-            const query = document.getElementById('cap_search_query').value.trim();
-            if(!query) return;
-            const snap = await get(ref(db, 'captains'));
-            if(snap.exists()) {
-                const caps = snap.val();
-                for(let key in caps) {
-                    if(caps[key].Cap_Phone === query || key === query || caps[key].Cap_User === query) {
-                        currentTargetCap = caps[key]; currentCapKey = key;
-                        renderCapDetails(); return;
+        // ================== تهيئة السوبر ريموت والدمج مع الرادار ==================
+        
+        function getActiveCompanyName() {
+            return currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : '';
+        }
+
+        window.addEventListener('load', () => {
+            const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+            if (savedUser && (savedUser.Client_User || savedUser.user)) {
+                currentUser = savedUser;
+                activeCompanyName = getActiveCompanyName();
+                const myMaster = savedUser.Client_User || savedUser.user;
+                
+                // جلب إعداد العداد
+                onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
+                    if(snap.exists()) {
+                        document.getElementById('timer_val').value = snap.val();
+                        remoteOrderTimer = parseInt(snap.val()) * 1000;
+                    } else {
+                        remoteOrderTimer = 10000;
+                    }
+                });
+
+                // جلب حالة الـ VPN
+                onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
+                    document.getElementById('toggle_anti_vpn').checked = snap.exists() ? snap.val() : false;
+                });
+
+                // جلب حالة تثبيت المنطقة
+                onValue(ref(db, `settings/${myMaster}/fix_area`), (snap) => {
+                    document.getElementById('toggle_fix_area').checked = snap.exists() ? snap.val() : false;
+                });
+
+                // جلب حالة النقاط الساخنة
+                onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
+                    document.getElementById('toggle_hotspots').checked = snap.exists() ? snap.val() : false;
+                });
+
+                // جلب حالة محرك الرادار التلقائي
+                onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
+                    isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
+                    const btn = document.getElementById('btn-auto-radar');
+                    if (isAutoRadarActive) {
+                        btn.classList.add('radar-active');
+                        btn.innerHTML = '🚀 محرك الرادار يعمل';
+                        triggerAutoRadarMaster();
+                    } else {
+                        btn.classList.remove('radar-active');
+                        btn.innerHTML = '🚀 تفعيل محرك الرادار';
+                    }
+                });
+
+                fetchGlobalUsers();
+                fetchLiveOrders();
+                fetchAssignedOrders();
+                fetchRadarMemory();
+                setInterval(refreshDynamicElements, 1000); // النبض المستمر لقراءة الطلبات
+            }
+        });
+
+        function fetchGlobalUsers() {
+            onValue(ref(db), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    globalUsers = [];
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; globalUsers.push(item); });
+                    };
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
+                }
+            });
+        }
+
+        function fetchLiveOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster();
+                }
+            });
+        }
+
+        function fetchAssignedOrders() {
+            onValue(ref(db, 'assigned_orders'), (snapshot) => {
+                allAssignedOrders = snapshot.exists() ? snapshot.val() : {};
+                checkAssignedOrdersStatus();
+            });
+        }
+
+        function fetchRadarMemory() {
+            onValue(ref(db, 'radar_memory'), (snapshot) => {
+                radarMemory = snapshot.exists() ? snapshot.val() : {};
+            });
+        }
+
+        function checkCompanyMatch(u, compName) {
+            const activeName = String(compName).toLowerCase().trim();
+            const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
+            if(!activeName && !activeUser) return false;
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim(),
+                String(u.Shop_Master || '').toLowerCase().trim(),
+                String(u.Client_Name || '').toLowerCase().trim()
+            ];
+            return (activeName && vals.includes(activeName)) || (activeUser && vals.includes(activeUser));
+        }
+
+        // --- محرك الرادار المدمج الذي يعمل في الخلفية ---
+        window.triggerAutoRadarMaster = async function() {
+            if(!currentUser) return;
+
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+            
+            const pendingOrders = allOrders.filter(o => {
+                const ordId = o.Shop_Ord_ID || o.id;
+                if (!ordId) return false;
+                if (o.OrderStatus !== 'new' && o.Shop_Status !== 'new') return false; 
+                
+                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+
+                if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
+                
+                const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
+                if (orderUser && myShops.includes(orderUser)) return true;
+                
+                return false;
+            }).reverse();
+            
+            let activeLinkedIds = new Set();
+            let busyCaptains = new Set();
+            
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    let st = allAssignedOrders[capKey][ordKey].status;
+                    if(st === 'assigned' || st === 'accepted') {
+                        busyCaptains.add(capKey);
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
+                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        }
                     }
                 }
             }
-            window.showToast("لم يتم العثور على الكابتن", true);
+            
+            const trulyPendingOrders = pendingOrders.filter(o => {
+                const ordId = o.Shop_Ord_ID || o.id;
+                return !activeLinkedIds.has(ordId);
+            });
+
+            if(trulyPendingOrders.length === 0) return;
+
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
+            
+            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
+            availableCaptains = availableCaptains.filter(c => {
+                const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                return !busyCaptains.has(k);
+            });
+
+            if (availableCaptains.length === 0) return;
+
+            let updates = {};
+            const ratio = localStorage.getItem('n1_commission_ratio') || 10;
+
+            for (let ord of trulyPendingOrders) {
+                if(availableCaptains.length === 0) break;
+                
+                const ordId = ord.Shop_Ord_ID || ord.id;
+                const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
+
+                let eligibleCaptains = availableCaptains.filter(c => {
+                     const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
+                     return cRegion === shopOriginArea;
+                });
+
+                if (eligibleCaptains.length === 0) continue;
+
+                let unskippedCaptains = eligibleCaptains.filter(c => {
+                     const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                     const hasSkipped = radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey];
+                     return !hasSkipped;
+                });
+
+                if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
+                     updates[`radar_memory/${ordId}`] = null;
+                     delete radarMemory[ordId]; 
+                     unskippedCaptains = eligibleCaptains;
+                }
+
+                if (unskippedCaptains.length === 0) continue;
+
+                let selectedCaptain = unskippedCaptains[0];
+                const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
+
+                availableCaptains = availableCaptains.filter(c => {
+                     const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                     return k !== capKey;
+                });
+
+                const fee = parseFloat(ord.Shop_Fee || ord.fee || 0);
+                const commission = (fee * (ratio / 100)).toFixed(2);
+                
+                const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
+                const orderData = {
+                    id: appOrderId,
+                    restaurant: (ord.Shop_Name || ord.restaurant) + (shopOriginArea ? " - " + shopOriginArea : ""),
+                    value: ord.Shop_Val || ord.value,
+                    fee: ord.Shop_Fee || ord.fee,
+                    status: 'assigned',
+                    timestamp: Date.now(),
+                    linkedRadarId: ordId,
+                    commission_amount: commission,
+                    cap_name: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
+                    dispatch_method: "Auto"
+                };
+                
+                updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
+            }
+
+            if(Object.keys(updates).length > 0) {
+                update(ref(db), updates);
+            }
         };
 
-        function renderCapDetails() {
-            document.getElementById('cap_details_area').style.display = 'block';
-            document.getElementById('rc_name').innerText = currentTargetCap.Cap_Name || currentTargetCap.name;
-            document.getElementById('rc_balance').innerText = parseFloat(currentTargetCap.Cap_Balance || 0).toFixed(2) + " د.أ";
-            document.getElementById('rc_app').innerText = currentTargetCap.app_status === 'online' ? "🟢 متصل" : "⚪ غير متصل";
+        function checkAssignedOrdersStatus() {
+            const now = Date.now();
+            let hasUpdates = false;
+            const updates = {};
+
+            for (let capKey in allAssignedOrders) {
+                for (let appOrdId in allAssignedOrders[capKey]) {
+                    let ord = allAssignedOrders[capKey][appOrdId];
+                    
+                    if (ord.dispatch_method === 'Auto') {
+                        const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
+                        const elapsed = now - ord.timestamp;
+
+                        if (ord.status === 'assigned') {
+                            if (elapsed > remoteOrderTimer || isAppClosed) { 
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                delete allAssignedOrders[capKey][appOrdId]; 
+                                if(ord.linkedRadarId) {
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
+                                }
+                                hasUpdates = true;
+                                continue;
+                            }
+                        }
+                        else if (ord.status === 'received' || ord.status === 'ringing') {
+                            if (elapsed > (remoteOrderTimer + 2000) || isAppClosed) {
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                delete allAssignedOrders[capKey][appOrdId]; 
+                                if(ord.linkedRadarId) {
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
+                                }
+                                hasUpdates = true;
+                                continue;
+                            }
+                        }
+                    }
+                    
+                    if (ord.status === 'rejected' || ord.status === 'timeout') {
+                        updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                        delete allAssignedOrders[capKey][appOrdId]; 
+                        if(ord.linkedRadarId) {
+                            updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                            if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
+                            radarMemory[ord.linkedRadarId].skipped[capKey] = true;
+                        }
+                        hasUpdates = true;
+                    }
+                }
+            }
             
-            const status = currentTargetCap.Cap_Status || currentTargetCap.status;
-            document.getElementById('rc_status').innerText = status === 'paused' ? "❄️ مجمد" : "✅ نشط";
-            document.getElementById('btn_freeze_cap').style.display = status === 'paused' ? 'none' : 'block';
-            document.getElementById('btn_unfreeze_cap').style.display = status === 'paused' ? 'block' : 'none';
-            document.getElementById('rc_hide_phone').checked = currentTargetCap.hide_phone === true;
+            if (hasUpdates) {
+                update(ref(db), updates);
+            }
         }
 
-        window.toggleRemoteCapStatus = async function(newStatus) {
-            const updates = {};
-            updates[`captains/${currentCapKey}/Cap_Status`] = newStatus;
-            updates[`captains/${currentCapKey}/status`] = newStatus;
-            updates[`captains/${currentCapKey}/app_access`] = newStatus === 'paused' ? 'denied' : 'granted';
-            await update(ref(db), updates);
-            currentTargetCap.Cap_Status = newStatus; renderCapDetails();
-            window.showToast("تم تحديث حالة الكابتن");
+        function refreshDynamicElements() {
+            checkAssignedOrdersStatus();
+            if (isAutoRadarActive) {
+                triggerAutoRadarMaster();
+            }
+        }
+
+        // ================== أوامر الكباتن (الإعدادات) ==================
+
+        window.updateTimer = async function() {
+            const timeVal = document.getElementById('timer_val').value;
+            if(!timeVal || timeVal < 5) { window.showToast("يرجى إدخال وقت صحيح لا يقل عن 5 ثواني", true); return; }
+            try {
+                // حفظ الإعداد للـ Admin العام
+                await set(ref(db, 'settings/order_timer'), { seconds: parseInt(timeVal), timestamp: Date.now() });
+                
+                // حفظ الإعداد للـ User/Company الحالي
+                const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                const myMaster = savedUser.Client_User || savedUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
+                }
+
+                window.showToast("تم تحديث وقت العداد بنجاح ⏱️");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التحديث", true);
+            }
         };
 
-        window.toggleCapPhonePrivacy = async function(isHidden) {
-            await update(ref(db, `captains/${currentCapKey}`), { hide_phone: isHidden });
-            window.showToast(isHidden ? "تم إخفاء رقم الكابتن عن المنشآت" : "رقم الكابتن متاح الآن");
+        window.toggleVPN = async function(isActive) {
+            try {
+                await set(ref(db, 'settings/anti_vpn'), { active: isActive, timestamp: Date.now() });
+                const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                const myMaster = savedUser.Client_User || savedUser.user;
+                if(myMaster) await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
+
+                if(isActive) window.showToast("تم تفعيل كاشف الـ VPN بنجاح 🔒");
+                else window.showToast("تم إيقاف كاشف الـ VPN 🔓");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التعديل", true);
+            }
+        };
+
+        window.toggleZoneLock = async function(isActive) {
+            try {
+                await set(ref(db, 'settings/zone_lock'), { active: isActive, timestamp: Date.now() });
+                const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                const myMaster = savedUser.Client_User || savedUser.user;
+                if(myMaster) await set(ref(db, `settings/${myMaster}/fix_area`), isActive);
+
+                if(isActive) window.showToast("تم إجبار الكباتن على مناطقهم ✅");
+                else window.showToast("تم السماح بالتنقل الحر للمناطق ❌");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التعديل", true);
+            }
+        };
+
+        window.sendAnnouncement = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            const type = document.getElementById('ad_type').value;
+            if(!text) { window.showToast("يرجى كتابة نص الإعلان أولاً", true); return; }
+            try {
+                const adData = { text: text, type: type, timestamp: Date.now(), expireAt: Date.now() + (24 * 60 * 60 * 1000) };
+                await set(ref(db, 'announcements/global'), adData);
+                window.showToast("تم بث الإعلان لجميع الكباتن بنجاح 🚀");
+                document.getElementById('ad_text').value = '';
+            } catch(e) { window.showToast("حدث خطأ أثناء الإرسال", true); }
+        };
+
+        window.clearAnnouncement = async function() {
+            try {
+                await remove(ref(db, 'announcements/global'));
+                window.showToast("تم إيقاف الإعلان الحالي بنجاح ✅");
+            } catch(e) { window.showToast("حدث خطأ أثناء الإيقاف", true); }
+        };
+
+        window.sendAdminAlert = async function() {
+            const text = document.getElementById('alert_text').value.trim();
+            if(!text) { window.showToast("يرجى كتابة نص التنبيه أولاً", true); return; }
+            try {
+                const alertData = { message: text, timestamp: Date.now() };
+                await set(ref(db, 'alerts/global'), alertData);
+                window.showToast("تم إرسال التنبيه المنبثق بنجاح 🔔");
+                document.getElementById('alert_text').value = '';
+            } catch(e) { window.showToast("حدث خطأ أثناء الإرسال", true); }
+        };
+
+        window.toggleHotspots = async function(isActive) {
+            try {
+                if(isActive) {
+                    await set(ref(db, 'orders/fake_hotspot_trigger'), { active: true, timestamp: Date.now() });
+                    const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                    const myMaster = savedUser.Client_User || savedUser.user;
+                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), true);
+                    window.showToast("تم تفعيل مؤشر النقاط الساخنة 🔥");
+                } else {
+                    await remove(ref(db, 'orders/fake_hotspot_trigger'));
+                    const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                    const myMaster = savedUser.Client_User || savedUser.user;
+                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), false);
+                    window.showToast("تم إيقاف مؤشر النقاط الساخنة ❌");
+                }
+            } catch(e) { window.showToast("حدث خطأ أثناء التعديل", true); }
         };
 
         window.toggleAutoRadar = function() {
@@ -412,82 +902,154 @@
             const myMaster = savedUser.Client_User || savedUser.user;
             const newState = !isAutoRadarActive;
             set(ref(db, `settings/${myMaster}/autoRadar`), newState);
-        };
-
-        window.updateTimer = async function() {
-            const val = document.getElementById('timer_val').value;
-            await set(ref(db, 'settings/order_timer'), { seconds: parseInt(val), timestamp: Date.now() });
-            window.showToast("تم تحديث عداد الانقضاض ⏱️");
-        };
-
-        window.toggleVPN = async function(isActive) {
-            await set(ref(db, 'settings/anti_vpn'), { active: isActive, timestamp: Date.now() });
-            window.showToast(isActive ? "كاشف VPN نشط 🛡️" : "الحماية معطلة 🔓");
+            window.showToast(newState ? "تم تشغيل محرك التوزيع التلقائي 🚀" : "تم إيقاف محرك التوزيع 🛑");
         };
 
         // ================== أوامر المنشآت ==================
 
         window.searchRemoteShop = async function() {
             const query = document.getElementById('shop_search_query').value.trim();
-            const snap = await get(ref(db));
-            if(snap.exists()) {
-                const data = snap.val();
-                let found = null; let node = 'shops'; let k = '';
-                const search = (obj, n) => {
-                    for(let key in obj) {
-                        if(obj[key].Shop_User === query || obj[key].user === query || obj[key].phone === query) { found = obj[key]; node = n; k = key; }
+            if(!query) { window.showToast("يرجى إدخال معرف أو هاتف المنشأة", true); return; }
+
+            try {
+                const snap = await get(ref(db));
+                if(snap.exists()) {
+                    const data = snap.val();
+                    let foundShop = null;
+                    let foundNode = null;
+                    let foundKey = null;
+
+                    const searchInNode = (nodeData, nodeName) => {
+                        if(!nodeData) return;
+                        for(let key in nodeData) {
+                            const s = nodeData[key];
+                            if((s.Shop_User === query) || (s.user === query) || (s.Client_User === query) || (s.Shop_Phone === query) || (s.phone === query) || (s.Client_Phone === query)) {
+                                foundShop = s;
+                                foundNode = nodeName;
+                                foundKey = key;
+                                return true;
+                            }
+                        }
+                    };
+
+                    searchInNode(data.shops, 'shops');
+                    if(!foundShop) searchInNode(data.users, 'users');
+
+                    if(foundShop) {
+                        currentTargetShop = foundShop;
+                        currentShopNode = foundNode;
+                        currentShopKey = foundKey;
+                        renderShopDetails();
+                        window.showToast("تم العثور على المنشأة بنجاح");
+                    } else {
+                        window.showToast("لم يتم العثور على منشأة بهذا المعرف", true);
+                        document.getElementById('shop_details_area').style.display = 'none';
+                        currentTargetShop = null;
                     }
-                };
-                search(data.shops, 'shops'); if(!found) search(data.users, 'users');
-                if(found) { currentTargetShop = found; currentShopKey = k; currentShopNode = node; renderShopDetails(); }
-                else window.showToast("المنشأة غير موجودة", true);
+                }
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء البحث", true);
             }
         };
 
         function renderShopDetails() {
-            document.getElementById('shop_details_area').style.display = 'block';
-            document.getElementById('rs_name').innerText = currentTargetShop.Shop_Name || currentTargetShop.Client_Name;
-            document.getElementById('rs_balance').innerText = parseFloat(currentTargetShop.Shop_Balance || currentTargetShop.balance || 0).toFixed(2) + " د.أ";
-            const status = currentTargetShop.Client_Status || currentTargetShop.status;
-            document.getElementById('btn_freeze_shop').style.display = status === 'paused' ? 'none' : 'block';
-            document.getElementById('btn_unfreeze_shop').style.display = status === 'paused' ? 'block' : 'none';
+            const area = document.getElementById('shop_details_area');
+            area.style.display = 'block';
+            document.getElementById('rs_name').innerText = currentTargetShop.Shop_Name || currentTargetShop.name || currentTargetShop.Client_Name || "غير محدد";
+            document.getElementById('rs_phone').innerText = currentTargetShop.Shop_Phone || currentTargetShop.phone || currentTargetShop.Client_Phone || "غير محدد";
+            
+            const bal = parseFloat(currentTargetShop.Shop_Balance || currentTargetShop.balance || currentTargetShop.Client_Balance || 0).toFixed(2);
+            document.getElementById('rs_balance').innerText = bal + " د.أ";
+
+            const status = currentTargetShop.Client_Status || currentTargetShop.status || "active";
+            const statusEl = document.getElementById('rs_status');
+            
+            if(status === 'paused') {
+                statusEl.innerText = "مجمد ❄️";
+                statusEl.style.color = "var(--danger)";
+                document.getElementById('btn_freeze_shop').style.display = 'none';
+                document.getElementById('btn_unfreeze_shop').style.display = 'flex';
+            } else {
+                statusEl.innerText = "نشط ✅";
+                statusEl.style.color = "var(--success)";
+                document.getElementById('btn_freeze_shop').style.display = 'flex';
+                document.getElementById('btn_unfreeze_shop').style.display = 'none';
+            }
         }
 
-        window.chargeRemoteShop = async function() {
-            const amount = parseFloat(document.getElementById('rs_charge_val').value);
-            if(isNaN(amount)) return;
-            const current = parseFloat(currentTargetShop.Shop_Balance || currentTargetShop.balance || 0);
-            const next = current + amount;
-            const updates = {};
-            updates[`${currentShopNode}/${currentShopKey}/Shop_Balance`] = next;
-            updates[`${currentShopNode}/${currentShopKey}/balance`] = next;
-            await update(ref(db), updates);
-            currentTargetShop.Shop_Balance = next; renderShopDetails();
-            window.showToast("تم تحديث رصيد المنشأة 💰");
-        };
-
-        window.toggleGlobalPhones = async function(isShowing) {
-            const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
-            const myMaster = savedUser.Client_User || savedUser.user;
-            await set(ref(db, `settings/${myMaster}/show_phone_numbers`), isShowing);
-            window.showToast(isShowing ? "الأرقام تظهر للجميع الآن" : "تم حجب الأرقام عالمياً");
-        };
-
-        // استماع للتحديثات العالمية
-        window.addEventListener('load', () => {
-            const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
-            const myMaster = savedUser.Client_User || savedUser.user;
-            if(myMaster) {
-                onValue(ref(db, `settings/${myMaster}/autoRadar`), (snap) => {
-                    isAutoRadarActive = snap.val();
-                    const btn = document.getElementById('btn-auto-radar');
-                    if(isAutoRadarActive) { btn.classList.add('radar-active'); btn.innerText = "محرك الرادار يعمل 🚀"; }
-                    else { btn.classList.remove('radar-active'); btn.innerText = "تشغيل محرك الرادار"; }
-                });
+        window.toggleRemoteShopStatus = async function(newStatus) {
+            if(!currentTargetShop) return;
+            try {
+                const updates = {};
+                updates[`${currentShopNode}/${currentShopKey}/Client_Status`] = newStatus;
+                updates[`${currentShopNode}/${currentShopKey}/status`] = newStatus;
+                await update(ref(db), updates);
+                
+                currentTargetShop.Client_Status = newStatus;
+                currentTargetShop.status = newStatus;
+                renderShopDetails();
+                
+                if(newStatus === 'paused') window.showToast("تم تجميد حساب المنشأة ❄️");
+                else window.showToast("تم تفعيل حساب المنشأة ✅");
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء التحديث", true);
             }
-        });
+        };
 
-        window.goBackToHome = () => window.location.replace('index.html');
+        window.chargeRemoteShop = async function() {
+            if(!currentTargetShop) return;
+            const amount = parseFloat(document.getElementById('rs_charge_val').value);
+            if(isNaN(amount) || document.getElementById('rs_charge_val').value === '') { 
+                window.showToast("يرجى إدخال مبلغ صحيح", true); 
+                return; 
+            }
+
+            try {
+                const currentBal = parseFloat(currentTargetShop.Shop_Balance || currentTargetShop.balance || currentTargetShop.Client_Balance || 0);
+                const newBal = currentBal + amount;
+                
+                const updates = {};
+                updates[`${currentShopNode}/${currentShopKey}/Shop_Balance`] = newBal;
+                updates[`${currentShopNode}/${currentShopKey}/balance`] = newBal;
+                updates[`${currentShopNode}/${currentShopKey}/Client_Balance`] = newBal;
+                
+                await update(ref(db), updates);
+                
+                currentTargetShop.Shop_Balance = newBal;
+                currentTargetShop.balance = newBal;
+                currentTargetShop.Client_Balance = newBal;
+                
+                renderShopDetails();
+                document.getElementById('rs_charge_val').value = '';
+                window.showToast(`تم تعديل رصيد المنشأة بنجاح 💰`);
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء تعديل الرصيد", true);
+            }
+        };
+
+        window.sendSpecificShopAlert = async function() {
+            if(!currentTargetShop) return;
+            const text = document.getElementById('rs_alert_text').value.trim();
+            if(!text) { window.showToast("يرجى كتابة نص التنبيه", true); return; }
+            
+            try {
+                const alertData = {
+                    message: text,
+                    timestamp: Date.now(),
+                    sender: "الإدارة المركزية"
+                };
+                
+                const updates = {};
+                updates[`alerts/users/${currentShopKey}`] = alertData;
+                
+                await update(ref(db), updates);
+                
+                window.showToast("تم إرسال التنبيه للمنشأة بنجاح 🔔");
+                document.getElementById('rs_alert_text').value = '';
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء الإرسال", true);
+            }
+        };
 
     </script>
 </body>
