@@ -6,6 +6,7 @@
     <title>N One | Smart Controller 💎</title>
     <meta name="theme-color" content="#0f172a">
     <style>
+        /* ================= تصميم Client Diamond (Royal Navy & Gold Theme) المدمج والرشيق ================= */
         :root {
             --primary: #0f172a;    
             --accent: #1e293b;     
@@ -224,6 +225,24 @@
             z-index: 999999; display: flex; flex-direction: column; gap: 10px;
             pointer-events: none; width: 90%; max-width: 400px;
         }
+
+        /* زر العودة الألماسي */
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-back:hover { background: rgba(255, 255, 255, 0.2); }
     </style>
 </head>
 <body>
@@ -233,11 +252,12 @@
     <div class="admin-container">
         <div class="admin-header">
             <div class="admin-logo">N One <span style="color:var(--gold)">Diamond</span></div>
-            <div class="admin-sub">التحكم المركزي للكباتن والمنشآت 💎</div>
+            <div class="admin-sub">التحكم المركزي (الريموت الألماسي) 💎</div>
+            <button class="btn-back" onclick="goBackToHome()">🔙 عودة للصفحة الرئيسية</button>
         </div>
 
         <div class="tabs-container">
-            <button class="tab-btn active" onclick="switchMainTab('captains-tab', this)">🦸‍♂️ ريموت الكباتن</button>
+            <button class="tab-btn active" onclick="switchMainTab('captains-tab', this)">🦸‍♂️ ريموت الكباتن والرادار</button>
             <button class="tab-btn" onclick="switchMainTab('shops-tab', this)">🏪 ريموت المنشآت</button>
         </div>
 
@@ -416,13 +436,31 @@
             btn.classList.add('active');
         };
 
+        // زر العودة الذكي
+        window.goBackToHome = function() {
+            if (document.referrer && document.referrer.includes(window.location.host)) {
+                window.history.back();
+            } else {
+                window.location.replace('index.html'); 
+            }
+        };
+
         // ================== أوامر الكباتن ==================
 
         window.updateTimer = async function() {
             const timeVal = document.getElementById('timer_val').value;
             if(!timeVal || timeVal < 5) { window.showToast("يرجى إدخال وقت صحيح لا يقل عن 5 ثواني", true); return; }
             try {
+                // حفظ الإعداد للـ Admin العام
                 await set(ref(db, 'settings/order_timer'), { seconds: parseInt(timeVal), timestamp: Date.now() });
+                
+                // حفظ الإعداد للـ User/Company الحالي (مهم للرادار)
+                const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                const myMaster = savedUser.Client_User || savedUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
+                }
+
                 window.showToast("تم تحديث وقت العداد بنجاح ⏱️");
             } catch(e) {
                 window.showToast("حدث خطأ أثناء التحديث", true);
@@ -431,7 +469,16 @@
 
         window.toggleVPN = async function(isActive) {
             try {
+                // حفظ الإعداد للـ Admin العام
                 await set(ref(db, 'settings/anti_vpn'), { active: isActive, timestamp: Date.now() });
+
+                // حفظ الإعداد للـ User/Company الحالي
+                const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                const myMaster = savedUser.Client_User || savedUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
+                }
+
                 if(isActive) {
                     window.showToast("تم تفعيل كاشف الـ VPN بنجاح 🔒");
                 } else {
@@ -444,7 +491,16 @@
 
         window.toggleZoneLock = async function(isActive) {
             try {
+                // حفظ الإعداد للـ Admin العام
                 await set(ref(db, 'settings/zone_lock'), { active: isActive, timestamp: Date.now() });
+
+                // حفظ الإعداد للـ User/Company الحالي
+                const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                const myMaster = savedUser.Client_User || savedUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/fix_area`), isActive);
+                }
+
                 if(isActive) {
                     window.showToast("تم إجبار الكباتن على مناطقهم ✅");
                 } else {
@@ -506,9 +562,21 @@
             try {
                 if(isActive) {
                     await set(ref(db, 'orders/fake_hotspot_trigger'), { active: true, timestamp: Date.now() });
+
+                    // تفعيل الخيار للشركة الحالية
+                    const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                    const myMaster = savedUser.Client_User || savedUser.user;
+                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), true);
+
                     window.showToast("تم تفعيل مؤشر النقاط الساخنة 🔥");
                 } else {
                     await remove(ref(db, 'orders/fake_hotspot_trigger'));
+
+                    // إيقاف الخيار للشركة الحالية
+                    const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+                    const myMaster = savedUser.Client_User || savedUser.user;
+                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), false);
+
                     window.showToast("تم إيقاف مؤشر النقاط الساخنة ❌");
                 }
             } catch(e) {
@@ -662,6 +730,20 @@
                 window.showToast("حدث خطأ أثناء الإرسال", true);
             }
         };
+
+        // استدعاء القيم الابتدائية من قاعدة البيانات لملء حقول الريموت عند الفتح
+        window.addEventListener('load', () => {
+            const savedUser = JSON.parse(localStorage.getItem('current_company_user') || localStorage.getItem('currentUser') || '{}');
+            const myMaster = savedUser.Client_User || savedUser.user;
+
+            if(myMaster) {
+                onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
+                    if(snap.exists()) {
+                        document.getElementById('timer_val').value = snap.val();
+                    }
+                });
+            }
+        });
 
     </script>
 </body>
