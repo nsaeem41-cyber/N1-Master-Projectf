@@ -788,6 +788,10 @@
 
                         if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
                             existingEntry.live_status = ord.status;
+                            if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                                hasUpdates = true;
+                            }
                             saveIsolatedData();
                             renderCompletedOrders();
                         }
