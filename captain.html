@@ -98,29 +98,35 @@
             display: flex; justify-content: space-between; align-items: center; color: white;
             position: sticky; top: 0; z-index: 100;
         }
-        /* شريط الطاقة الذهبي المتحرك */
+        
+        /* شريط الطاقة الذهبي المتحرك المطور */
         .energy-bar {
             height: 4px;
             width: 100%;
-            background: #475569;
+            background: rgba(212, 175, 55, 0.1);
             position: sticky; top: 85px; z-index: 100;
             overflow: hidden;
             transition: 0.3s;
         }
         .energy-bar-fill {
             height: 100%;
-            width: 50%;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            width: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.8), var(--gold), rgba(212, 175, 55, 0.8), transparent);
             transform: translateX(-100%);
             opacity: 0;
             transition: 0.3s;
         }
-        .energy-bar.active { background: #334155; }
+        .energy-bar.active { background: rgba(212, 175, 55, 0.15); box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
         .energy-bar.active .energy-bar-fill {
             opacity: 1;
-            animation: slideGlow 1.5s infinite linear;
+            animation: slideGlowPulse 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--gold);
         }
-        @keyframes slideGlow { 0% { transform: translateX(200%); } 100% { transform: translateX(-100%); } }
+        @keyframes slideGlowPulse { 
+            0% { transform: translateX(100%); opacity: 0.5; } 
+            50% { opacity: 1; box-shadow: 0 0 15px var(--gold); }
+            100% { transform: translateX(-100%); opacity: 0.5; } 
+        }
 
         .header-brand { font-size: 18px; font-weight: 900; display: flex; flex-direction: column; }
         .header-company { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; width: fit-content; }
@@ -189,6 +195,27 @@
         .btn-dialog:active { transform: scale(0.95); }
         .btn-dialog-ok { background: var(--success); }
         .btn-dialog-cancel { background: var(--danger); }
+
+        /* نافذة تقييم الجواهر للكابتن */
+        .rating-modal-box {
+            background: white; padding: 30px; border-radius: 20px; text-align: center; 
+            max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+            border-top: 6px solid var(--info); animation: slideUp 0.4s ease-out;
+        }
+        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
+        .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
+        .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
+        .rating-feedback { display: none; margin-top: 15px; text-align: right; }
+        .rating-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .quick-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        .tag { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; color: var(--text-light); transition: 0.3s; }
+        .tag.active { background: var(--info); color: white; border-color: var(--info); }
+        textarea {
+            width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
+            font-size: 15px; background: var(--input-bg); outline: none; transition: 0.3s;
+            color: var(--primary); font-weight: 700; box-sizing: border-box; font-family: inherit; resize: vertical;
+        }
+        textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
 
         /* ================= المحتوى الداخلي ================= */
         .app-content { padding: 20px; flex: 1; overflow-y: auto; background: var(--bg); }
@@ -287,10 +314,10 @@
         .btn-reject { background: var(--danger); }
         
         /* ألوان حالات الطلب الخماسية */
-        .btn-status-picked { background: #f97316; } /* برتقالي */
-        .btn-status-onway { background: #8b5cf6; } /* بنفسجي */
-        .btn-status-arrived { background: #06b6d4; } /* أزرق سماوي */
-        .btn-status-completed { background: var(--gold); color: var(--primary); } /* ذهبي */
+        .btn-status-picked { background: #f97316; } 
+        .btn-status-onway { background: #8b5cf6; } 
+        .btn-status-arrived { background: #06b6d4; } 
+        .btn-status-completed { background: var(--gold); color: var(--primary); } 
 
         /* شريط العداد التنازلي للطلب */
         .order-timer-bar {
@@ -373,24 +400,6 @@
             border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; 
         }
 
-        /* نافذة تقييم الجواهر */
-        .rating-modal-box {
-            background: white; padding: 30px; border-radius: 20px; text-align: center; 
-            max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
-            border-top: 6px solid var(--info); animation: slideUp 0.4s ease-out;
-        }
-        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 20px 0; direction: ltr; }
-        .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
-        .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
-        
-        /* خريطة النقاط الساخنة */
-        .hotspots-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-        .hotspot-tag {
-            background: var(--diamond); color: var(--info); padding: 8px 12px; border-radius: 20px;
-            font-size: 11px; font-weight: bold; border: 1px solid #bae6fd; display: flex; align-items: center; gap: 5px;
-        }
-        .hotspot-tag span { background: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; color: var(--primary); }
-
         /* شاشة الإيقاف والانتظار */
         .blocked-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -455,8 +464,9 @@
     
     <div id="rating-modal" class="custom-dialog-overlay">
         <div class="rating-modal-box">
-            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">تقييم المنشأة 💎</div>
-            <div style="font-size: 13px; color: #64748b;">كيف كانت تجربتك في استلام هذا الطلب؟</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px;">تقييم المنشأة 💎</div>
+            <div id="rating_title_desc" style="font-size: 13px; color: #64748b; font-weight: bold;">كيف كان أداء المنشأة في تجهيز الطلب</div>
+            
             <div class="gems-container" id="gems-container">
                 <span class="gem" onclick="setRating(1)">💎</span>
                 <span class="gem" onclick="setRating(2)">💎</span>
@@ -464,10 +474,20 @@
                 <span class="gem" onclick="setRating(4)">💎</span>
                 <span class="gem" onclick="setRating(5)">💎</span>
             </div>
+            
+            <div id="rating-feedback" class="rating-feedback">
+                <div id="dynamic-question" class="rating-title">ما هي المشكلة التي واجهتك</div>
+                <div class="quick-tags" id="quick-tags">
+                </div>
+                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+            </div>
+
             <input type="hidden" id="current_rating_val" value="0">
             <input type="hidden" id="rating_shop_id" value="">
-            <button class="btn-login" style="background: var(--info); color: white;" onclick="submitRating()">إرسال التقييم 🚀</button>
-            <button class="btn-link" style="color: #94a3b8;" onclick="closeRatingModal()">تخطي</button>
+            <input type="hidden" id="selected_tag" value="">
+            
+            <button class="btn-main btn-send" style="background: var(--info); color: white; margin-top: 15px;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px;" onclick="closeRatingModal()">تخطي</button>
         </div>
     </div>
 
@@ -643,12 +663,12 @@
                 
                 <div id="vpn-warning" class="vpn-warning-banner" style="display:none;">
                     <span style="font-size: 18px;">🛡️</span>
-                    <span id="lang_vpn_warn">يا كابتن، يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة.</span>
+                    <span id="lang_vpn_warn">يا كابتن يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة</span>
                 </div>
 
                 <div id="balance-warning" class="warning-banner">
                     <span style="font-size: 18px;">⚠️</span>
-                    <span id="lang_bal_warn">عذراً وصل رصيدك للحد المانع (-1 د.أ) يرجى شحن رصيدك للاستمرار في استقبال الطلبات</span>
+                    <span id="lang_bal_warn">عذرا وصل رصيدك للحد المانع يرجى شحن رصيدك للاستمرار في استقبال الطلبات</span>
                 </div>
 
                 <div class="cap-profile-card">
@@ -694,7 +714,7 @@
                 <div class="section-title" id="lang_sec_orders">📲 الطلبات الواردة</div>
                 <div id="active-orders-container">
                     <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;" id="lang_no_orders">
-                        لا توجد طلبات حالياً خليك قريب من النقاط الساخنة 📡
+                        لا توجد طلبات حاليا خليك قريب من النقاط الساخنة 📡
                     </div>
                 </div>
 
@@ -718,7 +738,6 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            console.log('التطبيق جاهز للتثبيت');
         });
 
         btnInstall.addEventListener('click', async () => {
@@ -726,7 +745,6 @@
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
-                    console.log('تم تثبيت التطبيق بنجاح');
                     splash.style.display = 'none';
                 }
                 deferredPrompt = null;
@@ -746,7 +764,6 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('SW registered successfully:', reg);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
@@ -755,8 +772,6 @@
                             }
                         };
                     };
-                }).catch(error => {
-                    console.log('SW registration failed:', error);
                 });
             });
         }
@@ -766,7 +781,6 @@
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock is active');
                 }
             } catch (err) {
                 console.log('Wake Lock error:', err);
@@ -828,11 +842,15 @@
             confirmCallback = null;
         };
         
-        // نظام التقييم الألماسي
+        // نظام التقييم
         window.openRatingModal = function(shopId) {
             document.getElementById('rating_shop_id').value = shopId;
             document.getElementById('current_rating_val').value = "0";
+            document.getElementById('selected_tag').value = "";
+            document.getElementById('rating_notes').value = "";
             document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
+            document.getElementById('rating-feedback').style.display = 'none';
+            document.getElementById('rating_title_desc').innerText = "كيف كان أداء المنشأة في تجهيز الطلب";
             document.getElementById('rating-modal').style.display = 'flex';
         };
         
@@ -847,6 +865,64 @@
                 if(index < val) g.classList.add('active');
                 else g.classList.remove('active');
             });
+            
+            const feedbackSection = document.getElementById('rating-feedback');
+            const question = document.getElementById('dynamic-question');
+            const tagsContainer = document.getElementById('quick-tags');
+            const desc = document.getElementById('rating_title_desc');
+            
+            feedbackSection.style.display = 'block';
+            document.getElementById('selected_tag').value = "";
+            
+            if (val === 1) {
+                desc.innerText = "ضعيف جدا ⚠️";
+                desc.style.color = "var(--danger)";
+                question.innerText = "نأسف لسماع ذلك ما هي المشكلة";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تأخير كبير جدا</span>
+                    <span class="tag" onclick="selectTag(this)">تعامل سيء</span>
+                    <span class="tag" onclick="selectTag(this)">الطلب غير جاهز</span>
+                `;
+            } else if (val === 2) {
+                desc.innerText = "دون المستوى 😟";
+                desc.style.color = "#d97706";
+                question.innerText = "ما الذي أزعجك في المنشأة";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تأخير في التجهيز</span>
+                    <span class="tag" onclick="selectTag(this)">سوء تغليف</span>
+                `;
+            } else if (val === 3) {
+                desc.innerText = "مقبول 😐";
+                desc.style.color = "#8b5cf6";
+                question.innerText = "كيف يمكن للمنشأة التحسن";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">سرعة التجهيز</span>
+                    <span class="tag" onclick="selectTag(this)">التعامل مع الكابتن</span>
+                `;
+            } else if (val === 4) {
+                desc.innerText = "ممتاز 🙂";
+                desc.style.color = "var(--info)";
+                question.innerText = "هل هناك ملاحظة بسيطة";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تجهيز سريع</span>
+                    <span class="tag" onclick="selectTag(this)">تعامل راقي</span>
+                `;
+            } else if (val === 5) {
+                desc.innerText = "ألماسي واحترافي 🌟";
+                desc.style.color = "var(--success)";
+                question.innerText = "شكرا لجهودك يا بطل";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">احترافية عالية</span>
+                    <span class="tag" onclick="selectTag(this)">تجهيز فوري</span>
+                    <span class="tag" onclick="selectTag(this)">قمة في الرقي</span>
+                `;
+            }
+        };
+
+        window.selectTag = function(element) {
+            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('selected_tag').value = element.innerText;
         };
 
     </script>
@@ -885,8 +961,8 @@
 
         const dict = {
             'ar': {
-                lang_loader: 'جاري الاتصال بالنظام...',
-                lang_popup_btn: 'حسناً فهمت',
+                lang_loader: 'جاري الاتصال بالنظام',
+                lang_popup_btn: 'حسنا فهمت',
                 lang_history_title: 'سجل الطلبات الألماسي 💎',
                 lang_settings_title: 'الإعدادات ⚙️',
                 lang_set_user: 'اسم المستخدم (يوزر الدخول)',
@@ -895,10 +971,10 @@
                 lang_toggle_btn: '🌐 Switch to English',
                 lang_save_btn: 'حفظ التعديلات ✅',
                 lang_blocked_title: 'تم إيقاف حسابك',
-                lang_blocked_text: 'عذراً لقد تم إيقاف أو تجميد حسابك من قبل الإدارة<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت',
+                lang_blocked_text: 'عذرا لقد تم إيقاف أو تجميد حسابك من قبل الإدارة يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت',
                 lang_blocked_btn: 'تسجيل الخروج',
                 lang_pending_title: 'حسابك قيد الانتظار',
-                lang_pending_text: 'لقد تم استلام طلب تسجيلك بنجاح<br><br>الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات',
+                lang_pending_text: 'لقد تم استلام طلب تسجيلك بنجاح الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات',
                 lang_pending_btn: 'العودة للرئيسية',
                 lang_login_sub: 'المنصة الألماسية 💎',
                 lang_login_user_lbl: 'اسم المستخدم (User ID)',
@@ -917,8 +993,8 @@
                 lang_reg_back: 'عودة لشاشة الدخول',
                 lang_header_cap: 'كابتن 🦸‍♂️',
                 lang_btn_out: 'خروج 🔒',
-                lang_bal_warn: 'عذراً وصل رصيدك للحد المانع (-1 د.أ) يرجى شحن رصيدك للاستمرار في استقبال الطلبات',
-                lang_vpn_warn: 'يا كابتن، يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة.',
+                lang_bal_warn: 'عذرا وصل رصيدك للحد المانع يرجى شحن رصيدك للاستمرار في استقبال الطلبات',
+                lang_vpn_warn: 'يا كابتن يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة',
                 lang_bal_title: 'الرصيد المالي الفعلي',
                 lang_rating: 'تقييم ألماسي 💎',
                 lang_ach_title: 'إنجاز اليوم 🏆',
@@ -927,15 +1003,15 @@
                 lang_sec_orders: '📲 الطلبات الواردة',
                 status_online: 'متاح وجاهز للطلبات 🟢',
                 status_offline: 'غير متاح للطلبات 🔴',
-                status_blocked: 'غير متاح (محظور مالياً)',
-                no_orders: 'لا توجد طلبات حالياً خليك قريب من النقاط الساخنة 📡',
+                status_blocked: 'غير متاح (محظور ماليا)',
+                no_orders: 'لا توجد طلبات حاليا خليك قريب من النقاط الساخنة 📡',
                 no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن',
                 lang_confirm_ok: 'تأكيد ✅',
                 lang_confirm_no: 'إلغاء ❌',
                 dir: 'rtl'
             },
             'en': {
-                lang_loader: 'Connecting to System...',
+                lang_loader: 'Connecting to System',
                 lang_popup_btn: 'Got it',
                 lang_history_title: 'Diamond History 💎',
                 lang_settings_title: 'Settings ⚙️',
@@ -945,10 +1021,10 @@
                 lang_toggle_btn: '🌐 التبديل للعربية',
                 lang_save_btn: 'Save Changes ✅',
                 lang_blocked_title: 'Account Blocked',
-                lang_blocked_text: 'Sorry your account has been suspended<br><br>Please contact your company management to reactivate',
+                lang_blocked_text: 'Sorry your account has been suspended Please contact your company management to reactivate',
                 lang_blocked_btn: 'Logout',
                 lang_pending_title: 'Account Pending',
-                lang_pending_text: 'Your registration has been received successfully<br><br>Please contact your company administration to activate the account',
+                lang_pending_text: 'Your registration has been received successfully Please contact your company administration to activate the account',
                 lang_pending_btn: 'Return to Home',
                 lang_login_sub: 'Diamond Portal 💎',
                 lang_login_user_lbl: 'Username',
@@ -967,17 +1043,17 @@
                 lang_reg_back: 'Back to Login',
                 lang_header_cap: 'Captain 🦸‍♂️',
                 lang_btn_out: 'Logout 🔒',
-                lang_bal_warn: 'Warning balance reached the limit (-1 JOD) Please recharge to receive orders',
-                lang_vpn_warn: 'Captain, please disable VPN to receive orders with the best quality and speed.',
+                lang_bal_warn: 'Warning balance reached the limit Please recharge to receive orders',
+                lang_vpn_warn: 'Captain please disable VPN to receive orders with the best quality and speed',
                 lang_bal_title: 'Actual Balance',
                 lang_rating: 'Diamond Rating 💎',
-                lang_ach_title: 'Today\'s Wins 🏆',
+                lang_ach_title: 'Today Wins 🏆',
                 lang_ach_sub: 'Great Job',
                 lang_hot_title: 'Hotspots 🔥',
                 lang_sec_orders: '📲 Incoming Orders',
-                status_online: 'Online & Ready 🟢',
+                status_online: 'Online Ready 🟢',
                 status_offline: 'Offline 🔴',
-                status_blocked: 'Offline (Blocked)',
+                status_blocked: 'Offline Blocked',
                 no_orders: 'No active orders right now stay near hotspots 📡',
                 no_history: 'No completed orders in history yet',
                 lang_confirm_ok: 'Confirm ✅',
@@ -1000,7 +1076,6 @@
             if(currentCaptain) updateUIProfile(currentCaptain);
         };
 
-        // مستشعر الإنترنت المباشر
         window.addEventListener('offline', () => {
             document.getElementById('offline-banner').style.display = 'block';
         });
@@ -1034,8 +1109,8 @@
             }, 3000);
             
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(currentLang === 'ar' ? 'N One - طلب تجريبي 🔥' : 'N One - Test Order 🔥', {
-                    body: currentLang === 'ar' ? 'هذا إشعار تجريبي لاختبار التنبيهات في الخلفية' : 'This is a test notification for background alerts',
+                new Notification('N One Diamond', {
+                    body: currentLang === 'ar' ? 'إشعار تجريبي لاختبار التنبيهات' : 'Test notification for background alerts',
                     icon: 'logo.jpg'
                 });
             } else if ('Notification' in window && Notification.permission !== 'denied') {
@@ -1138,7 +1213,7 @@
             document.getElementById('verified_company_name').value = '';
             
             const areaSelect = document.getElementById('reg_area');
-            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى التحقق من معرف الشركة أولاً...' : 'Please verify Company ID first...'}</option>`;
+            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى التحقق من معرف الشركة أولا' : 'Please verify Company ID first'}</option>`;
             areaSelect.disabled = true;
 
             try {
@@ -1147,7 +1222,7 @@
                     globalPricesList = Object.values(snap.val());
                 }
             } catch(e) {
-                console.log("Error loading areas", e);
+                console.log("Error loading areas");
             }
         };
 
@@ -1167,7 +1242,7 @@
             }
 
             badge.className = 'id-status-badge verifying';
-            badge.innerText = currentLang === 'ar' ? 'جاري التحقق ⏳' : 'Verifying ⏳';
+            badge.innerText = currentLang === 'ar' ? 'جاري التحقق' : 'Verifying';
 
             try {
                 const userSnap = await get(ref(db, `users/${compIdInput}`));
@@ -1181,7 +1256,7 @@
                     hiddenCompName.value = compName;
                     
                     areaSelect.disabled = false;
-                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة...' : 'Select Area...'}</option>`;
+                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>`;
                     const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => (p.Price_Area || '').trim()))].filter(Boolean);
                     
                     if (areas.length > 0) {
@@ -1193,7 +1268,7 @@
                     }
                 } else {
                     badge.className = 'id-status-badge error';
-                    badge.innerText = currentLang === 'ar' ? 'معرف غير صالح ❌' : 'Invalid ID ❌';
+                    badge.innerText = currentLang === 'ar' ? 'معرف غير صالح' : 'Invalid ID';
                     verifiedCompanyId = null;
                     hiddenCompName.value = '';
                     areaSelect.disabled = true;
@@ -1201,7 +1276,7 @@
                 }
             } catch(e) {
                 badge.className = 'id-status-badge error';
-                badge.innerText = currentLang === 'ar' ? 'خطأ في الاتصال ❌' : 'Connection Error ❌';
+                badge.innerText = currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error';
             }
         };
 
@@ -1214,7 +1289,7 @@
             const area = document.getElementById('reg_area').value;
 
             if(!verifiedCompanyId) {
-                window.showToast(currentLang === 'ar' ? "يرجى إدخال معرف شركة صحيح أولاً" : "Please enter a valid Company ID first", true);
+                window.showToast(currentLang === 'ar' ? "يرجى إدخال معرف شركة صحيح أولا" : "Please enter a valid Company ID first", true);
                 return;
             }
 
@@ -1229,7 +1304,7 @@
                 const existing = await get(ref(db, `captains/${user}`));
                 if(existing.exists()) {
                     document.getElementById('loader').style.display = 'none';
-                    window.showToast(currentLang === 'ar' ? "اسم المستخدم مستخدم مسبقاً يرجى اختيار اسم آخر" : "Username already exists", true);
+                    window.showToast(currentLang === 'ar' ? "اسم المستخدم مستخدم مسبقا يرجى اختيار اسم آخر" : "Username already exists", true);
                     return;
                 }
 
@@ -1351,7 +1426,6 @@
             }
         }
 
-        // مستشعر الـ VPN الدولي الجديد
         let isVpnDetected = false;
         async function detectVPN() {
             if(!systemSettings.anti_vpn) {
@@ -1383,7 +1457,6 @@
                 }
             });
             
-            // قراءة إعدادات حجب الأرقام (ريموت الأمان)
             if (master) {
                 onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
                     systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
@@ -1447,7 +1520,7 @@
             const updates = {};
             updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'timeout'; 
             await update(ref(db), updates);
-            window.showToast(currentLang === 'ar' ? "انتهى الوقت! تم سحب الطلب ⏳" : "Time out! Order reassigned ⏳", true);
+            window.showToast(currentLang === 'ar' ? "انتهى الوقت تم سحب الطلب ⏳" : "Time out Order reassigned ⏳", true);
         };
 
         function initRealtimeListeners() {
@@ -1550,8 +1623,8 @@
                             container.innerHTML += `
                                 <div class="order-card ringing" id="card_${ord.id}">
                                     <div class="order-header">
-                                        <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
-                                        <span>${lblTime}: ${ordTime}</span>
+                                        <span>${lblOrd} #${ord.id.substring(ord.id.length - 4)}</span>
+                                        <span>${lblTime} ${ordTime}</span>
                                     </div>
                                     <div class="order-rest" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${restName}</div>
                                     <div class="order-details">
@@ -1592,7 +1665,6 @@
                             const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
                             const callSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
 
-                            // تطبيق ريموت إخفاء الأرقام
                             let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
                             let phoneHtml = '';
                             if (ord.shop_phone) {
@@ -1622,14 +1694,14 @@
                             } else if (ord.status === 'arrived') {
                                 btnClass = 'btn-status-completed';
                                 btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
-                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}', '${ord.shop_id || ord.Shop_User || ''}')`;
+                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}')`;
                             }
 
                             container.innerHTML += `
                                 <div class="order-card" id="card_${ord.id}">
                                     <div class="order-header">
-                                        <span>${lblOrd}: #${ord.id.substring(ord.id.length - 4)}</span>
-                                        <span>${lblTime}: ${ordTime}</span>
+                                        <span>${lblOrd} #${ord.id.substring(ord.id.length - 4)}</span>
+                                        <span>${lblTime} ${ordTime}</span>
                                     </div>
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">🏪 ${restName}</span>
@@ -1790,12 +1862,12 @@
                 await update(ref(db), updates);
                 window.showToast(currentLang === 'ar' ? "تم قبول الطلب وجاري التجهيز 🚀" : "Order accepted 🚀", false);
             } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال حاول مجدداً" : "Connection error please retry", true);
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال حاول مجددا" : "Connection error please retry", true);
             }
         };
 
         window.rejectOrder = async function(orderId) {
-            const msg = currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب؟ ❌" : "Are you sure you want to reject? ❌";
+            const msg = currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب ❌" : "Are you sure you want to reject ❌";
             window.showAppConfirm(msg, async () => {
                 if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
                 const updates = {};
@@ -1837,21 +1909,26 @@
             }
         };
 
-        window.completeOrder = async function(appOrdId, radarOrdId, shopId) {
+        window.completeOrder = async function(appOrdId, radarOrdId) {
             try {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
                 
+                let shopId = '';
                 if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
                     updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered';
+                    const ordSnap = await get(ref(db, `orders/${radarOrdId}`));
+                    if(ordSnap.exists()) {
+                        shopId = ordSnap.val().Shop_User;
+                    }
                 }
 
                 await update(ref(db), updates);
                 window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false);
                 
                 if(shopId && shopId !== 'undefined' && shopId !== 'null') {
-                    setTimeout(() => { openRatingModal(shopId); }, 1000);
+                    setTimeout(() => { openRatingModal(shopId); }, 1500);
                 }
                 
             } catch (e) {
@@ -1862,9 +1939,11 @@
         window.submitRating = async function() {
             const val = parseInt(document.getElementById('current_rating_val').value);
             const shopId = document.getElementById('rating_shop_id').value;
+            const selectedTag = document.getElementById('selected_tag').value;
+            const notes = document.getElementById('rating_notes').value.trim();
             
             if(val === 0) {
-                window.showToast("الرجاء اختيار التقييم أولاً", true);
+                window.showToast("الرجاء اختيار التقييم أولا");
                 return;
             }
             
@@ -1873,13 +1952,15 @@
                 await set(newRatingRef, {
                     captainId: capNodeKey,
                     rating: val,
+                    reason: selectedTag,
+                    notes: notes,
                     timestamp: Date.now()
                 });
                 
-                window.showToast("شكراً لتقييمك! 💎", false);
+                window.showToast("شكرا لتقييمك 💎");
                 closeRatingModal();
             } catch(e) {
-                window.showToast("حدث خطأ أثناء إرسال التقييم", true);
+                window.showToast("حدث خطأ أثناء إرسال التقييم");
                 closeRatingModal();
             }
         };
