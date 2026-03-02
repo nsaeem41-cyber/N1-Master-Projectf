@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>بوابة المنشآت | N One</title>
     
+    <meta property="og:title" content="سجل منشأتك في أسطول N One 💎">
+    <meta property="og:description" content="انضم لشبكة المزودين المعتمدين وارتقِ بتجربة التوصيل لعملائك 🚀">
+    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/logo_shop.jpg">
+    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/shop.html"> 
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="manifest" href="manifest_shop.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -94,25 +100,18 @@
         }
         .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
 
-        /* تعديل ترتيب الباجات للهاتف وتوحيد الألوان */
         .badges-wrapper {
             display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; width: 100%; padding: 0 10px;
         }
-        .badges-row-top {
-            display: flex; justify-content: center; width: 100%;
-        }
-        .badges-row-bottom {
-            display: flex; justify-content: center; gap: 8px; width: 100%;
-        }
+        .badges-row-top { display: flex; justify-content: center; width: 100%; }
+        .badges-row-bottom { display: flex; justify-content: center; gap: 8px; width: 100%; }
         .shop-info-badge { 
             background: rgba(255, 255, 255, 0.08); color: var(--gold);
             padding: 8px 15px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
             font-size: 12px; font-weight: bold; border: 1px solid rgba(212, 175, 55, 0.3);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .badges-row-bottom .shop-info-badge {
-            max-width: 50%;
-        }
+        .badges-row-bottom .shop-info-badge { max-width: 50%; }
 
         .nav-tabs {
             display: flex; justify-content: center; gap: 8px; margin-top: 15px;
@@ -339,7 +338,9 @@
             <img src="logo_shop.jpg" alt="Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Shop'">
             <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
             <p class="pwa-text">لضمان وصول الطلبات والتحديثات الفورية يرجى تثبيت التطبيق الخاص بالمنشآت التجارية</p>
-            <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق 🚀</button>
+            <a href="https://nsaeem41-cyber.github.io/N1-Master-Projectf/shop.html" style="text-decoration: none; display: block; width: 100%;">
+                <button id="btn-install-app" class="btn-install-app">انضم إلى أسطول N One 🚀</button>
+            </a>
             <button id="btn-continue-app" class="btn-continue-app">الاستمرار عبر المتصفح</button>
         </div>
     </div>
@@ -1113,13 +1114,15 @@
                     if(recentOrders.length === 0) {
                         list.innerHTML = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
                     } else {
+                        // هنا الحل الألماسي: ضفنا كل الحالات حتى "completed" عشان مستحيل يعلق 
                         const statusMap = {
                             'new': { text: 'قيد الانتظار', color: '#d97706', bg: '#fef3c7' },
                             'accepted': { text: 'تم القبول (جاري التجهيز)', color: '#2563eb', bg: '#dbeafe' },
                             'picked_up': { text: 'تم الاستلام من المنشأة', color: '#7c3aed', bg: '#ede9fe' },
                             'on_way': { text: 'في الطريق', color: '#7c3aed', bg: '#ede9fe' },
                             'arrived': { text: 'الكابتن عند العميل', color: '#db2777', bg: '#fce7f3' },
-                            'delivered': { text: 'تم التسليم بنجاح', color: '#059669', bg: '#d1fae5' },
+                            'delivered': { text: 'تم التسليم بنجاح 💎', color: '#059669', bg: '#d1fae5' },
+                            'completed': { text: 'تم التسليم بنجاح 💎', color: '#059669', bg: '#d1fae5' }, // هاي اللي كانت ناقصة!
                             'cancelled': { text: 'ملغي', color: '#dc2626', bg: '#fee2e2' }
                         };
 
@@ -1129,15 +1132,15 @@
                             const dateStr = fullDateObj.toLocaleDateString('en-GB'); 
                             
                             const currentStatus = item.OrderStatus || item.Shop_Status || 'new';
-                            const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8', bg: '#f1f5f9' };
+                            const statusInfo = statusMap[currentStatus] || { text: 'تم التسليم بنجاح 💎', color: '#059669', bg: '#d1fae5' };
                             
                             if (orderStatesHistory[item.Shop_Ord_ID] && orderStatesHistory[item.Shop_Ord_ID] !== currentStatus) {
                                 if (currentStatus === 'accepted') { snd_accept.play().catch(e=>{}); showToast('كابتن بطل وافق على الطلب'); }
                                 if (currentStatus === 'picked_up') { snd_pickup.play().catch(e=>{}); showToast('الكابتن استلم الطلب وطلع'); }
                                 if (currentStatus === 'arrived') { snd_arrive.play().catch(e=>{}); showToast('الكابتن وصل عند العميل'); }
-                                if (currentStatus === 'delivered') { 
+                                if (currentStatus === 'delivered' || currentStatus === 'completed') { 
                                     snd_deliver.play().catch(e=>{}); 
-                                    showToast('تم تسليم الطلب بنجاح وقبضنا'); 
+                                    showToast('تم تسليم الطلب بنجاح وقبضنا 💎'); 
                                     
                                     if(!askedToRate[item.Shop_Ord_ID] && item.Cap_Phone) {
                                         setTimeout(() => { openRatingModal(item.Cap_Phone); }, 1500);
