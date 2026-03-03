@@ -550,7 +550,7 @@
         <div id="history-modal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="modal-title" id="lang_history_title">سجل الطلبات الألماسي 💎</div>
+                    <div class="modal-title" id="lang_history_title">سجل الطلبات</div>
                     <button class="close-modal" onclick="document.getElementById('history-modal').style.display='none'">✕</button>
                 </div>
                 <div id="history-list-container" class="history-list">
@@ -988,7 +988,7 @@
             'ar': {
                 lang_loader: 'جاري الاتصال بالنظام',
                 lang_popup_btn: 'حسنا فهمت',
-                lang_history_title: 'سجل الطلبات الألماسي 💎',
+                lang_history_title: 'سجل الطلبات',
                 lang_settings_title: 'الإعدادات ⚙️',
                 lang_set_user: 'اسم المستخدم (يوزر الدخول)',
                 lang_set_pass: 'كلمة المرور',
@@ -1038,7 +1038,7 @@
             'en': {
                 lang_loader: 'Connecting to System',
                 lang_popup_btn: 'Got it',
-                lang_history_title: 'Diamond History 💎',
+                lang_history_title: 'Order History',
                 lang_settings_title: 'Settings ⚙️',
                 lang_set_user: 'Username',
                 lang_set_pass: 'Password',
@@ -1975,6 +1975,7 @@
                     updates[`captains/${capNodeKey}/balance`] = newBal;
                     updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true;
                     updates[`assigned_orders/${capNodeKey}/${appOrdId}/commission_amount`] = commissionAmount;
+                    updates[`assigned_orders/${capNodeKey}/${appOrdId}/commission`] = commissionAmount;
 
                     if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
                         updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed';
@@ -2060,7 +2061,7 @@
                     const d = new Date(ord.completed_at || ord.timestamp);
                     const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
                     const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                    const comm = parseFloat(ord.commission || 0).toFixed(2);
+                    const comm = parseFloat(ord.commission_amount || ord.commission || 0).toFixed(2);
                     
                     const cleanRestName = (name) => {
                         if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
