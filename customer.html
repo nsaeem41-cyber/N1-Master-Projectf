@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>N One | Customer App 💎</title>
+    
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    
+    <style>
+        /* ================= تصميم العميل (N One Diamond UI) ================= */
+        :root {
+            --primary: #0f172a;    
+            --gold: #d4af37;       
+            --bg: #f8fafc;         
+            --text: #334155;       
+            --success: #10b981;    
+            --diamond: #e0f2fe;    
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; 
+            background-color: #e2e8f0; /* لون خلفية حول التطبيق */
+            display: flex; justify-content: center; min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+
+        /* حاوية الهاتف */
+        .app-container {
+            width: 100%; max-width: 480px;
+            background: var(--bg);
+            height: 100vh; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ================= الخريطة التخيلية ================= */
+        .map-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #cbd5e1;
+            /* رسم شبكة شوارع بسيطة بالـ CSS كخلفية تخيلية */
+            background-image: 
+                linear-gradient(white 2px, transparent 2px),
+                linear-gradient(90deg, white 2px, transparent 2px),
+                linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+            background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+            z-index: 1;
+        }
+
+        /* النبض في منتصف الخريطة (موقع الزبون) */
+        .user-location-pin {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            width: 20px; height: 20px; background: var(--primary);
+            border-radius: 50%; border: 3px solid white; z-index: 5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .user-location-pulse {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; background: rgba(15, 23, 42, 0.2);
+            border-radius: 50%; z-index: 4;
+            animation: radarPulse 2s infinite;
+        }
+        @keyframes radarPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+        }
+
+        /* الأزرار العائمة على الخريطة */
+        .floating-btn {
+            position: absolute; z-index: 10;
+            background: white; border: none; border-radius: 50%;
+            width: 45px; height: 45px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; font-size: 20px;
+            transition: 0.3s;
+        }
+        .floating-btn:active { transform: scale(0.9); }
+        .menu-btn { top: 20px; right: 20px; }
+        .gps-btn { bottom: 220px; right: 20px; color: var(--info); }
+
+        /* ================= اللوحة السفلية (Bottom Sheet) ================= */
+        .bottom-sheet {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: white; border-radius: 30px 30px 0 0;
+            z-index: 20; box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+            padding: 25px 25px 35px 25px; box-sizing: border-box;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+        .drag-handle {
+            width: 40px; height: 5px; background: #e2e8f0;
+            border-radius: 10px; margin: 0 auto 20px auto;
+        }
+        
+        .greeting { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
+
+        /* حقل البحث (إلى أين؟) */
+        .search-box {
+            background: #f1f5f9; padding: 15px 20px; border-radius: 15px;
+            display: flex; align-items: center; gap: 15px; cursor: pointer;
+            border: 2px solid transparent; transition: 0.3s; margin-bottom: 20px;
+        }
+        .search-box:active { background: #e2e8f0; border-color: var(--gold); }
+        .search-icon { font-size: 20px; }
+        .search-text { font-size: 18px; font-weight: 800; color: var(--text); flex: 1; }
+        .time-badge { background: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* الأماكن المحفوظة */
+        .saved-places { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
+        .place-item {
+            background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 12px 20px; display: flex; align-items: center; gap: 10px;
+            font-weight: bold; font-size: 14px; white-space: nowrap; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: 0.2s;
+        }
+        .place-item:active { transform: scale(0.95); border-color: var(--gold); }
+        .place-icon { background: #f1f5f9; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
+
+        /* ================= شاشة اختيار الرحلة ================= */
+        .ride-options-panel { display: none; }
+        .ride-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px; border: 2px solid transparent; border-radius: 15px;
+            margin-bottom: 10px; transition: 0.3s; cursor: pointer;
+        }
+        .ride-card.selected { border-color: var(--gold); background: #fffbeb; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); }
+        .ride-img { width: 60px; height: 40px; background: #e2e8f0; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .ride-info { flex: 1; margin-right: 15px; }
+        .ride-name { font-size: 16px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+        .ride-time { font-size: 12px; color: #64748b; font-weight: bold; margin-top: 3px; }
+        .ride-price { font-size: 18px; font-weight: 900; color: var(--primary); }
+
+        .btn-confirm {
+            background: var(--primary); color: white; width: 100%; border: none;
+            padding: 18px; border-radius: 15px; font-size: 18px; font-weight: 900;
+            margin-top: 10px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+        }
+        .btn-confirm:active { transform: scale(0.98); }
+
+        .btn-back-sheet { background: transparent; border: none; color: var(--primary); font-size: 24px; cursor: pointer; padding: 0; margin-bottom: 15px; }
+
+        /* ================= شاشة جاري البحث ================= */
+        .searching-panel { display: none; text-align: center; padding: 30px 0; }
+        .radar-spinner {
+            width: 80px; height: 80px; border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--gold); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .searching-title { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+        .searching-desc { font-size: 14px; font-weight: bold; color: #64748b; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="map-bg"></div>
+        <div class="user-location-pulse"></div>
+        <div class="user-location-pin"></div>
+
+        <button class="floating-btn menu-btn">☰</button>
+        <button class="floating-btn gps-btn" id="gps-btn">📍</button>
+
+        <div class="bottom-sheet" id="main-sheet">
+            <div class="drag-handle"></div>
+            
+            <div id="state-home">
+                <div class="greeting">أهلاً بك في N One 💎</div>
+                
+                <div class="search-box" onclick="showRideOptions()">
+                    <span class="search-icon">🔍</span>
+                    <span class="search-text">إلى أين تريد الذهاب؟</span>
+                    <span class="time-badge">الآن 🕒</span>
+                </div>
+
+                <div class="saved-places">
+                    <div class="place-item" onclick="showRideOptions()">
+                        <div class="place-icon">🏠</div>
+                        المنزل
+                    </div>
+                    <div class="place-item" onclick="showRideOptions()">
+                        <div class="place-icon">💼</div>
+                        العمل
+                    </div>
+                    <div class="place-item" onclick="showRideOptions()">
+                        <div class="place-icon">⭐</div>
+                        المطار
+                    </div>
+                </div>
+            </div>
+
+            <div id="state-ride" class="ride-options-panel">
+                <button class="btn-back-sheet" onclick="goBackHome()">🡢</button>
+                <div style="font-size: 18px; font-weight: 900; margin-bottom: 15px;">اختر فئة الرحلة</div>
+
+                <div class="ride-card selected" onclick="selectRide(this)">
+                    <div class="ride-img">💎</div>
+                    <div class="ride-info">
+                        <div class="ride-name">N One ألماسي <span style="font-size: 10px; background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px;">سريع</span></div>
+                        <div class="ride-time">وصول خلال 3 دقائق • سيارات حديثة</div>
+                    </div>
+                    <div class="ride-price">3.50 د.أ</div>
+                </div>
+
+                <div class="ride-card" onclick="selectRide(this)">
+                    <div class="ride-img">🚗</div>
+                    <div class="ride-info">
+                        <div class="ride-name">N One اقتصادي</div>
+                        <div class="ride-time">وصول خلال 6 دقائق • توفير أكثر</div>
+                    </div>
+                    <div class="ride-price">2.20 د.أ</div>
+                </div>
+
+                <div class="ride-card" onclick="selectRide(this)">
+                    <div class="ride-img">🛵</div>
+                    <div class="ride-info">
+                        <div class="ride-name">N One توصيل</div>
+                        <div class="ride-time">لتوصيل الطرود والطلبات</div>
+                    </div>
+                    <div class="ride-price">1.50 د.أ</div>
+                </div>
+
+                <button class="btn-confirm" onclick="startSearching()">تأكيد الرحلة 🚀</button>
+            </div>
+
+            <div id="state-searching" class="searching-panel">
+                <div class="radar-spinner"></div>
+                <div class="searching-title">جاري البحث عن كابتن ألماسي</div>
+                <div class="searching-desc">نقوم بربطك مع أقرب كابتن متاح في منطقتك...</div>
+                
+                <button class="btn-confirm" style="background: #f1f5f9; color: var(--danger); margin-top: 30px; box-shadow: none;" onclick="goBackHome()">إلغاء الطلب ✕</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // سكريبت تفاعلي بسيط لمحاكاة التطبيق
+        const mainSheet = document.getElementById('main-sheet');
+        const stateHome = document.getElementById('state-home');
+        const stateRide = document.getElementById('state-ride');
+        const stateSearch = document.getElementById('state-searching');
+        const gpsBtn = document.getElementById('gps-btn');
+
+        function showRideOptions() {
+            stateHome.style.display = 'none';
+            stateRide.style.display = 'block';
+            stateSearch.style.display = 'none';
+            
+            // رفع اللوحة السفلية قليلاً لتعطي شعور التطبيق
+            mainSheet.style.transform = 'translateY(-20px)';
+            gpsBtn.style.bottom = '350px';
+        }
+
+        function goBackHome() {
+            stateHome.style.display = 'block';
+            stateRide.style.display = 'none';
+            stateSearch.style.display = 'none';
+            
+            mainSheet.style.transform = 'translateY(0)';
+            gpsBtn.style.bottom = '220px';
+        }
+
+        function selectRide(element) {
+            // إزالة التحديد عن الكل
+            document.querySelectorAll('.ride-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            // إضافة التحديد للبطاقة المطلوبة
+            element.classList.add('selected');
+        }
+
+        function startSearching() {
+            stateHome.style.display = 'none';
+            stateRide.style.display = 'none';
+            stateSearch.style.display = 'block';
+            
+            mainSheet.style.transform = 'translateY(0)';
+            
+            // محاكاة إيجاد كابتن بعد 4 ثواني
+            setTimeout(() => {
+                if (stateSearch.style.display === 'block') {
+                    alert("تم إيجاد كابتن! 💎🚗 الكابتن (أحمد) في طريقه إليك.");
+                    goBackHome();
+                }
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
