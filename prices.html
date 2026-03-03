@@ -268,7 +268,7 @@
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الشركة";
             } else {
-                alert("يرجى تسجيل الدخول أولاً من لوحة التحكم يا بطة 😊");
+                alert("يرجى تسجيل الدخول أولاً من لوحة التحكم");
                 window.location.replace('index.html');
                 return;
             }
@@ -296,13 +296,13 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية 😊");
+                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية");
                         localStorage.removeItem('current_company_user');
                         localStorage.removeItem('currentUser');
                         window.location.replace('index.html');
                     }
                 } else {
-                    alert("تم حذف الحساب نهائياً سيتم تسجيل الخروج فوراً 😊");
+                    alert("تم حذف الحساب نهائياً سيتم تسجيل الخروج فوراً");
                     localStorage.removeItem('current_company_user');
                     localStorage.removeItem('currentUser');
                     window.location.replace('index.html');
@@ -385,7 +385,7 @@
         }
 
         window.addSource = function() {
-            const name = prompt("اسم المصدر أو الشركة الجديدة 😊");
+            const name = prompt("اسم المصدر أو الشركة الجديدة");
             if (name && !pricingData[name]) {
                 pricingData[name] = [];
                 populateSources();
@@ -398,7 +398,7 @@
             const current = document.getElementById('source-select').value;
             if(!current || !pricingData[current]) return;
             
-            const newName = prompt(`نسخ قائمة ${current} إلى مصدر جديد باسم 😊`);
+            const newName = prompt(`نسخ قائمة ${current} إلى مصدر جديد باسم`);
             if (newName && !pricingData[newName]) {
                 pricingData[newName] = JSON.parse(JSON.stringify(pricingData[current]));
                 pricingData[newName].forEach(item => { item.id = "PRC_" + Date.now() + Math.floor(Math.random()*1000); });
@@ -412,7 +412,7 @@
             const current = document.getElementById('source-select').value;
             if(!current || !pricingData[current]) return;
 
-            if (confirm(`هل أنت متأكد من حذف قائمة ${current} نهائيا 😊`)) {
+            if (confirm(`هل أنت متأكد من حذف قائمة ${current} نهائيا`)) {
                 const idsToDelete = pricingData[current].map(i => i.id);
                 idsToDelete.forEach(async (id) => {
                     await remove(ref(db, `prices/${id}`));
@@ -510,7 +510,7 @@
             const source = document.getElementById('source-select').value;
             if(!source) return;
             
-            const name = prompt("اسم المنطقة الجديدة 😊");
+            const name = prompt("اسم المنطقة الجديدة");
             if (name) {
                 pricingData[source].push({ id: "PRC_" + Date.now() + Math.floor(Math.random()*1000), area: name, price: 0, isOffer: false, lastMod: Date.now() });
                 renderMatrix();
@@ -518,7 +518,7 @@
         }
 
         window.deleteItem = async function(source, index) {
-            if(confirm("هل أنت متأكد من حذف هذه المنطقة 😊")) {
+            if(confirm("هل أنت متأكد من حذف هذه المنطقة")) {
                 const item = pricingData[source][index];
                 if (item.id) {
                     await remove(ref(db, `prices/${item.id}`));
@@ -587,10 +587,10 @@
                 setTimeout(() => {
                     btn.innerHTML = "💾 حفظ واعتماد الأسعار";
                     btn.style.background = "var(--success)";
-                    alert("تم حفظ المصفوفة وتثبيتها في الخزنة الحديدية بنجاح 😊");
+                    alert("تم حفظ المصفوفة وتثبيتها في الخزنة الحديدية بنجاح");
                 }, 1500);
             } catch(e) {
-                alert("حدث خطأ أثناء الحفظ يا بطة 😊");
+                alert("حدث خطأ أثناء الحفظ يا بطة");
                 console.error(e);
                 btn.innerHTML = "💾 حفظ واعتماد الأسعار";
                 btn.style.background = "var(--success)";
