@@ -1,69 +1,103 @@
 // =================================================================
-// N One Empire - Service Worker (Smart Cache Controller)
+// N One Empire - Service Worker (Official Diamond Version)
 // =================================================================
 
-// 👑 غيري هاد الرقم كل ما تعملي تحديث جديد عشان تجيبري أجهزة الكباتن تتحدث
-const CACHE_VERSION = 'N-One-Empire-v727'; 
-const DYNAMIC_CACHE = 'N-One-Dynamic-v727';
-
-// 🗂️ الملفات الأساسية اللي لازم تتخزن عشان التطبيق يفتح نفاث حتى لو النت ضعيف
-const ASSETS_TO_CACHE = [
-    '/',
-    '/index.html',
-    '/n_one_logo_new.png' // الشعار الجديد الفخم
-    // بتقدري تضيفي هون أي صفحات ثانية زي '/client.html' لو حبيبتي
+// 👑 تحديث النسخة لإجبار المتصفح والواتساب على رؤية التعديلات الجديدة
+const CACHE_NAME = 'n-one-empire-v727-diamond';
+const urlsToCache = [
+    './',
+    './index.html',
+    './captain.html',
+    './manifest.json',
+    './n_one_logo_new.png' // الشعار الجديد الفخم
 ];
 
-// 1. التثبيت (Install) - تخزين الملفات الأساسية وتفعيل فوري
+// مرحلة التثبيت: تجهيز ملفات الإمبراطورية في الذاكرة
 self.addEventListener('install', event => {
-    self.skipWaiting(); // إجبار التطبيق على التحديث فوراً بدون انتظار
+    self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_VERSION)
+        caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('[N One SW] جاري تجهيز الذخيرة الألماسية...');
-                return cache.addAll(ASSETS_TO_CACHE);
+                console.log('[N One SW] تم تخزين الذخيرة الألماسية بنجاح 💎');
+                return cache.addAll(urlsToCache);
             })
     );
 });
 
-// 2. التفعيل (Activate) - تنظيف الذاكرة القديمة وتطهير السيستم
+// مرحلة التفعيل: تدمير أي كاش قديم (v5 وغيرها) وتنظيف السيستم
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(keys => {
-            return Promise.all(keys.map(key => {
-                if (key !== CACHE_VERSION && key !== DYNAMIC_CACHE) {
-                    console.log('[N One SW] تم تدمير الذاكرة القديمة:', key);
-                    return caches.delete(key);
-                }
-            }));
-        }).then(() => self.clients.claim()) // السيطرة الفورية على كل الصفحات المفتوحة
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('[N One SW] جاري مسح المخلفات القديمة:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
     );
 });
 
-// 3. الاعتراض (Fetch) - خوارزمية جلب البيانات بذكاء
+// إدارة الطلبات: استراتيجية (Network First) - الأولوية دايماً للجديد
 self.addEventListener('fetch', event => {
-    const reqUrl = event.request.url;
-
-    // 🛑 حماية خطيرة: منع السيرفر وكر من التدخل في فايربيس عشان الرادار ما يعلق!
-    if (reqUrl.includes('firestore.googleapis.com') || 
-        reqUrl.includes('firebaseio.com') || 
-        reqUrl.includes('google.com')) {
-        return; // خليه يمر طبيعي بدون كاش
+    // استثناء روابط Firebase وقواعد البيانات لضمان سرعة الرادار
+    if (event.request.url.includes('firebaseio.com') || event.request.url.includes('googleapis.com')) {
+        return;
     }
 
-    // استراتيجية (Network First) - جيب الجديد من النت، وإذا النت فاصل جيب من الذاكرة
     event.respondWith(
         fetch(event.request)
-            .then(networkResponse => {
-                return caches.open(DYNAMIC_CACHE).then(cache => {
-                    // تحديث الذاكرة الديناميكية بالنسخة الجديدة
-                    cache.put(event.request, networkResponse.clone());
-                    return networkResponse;
-                });
+            .then(response => {
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return response;
             })
             .catch(() => {
-                // لو النت فاصل، جيب النسخة المخبية في الإمبراطورية
                 return caches.match(event.request);
             })
+    );
+});
+
+// نظام الإشعارات الرسمي للإمبراطورية
+self.addEventListener('push', event => {
+    const options = {
+        body: event.data ? event.data.text() : 'لديك تحديث أو طلب جديد من الإمبراطورية 🔥',
+        icon: 'n_one_logo_new.png',
+        badge: 'n_one_logo_new.png',
+        vibrate: [200, 100, 200, 100, 200],
+        tag: 'n-one-order',
+        renotify: true,
+        requireInteraction: true,
+        data: {
+            url: './index.html'
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification('N One - الإمبراطورية 💎', options)
+    );
+});
+
+// التوجيه الذكي عند النقر على الإشعار
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            for (let i = 0; i < windowClients.length; i++) {
+                let client = windowClients[i];
+                if (client.url.includes('index.html') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('./index.html');
+            }
+        })
     );
 });
