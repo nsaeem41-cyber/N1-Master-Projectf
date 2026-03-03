@@ -249,7 +249,40 @@
     </div>
 
     <div class="container">
-        
+
+        <div class="card" style="border-top-color: var(--danger); background: linear-gradient(to left, #f8fafc, #ffffff); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🛡️</span>
+                <div>
+                    <h3 style="margin: 0; color: var(--primary); font-size: 14px;">مركز الحماية والتحكم السيبراني</h3>
+                    <small style="color: #64748b; font-weight: bold;">أدوات التحكم المتقدمة للإدارة</small>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label style="font-size: 11px; font-weight: bold; color: var(--primary);">⏱️ وقت الطلب (ثواني):</label>
+                    <input type="number" id="remote_timer_val" style="width: 50px; height: 28px; padding: 0 5px; text-align: center; border-color: var(--info); border-radius: 6px;" min="5" max="60" placeholder="10">
+                    <button class="btn-check" style="background: var(--info); color: white; height: 28px; margin: 0; border-radius: 6px;" onclick="updateRemoteTimer()">حفظ</button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <span style="font-size: 11px; font-weight: bold; color: var(--danger);">🛡️ حظر VPN</span>
+                    <label class="switch-small" style="margin: 0;">
+                        <input type="checkbox" id="remote_toggle_vpn" onchange="toggleRemoteVPN(this.checked)">
+                        <span class="slider-small"></span>
+                    </label>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <span style="font-size: 11px; font-weight: bold; color: #b45309;">🔥 النقاط الساخنة</span>
+                    <label class="switch-small" style="margin: 0;">
+                        <input type="checkbox" id="remote_toggle_hotspots" onchange="toggleRemoteHotspots(this.checked)">
+                        <span class="slider-small"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
@@ -529,6 +562,7 @@
             setupSmartAdsListener();
             setupAlertsListener(); 
             fetchData();
+            fetchCyberSettings(); // تشغيل جلب الإعدادات السيبرانية
         };
 
         window.fetchPricingAreas = function() {
@@ -1505,6 +1539,64 @@
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء عملية الحذف 🌸😊");
             }
+        };
+
+        // ================= التحديث 726: دوال التحكم السيبراني =================
+        window.fetchCyberSettings = function() {
+            if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            if(!myMaster) return;
+
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
+                if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
+            });
+            onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
+                document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
+            });
+            onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
+                document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
+            });
+        };
+
+        window.updateRemoteTimer = async function() {
+            const timeVal = document.getElementById('remote_timer_val').value;
+            if(!timeVal || timeVal < 5) { alert("يرجى إدخال وقت صحيح لا يقل عن 5 ثواني 🌸😊"); return; }
+            document.getElementById('loader-overlay').style.display = 'flex';
+            try {
+                const myMaster = currentUser.Client_User || currentUser.user;
+                await set(ref(db, 'settings/order_timer'), { seconds: parseInt(timeVal), timestamp: Date.now() });
+                if(myMaster) await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم تحديث وقت قبول الطلب بنجاح ⏱️🚀");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء التحديث 🌸😊");
+            }
+        };
+
+        window.toggleRemoteVPN = async function(isActive) {
+            try {
+                const myMaster = currentUser.Client_User || currentUser.user;
+                await set(ref(db, 'settings/anti_vpn'), { active: isActive, timestamp: Date.now() });
+                if(myMaster) await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
+                if(isActive) alert("تم تفعيل كاشف الـ VPN وحظر المتلاعبين بالموقع بنجاح 🔒💎");
+                else alert("تم إيقاف كاشف الـ VPN 🔓");
+            } catch(e) { alert("حدث خطأ أثناء التعديل 🌸😊"); }
+        };
+
+        window.toggleRemoteHotspots = async function(isActive) {
+            try {
+                const myMaster = currentUser.Client_User || currentUser.user;
+                if(isActive) {
+                    await set(ref(db, 'orders/fake_hotspot_trigger'), { active: true, timestamp: Date.now() });
+                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), true);
+                    alert("تم تفعيل مؤشر النقاط الساخنة للكباتن 🔥🚀");
+                } else {
+                    await remove(ref(db, 'orders/fake_hotspot_trigger'));
+                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), false);
+                    alert("تم إيقاف مؤشر النقاط الساخنة ❌");
+                }
+            } catch(e) { alert("حدث خطأ أثناء التعديل 🌸😊"); }
         };
 
     </script>
