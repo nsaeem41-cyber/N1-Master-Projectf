@@ -248,6 +248,7 @@
             background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
         }
         .status-text { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
         .status-indicator { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; }
@@ -721,17 +722,6 @@
                     </div>
                 </div>
 
-                <div class="status-toggle-card">
-                    <div class="status-text">
-                        <div id="ui_status_indicator" class="status-indicator offline"></div>
-                        <span id="ui_status_text">غير متاح للطلبات</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle_status" onchange="toggleOnlineStatus()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
                 <div id="daily-achievements-section" style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;">
                     <div class="achievement-card">
                         <div class="ach-title" id="lang_ach_title">إنجاز اليوم 🏆</div>
@@ -752,9 +742,20 @@
                     </div>
                 </div>
 
+                <div id="status-toggle-section" class="status-toggle-card">
+                    <div class="status-text">
+                        <div id="ui_status_indicator" class="status-indicator offline"></div>
+                        <span id="ui_status_text">غير متاح للطلبات</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle_status" onchange="toggleOnlineStatus()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
                 <div id="hotspots-section" style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;">
                     <div class="achievement-card">
-                        <div class="ach-title" id="lang_hot_title">نقاط ساخنة 🔥</div>
+                        <div class="ach-title" id="lang_hot_title">المطاعم النشطة بمنطقتك 🔥</div>
                         <div id="ui_hotspots" class="hotspots-container" style="margin: 0; justify-content: center;">
                             <div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;" id="lang_hot_wait">جاري الرصد...</div>
                         </div>
@@ -764,7 +765,7 @@
                 <div class="section-title" id="lang_sec_orders">📲 الطلبات الواردة</div>
                 <div id="active-orders-container">
                     <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;" id="lang_no_orders">
-                        لا توجد طلبات حاليا خليك قريب من النقاط الساخنة 📡
+                        لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡
                     </div>
                 </div>
 
@@ -1049,12 +1050,12 @@
                 lang_rating: 'تقييم ألماسي 💎',
                 lang_ach_title: 'إنجاز اليوم 🏆',
                 lang_ach_sub: 'عمل ممتاز',
-                lang_hot_title: 'نقاط ساخنة 🔥',
+                lang_hot_title: 'المطاعم النشطة بمنطقتك 🔥',
                 lang_sec_orders: '📲 الطلبات الواردة',
                 status_online: 'متاح وجاهز للطلبات 🟢',
                 status_offline: 'غير متاح للطلبات 🔴',
                 status_blocked: 'غير متاح (محظور ماليا)',
-                no_orders: 'لا توجد طلبات حاليا خليك قريب من النقاط الساخنة 📡',
+                no_orders: 'لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡',
                 no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن',
                 lang_confirm_ok: 'تأكيد ✅',
                 lang_confirm_no: 'إلغاء ❌',
@@ -1652,7 +1653,7 @@
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
-                const achievementsSection = document.getElementById('daily-achievements-section'); 
+                const statusToggleSection = document.getElementById('status-toggle-section'); // لوحة الحالة متصل/أوفلاين
                 
                 let todayCount = 0;
                 let todayVal = 0;
@@ -1823,13 +1824,13 @@
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
-                // إخفاء/إظهار النقاط الساخنة والإنجازات بناءً على وجود طلب نشط
+                // إخفاء/إظهار النقاط الساخنة ولوحة الحالة بناءً على وجود طلب نشط
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
-                    if(achievementsSection) achievementsSection.style.display = 'none';
+                    if(statusToggleSection) statusToggleSection.style.display = 'none';
                 } else {
                     if(hotspotsSection) hotspotsSection.style.display = 'grid';
-                    if(achievementsSection) achievementsSection.style.display = 'grid';
+                    if(statusToggleSection) statusToggleSection.style.display = 'flex';
                 }
 
                 const audio = document.getElementById('order-ringtone');
