@@ -289,8 +289,16 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; text-align: center;
         }
         .ach-title { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; }
-        .ach-number { font-size: 36px; font-weight: 900; color: var(--primary); }
+        .ach-number { font-size: 32px; font-weight: 900; color: var(--primary); }
         .ach-subtitle { font-size: 11px; color: var(--success); font-weight: bold; margin-top: 5px; }
+
+        .financial-row {
+            display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px;
+        }
+        .fin-box { text-align: center; flex: 1; }
+        .fin-lbl { font-size: 10px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
+        .fin-val { font-size: 16px; font-weight: 900; color: var(--primary); }
+        .fin-val.success { color: var(--success); }
 
         /* الطلبات الحالية */
         .section-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
@@ -345,7 +353,7 @@
         /* سهم الاتجاهات الألماسي (النسخة الراقية) */
         .btn-map-link {
             background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; 
-            width: 40px; height: 40px; border-radius: 50%; 
+            width: 35px; height: 35px; border-radius: 50%; 
             display: inline-flex; align-items: center; justify-content: center; 
             text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
             flex-shrink: 0;
@@ -354,13 +362,13 @@
         
         .btn-call-shop {
             background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
-            width: 40px; height: 40px; border-radius: 50%; 
+            width: 35px; height: 35px; border-radius: 50%; 
             display: inline-flex; align-items: center; justify-content: center; 
             text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
             flex-shrink: 0;
         }
         .btn-call-shop:hover { transform: scale(1.1); background: #d1fae5; }
-        .hidden-phone-badge { font-size: 11px; color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 10px; border: 1px solid #fecaca; }
+        .hidden-phone-badge { font-size: 10px; color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 10px; border: 1px solid #fecaca; }
 
         /* سجل الطلبات والإعدادات (Modals) */
         .modal-overlay {
@@ -722,12 +730,27 @@
                     </label>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;">
                     <div class="achievement-card">
                         <div class="ach-title" id="lang_ach_title">إنجاز اليوم 🏆</div>
-                        <div class="ach-number" id="ui_today_count">0</div>
-                        <div class="ach-subtitle" id="lang_ach_sub">عمل ممتاز</div>
+                        <div class="financial-row">
+                            <div class="fin-box" style="border-left: 1px solid #e2e8f0;">
+                                <div class="fin-lbl">عدد الطلبات</div>
+                                <div class="fin-val" id="ui_today_count">0</div>
+                            </div>
+                            <div class="fin-box" style="border-left: 1px solid #e2e8f0;">
+                                <div class="fin-lbl">قيم الطلبات</div>
+                                <div class="fin-val" id="ui_today_val">0.00</div>
+                            </div>
+                            <div class="fin-box">
+                                <div class="fin-lbl">أجور التوصيل</div>
+                                <div class="fin-val success" id="ui_today_fee">0.00</div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;">
                     <div class="achievement-card">
                         <div class="ach-title" id="lang_hot_title">نقاط ساخنة 🔥</div>
                         <div id="ui_hotspots" class="hotspots-container" style="margin: 0; justify-content: center;">
@@ -1133,26 +1156,25 @@
         function checkAndResetDailyCounter() {
             const now = new Date();
             const resetTime = new Date();
-            resetTime.setHours(0, 0, 0, 0); // ضبط الوقت على منتصف الليل
+            resetTime.setHours(0, 0, 0, 0); 
 
-            // إذا كان الوقت الحالي قد تجاوز منتصف الليل اليوم
-            // نحتاج لحساب الوقت المتبقي لمنتصف الليل القادم
             if (now > resetTime) {
                 resetTime.setDate(resetTime.getDate() + 1);
             }
 
             const timeUntilReset = resetTime.getTime() - now.getTime();
 
-            // ضبط مؤقت لتصفير العداد عندما يحين منتصف الليل
             setTimeout(() => {
-                // تصفير العداد المرئي
+                // تصفير العداد المرئي والمبالغ
                 const todayCountEl = document.getElementById('ui_today_count');
-                if(todayCountEl) todayCountEl.innerText = '0';
+                const todayValEl = document.getElementById('ui_today_val');
+                const todayFeeEl = document.getElementById('ui_today_fee');
                 
-                // تفريغ المصفوفة الداخلية
+                if(todayCountEl) todayCountEl.innerText = '0';
+                if(todayValEl) todayValEl.innerText = '0.00';
+                if(todayFeeEl) todayFeeEl.innerText = '0.00';
+                
                 allCompletedOrders = [];
-
-                // إعادة تشغيل المؤقت لليوم التالي
                 checkAndResetDailyCounter();
             }, timeUntilReset);
         }
@@ -1628,12 +1650,17 @@
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 let todayCount = 0;
+                let todayVal = 0;
+                let todayFee = 0;
                 let hasActive = false;
                 let hasNewRinging = false;
                 allCompletedOrders = [];
                 container.innerHTML = '';
                 
                 const todayStr = new Date().toDateString();
+                
+                const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+                const callSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
 
                 if (snapshot.exists()) {
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
@@ -1645,9 +1672,23 @@
                             return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
                         };
                         const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
+                        
+                        let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
+                        let phoneHtml = '';
+                        if (ord.shop_phone) {
+                            if (isPhoneHidden) {
+                                phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
+                            } else {
+                                phoneHtml = `<a href="tel:${ord.shop_phone}" class="btn-call-shop" title="اتصال بالمنشأة">${callSvg}</a>`;
+                            }
+                        }
 
                         if (ord.status === 'completed') {
-                            if (new Date(ord.timestamp).toDateString() === todayStr) todayCount++;
+                            if (new Date(ord.completed_at || ord.timestamp).toDateString() === todayStr) {
+                                todayCount++;
+                                todayVal += parseFloat(ord.value || ord.Shop_Val || 0);
+                                todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
+                            }
                             allCompletedOrders.push(ord);
                         }
                         
@@ -1683,7 +1724,12 @@
                                         <span>${lblOrd} #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime} ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${restName}</div>
+                                    <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">🏪 ${restName}</span>
+                                        <div style="display:flex; gap:8px;">
+                                            ${phoneHtml}
+                                        </div>
+                                    </div>
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${lblVal}</div>
@@ -1719,18 +1765,6 @@
                             if (mapQuery.includes('+')) mapQuery = mapQuery.split('+')[0].trim();
                             
                             const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery));
-                            const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
-                            const callSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
-
-                            let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
-                            let phoneHtml = '';
-                            if (ord.shop_phone) {
-                                if (isPhoneHidden) {
-                                    phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
-                                } else {
-                                    phoneHtml = `<a href="tel:${ord.shop_phone}" class="btn-call-shop" title="اتصال بالمنشأة">${callSvg}</a>`;
-                                }
-                            }
 
                             let btnClass = '';
                             let btnText = '';
@@ -1785,6 +1819,8 @@
                 }
                 
                 document.getElementById('ui_today_count').innerText = todayCount;
+                document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
+                document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
                 const audio = document.getElementById('order-ringtone');
                 if (hasNewRinging && currentCaptain.app_status === 'online') {
