@@ -287,6 +287,7 @@
         .achievement-card {
             background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; text-align: center;
+            transition: all 0.3s ease;
         }
         .ach-title { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; }
         .ach-number { font-size: 32px; font-weight: 900; color: var(--primary); }
@@ -312,7 +313,8 @@
         @keyframes pulseAlert { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         
         .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #64748b; font-weight: bold; }
-        .order-rest { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
+        .order-rest { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
+        .order-rest-phone { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;}
         .order-details { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
         .detail-box { text-align: center; flex: 1; }
         .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
@@ -750,7 +752,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;">
+                <div id="hotspots-section" style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px;">
                     <div class="achievement-card">
                         <div class="ach-title" id="lang_hot_title">نقاط ساخنة 🔥</div>
                         <div id="ui_hotspots" class="hotspots-container" style="margin: 0; justify-content: center;">
@@ -1649,6 +1651,8 @@
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
+                const hotspotsSection = document.getElementById('hotspots-section'); // لوحة النقاط الساخنة
+                
                 let todayCount = 0;
                 let todayVal = 0;
                 let todayFee = 0;
@@ -1677,9 +1681,9 @@
                         let phoneHtml = '';
                         if (ord.shop_phone) {
                             if (isPhoneHidden) {
-                                phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
+                                phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge">رقم محجوب 🛡️</span></div>`;
                             } else {
-                                phoneHtml = `<a href="tel:${ord.shop_phone}" class="btn-call-shop" title="اتصال بالمنشأة">${callSvg}</a>`;
+                                phoneHtml = `<div class="order-rest-phone">📞 هاتف المنشأة: <a href="tel:${ord.shop_phone}" style="color:var(--info); text-decoration:none;" title="اتصال بالمنشأة" target="_blank">${ord.shop_phone}</a></div>`;
                             }
                         }
 
@@ -1724,12 +1728,8 @@
                                         <span>${lblOrd} #${ord.id.substring(ord.id.length - 4)}</span>
                                         <span>${lblTime} ${ordTime}</span>
                                     </div>
-                                    <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">🏪 ${restName}</span>
-                                        <div style="display:flex; gap:8px;">
-                                            ${phoneHtml}
-                                        </div>
-                                    </div>
+                                    <div class="order-rest" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${restName}</div>
+                                    ${phoneHtml}
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${lblVal}</div>
@@ -1797,10 +1797,10 @@
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">🏪 ${restName}</span>
                                         <div style="display:flex; gap:8px;">
-                                            ${phoneHtml}
                                             <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
                                         </div>
                                     </div>
+                                    ${phoneHtml}
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${lblVal}</div>
@@ -1822,6 +1822,13 @@
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
+                // إخفاء/إظهار النقاط الساخنة بناءً على وجود طلب نشط
+                if (hasActive) {
+                    hotspotsSection.style.display = 'none';
+                } else {
+                    hotspotsSection.style.display = 'grid';
+                }
+
                 const audio = document.getElementById('order-ringtone');
                 if (hasNewRinging && currentCaptain.app_status === 'online') {
                     ringtoneActive = true;
@@ -1841,7 +1848,7 @@
                 }
             });
 
-            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) ---
+            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) من رادار الـ Orders ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
                 const globalOrdersRef = ref(db, 'orders');
@@ -1850,13 +1857,15 @@
                         const allOrders = snapshot.val();
                         const areaCounts = {};
                         
-                        // نجمع الطلبات حسب المنطقة
+                        // نجمع الطلبات حسب المنطقة للمطاعم النشطة حالياً
                         for(let key in allOrders) {
                             const ord = allOrders[key];
-                            // نفترض أن المنطقة مسجلة في OrderArea أو Shop_Area
-                            const area = ord.OrderArea || ord.Shop_Area; 
-                            if(area) {
-                                areaCounts[area] = (areaCounts[area] || 0) + 1;
+                            // نفحص فقط الطلبات الجديدة (new) لتمثيل السخونة الحقيقية للرادار
+                            if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
+                                const area = ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup; 
+                                if(area) {
+                                    areaCounts[area] = (areaCounts[area] || 0) + 1;
+                                }
                             }
                         }
 
@@ -1864,7 +1873,7 @@
                         const sortedAreas = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
                         
                         const hotspotsContainer = document.getElementById('ui_hotspots');
-                        hotspotsContainer.innerHTML = ''; // تفريغ الحاوية
+                        hotspotsContainer.innerHTML = ''; 
 
                         if(sortedAreas.length > 0) {
                             // عرض أعلى 3 مناطق ساخنة
@@ -1872,11 +1881,11 @@
                                 hotspotsContainer.innerHTML += `<div class="hotspot-tag">${areaName} 🔥</div>`;
                             });
                         } else {
-                            const txt = currentLang === 'ar' ? 'لا يوجد طلبات حالياً' : 'No Active Hotspots';
+                            const txt = currentLang === 'ar' ? 'لا يوجد ضغط طلبات حالياً' : 'No Active Hotspots';
                             hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${txt}</div>`;
                         }
                     } else {
-                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد طلبات حالياً</div>`;
+                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد ضغط طلبات حالياً</div>`;
                     }
                 });
             }
