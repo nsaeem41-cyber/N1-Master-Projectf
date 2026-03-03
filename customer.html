@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>N One | Customer Super App 💎</title>
     
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <style>
-        /* ================= تصميم N One Super App ================= */
+        /* ================= تصميم العميل (N One Diamond UI) ================= */
         :root {
             --primary: #0f172a;    
-            --accent: #1e293b;     
             --gold: #d4af37;       
             --bg: #f8fafc;         
             --text: #334155;       
@@ -17,6 +20,8 @@
             --danger: #ef4444;     
             --info: #0ea5e9;
             --diamond: #e0f2fe;    
+            --pink: #db2777;
+            --pink-light: #fce7f3;
         }
 
         body { 
@@ -53,7 +58,7 @@
             z-index: 10;
         }
         .profile-btn {
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             padding: 8px 15px; border-radius: 20px; border: 2px solid var(--gold);
             display: flex; align-items: center; gap: 8px; font-weight: 900;
             color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
@@ -74,9 +79,21 @@
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
+        /* زر الطلب الصوتي الذكي AI */
+        .voice-ai-btn {
+            position: absolute; bottom: 75vh; right: 20px; z-index: 15;
+            background: linear-gradient(135deg, var(--info), var(--primary));
+            color: white; border: none; width: 60px; height: 60px;
+            border-radius: 50%; font-size: 24px; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+            display: flex; justify-content: center; align-items: center;
+            transition: 0.3s; border: 3px solid white;
+        }
+        .voice-ai-btn:active { transform: scale(0.9); }
+
         /* ================= اللوحة السفلية (Super App Sheet) ================= */
         .bottom-sheet {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 65vh;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 72vh;
             background: white; border-radius: 35px 35px 0 0; z-index: 20;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
@@ -86,100 +103,111 @@
             border-radius: 10px; margin: 15px auto;
         }
         
-        /* التبويبات العلوية في اللوحة */
-        .app-tabs {
-            display: flex; gap: 10px; padding: 0 20px; margin-bottom: 15px;
-        }
+        .app-tabs { display: flex; gap: 10px; padding: 0 20px; margin-bottom: 15px; }
         .app-tab {
             flex: 1; padding: 12px; text-align: center; border-radius: 15px;
             font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.3s;
             background: #f1f5f9; color: #64748b; border: 2px solid transparent;
         }
-        .app-tab.active {
-            background: var(--gold); color: var(--primary);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-        }
+        .app-tab.active { background: var(--gold); color: var(--primary); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
 
         .sheet-content { padding: 0 25px 20px; overflow-y: auto; flex: 1; }
         
-        /* الذكاء الاستباقي */
-        .ai-greeting { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 20px; }
+        /* الذكاء الاستباقي ومحفظة العائلة */
+        .ai-greeting { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
         .ai-greeting span { color: var(--gold); }
 
-        /* الفورم */
+        .wallet-card {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 15px; padding: 15px; color: white; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2);
+        }
+
+        /* الفورم والجدولة */
         .input-box {
-            background: #f8fafc; border: 2px solid #e2e8f0; padding: 15px;
+            background: #f8fafc; border: 2px solid #e2e8f0; padding: 12px 15px;
             border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
         }
-        .input-box input {
-            border: none; background: transparent; outline: none; width: 100%;
-            font-size: 15px; font-weight: bold; color: var(--primary);
-        }
-        
+        .input-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; font-weight: bold; color: var(--primary); }
+        .schedule-btn { background: var(--diamond); color: var(--info); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; border: 1px solid #bae6fd; }
+
+        /* الأماكن المحفوظة */
+        .saved-places { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;}
+        .place-item { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 13px; white-space: nowrap; cursor: pointer; }
+
         /* ميزة السعر والمساومة */
         .bid-container { display: flex; gap: 10px; margin-bottom: 15px; }
-        .bid-input {
-            flex: 1; background: #fffbeb; border: 2px solid #fde68a; padding: 15px;
-            border-radius: 15px; font-size: 18px; font-weight: 900; color: #b45309; text-align: center;
-        }
-        
-        /* زر إرسال لصديق */
-        .gift-toggle {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #f1f5f9; padding: 12px 15px; border-radius: 12px; margin-bottom: 20px;
-        }
-        .gift-toggle span { font-size: 13px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 5px; }
-        
+        .bid-input { flex: 1; background: #fffbeb; border: 2px solid #fde68a; padding: 12px; border-radius: 15px; font-size: 18px; font-weight: 900; color: #b45309; text-align: center; }
+
         .btn-main {
             background: var(--primary); color: white; width: 100%; border: none;
-            padding: 18px; border-radius: 15px; font-size: 18px; font-weight: 900;
+            padding: 15px; border-radius: 15px; font-size: 16px; font-weight: 900;
             cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px;
         }
         .btn-main:active { transform: scale(0.98); }
 
-        /* ================= شاشة العروض (المساومة) ================= */
+        /* ================= شاشة اختيار الرحلة و N One Pink ================= */
+        .ride-options-panel { display: none; }
+        .ride-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; border: 2px solid transparent; border-radius: 15px;
+            margin-bottom: 8px; transition: 0.3s; cursor: pointer; background: #f8fafc;
+        }
+        .ride-card.selected { border-color: var(--gold); background: #fffbeb; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15); }
+        .ride-card.pink-option.selected { border-color: var(--pink); background: var(--pink-light); box-shadow: 0 4px 15px rgba(219, 39, 119, 0.15); }
+        
+        .ride-img { width: 50px; height: 50px; background: white; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .ride-info { flex: 1; margin-right: 12px; }
+        .ride-name { font-size: 15px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+        .ride-time { font-size: 11px; color: #64748b; font-weight: bold; margin-top: 3px; }
+        .ride-price { font-size: 16px; font-weight: 900; color: var(--primary); }
+
+        .btn-back-sheet { background: transparent; border: none; color: var(--primary); font-size: 24px; cursor: pointer; padding: 0; margin-bottom: 10px; }
+
+        /* ================= شاشة مزاج الرحلة VIP ================= */
+        .mood-panel { display: none; text-align: center; }
+        .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .mood-btn {
+            background: white; border: 2px solid #e2e8f0; border-radius: 15px; padding: 15px 10px;
+            font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .mood-btn.active { border-color: var(--info); background: var(--diamond); color: var(--info); }
+        .mood-btn span { font-size: 24px; }
+
+        /* ================= شاشة جاري البحث ================= */
+        .searching-panel { display: none; text-align: center; padding: 30px 0; }
+        .radar-spinner {
+            width: 80px; height: 80px; border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--gold); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ================= قسم العروض (المساومة) ================= */
         .offers-panel { display: none; }
         .offer-card {
             background: white; border: 2px solid var(--gold); border-radius: 15px;
             padding: 15px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
             display: flex; justify-content: space-between; align-items: center;
-            animation: slideUp 0.4s ease-out;
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .offer-cap-info { display: flex; flex-direction: column; gap: 4px; }
-        .offer-price { font-size: 22px; font-weight: 900; color: var(--primary); }
-        .offer-btn {
-            background: var(--success); color: white; border: none; padding: 10px 20px;
-            border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;
-        }
+        .offer-price { font-size: 20px; font-weight: 900; color: var(--primary); }
+        .offer-btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; }
 
-        /* ================= قسم المطاعم (N One Market) ================= */
+        /* ================= قسم المطاعم وجيبلي بطريقك ================= */
         .market-panel { display: none; }
-        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
-        .cat-item {
-            background: #f1f5f9; padding: 10px 20px; border-radius: 20px;
-            font-size: 13px; font-weight: bold; white-space: nowrap; cursor: pointer; border: 1px solid transparent;
+        .multi-errand-banner {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;
+            padding: 15px; border-radius: 15px; margin-bottom: 15px; display: flex;
+            justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(109, 40, 217, 0.3);
         }
-        .cat-item.active { background: var(--diamond); color: var(--info); border-color: var(--info); }
-        
         .restaurant-card {
             background: white; border: 1px solid #e2e8f0; border-radius: 15px;
-            padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            padding: 15px; margin-bottom: 12px; display: flex; gap: 15px; align-items: center;
         }
-        .rest-img { width: 60px; height: 60px; background: #cbd5e1; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 30px; }
-        .rest-info h4 { margin: 0 0 5px 0; font-size: 15px; color: var(--primary); font-weight: 900; }
-        .rest-info p { margin: 0; font-size: 11px; color: #64748b; font-weight: bold; }
-        .rest-badge { background: #fef2f2; color: var(--danger); padding: 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-top: 5px; display: inline-block; }
-
-        /* مفاتيح Toggle */
-        .switch-small { position: relative; display: inline-block; width: 40px; height: 24px; }
-        .switch-small input { opacity: 0; width: 0; height: 0; }
-        .slider-small { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-        .slider-small:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider-small { background-color: var(--success); }
-        input:checked + .slider-small:before { transform: translateX(16px); }
 
     </style>
 </head>
@@ -190,19 +218,23 @@
         <div class="map-bg"></div>
 
         <div class="top-bar">
-            <div class="profile-btn" onclick="alert('ملف الزبون: رصيد الجواهر، الإعدادات، سجل الرحلات')">
+            <div class="profile-btn" onclick="alert('ملف الزبون 💎\n- المحفظة العائلية\n- الإعدادات\n- السجل')">
                 <span>👤</span>
-                <span>💎 1,250 نقطة</span>
+                <span style="display: flex; flex-direction: column; line-height: 1;">
+                    <span>💎 1,250 نقطة</span>
+                </span>
             </div>
             <button class="sos-btn" onclick="triggerSOS()">🛡️</button>
         </div>
+
+        <button class="voice-ai-btn" onclick="activateVoiceAI()">🎙️</button>
 
         <div class="bottom-sheet" id="main-sheet">
             <div class="drag-handle"></div>
             
             <div class="app-tabs">
                 <div class="app-tab active" onclick="switchMainTab('rides', this)">🚗 مشاوير N One</div>
-                <div class="app-tab" onclick="switchMainTab('market', this)">🍔 المطاعم والمتاجر</div>
+                <div class="app-tab" onclick="switchMainTab('market', this)">🍔 N One Market</div>
             </div>
 
             <div class="sheet-content">
@@ -210,24 +242,31 @@
                 <div id="rides-section">
                     <div class="ai-greeting" id="smart-greeting">صباح الخير، <span>عالشغل؟</span> 💼</div>
                     
+                    <div class="wallet-card" onclick="alert('إدارة محفظة العائلة وإضافة رصيد للأبناء أو إرسال هدايا 🎁')">
+                        <div>
+                            <div style="font-size: 11px; font-weight: bold; opacity: 0.9;">محفظة N One العائلية 👨‍👩‍👧</div>
+                            <div style="font-size: 18px; font-weight: 900; margin-top: 4px;">25.50 د.أ</div>
+                        </div>
+                        <div style="font-size: 24px;">💳</div>
+                    </div>
+
                     <div class="input-box">
                         <span>🟢</span>
-                        <input type="text" placeholder="موقعك الحالي (تم التحديد)" value="الجبيهة - إشارة المنهل" readonly>
+                        <input type="text" placeholder="موقعك (الجبيهة)" readonly>
                     </div>
-                    <div class="input-box">
+                    <div class="input-box" onclick="showRideOptions()">
                         <span>📍</span>
                         <input type="text" placeholder="إلى أين تريد الذهاب؟">
+                        <div class="schedule-btn" onclick="event.stopPropagation(); alert('تم فتح نافذة جدولة الرحلات 📅\nالسيستم سيبعث كابتن تلقائياً في الوقت المحدد!')">جدولة 📅</div>
                     </div>
 
-                    <div class="gift-toggle">
-                        <span>🎁 طلب سيارة لشخص آخر (صديق/عائلة)</span>
-                        <label class="switch-small">
-                            <input type="checkbox" onchange="alert('سيتم إرسال رسالة تتبع وتأكيد للشخص الآخر')">
-                            <span class="slider-small"></span>
-                        </label>
+                    <div class="saved-places">
+                        <div class="place-item" onclick="showRideOptions()">🏠 المنزل</div>
+                        <div class="place-item" onclick="showRideOptions()">💼 العمل</div>
+                        <div class="place-item" onclick="showRideOptions()">🎓 الجامعة</div>
                     </div>
 
-                    <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">اقترح سعرك للرحلة (المساومة)</div>
+                    <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">أو اقترح سعرك (نظام المساومة)</div>
                     <div class="bid-container">
                         <input type="number" class="bid-input" placeholder="2.50" step="0.25">
                         <div style="background: #f1f5f9; padding: 15px; border-radius: 15px; font-weight: 900; color: #64748b;">د.أ</div>
@@ -236,9 +275,83 @@
                     <button class="btn-main" onclick="requestOffers()">اطلب وساوم الكباتن 🚀</button>
                 </div>
 
+                <div id="state-ride" class="ride-options-panel">
+                    <button class="btn-back-sheet" onclick="goBackHome()">🡢</button>
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 15px;">اختر فئة الرحلة</div>
+
+                    <div class="ride-card selected" onclick="selectRide(this)">
+                        <div class="ride-img">💎</div>
+                        <div class="ride-info">
+                            <div class="ride-name">N One ألماسي <span class="badge" style="background: var(--primary); color: white;">VIP</span></div>
+                            <div class="ride-time">وصول سريع • سيارات حديثة</div>
+                        </div>
+                        <div class="ride-price">3.50 د.أ</div>
+                    </div>
+
+                    <div class="ride-card pink-option" onclick="selectRide(this)">
+                        <div class="ride-img">🌸</div>
+                        <div class="ride-info">
+                            <div class="ride-name" style="color: var(--pink);">N One Pink</div>
+                            <div class="ride-time">كباتن سيدات فقط • أمان تام</div>
+                        </div>
+                        <div class="ride-price">3.50 د.أ</div>
+                    </div>
+
+                    <div class="ride-card" onclick="selectRide(this)">
+                        <div class="ride-img">🚗</div>
+                        <div class="ride-info">
+                            <div class="ride-name">N One اقتصادي</div>
+                            <div class="ride-time">توفير أكثر للمشاوير اليومية</div>
+                        </div>
+                        <div class="ride-price">2.20 د.أ</div>
+                    </div>
+
+                    <div class="ride-card" onclick="selectRide(this)">
+                        <div class="ride-img">📦</div>
+                        <div class="ride-info">
+                            <div class="ride-name">طرد سري (Secure)</div>
+                            <div class="ride-time">تسليم برمز PIN للمنقولات الثمينة</div>
+                        </div>
+                        <div class="ride-price">2.50 د.أ</div>
+                    </div>
+
+                    <button class="btn-main" onclick="showMoodPanel()">التالي: ضبط مزاج الرحلة ⚙️</button>
+                </div>
+
+                <div id="state-mood" class="mood-panel">
+                    <button class="btn-back-sheet" style="text-align: right; width: 100%;" onclick="backToRides()">🡢</button>
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 5px; color: var(--primary);">مزاج الرحلة (VIP) 👑</div>
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">سيتم إبلاغ الكابتن بتفضيلاتك لضمان راحتك التامة.</p>
+
+                    <div class="mood-grid">
+                        <div class="mood-btn" onclick="this.classList.toggle('active')">
+                            <span>🔇</span> هدوء تام (بدون أحاديث)
+                        </div>
+                        <div class="mood-btn active" onclick="this.classList.toggle('active')">
+                            <span>❄️</span> الرجاء تشغيل التكييف
+                        </div>
+                        <div class="mood-btn" onclick="this.classList.toggle('active')">
+                            <span>🎶</span> تشغيل موسيقى هادئة
+                        </div>
+                        <div class="mood-btn" onclick="this.classList.toggle('active')">
+                            <span>🚭</span> سيارة خالية من التدخين
+                        </div>
+                    </div>
+
+                    <button class="btn-main" style="background: var(--gold); color: var(--primary);" onclick="startSearching()">تأكيد وبحث عن كابتن 🚀</button>
+                </div>
+
+                <div id="state-searching" class="searching-panel">
+                    <div class="radar-spinner"></div>
+                    <div class="searching-title">نبحث لك عن الأفضل...</div>
+                    <div class="searching-desc">جاري إرسال تفضيلاتك للكباتن المتاحين في محيطك.</div>
+                    
+                    <button class="btn-main" style="background: #f1f5f9; color: var(--danger); margin-top: 30px; box-shadow: none;" onclick="goBackHome()">إلغاء الطلب ✕</button>
+                </div>
+
                 <div id="offers-section" class="offers-panel">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                        <h3 style="margin:0; color:var(--primary);">📡 عروض الكباتن المتاحين</h3>
+                        <h3 style="margin:0; color:var(--primary);">📡 عروض الكباتن</h3>
                         <button style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:8px; cursor:pointer;" onclick="cancelRequest()">إلغاء</button>
                     </div>
                     
@@ -250,59 +363,63 @@
                         </div>
                         <div style="text-align: left;">
                             <div class="offer-price">2.50 د.أ</div>
-                            <button class="offer-btn" onclick="acceptOffer('أحمد', '2.50')">قبول ✅</button>
+                            <button class="offer-btn" onclick="acceptOffer('أحمد')">قبول ✅</button>
                         </div>
                     </div>
 
                     <div class="offer-card" style="border-color: #e2e8f0; box-shadow: none;">
                         <div class="offer-cap-info">
-                            <span style="font-size: 16px; font-weight: 900; color: var(--primary);">كابتن محمود 🚗</span>
-                            <span style="font-size: 12px; color: #64748b; font-weight: bold;">كيا فيوجن • يبعد 4 دقائق</span>
-                            <span style="font-size: 11px; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 5px; width: fit-content;">⭐ 4.5 تقييم ممتاز</span>
+                            <span style="font-size: 16px; font-weight: 900; color: var(--primary);">كابتن سارة 🌸</span>
+                            <span style="font-size: 12px; color: #64748b; font-weight: bold;">كيا نيرو • تبعد 4 دقائق</span>
+                            <span style="font-size: 11px; background: var(--pink-light); color: var(--pink); padding: 2px 6px; border-radius: 5px; width: fit-content;">⭐ N One Pink</span>
                         </div>
                         <div style="text-align: left;">
-                            <div class="offer-price">2.00 د.أ</div>
-                            <button class="offer-btn" style="background: var(--primary);" onclick="acceptOffer('محمود', '2.00')">قبول ✅</button>
+                            <div class="offer-price">2.75 د.أ</div>
+                            <button class="offer-btn" style="background: var(--pink);" onclick="acceptOffer('سارة')">قبول ✅</button>
                         </div>
                     </div>
                 </div>
 
                 <div id="market-section" class="market-panel">
-                    <div class="category-scroll">
-                        <div class="cat-item active">الكل</div>
-                        <div class="cat-item">🍔 وجبات سريعة</div>
-                        <div class="cat-item">☕ كافيهات</div>
-                        <div class="cat-item">🛒 سوبر ماركت</div>
-                        <div class="cat-item">💊 صيدليات</div>
-                    </div>
-
-                    <div class="restaurant-card" onclick="alert('فتح قائمة مطعم شاورما N One')">
-                        <div class="rest-img">🌯</div>
-                        <div class="rest-info">
-                            <h4>شاورما الإمبراطورية</h4>
-                            <p>أشهى الوجبات السريعة • توصيل ألماسي</p>
-                            <span class="rest-badge">🔥 توصيل مجاني للكباتن</span>
-                        </div>
-                    </div>
-
-                    <div class="restaurant-card" onclick="alert('فتح قائمة N One Cafe')">
-                        <div class="rest-img">☕</div>
-                        <div class="rest-info">
-                            <h4>N One كافيه</h4>
-                            <p>قهوة مختصة ومخبوزات طازجة</p>
-                        </div>
-                    </div>
                     
-                    <button class="btn-main" style="background: #f1f5f9; color: var(--primary); box-shadow: none;">تصفح المزيد من المتاجر 🛍️</button>
+                    <div class="multi-errand-banner" onclick="alert('ميزة (جيبلي بطريقك):\nاطلب من أكثر من مكان، ونفس الكابتن بيجمعهم وبجيبهم لعندك بطلبية وحدة!')">
+                        <div>
+                            <div style="font-weight: 900; font-size: 14px;">ميزة "جيبلي بطريقك" 🛍️</div>
+                            <div style="font-size: 11px; opacity: 0.9;">اطلب من أكثر من مكان بكابتن واحد!</div>
+                        </div>
+                        <div style="font-size: 24px;">➕</div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;">
+                        <div style="background: var(--diamond); color: var(--info); padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap;">🍔 مطاعم</div>
+                        <div style="background: #f1f5f9; padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap;">💊 صيدليات</div>
+                        <div style="background: #f1f5f9; padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; white-space: nowrap;">🛒 سوبر ماركت</div>
+                    </div>
+
+                    <div class="restaurant-card" onclick="alert('فتح قائمة مطعم الإمبراطورية')">
+                        <div class="rest-img">🌯</div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; font-size: 15px; color: var(--primary); font-weight: 900;">شاورما الإمبراطورية</h4>
+                            <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold;">أشهى الوجبات • توصيل ألماسي</p>
+                            <span style="background: #fef2f2; color: var(--danger); padding: 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-top: 5px; display: inline-block;">🔥 الأكثر طلباً</span>
+                        </div>
+                    </div>
+
+                    <div class="restaurant-card" onclick="alert('فتح صيدلية N One')">
+                        <div class="rest-img">💊</div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; font-size: 15px; color: var(--primary); font-weight: 900;">صيدلية الصحة</h4>
+                            <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold;">أدوية ومستحضرات تجميل</p>
+                        </div>
+                    </div>
                 </div>
 
             </div>
         </div>
-
     </div>
 
     <script>
-        // الذكاء الاستباقي للترحيب
+        // الذكاء الاستباقي
         function setAIGreeting() {
             const hour = new Date().getHours();
             const greetingEl = document.getElementById('smart-greeting');
@@ -316,45 +433,84 @@
         }
         setAIGreeting();
 
-        // التبديل بين المشاوير والمطاعم
+        // التبديلات
+        const mainSheet = document.getElementById('main-sheet');
+        
         function switchMainTab(tab, btn) {
             document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
             
-            if (tab === 'rides') {
-                document.getElementById('rides-section').style.display = 'block';
-                document.getElementById('market-section').style.display = 'none';
-                document.getElementById('offers-section').style.display = 'none';
-            } else {
-                document.getElementById('rides-section').style.display = 'none';
-                document.getElementById('market-section').style.display = 'block';
-                document.getElementById('offers-section').style.display = 'none';
-            }
+            hideAllPanels();
+            if (tab === 'rides') document.getElementById('rides-section').style.display = 'block';
+            else document.getElementById('market-section').style.display = 'block';
         }
 
-        // محاكاة طلب مساومة
-        function requestOffers() {
+        function hideAllPanels() {
             document.getElementById('rides-section').style.display = 'none';
-            document.getElementById('offers-section').style.display = 'block';
+            document.getElementById('state-ride').style.display = 'none';
+            document.getElementById('state-mood').style.display = 'none';
+            document.getElementById('state-searching').style.display = 'none';
+            document.getElementById('offers-section').style.display = 'none';
+            document.getElementById('market-section').style.display = 'none';
         }
 
-        // إلغاء الطلب
-        function cancelRequest() {
-            document.getElementById('offers-section').style.display = 'none';
+        function goBackHome() {
+            hideAllPanels();
             document.getElementById('rides-section').style.display = 'block';
         }
 
-        // قبول عرض كابتن
-        function acceptOffer(name, price) {
-            alert(`تم تأكيد الرحلة مع الكابتن ${name} بسعر ${price} د.أ 🚀\nالسيارة في طريقها إليك الآن، يمكنك تتبعها على الخريطة!`);
-            cancelRequest(); // للرجوع بعد المحاكاة
+        function showRideOptions() {
+            hideAllPanels();
+            document.getElementById('state-ride').style.display = 'block';
         }
 
-        // زر الطوارئ (الدرع الألماسي)
+        function backToRides() {
+            hideAllPanels();
+            document.getElementById('state-ride').style.display = 'block';
+        }
+
+        function selectRide(element) {
+            document.querySelectorAll('.ride-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function showMoodPanel() {
+            hideAllPanels();
+            document.getElementById('state-mood').style.display = 'block';
+        }
+
+        function startSearching() {
+            hideAllPanels();
+            document.getElementById('state-searching').style.display = 'block';
+            
+            setTimeout(() => {
+                if (document.getElementById('state-searching').style.display === 'block') {
+                    alert("تم إيجاد كابتن! 💎🚗 الكابتن في طريقه إليك والتكييف شغال.");
+                    goBackHome();
+                }
+            }, 3000);
+        }
+
+        function requestOffers() {
+            hideAllPanels();
+            document.getElementById('offers-section').style.display = 'block';
+        }
+
+        function cancelRequest() { goBackHome(); }
+
+        function acceptOffer(name) {
+            alert(`تم تأكيد الرحلة مع الكابتن ${name} 🚀\nالسيارة في طريقها إليك الآن!`);
+            goBackHome();
+        }
+
         function triggerSOS() {
-            if(confirm("🚨 تنبيه طوارئ! هل ترغب في إرسال موقعك المباشر لغرفة عمليات N One والاتصال بالشرطة؟")) {
-                alert("تم تفعيل بروتوكول الحماية N One Shield. فريق العمليات يتابع موقعك الآن.");
+            if(confirm("🚨 تنبيه طوارئ! إرسال موقعك المباشر لغرفة العمليات والشرطة؟")) {
+                alert("بروتوكول الحماية N One Shield مفعل. فريق العمليات يتابعك الآن.");
             }
+        }
+
+        function activateVoiceAI() {
+            alert("🎙️ الطلب الصوتي الذكي مفعل:\nتحدث الآن... (مثال: اطلبلي كابتن لمرج الحمام)");
         }
     </script>
 </body>
