@@ -586,13 +586,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // ========================================================
-        // 🛡️ المتغيرات الألماسية المعزولة 🛡️
-        // ========================================================
         let currentUser = null;
         let activeCompanyName = ''; 
-        let myCompanyId = ''; // المفتاح الذهبي للعزل المطلق
-        
         let allOrders = [];
         let globalUsers = [];
         let allAssignedOrders = {};
@@ -611,30 +606,43 @@
         let radarMemory = {};
         let remoteOrderTimer = 10000;
 
-        // ========================================================
-        // 🔒 دوال التخزين المعزول (Namespaced Storage)
-        // ========================================================
-        function getSafeStorageKey(baseKey) {
-            return `${baseKey}_${myCompanyId}`;
+        window.applyDiamondWakeLock = async function() {
+            try {
+                if ('wakeLock' in navigator) {
+                    window.nOneWakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log('N One Wake Lock Active');
+            }
         }
 
+        document.addEventListener('visibilitychange', async () => {
+            if (window.nOneWakeLock !== null && document.visibilityState === 'visible') {
+                await window.applyDiamondWakeLock();
+            }
+        });
+
+        // ========================================================
+        // العزل السيادي للذاكرة المحلية (LocalStorage)
+        // ========================================================
         function loadIsolatedData() {
-            processedAppOrders = JSON.parse(localStorage.getItem(getSafeStorageKey('n1_processed_app_orders')) || '[]');
-            completedOrders = JSON.parse(localStorage.getItem(getSafeStorageKey('n1_completed_orders')) || '[]');
-            captainMemory = JSON.parse(localStorage.getItem(getSafeStorageKey('n1_captains')) || '{}');
+            const compId = activeCompanyName || 'default';
+            processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
+            completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders_' + compId) || '[]');
+            captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
         }
 
         function saveIsolatedData() {
-            localStorage.setItem(getSafeStorageKey('n1_processed_app_orders'), JSON.stringify(processedAppOrders));
-            localStorage.setItem(getSafeStorageKey('n1_completed_orders'), JSON.stringify(completedOrders));
-            localStorage.setItem(getSafeStorageKey('n1_captains'), JSON.stringify(captainMemory));
+            const compId = activeCompanyName || 'default';
+            localStorage.setItem('n1_processed_app_orders_' + compId, JSON.stringify(processedAppOrders));
+            localStorage.setItem('n1_completed_orders_' + compId, JSON.stringify(completedOrders));
+            localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
         }
 
         function checkCompanyMatch(u, compName) {
             const activeName = String(compName).toLowerCase().trim();
-            const activeUser = String(myCompanyId).toLowerCase().trim();
+            const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
             if(!activeName && !activeUser) return false;
-            
             const vals = [
                 String(u.Client_Master || '').toLowerCase().trim(),
                 String(u.master || '').toLowerCase().trim(),
@@ -663,30 +671,34 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
+        function getActiveCompanyName() {
+            return currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : '';
+        }
+
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                activeCompanyName = (currentUser.Client_Name || currentUser.name || '').trim();
-                myCompanyId = (currentUser.Client_User || currentUser.user || '').trim();
-                
+                activeCompanyName = getActiveCompanyName();
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
+                
                 if(document.getElementById('new_cap_company_id')) {
                     document.getElementById('new_cap_company_id').value = activeCompanyName;
                 }
                 
                 loadIsolatedData();
+                
             } else {
                 showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
                 setTimeout(() => { window.history.back(); }, 1500);
                 return;
             }
             
-            document.getElementById('man_ratio').value = localStorage.getItem(getSafeStorageKey('n1_commission_ratio')) || 10;
+            document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
             
             fetchRadarMemory();
             fetchRegionsFromPrices();
-            fetchRadarStatus(); // هنا يكمن العزل للوقت والفي بي ان
+            fetchRadarStatus();
             fetchAssignedOrders();
             fetchLiveOrders();
             fetchGlobalUsers();
@@ -694,11 +706,20 @@
             renderCompletedOrders();
             setupRealtimeFreezeListener();
             
-            setInterval(() => {
-                checkAssignedOrdersStatus();
-                renderRadar();
-                if (isAutoRadarActive) triggerAutoRadarMaster(true);
-            }, 1000);
+            window.applyDiamondWakeLock();
+
+            const nOneWorkerCode = `
+                setInterval(() => {
+                    postMessage('radar_pulse');
+                }, 1000);
+            `;
+            const nOneBlob = new Blob([nOneWorkerCode], { type: 'application/javascript' });
+            const nOneWorker = new Worker(URL.createObjectURL(nOneBlob));
+            nOneWorker.onmessage = function(e) {
+                if (e.data === 'radar_pulse') {
+                    refreshDynamicElements();
+                }
+            };
         };
 
         function fetchRadarMemory() {
@@ -712,6 +733,7 @@
                 if(snapshot.exists()) {
                     const data = snapshot.val();
                     captainRatings = {};
+                    
                     for(let capPhone in data) {
                         let total = 0;
                         let count = 0;
@@ -719,42 +741,41 @@
                             total += parseInt(data[capPhone][ratingKey].rating || 0);
                             count++;
                         }
-                        if(count > 0) captainRatings[capPhone] = (total / count).toFixed(1);
+                        if(count > 0) {
+                            captainRatings[capPhone] = (total / count).toFixed(1);
+                        }
                     }
                     renderCaptainsList(); 
                 }
             });
         }
 
-        // ========================================================
-        // 🛡️ جدار التيتانيوم لإعدادات الرادار
-        // ========================================================
         function fetchRadarStatus() {
-            if (!myCompanyId) return;
+            if (!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
             
-            const settingsRef = ref(db, `settings/${myCompanyId}`);
-            
-            onValue(child(settingsRef, 'order_timer'), (snapshot) => {
-                if(snapshot.exists() && snapshot.val() !== null) {
-                    remoteOrderTimer = parseInt(snapshot.val().seconds || snapshot.val()) * 1000;
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snapshot) => {
+                if(snapshot.exists()) {
+                    remoteOrderTimer = parseInt(snapshot.val()) * 1000;
                 } else {
-                    remoteOrderTimer = 10000; // الافتراضي إذا لم تحدد الشركة
+                    remoteOrderTimer = 10000;
                 }
             });
 
-            onValue(child(settingsRef, 'autoRadar'), (snapshot) => {
+            onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
                 isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
                 const btn = document.getElementById('btn-auto-radar');
                 if (isAutoRadarActive) {
                     btn.classList.add('radar-active');
                     btn.innerHTML = '🚀 الرادار يعمل';
+                    triggerAutoRadarMaster(true);
                 } else {
                     btn.classList.remove('radar-active');
                     btn.innerHTML = '🚀 تفعيل الرادار';
                 }
             });
             
-            onValue(child(settingsRef, 'show_phone_numbers'), (snapshot) => {
+            onValue(ref(db, `settings/${myMaster}/show_phone_numbers`), (snapshot) => {
                 const isShowing = snapshot.exists() ? snapshot.val() : false;
                 document.getElementById('global_phone_toggle').checked = isShowing;
             });
@@ -762,13 +783,16 @@
 
         window.toggleGlobalPhones = async function() {
             const isShowing = document.getElementById('global_phone_toggle').checked;
-            await set(ref(db, `settings/${myCompanyId}/show_phone_numbers`), isShowing);
+            const myMaster = currentUser.Client_User || currentUser.user;
+            await set(ref(db, `settings/${myMaster}/show_phone_numbers`), isShowing);
             showAppNotification(isShowing ? "تم تفعيل إظهار الأرقام للجميع" : "تم حجب الأرقام عن الجميع", "success");
         };
 
         function fetchAssignedOrders() {
             onValue(ref(db, 'assigned_orders'), (snapshot) => {
                 allAssignedOrders = snapshot.exists() ? snapshot.val() : {};
+                checkAssignedOrdersStatus();
+                renderRadar();
             });
         }
 
@@ -777,12 +801,7 @@
             let hasUpdates = false;
             const updates = {};
 
-            // حصر العمليات بكباتن هاي الشركة بس!
-            const myCaptainsKeys = globalUsers.filter(u => u._node === 'captains').map(u => u.Cap_User || u.user || u.Cap_Phone || u.phone);
-
             for (let capKey in allAssignedOrders) {
-                if (!myCaptainsKeys.includes(capKey)) continue; // تجاهل أي كابتن لا يتبع للشركة
-
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
@@ -850,6 +869,7 @@
                         completedOrders.unshift(entry);
                         processedAppOrders.push(appOrdId);
                         saveIsolatedData();
+                        
                         renderCompletedOrders();
                     }
                     else if (processedAppOrders.includes(appOrdId)) {
@@ -900,11 +920,16 @@
                     }
                 }
             }
-            if (hasUpdates) update(ref(db), updates);
+            
+            if (hasUpdates) {
+                update(ref(db), updates);
+            }
         }
 
         function fetchRegionsFromPrices() {
-            if(!myCompanyId) return;
+            if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            
             onValue(ref(db, 'prices'), (snapshot) => {
                 const selectNew = document.getElementById('new_cap_region');
                 const selectEdit = document.getElementById('edit_cap_region');
@@ -912,9 +937,11 @@
                 let sourcesAdded = new Set();
                 
                 if (snapshot.exists()) {
-                    const data = Object.values(snapshot.val());
-                    data.forEach(priceObj => {
-                        if (checkCompanyMatch(priceObj, activeCompanyName)) {
+                    const data = snapshot.val();
+                    Object.values(data).forEach(priceObj => {
+                        const priceMaster = String(priceObj.Client_Master || '').toLowerCase().trim();
+                        const myMasterStr = String(myMaster).toLowerCase().trim();
+                        if (priceMaster === myMasterStr || checkCompanyMatch(priceObj, activeCompanyName)) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
@@ -923,35 +950,50 @@
                         }
                     });
                 }
-                if (sourcesAdded.size === 0) optionsHtml.push('<option value="عام">عام</option>');
+                if (sourcesAdded.size === 0) {
+                     optionsHtml.push('<option value="عام">عام</option>');
+                }
+                
                 selectNew.innerHTML = optionsHtml.join('');
                 selectEdit.innerHTML = optionsHtml.join('');
             });
         }
 
         window.toggleAutoRadar = function() {
+            const myMaster = currentUser.Client_User || currentUser.user;
             const newState = !isAutoRadarActive;
-            set(ref(db, `settings/${myCompanyId}/autoRadar`), newState);
+            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
         };
 
         window.saveRatio = function() {
-            localStorage.setItem(getSafeStorageKey('n1_commission_ratio'), document.getElementById('man_ratio').value);
+            localStorage.setItem('n1_commission_ratio', document.getElementById('man_ratio').value);
         };
 
         window.goBackToCustomer = function() {
-            window.location.replace('index.html'); 
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.replace('index.html'); 
+            }
         };
 
         window.enableSound = function() {
             if (!soundEnabled) {
-                document.getElementById('notif-sound').play().then(() => document.getElementById('notif-sound').pause()).catch(()=>{});
+                document.getElementById('notif-sound').play().then(() => { document.getElementById('notif-sound').pause(); }).catch(() => {});
+                document.getElementById('sound-picked').play().then(() => { document.getElementById('sound-picked').pause(); }).catch(() => {});
+                document.getElementById('sound-onway').play().then(() => { document.getElementById('sound-onway').pause(); }).catch(() => {});
+                if(document.getElementById('sound-arrived')) document.getElementById('sound-arrived').play().then(() => { document.getElementById('sound-arrived').pause(); }).catch(() => {});
+                document.getElementById('sound-delivered').play().then(() => { document.getElementById('sound-delivered').pause(); }).catch(() => {});
                 soundEnabled = true;
             }
         };
 
         function setupRealtimeFreezeListener() {
-            if(!myCompanyId) return;
-            onValue(ref(db, `users/${myCompanyId}`), (snapshot) => {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const myRef = ref(db, `users/${username}`);
+            
+            onValue(myRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
@@ -975,23 +1017,10 @@
 
         function fetchLiveOrders() {
             onValue(ref(db, 'orders'), (snapshot) => {
-                if(snapshot.exists()) {
-                    // المصفاة الصارمة للطلبات: نقرأ فقط ما يخص هذه الشركة
-                    allOrders = [];
-                    const data = snapshot.val();
-                    const myShops = globalUsers.filter(u => u._node === 'shops').map(u => u.Client_User || u.user || u.Shop_User);
-                    
-                    for(let key in data) {
-                        const o = data[key];
-                        const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                        const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
-                        
-                        if (orderComp === String(myCompanyId).toLowerCase().trim() || orderComp === activeCompanyName.toLowerCase() || myShops.includes(orderUser)) {
-                            allOrders.push({...o, id: key});
-                        }
-                    }
-                } else {
-                    allOrders = [];
+                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                renderRadar();
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster(true);
                 }
             });
         }
@@ -1002,23 +1031,54 @@
                     const data = snapshot.val();
                     globalUsers = [];
                     
-                    if(data.users) Object.values(data.users).forEach(u => { if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'users'; globalUsers.push(u); }});
-                    if(data.shops) Object.values(data.shops).forEach(u => { if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'shops'; globalUsers.push(u); }});
-                    if(data.captains) Object.values(data.captains).forEach(u => { if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'captains'; globalUsers.push(u); }});
+                    if(data.users) Object.values(data.users).forEach(u => { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'users'; 
+                            globalUsers.push(u); 
+                        }
+                    });
+                    if(data.shops) Object.values(data.shops).forEach(u => { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'shops'; 
+                            globalUsers.push(u); 
+                        }
+                    });
+                    if(data.captains) Object.values(data.captains).forEach(u => { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'captains'; 
+                            globalUsers.push(u); 
+                        }
+                    });
+                    
+                    renderRadar();
+                    renderCaptainsList();
+                    renderCompletedOrders();
                 }
             });
         }
 
         window.renderRadar = function() {
-            if (!myCompanyId) return;
+            if (!currentUser) return;
             const tbody = document.getElementById('live-table-body');
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
+            
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
             
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
                 if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
-                return true;
+                
+                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+
+                if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
+                
+                const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
+                if (orderUser && myShops.includes(orderUser)) return true;
+                
+                return false;
             }).reverse();
             
             document.getElementById('stat-pending').innerText = pendingOrders.length;
@@ -1036,19 +1096,19 @@
             }
 
             let assignedInfoMap = {};
-            const myCaptainsKeys = globalUsers.filter(u => u._node === 'captains').map(u => u.Cap_User || u.user || u.Cap_Phone || u.phone);
-
             for(let capKey in allAssignedOrders) {
-                if(!myCaptainsKeys.includes(capKey)) continue;
                 for(let ordKey in allAssignedOrders[capKey]) {
                     if(allAssignedOrders[capKey][ordKey].status === 'assigned') {
                         let radarId = allAssignedOrders[capKey][ordKey].linkedRadarId;
-                        if(radarId) assignedInfoMap[radarId] = allAssignedOrders[capKey][ordKey].cap_name || "كابتن";
+                        if(radarId) {
+                            assignedInfoMap[radarId] = allAssignedOrders[capKey][ordKey].cap_name || "كابتن";
+                        }
                     }
                 }
             }
 
             tbody.innerHTML = '';
+            
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
 
@@ -1059,6 +1119,7 @@
                 const dateStr = orderDate.toLocaleDateString('en-GB');
                 
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                
                 const shopOriginArea = shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
                 const destinationArea = ord.Shop_Pickup || ord.pickup || 'غير محدد';
                 const phone = shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---';
@@ -1109,36 +1170,54 @@
 
         window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
-            const trulyPendingOrders = allOrders.filter(o => {
+            
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+            
+            const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
                 if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
-                return true;
+                
+                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+
+                if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
+                
+                const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
+                if (orderUser && myShops.includes(orderUser)) return true;
+                
+                return false;
             }).reverse();
             
             let activeLinkedIds = new Set();
             let busyCaptains = new Set();
-            const myCaptainsKeys = globalUsers.filter(u => u._node === 'captains').map(u => u.Cap_User || u.user || u.Cap_Phone || u.phone);
-
+            
             for(let capKey in allAssignedOrders) {
-                if(!myCaptainsKeys.includes(capKey)) continue;
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
                     if(st === 'assigned' || st === 'accepted') {
                         busyCaptains.add(capKey);
-                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
+                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        }
                     }
                 }
             }
             
-            const finalPending = trulyPendingOrders.filter(o => !activeLinkedIds.has(o.Shop_Ord_ID || o.id));
+            const trulyPendingOrders = pendingOrders.filter(o => {
+                const ordId = o.Shop_Ord_ID || o.id;
+                return !activeLinkedIds.has(ordId);
+            });
 
-            if(finalPending.length === 0) {
+            if(trulyPendingOrders.length === 0) {
                 if(!silent) showAppNotification("لا توجد طلبات جديدة للتوزيع", "warning");
                 return;
             }
 
-            let availableCaptains = globalUsers.filter(u => u._node === 'captains' && u.app_status === 'online' && (u.Cap_Status || u.status) === 'active');
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
+            
+            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
                 const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
                 return !busyCaptains.has(k);
@@ -1152,11 +1231,13 @@
             let dispatchedCount = 0;
             let updates = {};
 
-            for (let ord of finalPending) {
+            for (let ord of trulyPendingOrders) {
                 if(availableCaptains.length === 0) break;
                 
                 const ordId = ord.Shop_Ord_ID || ord.id;
+
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
                 let eligibleCaptains = availableCaptains.filter(c => {
@@ -1220,7 +1301,9 @@
                 try {
                     await update(ref(db), updates);
                     if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
-                } catch(e) {}
+                } catch(e) {
+                    if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
+                }
             } else {
                 if(!silent) showAppNotification("لم يتم توزيع أي طلب", "warning");
             }
@@ -1235,8 +1318,10 @@
 
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             let fullShopName = ord.Shop_Name || ord.restaurant || '';
+            
             let extractedUrls = fullShopName.match(urlRegex);
             let hiddenUrlStr = extractedUrls ? extractedUrls.join(' ') : '';
+            
             let cleanShopName = fullShopName.replace(urlRegex, '').trim();
 
             document.getElementById('man_rest_name').value = cleanShopName + (shopOriginArea ? " - " + shopOriginArea : "");
@@ -1244,6 +1329,7 @@
             document.getElementById('man_fee').value = ord.Shop_Fee || ord.fee || '';
             document.getElementById('linked_order_id').value = orderId;
             document.getElementById('man_hidden_url').value = hiddenUrlStr;
+            
             document.querySelector('.side-content').scrollTop = 0;
         };
 
@@ -1261,7 +1347,7 @@
             const hint = document.getElementById('mem_hint');
             const statusIndicator = document.getElementById('cap_status_indicator');
             
-            currentTargetCaptain = globalUsers.find(u => u._node === 'captains' && (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone));
+            currentTargetCaptain = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
             
             if (currentTargetCaptain) {
                 hint.style.display = 'block';
@@ -1309,33 +1395,62 @@
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { showAppNotification("يرجى إكمال البيانات", "warning"); return; }
-            if (!currentTargetCaptain) { showAppNotification("الكابتن غير موجود بالنظام", "error"); return; }
+            if (!phone || !restInfo || !fee) { 
+                showAppNotification("يرجى إكمال البيانات", "warning"); 
+                return; 
+            }
+            
+            if (!currentTargetCaptain) {
+                showAppNotification("الكابتن غير موجود بالنظام", "error");
+                return;
+            }
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
-            if (capStatus === 'paused' || capStatus === 'off') { showAppNotification("حساب الكابتن مجمد", "error"); return; }
-            if (currentTargetCaptain.app_status === 'offline') { showAppNotification("الكابتن أوفلاين", "error"); return; }
+            if (capStatus === 'paused' || capStatus === 'off') {
+                showAppNotification("حساب الكابتن مجمد", "error");
+                return;
+            }
+
+            if (currentTargetCaptain.app_status === 'offline') {
+                showAppNotification("الكابتن أوفلاين", "error");
+                return;
+            }
 
             const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
 
             let activeCount = 0;
             for(let ordKey in allAssignedOrders[capKey]) {
-                if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') activeCount++;
+                if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                    activeCount++;
+                }
             }
 
             if (activeCount > 0) {
-                if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) return; 
+                if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) {
+                    return; 
+                }
             }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
             const updates = {};
             const appOrderId = "APP_ORD_" + Date.now();
-            let finalRestInfo = restInfo + (hiddenUrl ? " - " + hiddenUrl : "");
+            
+            let finalRestInfo = restInfo;
+            if(hiddenUrl) {
+                finalRestInfo += " - " + hiddenUrl;
+            }
             
             const orderData = {
-                id: appOrderId, restaurant: finalRestInfo, value: val, fee: fee, status: 'assigned',
-                timestamp: Date.now(), linkedRadarId: linkedId || null, commission_amount: commission,
-                cap_name: capName || currentTargetCaptain.Cap_Name || currentTargetCaptain.name, dispatch_method: "App"
+                id: appOrderId,
+                restaurant: finalRestInfo,
+                value: val,
+                fee: fee,
+                status: 'assigned',
+                timestamp: Date.now(),
+                linkedRadarId: linkedId || null,
+                commission_amount: commission,
+                cap_name: capName || currentTargetCaptain.Cap_Name || currentTargetCaptain.name,
+                dispatch_method: "App"
             };
             
             updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
@@ -1343,11 +1458,13 @@
             try {
                 await update(ref(db), updates);
                 showAppNotification("تم الإرسال للتطبيق بنجاح");
+                
                 document.getElementById('man_rest_name').value = '';
                 document.getElementById('man_hidden_url').value = '';
                 document.getElementById('man_val').value = '';
                 document.getElementById('man_fee').value = '';
                 document.getElementById('linked_order_id').value = '';
+
             } catch (error) {
                 showAppNotification("خطأ في الإرسال", "error");
             }
@@ -1363,22 +1480,37 @@
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { showAppNotification("يرجى إكمال البيانات", "warning"); return; }
-            if (capName) { captainMemory[phone] = capName; saveIsolatedData(); }
+            if (!phone || !restInfo || !fee) { 
+                showAppNotification("يرجى إكمال البيانات", "warning"); 
+                return; 
+            }
+
+            if (capName) {
+                captainMemory[phone] = capName;
+                saveIsolatedData();
+            }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
 
             if (currentTargetCaptain) {
-                if (currentTargetCaptain.app_status === 'offline') { showAppNotification("الكابتن أوفلاين", "error"); return; }
+                if (currentTargetCaptain.app_status === 'offline') {
+                    showAppNotification("الكابتن أوفلاين", "error");
+                    return;
+                }
+
                 const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
                 
                 let activeCount = 0;
                 for(let ordKey in allAssignedOrders[capKey]) {
-                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') activeCount++;
+                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                        activeCount++;
+                    }
                 }
 
                 if (activeCount > 0) {
-                    if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) return; 
+                    if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) {
+                        return; 
+                    }
                 }
 
                 const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
@@ -1389,30 +1521,43 @@
                 updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
                 
                 if (linkedId) {
-                    updates[`orders/${linkedId}/Cap_Name`] = capName || (currentTargetCaptain.Cap_Name || currentTargetCaptain.name || '');
+                    updates[`orders/${linkedId}/Cap_Name`] = capName || (currentTargetCaptain ? (currentTargetCaptain.Cap_Name || currentTargetCaptain.name) : '');
                     updates[`orders/${linkedId}/Cap_Phone`] = phone;
-                    updates[`orders/${linkedId}/Cap_CarType`] = currentTargetCaptain.Cap_CarType || currentTargetCaptain.Cap_Car || '';
-                    updates[`orders/${linkedId}/Cap_CarCode`] = currentTargetCaptain.Cap_CarCode || '';
+                    if (currentTargetCaptain) {
+                        updates[`orders/${linkedId}/Cap_CarType`] = currentTargetCaptain.Cap_CarType || currentTargetCaptain.Cap_Car || '';
+                        updates[`orders/${linkedId}/Cap_CarCode`] = currentTargetCaptain.Cap_CarCode || '';
+                    }
                     updates[`orders/${linkedId}/Cap_Commission`] = commission;
                     updates[`orders/${linkedId}/OrderStatus`] = 'accepted';
                     updates[`orders/${linkedId}/FinancialStatus`] = 'confirmed';
                 }
+
                 await update(ref(db), updates);
             } else if (linkedId) {
-                const updates = {
-                    [`orders/${linkedId}/Cap_Name`]: capName || '',
-                    [`orders/${linkedId}/Cap_Phone`]: phone,
-                    [`orders/${linkedId}/Cap_Commission`]: commission,
-                    [`orders/${linkedId}/OrderStatus`]: 'accepted',
-                    [`orders/${linkedId}/FinancialStatus`]: 'confirmed'
-                };
+                const updates = {};
+                updates[`orders/${linkedId}/Cap_Name`] = capName || '';
+                updates[`orders/${linkedId}/Cap_Phone`] = phone;
+                updates[`orders/${linkedId}/Cap_Commission`] = commission;
+                updates[`orders/${linkedId}/OrderStatus`] = 'accepted';
+                updates[`orders/${linkedId}/FinancialStatus`] = 'confirmed';
                 await update(ref(db), updates);
             }
 
-            let finalRestInfo = restInfo + (hiddenUrl ? " - " + hiddenUrl : "");
+            let finalRestInfo = restInfo;
+            if(hiddenUrl) {
+                finalRestInfo += " - " + hiddenUrl;
+            }
+
             const entry = {
-                orderId: linkedId || "MANUAL_" + Date.now(), time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                cap: capName || "كابتن", rest: finalRestInfo, comm: commission, date: new Date().toISOString(), via: "WhatsApp", live_status: 'manual', companyId: activeCompanyName
+                orderId: linkedId || "MANUAL_" + Date.now(),
+                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                cap: capName || "كابتن",
+                rest: finalRestInfo,
+                comm: commission,
+                date: new Date().toISOString(),
+                via: "WhatsApp",
+                live_status: 'manual',
+                companyId: activeCompanyName
             };
             completedOrders.unshift(entry);
             saveIsolatedData();
@@ -1421,7 +1566,15 @@
             if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
             
             let urlText = hiddenUrl ? `📍 الموقع ${hiddenUrl}%0a` : '';
-            const msg = `*${currentUser.Client_Name || 'إمبراطورية N One'} | أوردر جديد* 🚀%0a-----------------------------%0a🏪 المنشأة *${restInfo}*%0a${urlText}🛵 التوصيل *${fee} د.أ*%0a💰 القيمة *${val} د.أ*%0a-----------------------------%0aبالتوفيق ✅`;
+            const msg = `*${currentUser.Client_Name || 'إمبراطورية N One'} | أوردر جديد* 🚀%0a` +
+                        `-----------------------------%0a` +
+                        `🏪 المنشأة *${restInfo}*%0a` +
+                        urlText +
+                        `🛵 التوصيل *${fee} د.أ*%0a` +
+                        `💰 القيمة *${val} د.أ*%0a` +
+                        `-----------------------------%0a` +
+                        `بالتوفيق ✅`;
+
             window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank');
 
             document.getElementById('man_rest_name').value = '';
@@ -1435,10 +1588,12 @@
 
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
+            
             const today = new Date().toDateString();
-            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض");
+            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName));
             
             document.getElementById('stat-completed-total').innerText = todayOrders.length;
+            
             let totalComm = todayOrders.reduce((sum, o) => sum + parseFloat(o.comm), 0);
             document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
             document.getElementById('side-total-comm').innerText = totalComm.toFixed(2) + " د.أ";
@@ -1449,12 +1604,15 @@
             }
 
             tbody.innerHTML = '';
+            
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
 
             todayOrders.forEach(o => {
                 const methodIcon = o.via === 'App' ? '📱' : (o.via === 'Auto' ? '🤖' : '💬');
-                let cleanRestName = (o.rest || '').replace(urlRegex, badgeHtml);
+                let cleanRestName = o.rest || '';
+                cleanRestName = cleanRestName.replace(urlRegex, badgeHtml);
+
                 let liveStatusBadge = '';
                 if (o.live_status === 'accepted') liveStatusBadge = '<span class="badge" style="background:#e0f2fe; color:#0284c7;">تمت الموافقة ⚡</span>';
                 else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="badge" style="background:#ffedd5; color:#ea580c;">تم الاستلام 🏃‍♂️</span>';
@@ -1463,10 +1621,14 @@
                 else if (o.live_status === 'delivered') liveStatusBadge = '<span class="badge" style="background:#dcfce7; color:#166534;">تم اكتمال الطلب 💎</span>';
                 else liveStatusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">مكتمل ✅</span>';
 
-                let liveDot = '<span style="font-size:10px; color:#cbd5e1;">⚪</span>';
+                let liveDot = '';
                 if (o.capKey || o.cap) {
-                    let cData = globalUsers.find(u => u._node === 'captains' && (u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Name === o.cap || u.name === o.cap));
-                    if (cData) liveDot = cData.app_status === 'online' ? '<span style="font-size:10px; color:var(--success);" title="أونلاين">🟢</span>' : '<span style="font-size:10px; color:var(--danger);" title="أوفلاين">🔴</span>';
+                    let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Name === o.cap || u.name === o.cap);
+                    if (cData) {
+                        liveDot = cData.app_status === 'online' ? '<span style="font-size:10px; color:var(--success);" title="أونلاين">🟢</span>' : '<span style="font-size:10px; color:var(--danger);" title="أوفلاين">🔴</span>';
+                    } else {
+                        liveDot = '<span style="font-size:10px; color:#cbd5e1;">⚪</span>';
+                    }
                 }
 
                 tbody.innerHTML += `
@@ -1485,31 +1647,48 @@
 
         window.resetDailyStats = function() {
             if(confirm("تصفير العمولات والطلبات لليوم")) {
-                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== new Date().toDateString());
-                saveIsolatedData(); renderCompletedOrders();
+                const today = new Date().toDateString();
+                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today || (o.companyId && o.companyId !== activeCompanyName));
+                saveIsolatedData();
+                renderCompletedOrders();
             }
         };
 
         window.deleteFromArchive = function(id) {
             if(confirm("حذف من الأرشيف")) {
                 completedOrders = completedOrders.filter(o => o.orderId !== id);
-                saveIsolatedData(); renderCompletedOrders(); renderRadar();
+                saveIsolatedData();
+                renderCompletedOrders();
+                renderRadar();
             }
         };
 
         window.clearCompletedOrders = function() {
             if(confirm("مسح الأرشيف كاملا")) {
-                completedOrders = [];
-                saveIsolatedData(); renderCompletedOrders(); renderRadar();
+                completedOrders = completedOrders.filter(o => o.companyId && o.companyId !== activeCompanyName);
+                saveIsolatedData();
+                renderCompletedOrders();
+                renderRadar();
             }
         };
 
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
+                const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+                
                 const updates = {};
                 allOrders.forEach(o => {
-                    if (o.id || o.Shop_Ord_ID) updates[`orders/${o.Shop_Ord_ID || o.id}`] = null;
+                    if (o.Shop_Type === 'shop_order' || o.id || o.Shop_Ord_ID) {
+                        const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                        if ((orderComp && (orderComp === activeName || orderComp === activeUser)) || myShops.includes(o.Shop_User || o.user || o.client)) {
+                            const ordId = o.Shop_Ord_ID || o.id;
+                            if (ordId) updates[`orders/${ordId}`] = null;
+                        }
+                    }
                 });
+                
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
                     showAppNotification("تم تنظيف الرادار");
@@ -1533,30 +1712,71 @@
             const pass = document.getElementById('new_cap_pass').value.trim();
             const bal = parseFloat(document.getElementById('new_cap_bal').value) || 0;
             
-            if(!name || !phone || !user || !pass || !region) { showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); return; }
-            if(globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u._node === 'captains'))) { showAppNotification("هذا الكابتن مسجل مسبقا", "error"); return; }
+            if(!name || !phone || !user || !pass || !region) { 
+                showAppNotification("يرجى إكمال جميع البيانات الأساسية", "error"); 
+                return; 
+            }
+            
+            const exists = globalUsers.some(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === user || u.user === user) && (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain'));
+            if(exists) {
+                showAppNotification("هذا الكابتن مسجل مسبقا", "error");
+                return;
+            }
 
             const capData = {
-                Cap_ID: "CAP_" + Date.now(), Cap_Name: name, Cap_Phone: phone, Cap_User: user, Cap_Pass: pass, Cap_Car: car, Cap_Region: region, Cap_Status: "active", Cap_Balance: bal, role: "captain", type: "captain", company: myCompanyId, Client_Master: myCompanyId, app_sync_lock: false, app_access: "granted", app_status: "offline", hide_phone: false
+                Cap_ID: "CAP_" + Date.now(),
+                Cap_Name: name,
+                Cap_Phone: phone,
+                Cap_User: user,
+                Cap_Pass: pass,
+                Cap_Car: car,
+                Cap_Region: region,
+                Cap_Status: "active",
+                Cap_Balance: bal,
+                role: "captain",
+                type: "captain",
+                company: activeCompanyName,       
+                Client_Master: activeCompanyName, 
+                app_sync_lock: false,
+                app_access: "granted",
+                app_status: "offline",
+                hide_phone: false
             };
+            
             await set(ref(db, 'captains/' + user), capData);
             showAppNotification("تم التوثيق بنجاح");
-            ['new_cap_name','new_cap_phone','new_cap_car','new_cap_region','new_cap_user','new_cap_pass'].forEach(id => document.getElementById(id).value='');
-            document.getElementById('new_cap_bal').value='0';
+            
+            document.getElementById('new_cap_name').value = '';
+            document.getElementById('new_cap_phone').value = '';
+            document.getElementById('new_cap_car').value = '';
+            document.getElementById('new_cap_region').value = '';
+            document.getElementById('new_cap_user').value = '';
+            document.getElementById('new_cap_pass').value = '';
+            document.getElementById('new_cap_bal').value = '0';
         };
 
         window.smartSearchCaptain = function() {
             const phone = document.getElementById('smart_search_phone').value.trim();
             const card = document.getElementById('smart-cap-card');
-            if(!phone || phone.length < 9) { card.style.display = 'none'; activeSmartCaptain = null; return; }
             
-            const cap = globalUsers.find(u => u._node === 'captains' && (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone));
+            if(!phone || phone.length < 9) { 
+                card.style.display = 'none'; 
+                activeSmartCaptain = null;
+                return; 
+            }
+            
+            const cap = globalUsers.find(u => (u.Cap_Phone === phone || u.phone === phone || u.Cap_User === phone || u.user === phone) && checkCompanyMatch(u, activeCompanyName));
+            
             if (cap) {
                 document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
                 document.getElementById('s_cap_car').innerText = cap.Cap_Car || 'غير محدد';
                 document.getElementById('s_cap_bal').innerText = parseFloat(cap.Cap_Balance || cap.balance || 0).toFixed(2) + " د.أ";
-                card.style.display = 'block'; activeSmartCaptain = cap;
-            } else { card.style.display = 'none'; activeSmartCaptain = null; }
+                card.style.display = 'block';
+                activeSmartCaptain = cap;
+            } else {
+                card.style.display = 'none';
+                activeSmartCaptain = null;
+            }
         };
 
         window.chargeCaptainBalance = async function() {
@@ -1567,9 +1787,13 @@
             const cap = activeSmartCaptain;
             const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
             const capKey = cap.Cap_User || cap.user || cap.Cap_Phone || cap.phone;
-            const updates = { [`captains/${capKey}/Cap_Balance`]: parseFloat(newBal), [`captains/${capKey}/balance`]: parseFloat(newBal) };
+            const updates = {};
+            updates[`${cap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+            updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
+            
             await update(ref(db), updates);
             showAppNotification("تم إيداع الرصيد بنجاح");
+            
             document.getElementById('charge_amount').value = '';
             document.getElementById('smart_search_phone').value = '';
             document.getElementById('smart-cap-card').style.display = 'none';
@@ -1578,26 +1802,48 @@
 
         window.setCaptainsFilter = function(filterType) {
             currentCaptainsFilter = filterType;
+            
             document.getElementById('filter-btn-active').classList.remove('active');
             document.getElementById('filter-btn-pending').classList.remove('active');
-            if(filterType === 'active') { document.getElementById('filter-btn-active').classList.add('active'); document.getElementById('th-balance').innerText = 'الرصيد'; }
-            else { document.getElementById('filter-btn-pending').classList.add('active'); document.getElementById('th-balance').innerText = 'تاريخ الطلب'; }
+            
+            if(filterType === 'active') {
+                document.getElementById('filter-btn-active').classList.add('active');
+                document.getElementById('th-balance').innerText = 'الرصيد';
+            } else {
+                document.getElementById('filter-btn-pending').classList.add('active');
+                document.getElementById('th-balance').innerText = 'تاريخ الطلب';
+            }
+            
             renderCaptainsList();
         };
 
         window.renderCaptainsList = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('captains-log-body');
-            let allMyCaptains = globalUsers.filter(u => u._node === 'captains').reverse();
+            
+            let allMyCaptains = globalUsers.filter(u => 
+                (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain' || u._node === 'captains') && 
+                checkCompanyMatch(u, activeCompanyName)
+            ).reverse();
             
             document.getElementById('stat-cap-total').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true).length;
-            document.getElementById('stat-cap-active').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'active' && c.app_status === 'online').length;
-            document.getElementById('stat-cap-paused').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'paused' || ((c.Cap_Status || c.status) === 'active' && c.app_status === 'offline')).length;
 
-            let displayCaptains = currentCaptainsFilter === 'active' ? allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true) : allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'pending' || c.is_pending === true);
+            const activeCount = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'active' && c.app_status === 'online').length;
+            const pausedCount = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'paused' || ((c.Cap_Status || c.status) === 'active' && c.app_status === 'offline')).length;
+            
+            document.getElementById('stat-cap-active').innerText = activeCount;
+            document.getElementById('stat-cap-paused').innerText = pausedCount;
+
+            let displayCaptains = [];
+            if (currentCaptainsFilter === 'active') {
+                displayCaptains = allMyCaptains.filter(c => (c.Cap_Status || c.status) !== 'pending' && c.is_pending !== true);
+            } else {
+                displayCaptains = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'pending' || c.is_pending === true);
+            }
 
             if (displayCaptains.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#94a3b8;">${currentCaptainsFilter === 'active' ? 'لا يوجد كباتن مفعلين' : 'لا توجد طلبات انتظار جديدة'}</td></tr>`;
+                const msg = currentCaptainsFilter === 'active' ? 'لا يوجد كباتن مفعلين' : 'لا توجد طلبات انتظار جديدة';
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#94a3b8;">${msg}</td></tr>`;
                 return;
             }
 
@@ -1611,42 +1857,95 @@
                     const isPaused = (cap.Cap_Status || cap.status) === 'paused';
                     const statusBadge = isPaused ? '<span class="badge" style="background:#fff3e0; color:#ef6c00;">مجمد ❄️</span>' : '<span class="badge" style="background:#e8f5e9; color:#2e7d32;">نشط ✅</span>';
                     const toggleBtn = isPaused ? `<button class="mini-circle-btn" style="background:var(--success); color:white;" onclick="toggleCapStatus('${capKey}', 'active')" title="تفعيل">▶️</button>` : `<button class="mini-circle-btn" style="background:#78909c; color:white;" onclick="toggleCapStatus('${capKey}', 'paused')" title="إيقاف">❄️</button>`;
+
                     const ratingVal = captainRatings[phoneKey] || "جديد";
                     const ratingHtml = ratingVal === "جديد" ? `<span style="font-size:11px; color:#94a3b8;">جديد</span>` : `<span class="badge bg-rating">💎 ${ratingVal}</span>`;
 
-                    tbody.innerHTML += `<tr><td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td><td>${ratingHtml}</td><td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td><td><div style="font-size:11px; color:var(--primary); font-weight:bold;">U ${capKey || '---'}</div><div style="font-size:11px; color:var(--danger); font-weight:bold;">P ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div></td><td><span class="area-badge" style="background:#f1f5f9; color:#64748b; border:none;">${cap.Cap_Region || cap.Cap_Location || 'عام'}</span></td><td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td><td style="font-weight:bold; color:${bal < 0 ? 'var(--danger)' : 'var(--success)'};">${bal} د.أ</td><td>${statusBadge}</td><td><div class="action-btns">${toggleBtn}<button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="openGlobalEdit('${capKey}')" title="تعديل شامل">⚙️</button><button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${capKey}')" title="حذف نهائي">✕</button></div></td></tr>`;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
+                            <td>${ratingHtml}</td>
+                            <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
+                            <td>
+                                <div style="font-size:11px; color:var(--primary); font-weight:bold;">U ${capKey || '---'}</div>
+                                <div style="font-size:11px; color:var(--danger); font-weight:bold;">P ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div>
+                            </td>
+                            <td><span class="area-badge" style="background:#f1f5f9; color:#64748b; border:none;">${cap.Cap_Region || cap.Cap_Location || 'عام'}</span></td>
+                            <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
+                            <td style="font-weight:bold; color:${bal < 0 ? 'var(--danger)' : 'var(--success)'};">${bal} د.أ</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <div class="action-btns">
+                                    ${toggleBtn}
+                                    <button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="openGlobalEdit('${capKey}')" title="تعديل شامل">⚙️</button>
+                                    <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${capKey}')" title="حذف نهائي">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
                 } else {
                     const reqDate = cap.created_at ? new Date(cap.created_at).toLocaleDateString('en-GB') : '---';
-                    tbody.innerHTML += `<tr style="background: #f8fafc;"><td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td><td><span style="font-size:11px; color:#94a3b8;">جديد</span></td><td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td><td><div style="font-size:11px; color:var(--primary); font-weight:bold;">U ${capKey || '---'}</div><div style="font-size:11px; color:var(--danger); font-weight:bold;">P ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div></td><td><span class="area-badge" style="background:#fef3c7; color:#d97706; border:none;">${cap.Cap_Region || cap.Cap_Location || 'غير محدد'}</span></td><td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td><td style="font-size:12px; color:#64748b; font-weight:bold;">${reqDate}</td><td><span class="badge" style="background:#e0e7ff; color:#4338ca;">بانتظار المراجعة</span></td><td><div class="action-btns"><button class="btn-royal" style="background:var(--success); padding:6px 10px; font-size:11px; width:auto;" onclick="approvePendingCaptain('${capKey}')">تفعيل</button><button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="openGlobalEdit('${capKey}')" title="تعديل الطلب">⚙️</button><button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${capKey}')" title="رفض وحذف">✕</button></div></td></tr>`;
+                    tbody.innerHTML += `
+                        <tr style="background: #f8fafc;">
+                            <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
+                            <td><span style="font-size:11px; color:#94a3b8;">جديد</span></td>
+                            <td><span class="badge bg-phone">${cap.Cap_Phone || cap.phone}</span></td>
+                            <td>
+                                <div style="font-size:11px; color:var(--primary); font-weight:bold;">U ${capKey || '---'}</div>
+                                <div style="font-size:11px; color:var(--danger); font-weight:bold;">P ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div>
+                            </td>
+                            <td><span class="area-badge" style="background:#fef3c7; color:#d97706; border:none;">${cap.Cap_Region || cap.Cap_Location || 'غير محدد'}</span></td>
+                            <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
+                            <td style="font-size:12px; color:#64748b; font-weight:bold;">${reqDate}</td>
+                            <td><span class="badge" style="background:#e0e7ff; color:#4338ca;">بانتظار المراجعة</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-royal" style="background:var(--success); padding:6px 10px; font-size:11px; width:auto;" onclick="approvePendingCaptain('${capKey}')">تفعيل</button>
+                                    <button class="mini-circle-btn" style="background:var(--info); color:white;" onclick="openGlobalEdit('${capKey}')" title="تعديل الطلب">⚙️</button>
+                                    <button class="mini-circle-btn" style="background:var(--danger); color:white;" onclick="deleteCaptain('${capKey}')" title="رفض وحذف">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
                 }
             });
         };
 
         window.approvePendingCaptain = async function(userKey) {
             if(confirm("تفعيل الحساب واعتماده رسميا")) {
-                const updates = {};
-                updates[`captains/${userKey}/Cap_Status`] = 'active';
-                updates[`captains/${userKey}/status`] = 'active';
-                updates[`captains/${userKey}/is_pending`] = false;
-                updates[`captains/${userKey}/app_access`] = 'granted';
-                updates[`captains/${userKey}/company`] = myCompanyId;
-                updates[`captains/${userKey}/Company_ID`] = myCompanyId;
-                updates[`captains/${userKey}/Client_Master`] = myCompanyId;
-                
-                if(confirm("تم التفعيل هل ترغب بإضافة رصيد افتتاحي لمحفظته الآن")) {
-                    let initBal = prompt("أدخل قيمة الرصيد الافتتاحي", "0.00");
-                    if(initBal && !isNaN(initBal)) {
-                        updates[`captains/${userKey}/Cap_Balance`] = parseFloat(initBal);
-                        updates[`captains/${userKey}/balance`] = parseFloat(initBal);
+                let nodeFound = null;
+                globalUsers.forEach(u => {
+                    if ((u.Cap_User === userKey || u.user === userKey) && u._node) { nodeFound = u._node; }
+                });
+
+                if (nodeFound) {
+                    const updates = {};
+
+                    updates[`${nodeFound}/${userKey}/Cap_Status`] = 'active';
+                    updates[`${nodeFound}/${userKey}/status`] = 'active';
+                    updates[`${nodeFound}/${userKey}/is_pending`] = false;
+                    updates[`${nodeFound}/${userKey}/app_access`] = 'granted';
+                    
+                    updates[`${nodeFound}/${userKey}/company`] = activeCompanyName;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = activeCompanyName;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = activeCompanyName;
+                    
+                    if(confirm("تم التفعيل هل ترغب بإضافة رصيد افتتاحي لمحفظته الآن")) {
+                        let initBal = prompt("أدخل قيمة الرصيد الافتتاحي", "0.00");
+                        if(initBal && !isNaN(initBal)) {
+                            updates[`${nodeFound}/${userKey}/Cap_Balance`] = parseFloat(initBal);
+                            updates[`${nodeFound}/${userKey}/balance`] = parseFloat(initBal);
+                        }
                     }
+
+                    await update(ref(db), updates);
+                    showAppNotification("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح");
                 }
-                await update(ref(db), updates);
-                showAppNotification("تم اعتماد الكابتن وانتقاله لسجل المفعلين بنجاح");
             }
         };
 
         window.openGlobalEdit = function(userKey) {
-            const cap = globalUsers.find(u => u._node === 'captains' && (u.Cap_User === userKey || u.user === userKey));
+            const cap = globalUsers.find(u => u.Cap_User === userKey || u.user === userKey);
             if(cap) {
                 document.getElementById('edit_cap_key').value = userKey;
                 document.getElementById('edit_cap_name').value = cap.Cap_Name || cap.name || '';
@@ -1657,6 +1956,7 @@
                 document.getElementById('edit_cap_pass').value = cap.Cap_Pass || cap.password || cap.pass || '';
                 document.getElementById('edit_cap_company').value = cap.Company_ID || cap.company || cap.Client_Master || '';
                 document.getElementById('edit_cap_hide_phone').checked = cap.hide_phone === true;
+                
                 document.getElementById('edit-captain-modal').style.display = 'flex';
             }
         };
@@ -1675,39 +1975,77 @@
             const company = document.getElementById('edit_cap_company').value.trim();
             const hidePhone = document.getElementById('edit_cap_hide_phone').checked;
 
-            if(!name || !phone || !pass) { showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error"); return; }
+            if(!name || !phone || !pass) {
+                showAppNotification("الرجاء التأكد من تعبئة الاسم والهاتف والرقم السري", "error");
+                return;
+            }
 
-            const updates = {
-                [`captains/${userKey}/Cap_Name`]: name, [`captains/${userKey}/name`]: name, [`captains/${userKey}/Cap_Phone`]: phone, [`captains/${userKey}/phone`]: phone, [`captains/${userKey}/Cap_Car`]: car, [`captains/${userKey}/Cap_Region`]: region, [`captains/${userKey}/Cap_Location`]: region, [`captains/${userKey}/Cap_Pass`]: pass, [`captains/${userKey}/pass`]: pass, [`captains/${userKey}/password`]: pass, [`captains/${userKey}/hide_phone`]: hidePhone
-            };
-            if (company) { updates[`captains/${userKey}/company`] = company; updates[`captains/${userKey}/Company_ID`] = company; updates[`captains/${userKey}/Client_Master`] = company; }
+            let nodeFound = null;
+            globalUsers.forEach(u => {
+                if ((u.Cap_User === userKey || u.user === userKey) && u._node) { nodeFound = u._node; }
+            });
 
-            await update(ref(db), updates);
-            showAppNotification("تم تحديث بيانات السجل بنجاح");
-            closeEditModal();
+            if (nodeFound) {
+                const updates = {};
+                updates[`${nodeFound}/${userKey}/Cap_Name`] = name;
+                updates[`${nodeFound}/${userKey}/name`] = name;
+                updates[`${nodeFound}/${userKey}/Cap_Phone`] = phone;
+                updates[`${nodeFound}/${userKey}/phone`] = phone;
+                updates[`${nodeFound}/${userKey}/Cap_Car`] = car;
+                updates[`${nodeFound}/${userKey}/Cap_Region`] = region;
+                updates[`${nodeFound}/${userKey}/Cap_Location`] = region;
+                updates[`${nodeFound}/${userKey}/Cap_Pass`] = pass;
+                updates[`${nodeFound}/${userKey}/pass`] = pass;
+                updates[`${nodeFound}/${userKey}/password`] = pass;
+                updates[`${nodeFound}/${userKey}/hide_phone`] = hidePhone;
+                
+                if (company) {
+                    updates[`${nodeFound}/${userKey}/company`] = company;
+                    updates[`${nodeFound}/${userKey}/Company_ID`] = company;
+                    updates[`${nodeFound}/${userKey}/Client_Master`] = company;
+                }
+
+                await update(ref(db), updates);
+                showAppNotification("تم تحديث بيانات السجل بنجاح");
+                closeEditModal();
+            }
         };
 
         window.toggleCapStatus = async function(user, nextStatus) {
             const msg = nextStatus === 'paused' ? "إيقاف الحساب" : "تفعيل الحساب";
             if(confirm(msg)) {
-                const updates = {
-                    [`captains/${user}/Cap_Status`]: nextStatus, [`captains/${user}/status`]: nextStatus, [`captains/${user}/app_sync_lock`]: nextStatus === 'paused', [`captains/${user}/app_access`]: nextStatus === 'paused' ? 'denied' : 'granted'
-                };
+                const updates = {};
+                globalUsers.forEach(u => {
+                    if ((u.Cap_User === user || u.user === user) && u._node) {
+                        updates[`${u._node}/${user}/Cap_Status`] = nextStatus;
+                        updates[`${u._node}/${user}/status`] = nextStatus;
+                        updates[`${u._node}/${user}/app_sync_lock`] = nextStatus === 'paused' ? true : false;
+                        updates[`${u._node}/${user}/app_access`] = nextStatus === 'paused' ? 'denied' : 'granted';
+                    }
+                });
                 await update(ref(db), updates);
             }
         };
 
         window.deleteCaptain = async function(user) {
             if(confirm("حذف السجل نهائيا")) {
-                await remove(ref(db, `captains/${user}`));
-                showAppNotification("تم حذف السجل نهائيا");
+                let nodeFound = null;
+                globalUsers.forEach(u => {
+                    if ((u.Cap_User === user || u.user === user) && u._node) { nodeFound = u._node; }
+                });
+                if (nodeFound) {
+                    await remove(ref(db, `${nodeFound}/${user}`));
+                    showAppNotification("تم حذف السجل نهائيا");
+                }
             }
         };
 
         function refreshDynamicElements() {
             checkAssignedOrdersStatus();
             renderRadar();
-            if (isAutoRadarActive) triggerAutoRadarMaster(true);
+            if (isAutoRadarActive) {
+                triggerAutoRadarMaster(true);
+            }
         }
 
     </script>
