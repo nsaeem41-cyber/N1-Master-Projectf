@@ -1003,7 +1003,7 @@
         let globalPricesList = [];
         let verifiedCompanyId = null; 
         
-        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false, hotspots_active: true };
+        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false };
         let orderTimers = {};
         let isListenerActive = false;
         let localOrderSeen = {};
@@ -1139,6 +1139,7 @@
                 Notification.requestPermission();
             }
             
+            // --- دالة تصفير العداد التلقائية الساعة 12 بالليل ---
             checkAndResetDailyCounter();
 
             setTimeout(() => {
@@ -1154,6 +1155,7 @@
             }, { once: true });
         };
 
+        // --- وظيفة تصفير الإنجازات اليومية ---
         function checkAndResetDailyCounter() {
             const now = new Date();
             const resetTime = new Date();
@@ -1166,6 +1168,7 @@
             const timeUntilReset = resetTime.getTime() - now.getTime();
 
             setTimeout(() => {
+                // تصفير العداد المرئي والمبالغ
                 const todayCountEl = document.getElementById('ui_today_count');
                 const todayValEl = document.getElementById('ui_today_val');
                 const todayFeeEl = document.getElementById('ui_today_fee');
@@ -1214,14 +1217,6 @@
                     document.getElementById('register-screen').classList.remove('active');
                     document.getElementById('main-screen').classList.remove('active');
                     document.getElementById('pending-screen').style.display = 'flex';
-                    return;
-                }
-                
-                if (currentCaptain.app_access === 'denied' || currentCaptain.Cap_Status === 'paused') {
-                    document.getElementById('login-screen').classList.remove('active');
-                    document.getElementById('register-screen').classList.remove('active');
-                    document.getElementById('main-screen').classList.remove('active');
-                    document.getElementById('blocked-screen').style.display = 'flex';
                     return;
                 }
                 
@@ -1535,43 +1530,35 @@
         
         setInterval(detectVPN, 5000); 
 
-        // ========================================================
-        // العزل السيادي للإعدادات (الجدار التيتانيوم)
-        // ========================================================
         function listenToSystemSettings() {
             const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
-            if(!master) return;
             
-            const masterPath = `settings/${master}`;
-            
-            onValue(ref(db, `${masterPath}/order_timer`), (snap) => {
-                if(snap.exists() && snap.val() !== null) {
-                    systemSettings.order_timer = parseInt(snap.val().seconds || snap.val());
+            onValue(ref(db, 'settings/order_timer'), (snap) => {
+                if(snap.exists() && snap.val().seconds) {
+                    systemSettings.order_timer = parseInt(snap.val().seconds);
                 }
             });
             
-            onValue(ref(db, `${masterPath}/show_phone_numbers`), (snap) => {
-                systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
-            });
-            
-            onValue(ref(db, `${masterPath}/anti_vpn`), (snap) => {
-                if (snap.exists()) {
-                    let val = snap.val();
-                    systemSettings.anti_vpn = typeof val === 'object' ? val.active : val === true;
-                    if(systemSettings.anti_vpn) detectVPN();
-                } else {
-                    systemSettings.anti_vpn = false;
-                }
-            });
+            if (master) {
+                onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
+                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
+                });
+            } else {
+                onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => {
+                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
+                });
+            }
 
-            onValue(ref(db, `${masterPath}/hotspots_active`), (snap) => {
-                if (snap.exists()) {
-                    systemSettings.hotspots_active = snap.val() === true;
-                } else {
-                    systemSettings.hotspots_active = false;
+            const handleVpnSnap = (snap) => {
+                if(snap.exists()) {
+                    systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
+                    if(systemSettings.anti_vpn) detectVPN();
                 }
-                updateHotspotsUI(); // تحديث فوري للشاشة
-            });
+            };
+
+            onValue(ref(db, 'settings/anti_vpn'), handleVpnSnap);
+            onValue(ref(db, 'settings/vpn_active'), handleVpnSnap);
+            onValue(ref(db, 'settings/vpn'), handleVpnSnap);
         }
 
         setInterval(() => {
@@ -1579,10 +1566,6 @@
                 const vpnWarning = document.getElementById('vpn-warning');
                 if (systemSettings.anti_vpn && isVpnDetected) {
                     vpnWarning.style.display = 'flex';
-                    if (currentCaptain.app_status === 'online') {
-                        forceOffline();
-                        window.showToast(currentLang === 'ar' ? "تم تحويلك لأوفلاين بسبب استخدام VPN" : "Forced offline due to VPN", true);
-                    }
                 } else {
                     vpnWarning.style.display = 'none';
                 }
@@ -1621,27 +1604,6 @@
             await update(ref(db), updates);
             window.showToast(currentLang === 'ar' ? "انتهى الوقت تم سحب الطلب ⏳" : "Time out Order reassigned ⏳", true);
         };
-
-        let currentHotspotData = []; // تخزين مؤقت للمطاعم النشطة
-        function updateHotspotsUI() {
-            const hotspotsContainer = document.getElementById('ui_hotspots');
-            if(!hotspotsContainer) return;
-
-            if(!systemSettings.hotspots_active) {
-                hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">تم إيقاف الخريطة الحرارية من الإدارة 🔒</div>`;
-                return;
-            }
-
-            if(currentHotspotData.length > 0) {
-                hotspotsContainer.innerHTML = '';
-                currentHotspotData.slice(0, 3).forEach(restName => {
-                    hotspotsContainer.innerHTML += `<div class="hotspot-tag">${restName} 🔥</div>`;
-                });
-            } else {
-                const txt = currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots in your area';
-                hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${txt}</div>`;
-            }
-        }
 
         function initRealtimeListeners() {
             if(!capNodeKey) return;
@@ -1691,7 +1653,7 @@
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
-                const statusToggleSection = document.getElementById('status-toggle-section'); 
+                const statusToggleSection = document.getElementById('status-toggle-section'); // لوحة الحالة متصل/أوفلاين
                 
                 let todayCount = 0;
                 let todayVal = 0;
@@ -1862,6 +1824,7 @@
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
+                // إخفاء/إظهار النقاط الساخنة ولوحة الحالة بناءً على وجود طلب نشط
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'none';
@@ -1889,41 +1852,55 @@
                 }
             });
 
-            // ==========================================
-            // الفلترة الألماسية للخرائط الحرارية (Hotspots)
-            // ==========================================
-            const globalOrdersRef = ref(db, 'orders');
-            onValue(globalOrdersRef, (snapshot) => {
-                const companyMaster = currentCaptain ? String(currentCaptain.company || currentCaptain.Client_Master || '').toLowerCase().trim() : '';
-                const myArea = currentCaptain ? (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim() : '';
-                
-                const areaCounts = {};
-
-                if (snapshot.exists()) {
-                    const allOrders = snapshot.val();
-                    
-                    for(let key in allOrders) {
-                        const ord = allOrders[key];
-                        if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
-                            const ordMaster = String(ord.Master_ID || ord.Company_ID || ord.Shop_Master || ord.master || ord.company || ord.Client_Master || '').toLowerCase().trim();
-                            
-                            if (ordMaster === companyMaster && companyMaster !== '') {
+            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) من رادار الـ Orders ---
+            const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
+            if(companyMaster) {
+                const globalOrdersRef = ref(db, 'orders');
+                onValue(globalOrdersRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const allOrders = snapshot.val();
+                        const areaCounts = {};
+                        const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim();
+                        
+                        // نجمع الطلبات للمطاعم النشطة حالياً ضمن منطقة الكابتن
+                        for(let key in allOrders) {
+                            const ord = allOrders[key];
+                            if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
                                 const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
+                                
+                                // إذا كانت منطقة الطلب تطابق منطقة الكابتن أو الكابتن مسجل كـ "عام"
                                 if(ordArea === myArea || myArea === '' || myArea === 'عام') {
                                     let rName = ord.Shop_Name || ord.restaurant || '';
-                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim(); 
+                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
+                                    rName = rName.split('-')[0].trim(); 
+                                    
                                     if(rName) {
                                         areaCounts[rName] = (areaCounts[rName] || 0) + 1;
                                     }
                                 }
                             }
                         }
+
+                        // ترتيب المطاعم حسب عدد الطلبات (الأكثر سخونة)
+                        const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
+                        
+                        const hotspotsContainer = document.getElementById('ui_hotspots');
+                        hotspotsContainer.innerHTML = ''; 
+
+                        if(sortedRests.length > 0) {
+                            // عرض أعلى 3 مطاعم ساخنة
+                            sortedRests.slice(0, 3).forEach(restName => {
+                                hotspotsContainer.innerHTML += `<div class="hotspot-tag">${restName} 🔥</div>`;
+                            });
+                        } else {
+                            const txt = currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots in your area';
+                            hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${txt}</div>`;
+                        }
+                    } else {
+                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد ضغط طلبات بمنطقتك حالياً</div>`;
                     }
-                }
-                
-                currentHotspotData = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
-                updateHotspotsUI(); // تطبيق التحديث فوراً
-            });
+                });
+            }
         }
 
         let masterListenerRef = null;
