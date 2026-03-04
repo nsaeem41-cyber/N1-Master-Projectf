@@ -1220,6 +1220,14 @@
                     return;
                 }
                 
+                if (currentCaptain.app_access === 'denied' || currentCaptain.Cap_Status === 'paused') {
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('register-screen').classList.remove('active');
+                    document.getElementById('main-screen').classList.remove('active');
+                    document.getElementById('blocked-screen').style.display = 'flex';
+                    return;
+                }
+                
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('register-screen').classList.remove('active');
                 document.getElementById('main-screen').classList.add('active');
@@ -1533,32 +1541,44 @@
         function listenToSystemSettings() {
             const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
             
-            onValue(ref(db, 'settings/order_timer'), (snap) => {
-                if(snap.exists() && snap.val().seconds) {
-                    systemSettings.order_timer = parseInt(snap.val().seconds);
-                }
-            });
-            
+            // --- التحديث الألماسي للعزل: جلب الإعدادات الخاصة بالشركة الأم فقط ---
             if (master) {
+                onValue(ref(db, `settings/${master}/order_timer`), (snap) => {
+                    if(snap.exists() && snap.val() !== null) {
+                        systemSettings.order_timer = parseInt(snap.val().seconds || snap.val());
+                    }
+                });
+                
                 onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
                     systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
                 });
+                
+                const handleVpnSnap = (snap) => {
+                    if(snap.exists()) {
+                        systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
+                        if(systemSettings.anti_vpn) detectVPN();
+                    } else {
+                        systemSettings.anti_vpn = false;
+                    }
+                };
+                onValue(ref(db, `settings/${master}/anti_vpn`), handleVpnSnap);
             } else {
+                onValue(ref(db, 'settings/order_timer'), (snap) => {
+                    if(snap.exists() && snap.val().seconds) {
+                        systemSettings.order_timer = parseInt(snap.val().seconds);
+                    }
+                });
                 onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => {
                     systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
                 });
+                const handleGlobalVpnSnap = (snap) => {
+                    if(snap.exists()) {
+                        systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
+                        if(systemSettings.anti_vpn) detectVPN();
+                    }
+                };
+                onValue(ref(db, 'settings/anti_vpn'), handleGlobalVpnSnap);
             }
-
-            const handleVpnSnap = (snap) => {
-                if(snap.exists()) {
-                    systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
-                    if(systemSettings.anti_vpn) detectVPN();
-                }
-            };
-
-            onValue(ref(db, 'settings/anti_vpn'), handleVpnSnap);
-            onValue(ref(db, 'settings/vpn_active'), handleVpnSnap);
-            onValue(ref(db, 'settings/vpn'), handleVpnSnap);
         }
 
         setInterval(() => {
@@ -1653,7 +1673,7 @@
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
-                const statusToggleSection = document.getElementById('status-toggle-section'); // لوحة الحالة متصل/أوفلاين
+                const statusToggleSection = document.getElementById('status-toggle-section'); 
                 
                 let todayCount = 0;
                 let todayVal = 0;
@@ -1824,7 +1844,6 @@
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
-                // إخفاء/إظهار النقاط الساخنة ولوحة الحالة بناءً على وجود طلب نشط
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'none';
@@ -1867,9 +1886,13 @@
                             const ord = allOrders[key];
                             if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
                                 const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
+                                // ==========================================
+                                // العزل الألماسي: استخراج مصدر الطلب
+                                // ==========================================
+                                const ordMaster = String(ord.Master_ID || ord.Company_ID || ord.Shop_Master || ord.master || ord.company || ord.Client_Master || '').trim();
                                 
-                                // إذا كانت منطقة الطلب تطابق منطقة الكابتن أو الكابتن مسجل كـ "عام"
-                                if(ordArea === myArea || myArea === '' || myArea === 'عام') {
+                                // إذا كانت منطقة الطلب تطابق منطقة الكابتن ومصدر الطلب يطابق شركة الكابتن
+                                if((ordMaster === String(companyMaster).trim()) && (ordArea === myArea || myArea === '' || myArea === 'عام')) {
                                     let rName = ord.Shop_Name || ord.restaurant || '';
                                     rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
                                     rName = rName.split('-')[0].trim(); 
