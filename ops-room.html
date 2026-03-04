@@ -606,6 +606,22 @@
         let radarMemory = {};
         let remoteOrderTimer = 10000;
 
+        window.applyDiamondWakeLock = async function() {
+            try {
+                if ('wakeLock' in navigator) {
+                    window.nOneWakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log('N One Wake Lock Active');
+            }
+        }
+
+        document.addEventListener('visibilitychange', async () => {
+            if (window.nOneWakeLock !== null && document.visibilityState === 'visible') {
+                await window.applyDiamondWakeLock();
+            }
+        });
+
         // ========================================================
         // العزل السيادي للذاكرة المحلية (LocalStorage)
         // ========================================================
@@ -690,6 +706,20 @@
             renderCompletedOrders();
             setupRealtimeFreezeListener();
             
+            window.applyDiamondWakeLock();
+
+            const nOneWorkerCode = `
+                setInterval(() => {
+                    postMessage('radar_pulse');
+                }, 1000);
+            `;
+            const nOneBlob = new Blob([nOneWorkerCode], { type: 'application/javascript' });
+            const nOneWorker = new Worker(URL.createObjectURL(nOneBlob));
+            nOneWorker.onmessage = function(e) {
+                if (e.data === 'radar_pulse') {
+                    refreshDynamicElements();
+                }
+            };
         };
 
         function fetchRadarMemory() {
@@ -720,9 +750,6 @@
             });
         }
 
-        // ========================================================
-        // العزل السيادي لإعدادات الرادار
-        // ========================================================
         function fetchRadarStatus() {
             if (!currentUser) return;
             const myMaster = currentUser.Client_User || currentUser.user;
