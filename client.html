@@ -1541,18 +1541,23 @@
             }
         };
 
-        // ================= التحديث 726: دوال التحكم السيبراني =================
+        // ========================================================
+        // التحديث 726: دوال التحكم السيبراني (تم العزل المطلق)
+        // ========================================================
         window.fetchCyberSettings = function() {
             if(!currentUser) return;
             const myMaster = currentUser.Client_User || currentUser.user;
             if(!myMaster) return;
 
+            // استدعاء وعرض الإعدادات الخاصة بـ myMaster فقط
             onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
                 if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
             });
+            
             onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
                 document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
             });
+            
             onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
                 document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
             });
@@ -1562,12 +1567,14 @@
             const timeVal = document.getElementById('remote_timer_val').value;
             if(!timeVal || timeVal < 5) { alert("يرجى إدخال وقت صحيح لا يقل عن 5 ثواني"); return; }
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             try {
                 const myMaster = currentUser.Client_User || currentUser.user;
-                await set(ref(db, 'settings/order_timer'), { seconds: parseInt(timeVal), timestamp: Date.now() });
-                if(myMaster) await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
+                    alert("تم تحديث وقت قبول الطلب الخاص بشركتك بنجاح ⏱️🚀");
+                }
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم تحديث وقت قبول الطلب بنجاح ⏱️🚀");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء التحديث");
@@ -1577,24 +1584,21 @@
         window.toggleRemoteVPN = async function(isActive) {
             try {
                 const myMaster = currentUser.Client_User || currentUser.user;
-                await set(ref(db, 'settings/anti_vpn'), { active: isActive, timestamp: Date.now() });
-                if(myMaster) await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
-                if(isActive) alert("تم تفعيل كاشف الـ VPN وحظر المتلاعبين بالموقع بنجاح 🔒💎");
-                else alert("تم إيقاف كاشف الـ VPN 🔓");
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
+                    if(isActive) alert("تم تفعيل كاشف الـ VPN وحظر المتلاعبين بالموقع لكباتن شركتك بنجاح 🔒💎");
+                    else alert("تم إيقاف كاشف الـ VPN 🔓");
+                }
             } catch(e) { alert("حدث خطأ أثناء التعديل"); }
         };
 
         window.toggleRemoteHotspots = async function(isActive) {
             try {
                 const myMaster = currentUser.Client_User || currentUser.user;
-                if(isActive) {
-                    await set(ref(db, 'orders/fake_hotspot_trigger'), { active: true, timestamp: Date.now() });
-                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), true);
-                    alert("تم تفعيل مؤشر النقاط الساخنة للكباتن 🔥🚀");
-                } else {
-                    await remove(ref(db, 'orders/fake_hotspot_trigger'));
-                    if(myMaster) await set(ref(db, `settings/${myMaster}/hotspots_active`), false);
-                    alert("تم إيقاف مؤشر النقاط الساخنة ❌");
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/hotspots_active`), isActive);
+                    if(isActive) alert("تم تفعيل مؤشر النقاط الساخنة لكباتن شركتك 🔥🚀");
+                    else alert("تم إيقاف مؤشر النقاط الساخنة ❌");
                 }
             } catch(e) { alert("حدث خطأ أثناء التعديل"); }
         };
