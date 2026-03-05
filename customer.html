@@ -49,7 +49,6 @@
                 linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
             background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
             z-index: 1;
-            /* منع أي تفاعل مع الخريطة للحفاظ على الأداء */
             pointer-events: none; 
             opacity: 0.8;
         }
@@ -111,15 +110,60 @@
             box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2); cursor: pointer;
         }
 
-        .input-box {
-            background: #f8fafc; border: 2px solid #e2e8f0; padding: 12px 15px;
-            border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+        /* ================= مسار الرحلة الفخم (Route Container) ================= */
+        .route-container {
+            background: white; border-radius: 20px; padding: 15px 20px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); margin-bottom: 20px;
+            position: relative; border: 1px solid #e2e8f0;
         }
-        .input-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; font-weight: bold; color: var(--primary); pointer-events: none; }
-        .schedule-btn { background: var(--diamond); color: var(--info); padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 900; pointer-events: auto; cursor: pointer; border: 1px solid #bae6fd; }
+        .route-line {
+            position: absolute; right: 25px; top: 38px; bottom: 38px;
+            width: 2px; background: #cbd5e1; border-radius: 2px; z-index: 1;
+        }
+        .route-box {
+            display: flex; align-items: center; gap: 15px; padding: 12px 0;
+            position: relative; z-index: 2; cursor: pointer;
+        }
+        .route-box:first-child { border-bottom: 1px solid #f1f5f9; padding-top: 0; }
+        .route-box:last-child { padding-bottom: 0; }
+        
+        .route-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .dot-start { background: var(--success); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); }
+        .dot-end { background: var(--primary); box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.1); }
+        
+        .route-input-group { flex: 1; display: flex; align-items: center; justify-content: space-between; }
+        .route-input-group input { 
+            border: none; background: transparent; font-size: 15px; 
+            font-weight: 900; color: var(--primary); width: 100%; 
+            outline: none; pointer-events: none; 
+        }
+        .route-input-group input::placeholder { color: #94a3b8; font-weight: bold; }
+        .schedule-btn { 
+            background: var(--diamond); color: var(--info); padding: 6px 12px; 
+            border-radius: 12px; font-size: 12px; font-weight: 900; 
+            pointer-events: auto; cursor: pointer; border: 1px solid #bae6fd;
+            transition: 0.3s; flex-shrink: 0; margin-right: 10px;
+        }
+        .schedule-btn:active { transform: scale(0.95); background: #bae6fd; }
 
-        .saved-places { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;}
-        .place-item { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 13px; white-space: nowrap; cursor: pointer; }
+        /* ================= كروت الأماكن المحفوظة (Places Grid) ================= */
+        .places-grid {
+            display: flex; gap: 12px; margin-bottom: 25px; overflow-x: auto; 
+            padding-bottom: 5px; scrollbar-width: none; /* Hide scrollbar for clean look */
+        }
+        .places-grid::-webkit-scrollbar { display: none; }
+        .place-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px;
+            padding: 10px 15px; display: flex; align-items: center; gap: 10px;
+            font-weight: 900; font-size: 14px; color: var(--primary); cursor: pointer;
+            transition: 0.3s; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .place-card:active { transform: scale(0.95); border-color: var(--gold); background: #fffbeb; }
+        .place-icon { 
+            background: white; width: 32px; height: 32px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
 
         .gift-toggle { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 12px 15px; border-radius: 12px; margin-bottom: 20px; }
         .gift-toggle span { font-size: 13px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 5px; }
@@ -188,7 +232,6 @@
 
         /* ================= الإشعارات الفخمة (N One Custom Alerts) ================= */
         
-        /* 1. التوست المنزلق من الأعلى */
         .n-toast {
             position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
@@ -203,7 +246,6 @@
         .n-toast-content h4 { margin: 0 0 5px 0; font-size: 14px; color: var(--gold); font-weight: 900; }
         .n-toast-content p { margin: 0; font-size: 13px; font-weight: bold; line-height: 1.4; }
 
-        /* 2. النافذة المنبثقة الذكية (Modal) */
         .n-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px);
@@ -289,20 +331,38 @@
                         <div style="font-size: 24px;">💳</div>
                     </div>
 
-                    <div class="input-box">
-                        <span>🟢</span>
-                        <input type="text" placeholder="موقعك الحالي (تم التحديد)" readonly>
-                    </div>
-                    <div class="input-box" onclick="showRideOptions()">
-                        <span>📍</span>
-                        <input type="text" placeholder="إلى أين تريد الذهاب؟">
-                        <div class="schedule-btn" onclick="event.stopPropagation(); showModal('جدولة الرحلات 📅', 'قم بتحديد وقت لاحق، وسيقوم النظام أوتوماتيكياً بإرسال كابتن لموقعك في الموعد المحدد بدون تدخل منك.', '⏰', 'موافق', null, true)">جدولة 📅</div>
+                    <div class="route-container">
+                        <div class="route-line"></div>
+                        
+                        <div class="route-box">
+                            <div class="route-dot dot-start"></div>
+                            <div class="route-input-group">
+                                <input type="text" placeholder="موقعك الحالي (تم التحديد)" value="موقعك الحالي" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="route-box" onclick="showRideOptions()">
+                            <div class="route-dot dot-end"></div>
+                            <div class="route-input-group">
+                                <input type="text" placeholder="إلى أين تريد الذهاب؟">
+                                <div class="schedule-btn" onclick="event.stopPropagation(); showModal('جدولة الرحلات 📅', 'قم بتحديد وقت لاحق، وسيقوم النظام أوتوماتيكياً بإرسال كابتن لموقعك في الموعد المحدد بدون تدخل منك.', '⏰', 'موافق', null, true)">جدولة 📅</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="saved-places">
-                        <div class="place-item" onclick="showRideOptions()">🏠 المنزل</div>
-                        <div class="place-item" onclick="showRideOptions()">💼 العمل</div>
-                        <div class="place-item" onclick="showRideOptions()">🎓 الجامعة</div>
+                    <div class="places-grid">
+                        <div class="place-card" onclick="showRideOptions()">
+                            <div class="place-icon">🏠</div>
+                            <span>المنزل</span>
+                        </div>
+                        <div class="place-card" onclick="showRideOptions()">
+                            <div class="place-icon">💼</div>
+                            <span>العمل</span>
+                        </div>
+                        <div class="place-card" onclick="showRideOptions()">
+                            <div class="place-icon">🎓</div>
+                            <span>الجامعة</span>
+                        </div>
                     </div>
 
                     <div class="gift-toggle" style="margin-top: 15px; margin-bottom: 15px;">
