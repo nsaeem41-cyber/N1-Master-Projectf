@@ -605,14 +605,6 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
         let remoteOrderTimer = 10000;
-        let myCompanyId = ''
-window.isCaptainOnline = function(c) {
-    if (!c) return false
-    let s1 = String(c.app_status || '').toLowerCase().trim()
-    let s2 = String(c.is_online || '').toLowerCase().trim()
-    let s3 = String(c.online || '').toLowerCase().trim()
-    return s1 === 'online' || s1 === 'true' || s2 === 'true' || s2 === 'online' || s3 === 'true' || s3 === 'online'
-}
 
         window.applyDiamondWakeLock = async function() {
             try {
@@ -688,7 +680,6 @@ window.isCaptainOnline = function(c) {
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 activeCompanyName = getActiveCompanyName();
-                myCompanyId = (currentUser.Client_User || currentUser.user || '').trim()
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 
                 if(document.getElementById('new_cap_company_id')) {
@@ -1024,27 +1015,15 @@ window.isCaptainOnline = function(c) {
             });
         }
 
-function fetchLiveOrders() {
-    onValue(ref(db, 'orders'), (snapshot) => {
-        if(snapshot.exists()) {
-            allOrders = []
-            const data = snapshot.val()
-            const myShops = globalUsers.filter(u => u._node === 'shops').map(u => u.Client_User || u.user || u.Shop_User)
-            for(let key in data) {
-                const o = data[key]
-                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim()
-                const orderUser = String(o.Shop_User || o.user || o.client || '').trim()
-                if (orderComp === String(myCompanyId).toLowerCase().trim() || orderComp === activeCompanyName.toLowerCase() || myShops.includes(orderUser)) {
-                    allOrders.push({...o, id: key, Shop_Ord_ID: key})
+        function fetchLiveOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                renderRadar();
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster(true);
                 }
-            }
-        } else {
-            allOrders = []
+            });
         }
-        renderRadar()
-        if(isAutoRadarActive) triggerAutoRadarMaster(true)
-    })
-}
 
         function fetchGlobalUsers() {
             onValue(ref(db), (snapshot) => {
@@ -1189,7 +1168,7 @@ function fetchLiveOrders() {
             });
         };
 
-        window.triggerAutoRadarMaster = let availableCaptains = globalUsers.filter(u => u._node === 'captains' && window.isCaptainOnline(u) && (u.Cap_Status || u.status) === 'active')
+        window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
@@ -1838,8 +1817,8 @@ function fetchLiveOrders() {
             renderCaptainsList();
         };
 
-document.getElementById('stat-cap-active').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'active' && window.isCaptainOnline(c)).length
-document.getElementById('stat-cap-paused').innerText = allMyCaptains.filter(c => (c.Cap_Status || c.status) === 'paused' || ((c.Cap_Status || c.status) === 'active' && !window.isCaptainOnline(c))).length
+        window.renderCaptainsList = function() {
+            if (!currentUser) return;
             const tbody = document.getElementById('captains-log-body');
             
             let allMyCaptains = globalUsers.filter(u => 
