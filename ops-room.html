@@ -9,7 +9,7 @@
     <style>
         /* ================= تصميم Ops Diamond (Royal Navy & Diamond White) ================= */
         :root {
-            --primary: #0f172a;  
+            --primary: #0f172a;    
             --accent: #1e293b;     
             --gold: #d4af37;       
             --bg: #f8fafc;         
@@ -605,25 +605,6 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
         let remoteOrderTimer = 10000;
-        let isRadarProcessing = false; 
-
-        // ===============================================
-        // المنطق الأصلي السليم - تم إزالة التعقيد الزائد
-        // ===============================================
-        function checkCompanyMatch(u, compName) {
-            const targetCompany = String(compName).toLowerCase().trim();
-            if(!targetCompany) return false;
-            
-            const vals = [
-                String(u.Client_Master || '').toLowerCase().trim(),
-                String(u.master || '').toLowerCase().trim(),
-                String(u.company || '').toLowerCase().trim(),
-                String(u.Company_ID || '').toLowerCase().trim(),
-                String(u.Shop_Master || '').toLowerCase().trim()
-            ];
-            
-            return vals.includes(targetCompany);
-        }
 
         window.applyDiamondWakeLock = async function() {
             try {
@@ -641,6 +622,9 @@
             }
         });
 
+        // ========================================================
+        // العزل السيادي للذاكرة المحلية (LocalStorage)
+        // ========================================================
         function loadIsolatedData() {
             const compId = activeCompanyName || 'default';
             processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
@@ -653,6 +637,21 @@
             localStorage.setItem('n1_processed_app_orders_' + compId, JSON.stringify(processedAppOrders));
             localStorage.setItem('n1_completed_orders_' + compId, JSON.stringify(completedOrders));
             localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
+        }
+
+        function checkCompanyMatch(u, compName) {
+            const activeName = String(compName).toLowerCase().trim();
+            const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
+            if(!activeName && !activeUser) return false;
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim(),
+                String(u.Shop_Master || '').toLowerCase().trim(),
+                String(u.Client_Name || '').toLowerCase().trim()
+            ];
+            return (activeName && vals.includes(activeName)) || (activeUser && vals.includes(activeUser));
         }
 
         window.showAppNotification = function(msg, type = 'success') {
@@ -672,20 +671,15 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
-        window.onload = function() {
-            // === الحل السحري لتشفير اللغة العربية في الروابط ===
-            const urlParams = new URLSearchParams(window.location.search);
-            const rawCompany = urlParams.get('company') || urlParams.get('master');
-            const companyFromUrl = rawCompany ? decodeURIComponent(rawCompany).trim() : null;
+        function getActiveCompanyName() {
+            return currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : '';
+        }
 
+        window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
-            
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                
-                // الاعتماد على الرابط المفكوك، وإن لم يوجد يعتمد على اسم المسجل
-                activeCompanyName = companyFromUrl || (currentUser.Client_Name || currentUser.name || '').trim();
-
+                activeCompanyName = getActiveCompanyName();
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 
                 if(document.getElementById('new_cap_company_id')) {
@@ -717,7 +711,7 @@
             const nOneWorkerCode = `
                 setInterval(() => {
                     postMessage('radar_pulse');
-                }, 2000);
+                }, 1000);
             `;
             const nOneBlob = new Blob([nOneWorkerCode], { type: 'application/javascript' });
             const nOneWorker = new Worker(URL.createObjectURL(nOneBlob));
@@ -757,10 +751,10 @@
         }
 
         function fetchRadarStatus() {
-            if (!currentUser || !activeCompanyName) return;
-            const targetMaster = activeCompanyName; 
+            if (!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
             
-            onValue(ref(db, `settings/${targetMaster}/order_timer`), (snapshot) => {
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snapshot) => {
                 if(snapshot.exists()) {
                     remoteOrderTimer = parseInt(snapshot.val()) * 1000;
                 } else {
@@ -768,7 +762,7 @@
                 }
             });
 
-            onValue(ref(db, `settings/${targetMaster}/autoRadar`), (snapshot) => {
+            onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
                 isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
                 const btn = document.getElementById('btn-auto-radar');
                 if (isAutoRadarActive) {
@@ -781,7 +775,7 @@
                 }
             });
             
-            onValue(ref(db, `settings/${targetMaster}/show_phone_numbers`), (snapshot) => {
+            onValue(ref(db, `settings/${myMaster}/show_phone_numbers`), (snapshot) => {
                 const isShowing = snapshot.exists() ? snapshot.val() : false;
                 document.getElementById('global_phone_toggle').checked = isShowing;
             });
@@ -789,15 +783,9 @@
 
         window.toggleGlobalPhones = async function() {
             const isShowing = document.getElementById('global_phone_toggle').checked;
-            const targetMaster = activeCompanyName; 
-            await set(ref(db, `settings/${targetMaster}/show_phone_numbers`), isShowing);
+            const myMaster = currentUser.Client_User || currentUser.user;
+            await set(ref(db, `settings/${myMaster}/show_phone_numbers`), isShowing);
             showAppNotification(isShowing ? "تم تفعيل إظهار الأرقام للجميع" : "تم حجب الأرقام عن الجميع", "success");
-        };
-
-        window.toggleAutoRadar = function() {
-            const targetMaster = activeCompanyName; 
-            const newState = !isAutoRadarActive;
-            set(ref(db, `settings/${targetMaster}/autoRadar`), newState);
         };
 
         function fetchAssignedOrders() {
@@ -814,13 +802,6 @@
             const updates = {};
 
             for (let capKey in allAssignedOrders) {
-                
-                const isMyCaptain = globalUsers.some(u => 
-                    (u._node === 'captains' || u.role === 'captain' || u.type === 'captain') && 
-                    (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey)
-                );
-                if (!isMyCaptain) continue; 
-
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
@@ -946,7 +927,8 @@
         }
 
         function fetchRegionsFromPrices() {
-            if(!currentUser || !activeCompanyName) return;
+            if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
             
             onValue(ref(db, 'prices'), (snapshot) => {
                 const selectNew = document.getElementById('new_cap_region');
@@ -957,7 +939,9 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.values(data).forEach(priceObj => {
-                        if (checkCompanyMatch(priceObj, activeCompanyName)) {
+                        const priceMaster = String(priceObj.Client_Master || '').toLowerCase().trim();
+                        const myMasterStr = String(myMaster).toLowerCase().trim();
+                        if (priceMaster === myMasterStr || checkCompanyMatch(priceObj, activeCompanyName)) {
                             const sourceName = priceObj.Price_Source;
                             if (sourceName && !sourcesAdded.has(sourceName)) {
                                 sourcesAdded.add(sourceName);
@@ -974,6 +958,12 @@
                 selectEdit.innerHTML = optionsHtml.join('');
             });
         }
+
+        window.toggleAutoRadar = function() {
+            const myMaster = currentUser.Client_User || currentUser.user;
+            const newState = !isAutoRadarActive;
+            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
+        };
 
         window.saveRatio = function() {
             localStorage.setItem('n1_commission_ratio', document.getElementById('man_ratio').value);
@@ -1042,13 +1032,22 @@
                     globalUsers = [];
                     
                     if(data.users) Object.values(data.users).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'users'; globalUsers.push(u); }
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'users'; 
+                            globalUsers.push(u); 
+                        }
                     });
                     if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'shops'; globalUsers.push(u); }
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'shops'; 
+                            globalUsers.push(u); 
+                        }
                     });
                     if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'captains'; globalUsers.push(u); }
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'captains'; 
+                            globalUsers.push(u); 
+                        }
                     });
                     
                     renderRadar();
@@ -1063,32 +1062,25 @@
             const tbody = document.getElementById('live-table-body');
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
-            // ===============================================
-            // نظام فلترة الطلبات المعزول والمباشر
-            // ===============================================
-            const targetCompany = activeCompanyName.toLowerCase().trim();
-            const myShops = globalUsers.map(u => String(u.Shop_User || u.Client_User || u.user).trim());
-
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+            
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
+                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
-                const st = o.OrderStatus || o.Shop_Status;
-                if (st === 'accepted' || st === 'picked_up' || st === 'on_way' || st === 'arrived' || st === 'delivered' || o.FinancialStatus === 'confirmed') return false;
+                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
 
-                const orderMaster = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                const orderShopUser = String(o.Shop_User || o.user || o.client || '').trim();
-
-                // هل الطلب يحمل اسم الشركة بشكل مباشر؟
-                if (orderMaster && orderMaster === targetCompany) return true;
+                if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
                 
-                // هل المطعم الذي طلب الأوردر موجود ضمن مطاعم هذه الشركة؟
-                if (orderShopUser && myShops.includes(orderShopUser)) return true;
-
+                const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
+                if (orderUser && myShops.includes(orderUser)) return true;
+                
                 return false;
             }).reverse();
-            // ===============================================
-
+            
             document.getElementById('stat-pending').innerText = pendingOrders.length;
             if (pendingOrders.length > 0 && soundEnabled && !isAlarmPlaying) {
                 document.getElementById('notif-sound').play();
@@ -1177,146 +1169,143 @@
         };
 
         window.triggerAutoRadarMaster = async function(silent = false) {
-            if (isRadarProcessing) return; 
-            isRadarProcessing = true; 
-
-            try {
-                const completedIDs = new Set(completedOrders.map(o => o.orderId));
-                const targetCompany = activeCompanyName.toLowerCase().trim();
-                const myShops = globalUsers.map(u => String(u.Shop_User || u.Client_User || u.user).trim());
-
-                const pendingOrders = allOrders.filter(o => {
-                    const ordId = o.Shop_Ord_ID || o.id;
-                    if (!ordId || completedIDs.has(ordId)) return false;
-                    
-                    const st = o.OrderStatus || o.Shop_Status;
-                    if (st === 'accepted' || st === 'picked_up' || st === 'on_way' || st === 'arrived' || st === 'delivered' || o.FinancialStatus === 'confirmed') return false;
-
-                    const orderMaster = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                    const orderShopUser = String(o.Shop_User || o.user || o.client || '').trim();
-
-                    if (orderMaster && orderMaster === targetCompany) return true;
-                    if (orderShopUser && myShops.includes(orderShopUser)) return true;
-
-                    return false;
-                }).reverse();
+            const completedIDs = new Set(completedOrders.map(o => o.orderId));
+            
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+            
+            const pendingOrders = allOrders.filter(o => {
+                const ordId = o.Shop_Ord_ID || o.id;
+                if (!ordId || completedIDs.has(ordId)) return false;
+                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
-                let activeLinkedIds = new Set();
-                let busyCaptains = new Set();
+                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+
+                if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
                 
-                for(let capKey in allAssignedOrders) {
-                    for(let ordKey in allAssignedOrders[capKey]) {
-                        let st = allAssignedOrders[capKey][ordKey].status;
-                        if(st === 'assigned' || st === 'accepted') {
-                            busyCaptains.add(capKey);
-                            if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
-                                activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
-                            }
+                const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
+                if (orderUser && myShops.includes(orderUser)) return true;
+                
+                return false;
+            }).reverse();
+            
+            let activeLinkedIds = new Set();
+            let busyCaptains = new Set();
+            
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    let st = allAssignedOrders[capKey][ordKey].status;
+                    if(st === 'assigned' || st === 'accepted') {
+                        busyCaptains.add(capKey);
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
+                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
                         }
                     }
                 }
+            }
+            
+            const trulyPendingOrders = pendingOrders.filter(o => {
+                const ordId = o.Shop_Ord_ID || o.id;
+                return !activeLinkedIds.has(ordId);
+            });
+
+            if(trulyPendingOrders.length === 0) {
+                if(!silent) showAppNotification("لا توجد طلبات جديدة للتوزيع", "warning");
+                return;
+            }
+
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
+            
+            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
+            availableCaptains = availableCaptains.filter(c => {
+                const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                return !busyCaptains.has(k);
+            });
+
+            if (availableCaptains.length === 0) {
+                if(!silent) showAppNotification("عذرا لا يوجد كابتن متاح حاليا", "warning");
+                return;
+            }
+
+            let dispatchedCount = 0;
+            let updates = {};
+
+            for (let ord of trulyPendingOrders) {
+                if(availableCaptains.length === 0) break;
                 
-                const trulyPendingOrders = pendingOrders.filter(o => {
-                    const ordId = o.Shop_Ord_ID || o.id;
-                    return !activeLinkedIds.has(ordId);
+                const ordId = ord.Shop_Ord_ID || ord.id;
+
+                const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                
+                const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
+
+                let eligibleCaptains = availableCaptains.filter(c => {
+                     const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
+                     return cRegion === shopOriginArea;
                 });
 
-                if(trulyPendingOrders.length === 0) {
-                    return;
+                if (eligibleCaptains.length === 0) {
+                    if (!ord.deadZoneAlertShown) {
+                        showAppNotification(`تنبيه المنطقة الميتة لا يوجد كباتن متاحين في منطقة ${shopOriginArea || 'غير محددة'} لطلب ${ord.Shop_Name || ord.restaurant || ''}`, "warning");
+                        ord.deadZoneAlertShown = true;
+                    }
+                    continue;
                 }
 
-                let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
-                
-                let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active');
+                let unskippedCaptains = eligibleCaptains.filter(c => {
+                     const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                     const hasSkipped = radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey];
+                     return !hasSkipped;
+                });
+
+                if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
+                     updates[`radar_memory/${ordId}`] = null;
+                     delete radarMemory[ordId]; 
+                     unskippedCaptains = eligibleCaptains;
+                }
+
+                if (unskippedCaptains.length === 0) continue;
+
+                let selectedCaptain = unskippedCaptains[0];
+                const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
+
                 availableCaptains = availableCaptains.filter(c => {
-                    const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
-                    return !busyCaptains.has(k);
+                     const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                     return k !== capKey;
                 });
 
-                if (availableCaptains.length === 0) {
-                    if(!silent) showAppNotification("عذرا لا يوجد كابتن متاح حاليا", "warning");
-                    return;
+                const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
+                const fee = parseFloat(ord.Shop_Fee || ord.fee || 0);
+                const commission = (fee * (ratio / 100)).toFixed(2);
+                
+                const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
+                const orderData = {
+                    id: appOrderId,
+                    restaurant: (ord.Shop_Name || ord.restaurant) + (shopOriginArea ? " - " + shopOriginArea : ""),
+                    value: ord.Shop_Val || ord.value,
+                    fee: ord.Shop_Fee || ord.fee,
+                    status: 'assigned',
+                    timestamp: Date.now(),
+                    linkedRadarId: ordId,
+                    commission_amount: commission,
+                    cap_name: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
+                    dispatch_method: "Auto"
+                };
+                
+                updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
+                dispatchedCount++;
+            }
+
+            if(Object.keys(updates).length > 0) {
+                try {
+                    await update(ref(db), updates);
+                    if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
+                } catch(e) {
+                    if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
                 }
-
-                let dispatchedCount = 0;
-                let updates = {};
-
-                for (let ord of trulyPendingOrders) {
-                    if(availableCaptains.length === 0) break;
-                    
-                    const ordId = ord.Shop_Ord_ID || ord.id;
-
-                    const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-                    
-                    const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
-
-                    let eligibleCaptains = availableCaptains.filter(c => {
-                         const cRegion = (c.Cap_Region || c.Cap_Location || '').trim();
-                         return cRegion === shopOriginArea;
-                    });
-
-                    if (eligibleCaptains.length === 0) {
-                        if (!ord.deadZoneAlertShown) {
-                            showAppNotification(`تنبيه المنطقة الميتة لا يوجد كباتن متاحين في منطقة ${shopOriginArea || 'غير محددة'} لطلب ${ord.Shop_Name || ord.restaurant || ''}`, "warning");
-                            ord.deadZoneAlertShown = true;
-                        }
-                        continue;
-                    }
-
-                    let unskippedCaptains = eligibleCaptains.filter(c => {
-                         const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
-                         const hasSkipped = radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey];
-                         return !hasSkipped;
-                    });
-
-                    if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
-                         updates[`radar_memory/${ordId}`] = null;
-                         delete radarMemory[ordId]; 
-                         unskippedCaptains = eligibleCaptains;
-                    }
-
-                    if (unskippedCaptains.length === 0) continue;
-
-                    let selectedCaptain = unskippedCaptains[0];
-                    const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
-
-                    availableCaptains = availableCaptains.filter(c => {
-                         const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
-                         return k !== capKey;
-                    });
-
-                    const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
-                    const fee = parseFloat(ord.Shop_Fee || ord.fee || 0);
-                    const commission = (fee * (ratio / 100)).toFixed(2);
-                    
-                    const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
-                    const orderData = {
-                        id: appOrderId,
-                        restaurant: (ord.Shop_Name || ord.restaurant) + (shopOriginArea ? " - " + shopOriginArea : ""),
-                        value: ord.Shop_Val || ord.value,
-                        fee: ord.Shop_Fee || ord.fee,
-                        status: 'assigned',
-                        timestamp: Date.now(),
-                        linkedRadarId: ordId,
-                        commission_amount: commission,
-                        cap_name: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن",
-                        dispatch_method: "Auto"
-                    };
-                    
-                    updates[`assigned_orders/${capKey}/${appOrderId}`] = orderData;
-                    dispatchedCount++;
-                }
-
-                if(Object.keys(updates).length > 0) {
-                    try {
-                        await update(ref(db), updates);
-                        if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
-                    } catch(e) {
-                        if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
-                    }
-                } 
-            } finally {
-                isRadarProcessing = false;
+            } else {
+                if(!silent) showAppNotification("لم يتم توزيع أي طلب", "warning");
             }
         };
 
@@ -1685,16 +1674,15 @@
 
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
-                const targetCompany = activeCompanyName.toLowerCase().trim();
-                const myShops = globalUsers.map(u => String(u.Shop_User || u.Client_User || u.user).trim());
+                const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+                const activeName = activeCompanyName.toLowerCase();
+                const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
                 
                 const updates = {};
                 allOrders.forEach(o => {
                     if (o.Shop_Type === 'shop_order' || o.id || o.Shop_Ord_ID) {
                         const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                        const orderShopUser = String(o.Shop_User || o.user || o.client || '').trim();
-
-                        if ((orderComp && orderComp === targetCompany) || (orderShopUser && myShops.includes(orderShopUser))) {
+                        if ((orderComp && (orderComp === activeName || orderComp === activeUser)) || myShops.includes(o.Shop_User || o.user || o.client)) {
                             const ordId = o.Shop_Ord_ID || o.id;
                             if (ordId) updates[`orders/${ordId}`] = null;
                         }
