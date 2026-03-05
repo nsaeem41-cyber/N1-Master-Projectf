@@ -680,7 +680,6 @@
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 activeCompanyName = getActiveCompanyName();
-                myCompanyId = (currentUser.Client_User || currentUser.user || '').trim();
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 
                 if(document.getElementById('new_cap_company_id')) {
@@ -1016,37 +1015,16 @@
             });
         }
 
-function fetchLiveOrders() {
-    // 1. تحديد هوية الشركة المفتوحة حالياً بدقة
-    const myMasterKey = (currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
-    const myMasterName = (activeCompanyName || "").trim().toLowerCase();
-
-    onValue(ref(db, 'orders'), (snapshot) => {
-        if(snapshot.exists()) {
-            allOrders = [];
-            const data = snapshot.val();
-            
-            // 2. فلترة صااااارمة عند بوابة الاستقبال
-            for(let key in data) {
-                const o = data[key];
-                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                
-                // الرادار هون بصير "أصم" عن أي طلب ما بخص شركتك
-                if (orderComp === myMasterKey || orderComp === myMasterName) {
-                    allOrders.push({...o, id: key, Shop_Ord_ID: key});
+        function fetchLiveOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                renderRadar();
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster(true);
                 }
-            }
-        } else {
-            allOrders = [];
+            });
         }
-        
-        // 3. تحديث الواجهة والعداد لطلبات شركتك فقط
-        renderRadar();
-        if(isAutoRadarActive) {
-            triggerAutoRadarMaster(true);
-        }
-    });
-}
+
         function fetchGlobalUsers() {
             onValue(ref(db), (snapshot) => {
                 if (snapshot.exists()) {
