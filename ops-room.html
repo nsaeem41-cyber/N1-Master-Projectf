@@ -605,46 +605,25 @@
         let currentCaptainsFilter = 'active'; 
         let radarMemory = {};
         let remoteOrderTimer = 10000;
-        
-        let isRadarProcessing = false; // قفل الرادار
+        let isRadarProcessing = false; 
 
-        // ==========================================
-        // 🛡️ الجدار الناري المحدث (يدعم فك تشفير اللغة العربية)
-        // ==========================================
+        // ===============================================
+        // المنطق الأصلي السليم - تم إزالة التعقيد الزائد
+        // ===============================================
         function checkCompanyMatch(u, compName) {
-            // compName تم فك تشفيره مسبقاً في دالة onload
             const targetCompany = String(compName).toLowerCase().trim();
             if(!targetCompany) return false;
             
-            const master1 = String(u.Client_Master || '').toLowerCase().trim();
-            const master2 = String(u.Company_ID || '').toLowerCase().trim();
-            const master3 = String(u.company || '').toLowerCase().trim();
-            const master4 = String(u.Master_ID || '').toLowerCase().trim();
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim(),
+                String(u.Shop_Master || '').toLowerCase().trim()
+            ];
             
-            return (master1 === targetCompany || master2 === targetCompany || master3 === targetCompany || master4 === targetCompany);
+            return vals.includes(targetCompany);
         }
-
-        function isOrderBelongToThisCompany(ord) {
-            const targetCompany = activeCompanyName.toLowerCase().trim();
-            if (!targetCompany) return false;
-
-            // 1. هل الطلب مسجل باسم هذه الشركة؟ (الاسم الذي أرسلته المنشأة في Master_ID)
-            const orderComp = String(ord.Master_ID || ord.Company_ID || ord.Shop_Master || ord.master || ord.company || ord.Client_Master || '').toLowerCase().trim();
-            if (orderComp && orderComp === targetCompany) return true;
-
-            // 2. هل صاحب الطلب (المطعم) مسجل ضمن هذه الشركة؟
-            const orderShopUser = String(ord.Shop_User || ord.user || ord.client || '').trim();
-            if (orderShopUser) {
-                 const isMyShop = globalUsers.some(u => 
-                    (u._node === 'shops' || u._node === 'users' || u.role === 'shop') && 
-                    (u.Shop_User === orderShopUser || u.Client_User === orderShopUser || u.user === orderShopUser)
-                 );
-                 if (isMyShop) return true;
-            }
-
-            return false; 
-        }
-        // ==========================================
 
         window.applyDiamondWakeLock = async function() {
             try {
@@ -693,12 +672,8 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
-        function getActiveCompanyName() {
-            return currentUser ? (currentUser.Client_Name || currentUser.name || '').trim() : '';
-        }
-
         window.onload = function() {
-            // السر هنا: فك تشفير الرابط (decodeURIComponent) ليتطابق مع الاسم العربي الذي أرسلته المنشأة
+            // === الحل السحري لتشفير اللغة العربية في الروابط ===
             const urlParams = new URLSearchParams(window.location.search);
             const rawCompany = urlParams.get('company') || urlParams.get('master');
             const companyFromUrl = rawCompany ? decodeURIComponent(rawCompany).trim() : null;
@@ -708,8 +683,8 @@
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 
-                // الاعتماد على الرابط المفكوك كأولوية
-                activeCompanyName = companyFromUrl || getActiveCompanyName();
+                // الاعتماد على الرابط المفكوك، وإن لم يوجد يعتمد على اسم المسجل
+                activeCompanyName = companyFromUrl || (currentUser.Client_Name || currentUser.name || '').trim();
 
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 
@@ -840,7 +815,6 @@
 
             for (let capKey in allAssignedOrders) {
                 
-                // التأكد من أن الكابتن يتبع للشركة الحالية فقط
                 const isMyCaptain = globalUsers.some(u => 
                     (u._node === 'captains' || u.role === 'captain' || u.type === 'captain') && 
                     (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey)
@@ -1068,22 +1042,13 @@
                     globalUsers = [];
                     
                     if(data.users) Object.values(data.users).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { 
-                            u._node = 'users'; 
-                            globalUsers.push(u); 
-                        }
+                        if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'users'; globalUsers.push(u); }
                     });
                     if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { 
-                            u._node = 'shops'; 
-                            globalUsers.push(u); 
-                        }
+                        if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'shops'; globalUsers.push(u); }
                     });
                     if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { 
-                            u._node = 'captains'; 
-                            globalUsers.push(u); 
-                        }
+                        if(checkCompanyMatch(u, activeCompanyName)) { u._node = 'captains'; globalUsers.push(u); }
                     });
                     
                     renderRadar();
@@ -1098,15 +1063,32 @@
             const tbody = document.getElementById('live-table-body');
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
+            // ===============================================
+            // نظام فلترة الطلبات المعزول والمباشر
+            // ===============================================
+            const targetCompany = activeCompanyName.toLowerCase().trim();
+            const myShops = globalUsers.map(u => String(u.Shop_User || u.Client_User || u.user).trim());
+
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
-                // استخدام دالة الجدار الناري الجديدة 
-                return isOrderBelongToThisCompany(o);
+                const st = o.OrderStatus || o.Shop_Status;
+                if (st === 'accepted' || st === 'picked_up' || st === 'on_way' || st === 'arrived' || st === 'delivered' || o.FinancialStatus === 'confirmed') return false;
+
+                const orderMaster = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                const orderShopUser = String(o.Shop_User || o.user || o.client || '').trim();
+
+                // هل الطلب يحمل اسم الشركة بشكل مباشر؟
+                if (orderMaster && orderMaster === targetCompany) return true;
+                
+                // هل المطعم الذي طلب الأوردر موجود ضمن مطاعم هذه الشركة؟
+                if (orderShopUser && myShops.includes(orderShopUser)) return true;
+
+                return false;
             }).reverse();
-            
+            // ===============================================
+
             document.getElementById('stat-pending').innerText = pendingOrders.length;
             if (pendingOrders.length > 0 && soundEnabled && !isAlarmPlaying) {
                 document.getElementById('notif-sound').play();
@@ -1200,14 +1182,23 @@
 
             try {
                 const completedIDs = new Set(completedOrders.map(o => o.orderId));
-                
+                const targetCompany = activeCompanyName.toLowerCase().trim();
+                const myShops = globalUsers.map(u => String(u.Shop_User || u.Client_User || u.user).trim());
+
                 const pendingOrders = allOrders.filter(o => {
                     const ordId = o.Shop_Ord_ID || o.id;
                     if (!ordId || completedIDs.has(ordId)) return false;
-                    if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                     
-                    // استخدام دالة الجدار الناري الجديدة 
-                    return isOrderBelongToThisCompany(o);
+                    const st = o.OrderStatus || o.Shop_Status;
+                    if (st === 'accepted' || st === 'picked_up' || st === 'on_way' || st === 'arrived' || st === 'delivered' || o.FinancialStatus === 'confirmed') return false;
+
+                    const orderMaster = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                    const orderShopUser = String(o.Shop_User || o.user || o.client || '').trim();
+
+                    if (orderMaster && orderMaster === targetCompany) return true;
+                    if (orderShopUser && myShops.includes(orderShopUser)) return true;
+
+                    return false;
                 }).reverse();
                 
                 let activeLinkedIds = new Set();
@@ -1694,14 +1685,16 @@
 
         window.clearLiveRadar = async function() {
             if(confirm("مسح الطلبات من الرادار")) {
-                const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
                 const targetCompany = activeCompanyName.toLowerCase().trim();
+                const myShops = globalUsers.map(u => String(u.Shop_User || u.Client_User || u.user).trim());
                 
                 const updates = {};
                 allOrders.forEach(o => {
                     if (o.Shop_Type === 'shop_order' || o.id || o.Shop_Ord_ID) {
                         const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
-                        if ((orderComp && orderComp === targetCompany) || myShops.includes(o.Shop_User || o.user || o.client)) {
+                        const orderShopUser = String(o.Shop_User || o.user || o.client || '').trim();
+
+                        if ((orderComp && orderComp === targetCompany) || (orderShopUser && myShops.includes(orderShopUser))) {
                             const ordId = o.Shop_Ord_ID || o.id;
                             if (ordId) updates[`orders/${ordId}`] = null;
                         }
