@@ -606,25 +606,6 @@
         let radarMemory = {};
         let remoteOrderTimer = 10000;
 
-        window.applyDiamondWakeLock = async function() {
-            try {
-                if ('wakeLock' in navigator) {
-                    window.nOneWakeLock = await navigator.wakeLock.request('screen');
-                }
-            } catch (err) {
-                console.log('N One Wake Lock Active');
-            }
-        }
-
-        document.addEventListener('visibilitychange', async () => {
-            if (window.nOneWakeLock !== null && document.visibilityState === 'visible') {
-                await window.applyDiamondWakeLock();
-            }
-        });
-
-        // ========================================================
-        // العزل السيادي للذاكرة المحلية (LocalStorage)
-        // ========================================================
         function loadIsolatedData() {
             const compId = activeCompanyName || 'default';
             processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
@@ -705,21 +686,7 @@
             fetchRatings();
             renderCompletedOrders();
             setupRealtimeFreezeListener();
-            
-            window.applyDiamondWakeLock();
-
-            const nOneWorkerCode = `
-                setInterval(() => {
-                    postMessage('radar_pulse');
-                }, 1000);
-            `;
-            const nOneBlob = new Blob([nOneWorkerCode], { type: 'application/javascript' });
-            const nOneWorker = new Worker(URL.createObjectURL(nOneBlob));
-            nOneWorker.onmessage = function(e) {
-                if (e.data === 'radar_pulse') {
-                    refreshDynamicElements();
-                }
-            };
+            setInterval(refreshDynamicElements, 1000);
         };
 
         function fetchRadarMemory() {
@@ -1067,7 +1034,6 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
@@ -1176,7 +1142,6 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
