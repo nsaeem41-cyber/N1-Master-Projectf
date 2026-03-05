@@ -38,7 +38,7 @@
             overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* ================= الخريطة التخيلية ================= */
+        /* ================= الخريطة التخيلية (منظر سينمائي فقط) ================= */
         .map-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #e2e8f0;
@@ -49,6 +49,9 @@
                 linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
             background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
             z-index: 1;
+            /* منع أي تفاعل مع الخريطة للحفاظ على الأداء */
+            pointer-events: none; 
+            opacity: 0.8;
         }
 
         /* ================= الهيدر الألماسي ================= */
@@ -78,17 +81,6 @@
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-
-        .voice-ai-btn {
-            position: absolute; bottom: 75vh; right: 20px; z-index: 15;
-            background: linear-gradient(135deg, var(--info), var(--primary));
-            color: white; border: none; width: 60px; height: 60px;
-            border-radius: 50%; font-size: 24px; cursor: pointer;
-            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
-            display: flex; justify-content: center; align-items: center;
-            transition: 0.3s; border: 3px solid white;
-        }
-        .voice-ai-btn:active { transform: scale(0.9); }
 
         /* ================= اللوحة السفلية ================= */
         .bottom-sheet {
@@ -129,9 +121,6 @@
         .saved-places { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;}
         .place-item { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 13px; white-space: nowrap; cursor: pointer; }
 
-        .bid-container { display: flex; gap: 10px; margin-bottom: 15px; }
-        .bid-input { flex: 1; background: #fffbeb; border: 2px solid #fde68a; padding: 12px; border-radius: 15px; font-size: 18px; font-weight: 900; color: #b45309; text-align: center; outline: none; }
-
         .gift-toggle { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 12px 15px; border-radius: 12px; margin-bottom: 20px; }
         .gift-toggle span { font-size: 13px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 5px; }
 
@@ -144,7 +133,7 @@
         .btn-main:active { transform: scale(0.98); }
 
         /* ================= Panels ================= */
-        .ride-options-panel, .mood-panel, .searching-panel, .offers-panel, .market-panel { display: none; }
+        .ride-options-panel, .mood-panel, .searching-panel, .market-panel { display: none; }
         
         .ride-card {
             display: flex; align-items: center; justify-content: space-between;
@@ -178,15 +167,6 @@
             animation: spin 1s linear infinite; margin: 0 auto 20px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .offer-card {
-            background: white; border: 2px solid var(--gold); border-radius: 15px;
-            padding: 15px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .offer-cap-info { display: flex; flex-direction: column; gap: 4px; }
-        .offer-price { font-size: 20px; font-weight: 900; color: var(--primary); }
-        .offer-btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; }
 
         .multi-errand-banner {
             background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;
@@ -288,8 +268,6 @@
             <button class="sos-btn" onclick="triggerSOS()">🛡️</button>
         </div>
 
-        <button class="voice-ai-btn" onclick="activateVoiceAI()">🎙️</button>
-
         <div class="bottom-sheet" id="main-sheet">
             <div class="drag-handle"></div>
             
@@ -313,7 +291,7 @@
 
                     <div class="input-box">
                         <span>🟢</span>
-                        <input type="text" placeholder="موقعك (الجبيهة)" readonly>
+                        <input type="text" placeholder="موقعك الحالي (تم التحديد)" readonly>
                     </div>
                     <div class="input-box" onclick="showRideOptions()">
                         <span>📍</span>
@@ -327,13 +305,15 @@
                         <div class="place-item" onclick="showRideOptions()">🎓 الجامعة</div>
                     </div>
 
-                    <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">أو اقترح سعرك (نظام المساومة)</div>
-                    <div class="bid-container">
-                        <input type="number" class="bid-input" placeholder="2.50" step="0.25">
-                        <div style="background: #f1f5f9; padding: 15px; border-radius: 15px; font-weight: 900; color: #64748b;">د.أ</div>
+                    <div class="gift-toggle" style="margin-top: 15px; margin-bottom: 15px;">
+                        <span>🎁 طلب سيارة لصديق/عائلة</span>
+                        <label class="switch-small">
+                            <input type="checkbox" onchange="if(this.checked) showToast('ميزة الإهداء', 'سيتم إرسال رابط التتبع ورسالة تأكيد للشخص الآخر', '📲')">
+                            <span class="slider-small"></span>
+                        </label>
                     </div>
 
-                    <button class="btn-main" onclick="requestOffers()">اطلب وساوم الكباتن 🚀</button>
+                    <button class="btn-main" onclick="showRideOptions()">استمرار لخيارات الرحلة 🚀</button>
                 </div>
 
                 <div id="state-ride" class="ride-options-panel">
@@ -376,14 +356,6 @@
                         <div class="ride-price">2.50 د.أ</div>
                     </div>
 
-                    <div class="gift-toggle" style="margin-top: 15px; margin-bottom: 10px;">
-                        <span>🎁 طلب سيارة لصديق/عائلة</span>
-                        <label class="switch-small">
-                            <input type="checkbox" onchange="if(this.checked) showToast('ميزة الإهداء', 'سيتم إرسال رابط التتبع ورسالة تأكيد للشخص الآخر', '📲')">
-                            <span class="slider-small"></span>
-                        </label>
-                    </div>
-
                     <button class="btn-main" onclick="showMoodPanel()">التالي: ضبط مزاج الرحلة ⚙️</button>
                 </div>
 
@@ -407,45 +379,14 @@
                         </div>
                     </div>
 
-                    <button class="btn-main" style="background: var(--gold); color: var(--primary);" onclick="startSearching()">تأكيد وبحث عن كابتن 🚀</button>
+                    <button class="btn-main" style="background: var(--gold); color: var(--primary);" onclick="startSearching()">تأكيد وإرسال الطلب 🚀</button>
                 </div>
 
                 <div id="state-searching" class="searching-panel">
                     <div class="radar-spinner"></div>
-                    <div class="searching-title">نبحث لك عن الأفضل...</div>
-                    <div class="searching-desc">جاري إرسال تفضيلاتك للكباتن المتاحين في محيطك.</div>
+                    <div class="searching-title" style="font-size: 18px; font-weight: 900; color: var(--primary);">نبحث لك عن الأفضل...</div>
+                    <div class="searching-desc" style="color: #64748b; font-size: 14px; margin-top: 10px;">جاري إرسال تفضيلاتك للكباتن المتاحين في محيطك.</div>
                     <button class="btn-main" style="background: #f1f5f9; color: var(--danger); margin-top: 30px; box-shadow: none;" onclick="goBackHome()">إلغاء الطلب ✕</button>
-                </div>
-
-                <div id="offers-section" class="offers-panel">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                        <h3 style="margin:0; color:var(--primary);">📡 عروض الكباتن</h3>
-                        <button style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:8px; cursor:pointer;" onclick="cancelRequest()">إلغاء</button>
-                    </div>
-                    
-                    <div class="offer-card">
-                        <div class="offer-cap-info">
-                            <span style="font-size: 16px; font-weight: 900; color: var(--primary);">كابتن أحمد 🦸‍♂️</span>
-                            <span style="font-size: 12px; color: #64748b; font-weight: bold;">تويوتا بريوس • يبعد 2 دقيقة</span>
-                            <span style="font-size: 11px; background: var(--diamond); color: var(--info); padding: 2px 6px; border-radius: 5px; width: fit-content;">💎 4.9 تقييم ألماسي</span>
-                        </div>
-                        <div style="text-align: left;">
-                            <div class="offer-price">2.50 د.أ</div>
-                            <button class="offer-btn" onclick="acceptOffer('أحمد')">قبول ✅</button>
-                        </div>
-                    </div>
-
-                    <div class="offer-card" style="border-color: #e2e8f0; box-shadow: none;">
-                        <div class="offer-cap-info">
-                            <span style="font-size: 16px; font-weight: 900; color: var(--primary);">كابتن سارة 🌸</span>
-                            <span style="font-size: 12px; color: #64748b; font-weight: bold;">كيا نيرو • تبعد 4 دقائق</span>
-                            <span style="font-size: 11px; background: var(--pink-light); color: var(--pink); padding: 2px 6px; border-radius: 5px; width: fit-content;">⭐ N One Pink</span>
-                        </div>
-                        <div style="text-align: left;">
-                            <div class="offer-price">2.75 د.أ</div>
-                            <button class="offer-btn" style="background: var(--pink);" onclick="acceptOffer('سارة')">قبول ✅</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="market-section" class="market-panel">
@@ -487,9 +428,10 @@
     </div>
 
     <script>
-        // ================= نظام الإشعارات الذكي (Toasts & Modals) =================
+        // ================= نظام الإشعارات الذكي الفخم =================
         let modalCallback = null;
 
+        // دالة الـ Toast الفخمة
         function showToast(title, desc, icon = '💎') {
             const toast = document.getElementById('n-toast');
             document.getElementById('toast-icon').innerText = icon;
@@ -500,6 +442,7 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         }
 
+        // دالة الـ Modal السينمائية
         function showModal(title, desc, icon, confirmText, onConfirm = null, isInfoOnly = false) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerText = desc;
@@ -532,8 +475,7 @@
             closeModal();
         }
 
-
-        // ================= منطق التطبيق =================
+        // ================= منطق التطبيق والتبديل بين الشاشات =================
         
         function setAIGreeting() {
             const hour = new Date().getHours();
@@ -561,7 +503,6 @@
             document.getElementById('state-ride').style.display = 'none';
             document.getElementById('state-mood').style.display = 'none';
             document.getElementById('state-searching').style.display = 'none';
-            document.getElementById('offers-section').style.display = 'none';
             document.getElementById('market-section').style.display = 'none';
         }
 
@@ -594,33 +535,18 @@
             hideAllPanels();
             document.getElementById('state-searching').style.display = 'block';
             
+            // محاكاة إيجاد كابتن
             setTimeout(() => {
                 if (document.getElementById('state-searching').style.display === 'block') {
-                    showModal('تم إيجاد كابتن!', 'الكابتن ألماسي في طريقه إليك وتم تفعيل التكييف بناءً على طلبك.', '🚘', 'تتبع الرحلة', () => { goBackHome(); }, true);
+                    showModal('تم قبول الطلب!', 'الكابتن في طريقه إليك الآن.', '🚘', 'تتبع الرحلة', () => { goBackHome(); }, true);
                 }
             }, 3000);
-        }
-
-        function requestOffers() {
-            hideAllPanels();
-            document.getElementById('offers-section').style.display = 'block';
-        }
-
-        function cancelRequest() { goBackHome(); }
-
-        function acceptOffer(name) {
-            showToast('تم تأكيد الرحلة', `السيارة مع الكابتن ${name} في طريقها إليك الآن!`, '🚀');
-            goBackHome();
         }
 
         function triggerSOS() {
             showModal('🚨 تنبيه طوارئ (N One Shield)', 'سيتم إرسال موقعك المباشر فوراً لغرفة عمليات الشركة والاتصال بالجهات الأمنية. هل أنت متأكد؟', '🛡️', 'تفعيل الحماية الفورية', () => {
                 showToast('درع الحماية مفعل', 'فريق العمليات يتابع موقعك ويتحرك الآن!', '🚨');
             });
-        }
-
-        function activateVoiceAI() {
-            showToast('الذكاء الاصطناعي مفعل', 'تحدث الآن... (مثال: اطلبلي كابتن لمرج الحمام)', '🎙️');
         }
     </script>
 </body>
