@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v5-diamond';
+const CACHE_NAME = 'n-one-captain-v6-diamond';
 const urlsToCache = [
     './',
     './captain.html',
@@ -6,19 +6,19 @@ const urlsToCache = [
     './logo.jpg'
 ];
 
-// مرحلة التثبيت: تجهيز ملفات الكابتن في الذاكرة
+// مرحلة التثبيت تجهيز ملفات الكابتن في الذاكرة مع تفعيل فوري
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Captain assets cached successfully');
+                console.log('Captain assets cached successfully V6');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
-// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة
+// مرحلة التفعيل مسح أي كاش قديم وتنظيف الذاكرة والسيطرة الفورية
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -33,12 +33,11 @@ self.addEventListener('activate', event => {
     );
 });
 
-// إدارة الطلبات: استراتيجية (Network First) عشان نشوف التحديثات فوراً
+// إدارة الطلبات استراتيجية الشبكة أولا عشان نشوف التحديثات فورا
 self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(event.request)
             .then(response => {
-                // إذا الاستجابة صحيحة نخزن نسخة ونرجعها
                 if (response && response.status === 200 && response.type === 'basic') {
                     const responseToCache = response.clone();
                     caches.open(CACHE_NAME).then(cache => {
@@ -48,21 +47,22 @@ self.addEventListener('fetch', event => {
                 return response;
             })
             .catch(() => {
-                // في حال انقطع النت نرجع النسخة المخزنة
                 return caches.match(event.request);
             })
     );
 });
 
-// نظام الإشعارات الرسمي لإمبراطورية N One
+// نظام الإشعارات الرسمي لإمبراطورية N One الوحش الكاسر
 self.addEventListener('push', event => {
     const options = {
-        body: event.data ? event.data.text() : 'لديك طلب جديد بانتظارك الآن 🔥',
+        body: event.data ? event.data.text() : 'لديك طلب ألماسي جديد بانتظارك افتح التطبيق فورا 🔥',
         icon: 'logo.jpg',
         badge: 'logo.jpg',
-        vibrate: [200, 100, 200, 100, 200],
+        // اهتزاز عنيف وطويل جدا عشان يصحصح الكابتن لو كان نايم
+        vibrate: [500, 250, 500, 250, 500, 250, 500, 250, 500],
         tag: 'n-one-order',
         renotify: true,
+        // هاي الخاصية بتخلي الإشعار يضل معلق عالشاشة وما يختفي لحاله أبدا
         requireInteraction: true,
         data: {
             url: './captain.html'
@@ -70,21 +70,26 @@ self.addEventListener('push', event => {
     };
 
     event.waitUntil(
-        self.registration.showNotification('N One - إمبراطورية التوصيل 💎', options)
+        self.registration.showNotification('N One - طلب ألماسي جديد 🚀', options)
     );
 });
 
-// فتح التطبيق فور النقر على الإشعار
+// فتح التطبيق فور النقر على الإشعار وسحبه للشاشة الأمامية
 self.addEventListener('notificationclick', event => {
     event.notification.close();
+    
     event.waitUntil(
-        clients.matchAll({ type: 'window' }).then(windowClients => {
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            // فحص إذا التطبيق مفتوح بالخلفية عشان نعمله فوكس غصب عنه
             for (let i = 0; i < windowClients.length; i++) {
                 let client = windowClients[i];
                 if (client.url.includes('captain.html') && 'focus' in client) {
+                    // نرسل رسالة سرية للتطبيق إنه الكابتن كبس على الإشعار
+                    client.postMessage({ action: 'notification_clicked' });
                     return client.focus();
                 }
             }
+            // إذا التطبيق مسكر تماما بنفتحه من الصفر
             if (clients.openWindow) {
                 return clients.openWindow('./captain.html');
             }
