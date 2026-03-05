@@ -579,9 +579,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // ========================================================
+        // 🛡️ المتغيرات الألماسية المعزولة 🛡️
+        // ========================================================
         let currentUser = null;
         let activeCompanyName = ''; 
-        let myCompanyId = ''; 
+        let myCompanyId = ''; // المفتاح الذهبي للعزل المطلق
         
         let allOrders = [];
         let globalUsers = [];
@@ -601,6 +604,10 @@
         let radarMemory = {};
         let remoteOrderTimer = 10000;
 
+        // ========================================================
+        // 🌟 مستشعر الأونلاين الذكي (Smart Online Checker)
+        // بلقط كل حالات الكابتن مهما اختلفت أحرفها من التطبيق
+        // ========================================================
         window.isCaptainOnline = function(c) {
             if (!c) return false;
             let s1 = String(c.app_status || '').toLowerCase().trim();
@@ -625,6 +632,9 @@
             }
         });
 
+        // ========================================================
+        // 🔒 دوال التخزين المعزول (Namespaced Storage)
+        // ========================================================
         function getSafeStorageKey(baseKey) {
             return `${baseKey}_${myCompanyId}`;
         }
@@ -711,6 +721,7 @@
             
             window.applyDiamondWakeLock();
 
+            // العزل لعملية الـ setInterval لتجنب تضارب الترددات
             const nOneWorkerCode = `
                 setInterval(() => {
                     postMessage('radar_pulse');
@@ -751,6 +762,9 @@
             });
         }
 
+        // ========================================================
+        // 🛡️ جدار التيتانيوم لإعدادات الرادار
+        // ========================================================
         function fetchRadarStatus() {
             if (!myCompanyId) return;
             
@@ -799,16 +813,18 @@
             let hasUpdates = false;
             const updates = {};
 
+            // حصر العمليات بكباتن هاي الشركة بس!
             const myCaptainsKeys = globalUsers.filter(u => u._node === 'captains').map(u => u.Cap_User || u.user || u.Cap_Phone || u.phone);
 
             for (let capKey in allAssignedOrders) {
-                if (!myCaptainsKeys.includes(capKey)) continue; 
+                if (!myCaptainsKeys.includes(capKey)) continue; // تجاهل أي كابتن لا يتبع للشركة
 
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
                     if (ord.dispatch_method === 'Auto') {
                         const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        // استخدمنا المستشعر الذكي هون
                         const isAppClosed = assignedCap ? (!window.isCaptainOnline(assignedCap)) : true;
                         const elapsed = now - ord.timestamp;
 
@@ -997,6 +1013,7 @@
         function fetchLiveOrders() {
             onValue(ref(db, 'orders'), (snapshot) => {
                 if(snapshot.exists()) {
+                    // المصفاة الصارمة للطلبات: نقرأ فقط ما يخص هذه الشركة
                     allOrders = [];
                     const data = snapshot.val();
                     const myShops = globalUsers.filter(u => u._node === 'shops').map(u => u.Client_User || u.user || u.Shop_User);
@@ -1162,6 +1179,7 @@
                 return;
             }
 
+            // استخدمنا المستشعر الذكي للأونلاين هون
             let availableCaptains = globalUsers.filter(u => u._node === 'captains' && window.isCaptainOnline(u) && (u.Cap_Status || u.status) === 'active');
             availableCaptains = availableCaptains.filter(c => {
                 const k = c.Cap_User || c.user || c.Cap_Phone || c.phone;
@@ -1296,6 +1314,7 @@
                 
                 statusIndicator.style.display = 'block';
                 if (capStatus === 'active') {
+                    // استخدام المستشعر الذكي
                     if (window.isCaptainOnline(currentTargetCaptain)) {
                         statusIndicator.style.color = 'var(--success)';
                         statusIndicator.innerText = '🟢 جاهز';
