@@ -680,7 +680,6 @@
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 activeCompanyName = getActiveCompanyName();
-                myCompanyId = (currentUser.Client_User || currentUser.user || '').trim()
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 
                 if(document.getElementById('new_cap_company_id')) {
@@ -1016,27 +1015,16 @@
             });
         }
 
-function fetchLiveOrders() {
-    onValue(ref(db, 'orders'), (snapshot) => {
-        if(snapshot.exists()) {
-            allOrders = []
-            const data = snapshot.val()
-            const myShops = globalUsers.filter(u => u._node === 'shops').map(u => u.Client_User || u.user || u.Shop_User)
-            for(let key in data) {
-                const o = data[key]
-                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim()
-                const orderUser = String(o.Shop_User || o.user || o.client || '').trim()
-                if (orderComp === String(myCompanyId).toLowerCase().trim() || orderComp === activeCompanyName.toLowerCase() || myShops.includes(orderUser)) {
-                    allOrders.push({...o, id: key, Shop_Ord_ID: key})
+        function fetchLiveOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                renderRadar();
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster(true);
                 }
-            }
-        } else {
-            allOrders = []
+            });
         }
-        renderRadar()
-        if(isAutoRadarActive) triggerAutoRadarMaster(true)
-    })
-}
+
         function fetchGlobalUsers() {
             onValue(ref(db), (snapshot) => {
                 if (snapshot.exists()) {
