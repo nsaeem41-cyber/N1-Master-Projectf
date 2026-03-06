@@ -660,7 +660,7 @@
                     </div>
                     
                     <div class="bg-work-toggle">
-                        <span>تفعيل العمل في الخلفية والنافذة العائمة 🛡️</span>
+                        <span>تفعيل العمل في الخلفية (والاهتزاز) 🛡️</span>
                         <label class="switch">
                             <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked, false)">
                             <span class="slider"></span>
@@ -874,7 +874,6 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // إذا كنا مش بوضع المتصفح العادي نخفيها
             if(isStandalone) splash.style.display = 'none';
         });
 
@@ -896,7 +895,6 @@
             }, 500);
         });
 
-        // تسجيل الـ Service Worker مع فرض التحديث الفوري لتجاوز الكاش القديم
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
@@ -912,9 +910,8 @@
             });
         }
 
-        // ================= أنظمة العمل بالخلفية المتقدمة والزر العائم (تم إضافة حفظ الذاكرة) =================
+        // ================= أنظمة العمل بالخلفية المتقدمة (تم إضافة حفظ الذاكرة وإزالة PIP) =================
         let wakeLock = null;
-        let pictureInPictureWindow = null;
 
         async function requestWakeLock() {
             try {
@@ -941,33 +938,16 @@
                 }
                 bgAudio.play().catch(e => console.log("تحتاج تفاعل لتشغيل الخلفية"));
                 
-                if ('documentPictureInPicture' in window && !isSilentLoad) {
-                    try {
-                        pictureInPictureWindow = await documentPictureInPicture.requestWindow({
-                            width: 200, height: 100,
-                        });
-                        pictureInPictureWindow.document.body.innerHTML = `
-                            <div style="background:#0f172a; color:#d4af37; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif; font-weight:bold;">
-                                <div style="font-size:24px; animation: pulse 2s infinite;">💎</div>
-                                <div style="font-size:12px; margin-top:5px;">N One - أنت متصل</div>
-                                <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }</style>
-                            </div>
-                        `;
-                    } catch(err) {
-                        console.log("PIP Error: ", err);
-                    }
-                }
-                if(!isSilentLoad) window.showToast("تم تفعيل العمل بالخلفية والنافذة العائمة وحفظها 🛡️", false);
+                if(!isSilentLoad) window.showToast("تم تفعيل العمل بالخلفية وحفظه بنجاح 🛡️", false);
             } else {
                 bgAudio.pause();
-                if(pictureInPictureWindow) { pictureInPictureWindow.close(); pictureInPictureWindow = null; }
                 if(!isSilentLoad) window.showToast("تم إيقاف العمل بالخلفية", true);
             }
         };
 
         // إشعار الخلفية المتفجر فقط إذا كان التطبيق مخفي
         function sendSystemNotification(title, body) {
-            if (document.visibilityState === 'visible') return; // لا ترسل الإشعار إذا كان التطبيق بوجه الكابتن
+            if (document.visibilityState === 'visible') return; 
             
             if ('Notification' in window && Notification.permission === 'granted') {
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
@@ -986,7 +966,6 @@
             }
         }
         
-        // خوارزمية الإشعارات الاحترافية
         window.showToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -1017,7 +996,6 @@
             }, 3000);
         };
 
-        // نظام التأكيد الملكي
         let confirmCallback = null;
         window.showAppConfirm = function(msg, callback) {
             document.getElementById('custom-confirm-msg').innerText = msg;
@@ -1036,7 +1014,6 @@
             confirmCallback = null;
         };
         
-        // نظام التقييم
         window.openRatingModal = function(shopId) {
             document.getElementById('rating_shop_id').value = shopId;
             document.getElementById('current_rating_val').value = "0";
@@ -1662,16 +1639,17 @@
                 return;
             }
             try {
-                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                // استخدام API دقيق وجديد لفحص الـ IP
+                const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
-                if (data.country && data.country !== 'JO' && data.country !== 'JOR') {
+                if (data.country_code && data.country_code !== 'JO') {
                     isVpnDetected = true;
                 } else {
                     isVpnDetected = false;
                 }
             } catch(e) {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1);
+                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1);
             }
         }
         
@@ -1724,6 +1702,11 @@
                 const vpnWarning = document.getElementById('vpn-warning');
                 if (systemSettings.anti_vpn && isVpnDetected) {
                     vpnWarning.style.display = 'flex';
+                    // فصل الكابتن فورا إذا اكتشفنا VPN وهو أونلاين
+                    if(currentCaptain.app_status === 'online') {
+                        forceOffline();
+                        document.getElementById('toggle_status').checked = false;
+                    }
                 } else {
                     vpnWarning.style.display = 'none';
                 }
@@ -1944,18 +1927,6 @@
                             
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
 
-                            // تحديث النافذة العائمة إذا كانت مفتوحة
-                            if(pictureInPictureWindow) {
-                                pictureInPictureWindow.document.body.innerHTML = `
-                                    <div style="background:#ef4444; color:white; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif; font-weight:bold; text-align:center;">
-                                        <div style="font-size:24px; animation: pulse 0.5s infinite;">🚨</div>
-                                        <div style="font-size:14px; margin-top:5px;">طلب جديد!</div>
-                                        <div style="font-size:10px; margin-top:2px;">افتح التطبيق للقبول</div>
-                                        <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }</style>
-                                    </div>
-                                `;
-                            }
-
                             // إشعار الخلفية فقط إذا كان التطبيق مخفي 
                             sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
                         }
@@ -2036,17 +2007,6 @@
                 } else {
                     if(hotspotsSection) hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'flex';
-                    
-                    // إعادة النافذة العائمة للوضع الهادئ
-                    if(pictureInPictureWindow) {
-                        pictureInPictureWindow.document.body.innerHTML = `
-                            <div style="background:#0f172a; color:#d4af37; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:sans-serif; font-weight:bold;">
-                                <div style="font-size:24px; animation: pulse 2s infinite;">💎</div>
-                                <div style="font-size:12px; margin-top:5px;">N One - أنت متصل</div>
-                                <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }</style>
-                            </div>
-                        `;
-                    }
                 }
 
                 const audio = document.getElementById('order-ringtone');
@@ -2091,8 +2051,8 @@
                                 
                                 if(ordArea === myArea || myArea === '' || myArea === 'عام') {
                                     let rName = ord.Shop_Name || ord.restaurant || '';
-                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
-                                    rName = rName.split('-')[0].trim(); 
+                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
+                                    rName = rName.split('-')[0].trim(); 
                                     
                                     if(rName) {
                                         areaCounts[rName] = (areaCounts[rName] || 0) + 1;
@@ -2103,7 +2063,7 @@
 
                         const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
                         const hotspotsContainer = document.getElementById('ui_hotspots');
-                        hotspotsContainer.innerHTML = ''; 
+                        hotspotsContainer.innerHTML = ''; 
 
                         if(sortedRests.length > 0) {
                             sortedRests.slice(0, 3).forEach(restName => {
@@ -2190,6 +2150,13 @@
             if (isOnline && bal <= -1) {
                 const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online";
                 window.showToast(msg, true);
+                document.getElementById('toggle_status').checked = false;
+                return;
+            }
+
+            if (isOnline && systemSettings.anti_vpn && isVpnDetected) {
+                const msgVPN = currentLang === 'ar' ? "يرجى إغلاق الـ VPN لتتمكن من التفعيل" : "Please disable VPN";
+                window.showToast(msgVPN, true);
                 document.getElementById('toggle_status').checked = false;
                 return;
             }
