@@ -100,6 +100,7 @@
         }
         .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
 
+        /* ترتيب الباجات للهاتف وتوحيد الألوان */
         .badges-wrapper {
             display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; width: 100%; padding: 0 10px;
         }
@@ -387,8 +388,8 @@
             <input type="hidden" id="rating_cap_id" value="">
             <input type="hidden" id="selected_tag" value="">
             
-            <button class="btn-main btn-send" style="background: var(--info); color: white; margin-top: 15px;" onclick="submitRating()">إرسال التقييم 🚀</button>
-            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px;" onclick="closeRatingModal()">تخطي</button>
+            <button class="btn-main btn-send" style="background: var(--info); color: white; margin-top: 15px; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px; cursor: pointer;" onclick="closeRatingModal()">تخطي</button>
         </div>
     </div>
 
@@ -1070,7 +1071,7 @@
             });
         };
 
-        // [تحديث الخبير]: نظام الفلترة الصارمة (Strict Data Isolation)
+        // [تحديث الخبير]: نظام الفلترة الصارمة لمنع تداخل طلبات المنشآت
         function isMyOrder(ord) {
             const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
             const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase();
@@ -1082,7 +1083,7 @@
             
             onValue(ordersRef, (snapshot) => {
                 const list = document.getElementById('history-list');
-                let listHtml = ''; // [تحديث الخبير]: استخدام String Builder لتسريع الأداء
+                let listHtml = ''; 
                 
                 if(snapshot.exists()) {
                     const allOrders = Object.values(snapshot.val());
@@ -1198,7 +1199,6 @@
                     listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
                 }
                 
-                // طباعة المحتوى دفعة واحدة
                 list.innerHTML = listHtml;
             });
         }
@@ -1361,7 +1361,6 @@
             }
         }
 
-        // [تحديث الخبير]: إغلاق ثغرة احتساب السعر برمجياً
         window.sendOrder = async function() {
             const dest = String(document.getElementById('destination').value).trim();
             const val = document.getElementById('order_val').value;
@@ -1477,7 +1476,7 @@
             }
         }
 
-        // [تحديث الخبير]: توثيق عمليات الشحن مالياً
+        // [تحديث الخبير]: توثيق عمليات الشحن مالياً وتوافقها مع قواعد الحماية الجديدة
         window.executeTransfer = async function() {
             if (!verifiedCaptain) return;
             const amount = parseFloat(document.getElementById('charge_amount').value);
@@ -1493,7 +1492,7 @@
 
                     const capKey = String(verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone || verifiedCaptain.phone).trim();
                     const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
-                    const myMaster = currentUser.Client_Master || currentUser.master || "default";
+                    
                     const capNode = verifiedCaptain._node || 'users';
 
                     const updates = {};
@@ -1507,9 +1506,9 @@
                     updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
                     updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
 
-                    // 3. إنشاء الفاتورة المالية (Log)
+                    // 3. إنشاء الفاتورة المالية (Log) ضمن مسار المنشأة نفسها ليتطابق مع القواعد الأمنية
                     const txId = "TX_" + Date.now() + Math.floor(Math.random() * 1000);
-                    updates[`financial_logs/${myMaster}/${txId}`] = {
+                    updates[`financial_logs/${shopKey}/${txId}`] = {
                         type: 'deposit_to_captain',
                         amount: amount,
                         captain_phone: capKey,
@@ -1535,7 +1534,8 @@
                     verifiedCaptain = null;
 
                 } catch (e) {
-                    showToast("فشلت عملية التحويل المالي");
+                    showToast("فشلت عملية التحويل المالي (يرجى التأكد من صلاحيات الحماية)");
+                    console.log(e);
                 } finally {
                     setLoading('btn-charge', false, "تنفيذ عملية التحويل ✅");
                 }
