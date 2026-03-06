@@ -225,38 +225,6 @@
         }
         textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
 
-        /* ================= نافذة الطلب العملاقة (Mega Popup) ================= */
-        .mega-order-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
-            display: none; justify-content: center; align-items: center; z-index: 70000;
-            animation: fadeIn 0.3s ease;
-        }
-        .mega-order-box {
-            background: white; width: 90%; max-width: 400px; border-radius: 25px;
-            padding: 30px 20px; text-align: center; box-shadow: 0 20px 50px rgba(212, 175, 55, 0.4);
-            border-top: 8px solid var(--gold); position: relative; overflow: hidden;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .mega-pulse-bg {
-            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 150px; background: rgba(212, 175, 55, 0.1);
-            border-radius: 50%; animation: pulseAlert 2s infinite; z-index: 0;
-        }
-        .mega-content { position: relative; z-index: 1; }
-        .mega-title { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .mega-rest { font-size: 20px; color: var(--text); font-weight: bold; margin-bottom: 20px; }
-        .mega-details { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 15px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
-        .mega-detail-box { flex: 1; }
-        .mega-lbl { font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: bold; }
-        .mega-val { font-size: 22px; font-weight: 900; color: var(--primary); }
-        .mega-timer { font-size: 30px; font-weight: 900; color: var(--danger); margin-bottom: 25px; text-shadow: 0 2px 5px rgba(239, 68, 68, 0.3); }
-        .mega-actions { display: flex; gap: 15px; }
-        .btn-mega { flex: 1; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 18px; border: none; cursor: pointer; color: white; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .btn-mega:active { transform: scale(0.95); }
-        .btn-mega-accept { background: linear-gradient(135deg, var(--success), #059669); }
-        .btn-mega-reject { background: #f1f5f9; color: var(--danger); box-shadow: none; border: 2px solid #e2e8f0; }
-
         /* ================= المحتوى الداخلي ================= */
         .app-content { padding: 20px; flex: 1; overflow-y: auto; background: var(--bg); }
 
@@ -527,37 +495,6 @@
     <div id="offline-banner" class="offline-banner">📡 لا يوجد اتصال بالإنترنت يرجى الاتصال لتلقي الطلبات</div>
 
     <div id="toast-container" style="position:fixed; top:40px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
-
-    <div id="mega-order-overlay" class="mega-order-overlay">
-        <div class="mega-order-box">
-            <div class="mega-pulse-bg"></div>
-            <div class="mega-content">
-                <div class="mega-title">🚀 طلب جديد!</div>
-                <div id="mega-order-rest" class="mega-rest">مطعم الإمبراطورية</div>
-                
-                <div class="mega-details">
-                    <div class="mega-detail-box" style="border-left: 1px solid #e2e8f0;">
-                        <div class="mega-lbl">قيمة الطلب</div>
-                        <div id="mega-order-val" class="mega-val">0.00 د.أ</div>
-                    </div>
-                    <div class="mega-detail-box">
-                        <div class="mega-lbl">أجرة التوصيل</div>
-                        <div id="mega-order-fee" class="mega-val" style="color: var(--success);">0.00 د.أ</div>
-                    </div>
-                </div>
-
-                <div id="mega-order-timer" class="mega-timer">10</div>
-                <div class="order-timer-bar" style="margin-bottom: 20px;">
-                    <div id="mega-timer-bar-fill" style="height: 100%; background: var(--danger); width: 100%; transition: width 1s linear;"></div>
-                </div>
-
-                <div class="mega-actions">
-                    <button id="btn-mega-accept" class="btn-mega btn-mega-accept">قبول فوري ✅</button>
-                    <button id="btn-mega-reject" class="btn-mega btn-mega-reject">رفض ❌</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="custom-confirm-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
@@ -945,10 +882,8 @@
             }
         };
 
-        // إشعار الخلفية المتفجر فقط إذا كان التطبيق مخفي
+        // إشعار الخلفية المتفجر دايما شغال حتى لو التطبيق مفتوح
         function sendSystemNotification(title, body) {
-            if (document.visibilityState === 'visible') return; 
-            
             if ('Notification' in window && Notification.permission === 'granted') {
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(function(registration) {
@@ -1127,7 +1062,6 @@
         let orderTimers = {};
         let isListenerActive = false;
         let localOrderSeen = {};
-        let activeMegaOrderId = null; 
         
         const COMMISSION_RATE = 0.10; 
 
@@ -1713,26 +1647,6 @@
             }
         }, 2000);
 
-        // ================= خوارزمية عرض نافذة الطلب العملاقة =================
-        function showMegaOrderPopup(ord, restName, timeLeft, totalTime) {
-            if(activeMegaOrderId === ord.id) return; 
-            activeMegaOrderId = ord.id;
-            
-            document.getElementById('mega-order-rest').innerText = `🏪 ${restName}`;
-            document.getElementById('mega-order-val').innerText = `${ord.value || ord.Shop_Val} د.أ`;
-            document.getElementById('mega-order-fee').innerText = `${ord.fee || ord.Shop_Fee} د.أ`;
-            
-            document.getElementById('btn-mega-accept').onclick = function() { hideMegaOrderPopup(); acceptOrder(ord.id, ord.fee || ord.Shop_Fee, ord.linkedRadarId); };
-            document.getElementById('btn-mega-reject').onclick = function() { hideMegaOrderPopup(); rejectOrder(ord.id); };
-            
-            document.getElementById('mega-order-overlay').style.display = 'flex';
-        }
-
-        function hideMegaOrderPopup() {
-            document.getElementById('mega-order-overlay').style.display = 'none';
-            activeMegaOrderId = null;
-        }
-
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
             
@@ -1743,25 +1657,17 @@
                 
                 const bar = document.getElementById(`bar_timer_${orderId}`);
                 const text = document.getElementById(`text_timer_${orderId}`);
-                const megaTimer = document.getElementById('mega-order-timer');
-                const megaBar = document.getElementById('mega-timer-bar-fill');
                 
                 if(timeLeft <= 0) {
                     clearInterval(orderTimers[orderId]);
-                    if(activeMegaOrderId === orderId) hideMegaOrderPopup();
                     rejectOrderAuto(orderId); 
                 } else {
                     if(text) text.innerText = `${timeLeft} ${lblSec} ⏳`;
-                    if(activeMegaOrderId === orderId && megaTimer) megaTimer.innerText = timeLeft;
 
                     const percent = (timeLeft / totalTime) * 100;
                     if(bar) {
                         bar.style.width = `${percent}%`;
                         if(percent < 30) bar.style.background = '#991b1b'; 
-                    }
-                    if(activeMegaOrderId === orderId && megaBar) {
-                        megaBar.style.width = `${percent}%`;
-                        if(percent < 30) megaBar.style.background = '#991b1b';
                     }
                 }
             }, 1000);
@@ -1927,7 +1833,6 @@
                             
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
 
-                            // إشعار الخلفية فقط إذا كان التطبيق مخفي 
                             sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
                         }
                         else if (['accepted', 'picked_up', 'on_way', 'arrived'].includes(ord.status)) {
@@ -2013,16 +1918,10 @@
                 if (hasNewRinging && currentCaptain.app_status === 'online') {
                     ringtoneActive = true;
                     audio.play().catch(e => console.log("تحتاج تفاعل"));
-                    
-                    // إظهار النافذة العملاقة للطلب الجديد
-                    if(ringingOrderData && document.visibilityState === 'visible') {
-                        showMegaOrderPopup(ringingOrderData.ord, ringingOrderData.restName, ringingOrderData.timeLeft, systemSettings.order_timer);
-                    }
                 } else {
                     ringtoneActive = false;
                     audio.pause();
                     audio.currentTime = 0;
-                    hideMegaOrderPopup();
                 }
                 
                 if (!hasActive) {
