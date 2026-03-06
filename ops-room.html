@@ -568,8 +568,7 @@
             <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
         </div>
     </div>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -593,7 +592,6 @@
         let allAssignedOrders = {};
         let captainRatings = {}; 
         
-        let processedAppOrders = [];
         let completedOrders = [];
         let captainMemory = {};
 
@@ -606,6 +604,7 @@
         let radarMemory = {};
         let remoteOrderTimer = 10000;
 
+        // ================= ميزة اليقظة الدائمة (Wake Lock) للرادار =================
         window.applyDiamondWakeLock = async function() {
             try {
                 if ('wakeLock' in navigator) {
@@ -622,21 +621,26 @@
             }
         });
 
-        // ========================================================
-        // العزل السيادي للذاكرة المحلية (LocalStorage)
-        // ========================================================
-        function loadIsolatedData() {
+        // ================= الترحيل السحابي المباشر (Cloud Financials) =================
+        function loadCloudArchive() {
             const compId = activeCompanyName || 'default';
-            processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
-            completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders_' + compId) || '[]');
+            onValue(ref(db, `company_archives/${compId}/orders`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    completedOrders = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else {
+                    completedOrders = [];
+                }
+                renderCompletedOrders();
+                renderRadar(); 
+            });
+            // جلب الذاكرة المحلية للكباتن المضافين يدويا فقط
             captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
         }
 
-        function saveIsolatedData() {
+        async function saveOrderToCloud(entry) {
             const compId = activeCompanyName || 'default';
-            localStorage.setItem('n1_processed_app_orders_' + compId, JSON.stringify(processedAppOrders));
-            localStorage.setItem('n1_completed_orders_' + compId, JSON.stringify(completedOrders));
-            localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
+            await set(ref(db, `company_archives/${compId}/orders/${entry.orderId}`), entry);
         }
 
         function checkCompanyMatch(u, compName) {
@@ -686,7 +690,8 @@
                     document.getElementById('new_cap_company_id').value = activeCompanyName;
                 }
                 
-                loadIsolatedData();
+                loadCloudArchive();
+                window.applyDiamondWakeLock(); 
                 
             } else {
                 showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
@@ -703,23 +708,9 @@
             fetchLiveOrders();
             fetchGlobalUsers();
             fetchRatings();
-            renderCompletedOrders();
             setupRealtimeFreezeListener();
             
-            window.applyDiamondWakeLock();
-
-            const nOneWorkerCode = `
-                setInterval(() => {
-                    postMessage('radar_pulse');
-                }, 1000);
-            `;
-            const nOneBlob = new Blob([nOneWorkerCode], { type: 'application/javascript' });
-            const nOneWorker = new Worker(URL.createObjectURL(nOneBlob));
-            nOneWorker.onmessage = function(e) {
-                if (e.data === 'radar_pulse') {
-                    refreshDynamicElements();
-                }
-            };
+            setInterval(refreshDynamicElements, 1000);
         };
 
         function fetchRadarMemory() {
@@ -796,6 +787,7 @@
             });
         }
 
+        // ================= التوثيق المالي الشامل (تأجيل الخصم حتى الوصول للمنشأة) =================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -813,7 +805,6 @@
                         if (ord.status === 'assigned') {
                             if (elapsed > remoteOrderTimer || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                                delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                     if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
@@ -826,89 +817,87 @@
                         else if (ord.status === 'received' || ord.status === 'ringing') {
                             if (elapsed > (remoteOrderTimer + 2000) || isAppClosed) {
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                                delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
-                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
                                 hasUpdates = true;
                                 continue;
                             }
                         }
                     }
-                    
-                    if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
-                        const commission = ord.commission_amount || 0;
+
+                    // في حال القبول (accepted) لا نخصم ولا نرحل، فقط نربط الكابتن بالطلب
+                    if (ord.status === 'accepted' && !ord.is_accepted_marked) {
                         const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                        
                         if(capData && ord.linkedRadarId) {
                             updates[`orders/${ord.linkedRadarId}/Cap_Name`] = capData.Cap_Name || capData.name || '';
                             updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = capData.Cap_Phone || capData.phone || '';
                             updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = capData.Cap_CarType || capData.Cap_Car || '';
                             updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = capData.Cap_CarCode || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
                             updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
-                            updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'frozen';
-                            hasUpdates = true;
                         }
-                        
-                        const entry = {
-                            orderId: ord.linkedRadarId || appOrdId,
-                            appOrdId: appOrdId,
-                            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                            cap: ord.cap_name || "كابتن",
-                            capKey: capKey,
-                            rest: ord.restaurant,
-                            comm: commission,
-                            date: new Date().toISOString(),
-                            via: ord.dispatch_method || "App",
-                            live_status: 'accepted',
-                            companyId: activeCompanyName
-                        };
-                        completedOrders.unshift(entry);
-                        processedAppOrders.push(appOrdId);
-                        saveIsolatedData();
-                        
-                        renderCompletedOrders();
+                        updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
+                        hasUpdates = true;
                     }
-                    else if (processedAppOrders.includes(appOrdId)) {
-                        let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
+                    
+                    // الخصم المالي الحقيقي والترحيل للأرشيف يبدأ من لحظة وصول المنشأة
+                    if (['arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered'].includes(ord.status)) {
+                        const isAlreadySaved = completedOrders.some(o => o.appOrdId === appOrdId);
                         
-                        if (!ord.is_commission_deducted && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
-                            const commission = ord.commission_amount || 0;
+                        if (!ord.is_commission_deducted) {
+                            const commission = parseFloat(ord.commission_amount || 0);
                             if(commission > 0) {
                                 const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                                 if(capData) {
-                                    const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
+                                    const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - commission).toFixed(2);
                                     updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                     updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
                                 }
                             }
                             updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
                             if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
                                 updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
                                 updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
                             }
                             hasUpdates = true;
                         }
 
-                        if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
-                            existingEntry.live_status = ord.status;
-                            if (ord.linkedRadarId) {
-                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                        if (!isAlreadySaved) {
+                            const entry = {
+                                orderId: ord.linkedRadarId || appOrdId,
+                                appOrdId: appOrdId,
+                                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                                cap: ord.cap_name || "كابتن",
+                                capKey: capKey,
+                                rest: ord.restaurant,
+                                comm: ord.commission_amount || 0,
+                                date: new Date().toISOString(),
+                                via: ord.dispatch_method || "App",
+                                live_status: ord.status,
+                                companyId: activeCompanyName
+                            };
+                            saveOrderToCloud(entry);
+                            hasUpdates = true;
+                        } else if (isAlreadySaved) {
+                            let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
+                            if(existingEntry && existingEntry.live_status !== ord.status) {
+                                existingEntry.live_status = ord.status;
+                                if (ord.linkedRadarId) {
+                                    updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                                }
+                                saveOrderToCloud(existingEntry); 
                                 hasUpdates = true;
                             }
-                            saveIsolatedData();
-                            renderCompletedOrders();
-                        }
-                        
-                        if (ord.status === 'delivered') {
-                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                            hasUpdates = true;
+                            
+                            if (ord.status === 'delivered') {
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                hasUpdates = true;
+                            }
                         }
                     }
-                    else if (ord.status === 'rejected' || ord.status === 'timeout') {
+                    
+                    if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                         delete allAssignedOrders[capKey][appOrdId]; 
                         if(ord.linkedRadarId) {
@@ -1052,7 +1041,6 @@
                     
                     renderRadar();
                     renderCaptainsList();
-                    renderCompletedOrders();
                 }
             });
         }
@@ -1168,15 +1156,32 @@
             });
         };
 
+        // ================= التوزيع الذكي الفردي والدوران اللانهائي =================
         window.triggerAutoRadarMaster = async function(silent = false) {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             
+            let activeLinkedIds = new Set();
+            let busyCaptains = new Set();
+            
+            // الكابتن اللي معاه طلب نشط ما رح يستلم طلب ثاني لحد ما يخلص (One-by-One)
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    let st = allAssignedOrders[capKey][ordKey].status;
+                    if(['assigned', 'accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived'].includes(st)) {
+                        busyCaptains.add(capKey);
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
+                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        }
+                    }
+                }
+            }
+
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
             
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
-                if (!ordId || completedIDs.has(ordId)) return false;
-                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
+                if (!ordId || completedIDs.has(ordId) || activeLinkedIds.has(ordId)) return false;
+                if (['accepted', 'delivered', 'canceled'].includes(o.OrderStatus)) return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
@@ -1189,31 +1194,8 @@
                 
                 return false;
             }).reverse();
-            
-            let activeLinkedIds = new Set();
-            let busyCaptains = new Set();
-            
-            for(let capKey in allAssignedOrders) {
-                for(let ordKey in allAssignedOrders[capKey]) {
-                    let st = allAssignedOrders[capKey][ordKey].status;
-                    if(st === 'assigned' || st === 'accepted') {
-                        busyCaptains.add(capKey);
-                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
-                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
-                        }
-                    }
-                }
-            }
-            
-            const trulyPendingOrders = pendingOrders.filter(o => {
-                const ordId = o.Shop_Ord_ID || o.id;
-                return !activeLinkedIds.has(ordId);
-            });
 
-            if(trulyPendingOrders.length === 0) {
-                if(!silent) showAppNotification("لا توجد طلبات جديدة للتوزيع", "warning");
-                return;
-            }
+            if(pendingOrders.length === 0) return;
 
             let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
             
@@ -1231,13 +1213,11 @@
             let dispatchedCount = 0;
             let updates = {};
 
-            for (let ord of trulyPendingOrders) {
+            for (let ord of pendingOrders) {
                 if(availableCaptains.length === 0) break;
                 
                 const ordId = ord.Shop_Ord_ID || ord.id;
-
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
-                
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
                 let eligibleCaptains = availableCaptains.filter(c => {
@@ -1245,13 +1225,7 @@
                      return cRegion === shopOriginArea;
                 });
 
-                if (eligibleCaptains.length === 0) {
-                    if (!ord.deadZoneAlertShown) {
-                        showAppNotification(`تنبيه المنطقة الميتة لا يوجد كباتن متاحين في منطقة ${shopOriginArea || 'غير محددة'} لطلب ${ord.Shop_Name || ord.restaurant || ''}`, "warning");
-                        ord.deadZoneAlertShown = true;
-                    }
-                    continue;
-                }
+                if (eligibleCaptains.length === 0) continue;
 
                 let unskippedCaptains = eligibleCaptains.filter(c => {
                      const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
@@ -1259,6 +1233,7 @@
                      return !hasSkipped;
                 });
 
+                // الدوران اللانهائي: تصفير الذاكرة وإعادة اللف على الكباتن
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ordId}`] = null;
                      delete radarMemory[ordId]; 
@@ -1283,6 +1258,7 @@
                 const orderData = {
                     id: appOrderId,
                     restaurant: (ord.Shop_Name || ord.restaurant) + (shopOriginArea ? " - " + shopOriginArea : ""),
+                    location_link: ord.Shop_Location_Link || ord.Shop_Location || "",
                     value: ord.Shop_Val || ord.value,
                     fee: ord.Shop_Fee || ord.fee,
                     status: 'assigned',
@@ -1301,11 +1277,7 @@
                 try {
                     await update(ref(db), updates);
                     if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
-                } catch(e) {
-                    if(!silent) showAppNotification("حدث خطأ أثناء التوزيع التلقائي", "error");
-                }
-            } else {
-                if(!silent) showAppNotification("لم يتم توزيع أي طلب", "warning");
+                } catch(e) {}
             }
         };
 
@@ -1320,7 +1292,7 @@
             let fullShopName = ord.Shop_Name || ord.restaurant || '';
             
             let extractedUrls = fullShopName.match(urlRegex);
-            let hiddenUrlStr = extractedUrls ? extractedUrls.join(' ') : '';
+            let hiddenUrlStr = extractedUrls ? extractedUrls.join(' ') : (ord.Shop_Location_Link || ord.Shop_Location || '');
             
             let cleanShopName = fullShopName.replace(urlRegex, '').trim();
 
@@ -1328,7 +1300,7 @@
             document.getElementById('man_val').value = ord.Shop_Val || ord.value || '';
             document.getElementById('man_fee').value = ord.Shop_Fee || ord.fee || '';
             document.getElementById('linked_order_id').value = orderId;
-            document.getElementById('man_hidden_url').value = hiddenUrlStr;
+            document.getElementById('man_hidden_url').value = hiddenUrlStr; 
             
             document.querySelector('.side-content').scrollTop = 0;
         };
@@ -1336,8 +1308,7 @@
         window.dismissOrder = async function(orderId) {
             if(confirm("هل تريد إخفاء الطلب")) {
                 const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual', companyId: activeCompanyName };
-                completedOrders.unshift(entry);
-                saveIsolatedData();
+                await saveOrderToCloud(entry);
                 renderRadar();
             }
         };
@@ -1395,40 +1366,26 @@
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { 
-                showAppNotification("يرجى إكمال البيانات", "warning"); 
-                return; 
-            }
+            if (!phone || !restInfo || !fee) { showAppNotification("يرجى إكمال البيانات", "warning"); return; }
             
-            if (!currentTargetCaptain) {
-                showAppNotification("الكابتن غير موجود بالنظام", "error");
-                return;
-            }
+            if (!currentTargetCaptain) { showAppNotification("الكابتن غير موجود بالنظام", "error"); return; }
 
             const capStatus = currentTargetCaptain.Cap_Status || currentTargetCaptain.status;
-            if (capStatus === 'paused' || capStatus === 'off') {
-                showAppNotification("حساب الكابتن مجمد", "error");
-                return;
-            }
+            if (capStatus === 'paused' || capStatus === 'off') { showAppNotification("حساب الكابتن مجمد", "error"); return; }
 
-            if (currentTargetCaptain.app_status === 'offline') {
-                showAppNotification("الكابتن أوفلاين", "error");
-                return;
-            }
+            if (currentTargetCaptain.app_status === 'offline') { showAppNotification("الكابتن أوفلاين", "error"); return; }
 
             const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
 
             let activeCount = 0;
             for(let ordKey in allAssignedOrders[capKey]) {
-                if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                if(['assigned', 'accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived'].includes(allAssignedOrders[capKey][ordKey].status)) {
                     activeCount++;
                 }
             }
 
             if (activeCount > 0) {
-                if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) {
-                    return; 
-                }
+                if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) return;
             }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
@@ -1436,9 +1393,7 @@
             const appOrderId = "APP_ORD_" + Date.now();
             
             let finalRestInfo = restInfo;
-            if(hiddenUrl) {
-                finalRestInfo += " - " + hiddenUrl;
-            }
+            if(hiddenUrl) { finalRestInfo += " - " + hiddenUrl; }
             
             const orderData = {
                 id: appOrderId,
@@ -1465,9 +1420,7 @@
                 document.getElementById('man_fee').value = '';
                 document.getElementById('linked_order_id').value = '';
 
-            } catch (error) {
-                showAppNotification("خطأ في الإرسال", "error");
-            }
+            } catch (error) { showAppNotification("خطأ في الإرسال", "error"); }
         };
 
         window.sendManualOrder = async function() {
@@ -1480,43 +1433,30 @@
             const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
             const linkedId = document.getElementById('linked_order_id').value;
 
-            if (!phone || !restInfo || !fee) { 
-                showAppNotification("يرجى إكمال البيانات", "warning"); 
-                return; 
-            }
-
-            if (capName) {
-                captainMemory[phone] = capName;
-                saveIsolatedData();
-            }
+            if (!phone || !restInfo || !fee) { showAppNotification("يرجى إكمال البيانات", "warning"); return; }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
+            const updates = {};
 
             if (currentTargetCaptain) {
-                if (currentTargetCaptain.app_status === 'offline') {
-                    showAppNotification("الكابتن أوفلاين", "error");
-                    return;
-                }
+                if (currentTargetCaptain.app_status === 'offline') { showAppNotification("الكابتن أوفلاين", "error"); return; }
 
                 const capKey = currentTargetCaptain.Cap_User || currentTargetCaptain.user || currentTargetCaptain.Cap_Phone || currentTargetCaptain.phone;
                 
                 let activeCount = 0;
                 for(let ordKey in allAssignedOrders[capKey]) {
-                    if(allAssignedOrders[capKey][ordKey].status === 'assigned' || allAssignedOrders[capKey][ordKey].status === 'accepted') {
+                    if(['assigned', 'accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived'].includes(allAssignedOrders[capKey][ordKey].status)) {
                         activeCount++;
                     }
                 }
 
                 if (activeCount > 0) {
-                    if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) {
-                        return; 
-                    }
+                    if (!confirm(`الكابتن لديه ${activeCount} طلب قيد التنفيذ تأكيد الإرسال`)) return;
                 }
 
                 const currentBal = parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0);
                 const newBal = (currentBal - parseFloat(commission)).toFixed(2);
                 
-                const updates = {};
                 updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                 updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
                 
@@ -1534,7 +1474,6 @@
 
                 await update(ref(db), updates);
             } else if (linkedId) {
-                const updates = {};
                 updates[`orders/${linkedId}/Cap_Name`] = capName || '';
                 updates[`orders/${linkedId}/Cap_Phone`] = phone;
                 updates[`orders/${linkedId}/Cap_Commission`] = commission;
@@ -1544,9 +1483,7 @@
             }
 
             let finalRestInfo = restInfo;
-            if(hiddenUrl) {
-                finalRestInfo += " - " + hiddenUrl;
-            }
+            if(hiddenUrl) { finalRestInfo += " - " + hiddenUrl; }
 
             const entry = {
                 orderId: linkedId || "MANUAL_" + Date.now(),
@@ -1559,8 +1496,8 @@
                 live_status: 'manual',
                 companyId: activeCompanyName
             };
-            completedOrders.unshift(entry);
-            saveIsolatedData();
+            
+            await saveOrderToCloud(entry);
 
             let waPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
             if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
@@ -1582,13 +1519,10 @@
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
             document.getElementById('linked_order_id').value = '';
-            renderRadar();
-            renderCompletedOrders();
         };
 
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
-            
             const today = new Date().toDateString();
             const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName));
             
@@ -1615,9 +1549,10 @@
 
                 let liveStatusBadge = '';
                 if (o.live_status === 'accepted') liveStatusBadge = '<span class="badge" style="background:#e0f2fe; color:#0284c7;">تمت الموافقة ⚡</span>';
+                else if (o.live_status === 'arrived_at_shop') liveStatusBadge = '<span class="badge" style="background:#e0e7ff; color:#4338ca;">وصل المنشأة 🏪</span>';
                 else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="badge" style="background:#ffedd5; color:#ea580c;">تم الاستلام 🏃‍♂️</span>';
                 else if (o.live_status === 'on_way') liveStatusBadge = '<span class="badge" style="background:#fef9c3; color:#ca8a04;">في الطريق 🛵</span>';
-                else if (o.live_status === 'arrived') liveStatusBadge = '<span class="badge" style="background:#cffafe; color:#0369a1;">وصل للعميل 📍</span>';
+                else if (o.live_status === 'arrived' || o.live_status === 'arrived_at_customer') liveStatusBadge = '<span class="badge" style="background:#cffafe; color:#0369a1;">وصل للعميل 📍</span>';
                 else if (o.live_status === 'delivered') liveStatusBadge = '<span class="badge" style="background:#dcfce7; color:#166534;">تم اكتمال الطلب 💎</span>';
                 else liveStatusBadge = '<span class="badge" style="background:#f1f5f9; color:#64748b;">مكتمل ✅</span>';
 
@@ -1645,30 +1580,36 @@
             });
         };
 
-        window.resetDailyStats = function() {
-            if(confirm("تصفير العمولات والطلبات لليوم")) {
+        window.resetDailyStats = async function() {
+            if(confirm("تصفير العمولات والطلبات لليوم من السحابة")) {
                 const today = new Date().toDateString();
-                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today || (o.companyId && o.companyId !== activeCompanyName));
-                saveIsolatedData();
-                renderCompletedOrders();
+                const compId = activeCompanyName || 'default';
+                const updates = {};
+                
+                completedOrders.forEach(o => {
+                    if(new Date(o.date).toDateString() === today) {
+                        updates[`company_archives/${compId}/orders/${o.orderId}`] = null;
+                    }
+                });
+                
+                await update(ref(db), updates);
+                showAppNotification("تم تصفير حسابات اليوم");
             }
         };
 
-        window.deleteFromArchive = function(id) {
-            if(confirm("حذف من الأرشيف")) {
-                completedOrders = completedOrders.filter(o => o.orderId !== id);
-                saveIsolatedData();
-                renderCompletedOrders();
-                renderRadar();
+        window.deleteFromArchive = async function(id) {
+            if(confirm("حذف الطلب نهائيا من الأرشيف السحابي")) {
+                const compId = activeCompanyName || 'default';
+                await remove(ref(db, `company_archives/${compId}/orders/${id}`));
+                showAppNotification("تم الحذف");
             }
         };
 
-        window.clearCompletedOrders = function() {
-            if(confirm("مسح الأرشيف كاملا")) {
-                completedOrders = completedOrders.filter(o => o.companyId && o.companyId !== activeCompanyName);
-                saveIsolatedData();
-                renderCompletedOrders();
-                renderRadar();
+        window.clearCompletedOrders = async function() {
+            if(confirm("تحذير سيتم مسح الأرشيف كاملا من السحابة")) {
+                const compId = activeCompanyName || 'default';
+                await remove(ref(db, `company_archives/${compId}/orders`));
+                showAppNotification("تم مسح الأرشيف");
             }
         };
 
@@ -1735,7 +1676,7 @@
                 Cap_Balance: bal,
                 role: "captain",
                 type: "captain",
-                company: activeCompanyName,       
+                company: activeCompanyName,        
                 Client_Master: activeCompanyName, 
                 app_sync_lock: false,
                 app_access: "granted",
