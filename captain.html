@@ -11,14 +11,16 @@
     <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/captain.html">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=3">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Captain App">
     <link rel="apple-touch-icon" href="logo.jpg">
     <style>
+        /* ================= منع الريفرش عند السحب للأسفل (Pull-to-refresh) ================= */
+        html, body {
+            overscroll-behavior-y: none;
+            touch-action: pan-y;
+        }
+
         /* ================= تصميم Captain App (Royal Navy & Diamond White) ================= */
         :root {
             --primary: #0f172a;    
@@ -223,6 +225,38 @@
         }
         textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
 
+        /* ================= نافذة الطلب العملاقة (Mega Popup) ================= */
+        .mega-order-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
+            display: none; justify-content: center; align-items: center; z-index: 70000;
+            animation: fadeIn 0.3s ease;
+        }
+        .mega-order-box {
+            background: white; width: 90%; max-width: 400px; border-radius: 25px;
+            padding: 30px 20px; text-align: center; box-shadow: 0 20px 50px rgba(212, 175, 55, 0.4);
+            border-top: 8px solid var(--gold); position: relative; overflow: hidden;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .mega-pulse-bg {
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+            width: 150px; height: 150px; background: rgba(212, 175, 55, 0.1);
+            border-radius: 50%; animation: pulseAlert 2s infinite; z-index: 0;
+        }
+        .mega-content { position: relative; z-index: 1; }
+        .mega-title { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .mega-rest { font-size: 20px; color: var(--text); font-weight: bold; margin-bottom: 20px; }
+        .mega-details { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 15px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .mega-detail-box { flex: 1; }
+        .mega-lbl { font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: bold; }
+        .mega-val { font-size: 22px; font-weight: 900; color: var(--primary); }
+        .mega-timer { font-size: 30px; font-weight: 900; color: var(--danger); margin-bottom: 25px; text-shadow: 0 2px 5px rgba(239, 68, 68, 0.3); }
+        .mega-actions { display: flex; gap: 15px; }
+        .btn-mega { flex: 1; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 18px; border: none; cursor: pointer; color: white; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn-mega:active { transform: scale(0.95); }
+        .btn-mega-accept { background: linear-gradient(135deg, var(--success), #059669); }
+        .btn-mega-reject { background: #f1f5f9; color: var(--danger); box-shadow: none; border: 2px solid #e2e8f0; }
+
         /* ================= المحتوى الداخلي ================= */
         .app-content { padding: 20px; flex: 1; overflow-y: auto; background: var(--bg); }
 
@@ -417,6 +451,13 @@
             border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; 
         }
 
+        /* زر العمل بالخلفية */
+        .bg-work-toggle {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #e0f2fe; border: 1px solid #bae6fd; padding: 12px 15px; border-radius: 12px; margin-top: 15px;
+        }
+        .bg-work-toggle span { font-size: 13px; font-weight: bold; color: var(--primary); }
+
         /* شاشة الإيقاف والانتظار */
         .blocked-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -481,9 +522,42 @@
 </head>
 <body id="app-body">
 
+    <audio id="keep-alive-audio" loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
+
     <div id="offline-banner" class="offline-banner">📡 لا يوجد اتصال بالإنترنت يرجى الاتصال لتلقي الطلبات</div>
 
     <div id="toast-container" style="position:fixed; top:40px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
+
+    <div id="mega-order-overlay" class="mega-order-overlay">
+        <div class="mega-order-box">
+            <div class="mega-pulse-bg"></div>
+            <div class="mega-content">
+                <div class="mega-title">🚀 طلب جديد!</div>
+                <div id="mega-order-rest" class="mega-rest">مطعم الإمبراطورية</div>
+                
+                <div class="mega-details">
+                    <div class="mega-detail-box" style="border-left: 1px solid #e2e8f0;">
+                        <div class="mega-lbl">قيمة الطلب</div>
+                        <div id="mega-order-val" class="mega-val">0.00 د.أ</div>
+                    </div>
+                    <div class="mega-detail-box">
+                        <div class="mega-lbl">أجرة التوصيل</div>
+                        <div id="mega-order-fee" class="mega-val" style="color: var(--success);">0.00 د.أ</div>
+                    </div>
+                </div>
+
+                <div id="mega-order-timer" class="mega-timer">10</div>
+                <div class="order-timer-bar" style="margin-bottom: 20px;">
+                    <div id="mega-timer-bar-fill" style="height: 100%; background: var(--danger); width: 100%; transition: width 1s linear;"></div>
+                </div>
+
+                <div class="mega-actions">
+                    <button id="btn-mega-accept" class="btn-mega btn-mega-accept">قبول فوري ✅</button>
+                    <button id="btn-mega-reject" class="btn-mega btn-mega-reject">رفض ❌</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="custom-confirm-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
@@ -584,7 +658,16 @@
                         <label id="lang_set_pass">كلمة المرور</label>
                         <input type="password" id="set_pass">
                     </div>
-                    <button class="btn-save-settings" style="background: var(--info); margin-top: 10px; color: white; box-shadow: 0 4px 10px rgba(14,165,233,0.3);" onclick="testNotification()" id="lang_test_notif">🔔 تجربة التنبيهات والرنة</button>
+                    
+                    <div class="bg-work-toggle">
+                        <span>تفعيل العمل في الخلفية (والاهتزاز) 🛡️</span>
+                        <label class="switch">
+                            <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked, false)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <button class="btn-save-settings" style="background: var(--info); margin-top: 15px; color: white; box-shadow: 0 4px 10px rgba(14,165,233,0.3);" onclick="testNotification()" id="lang_test_notif">🔔 تجربة التنبيهات والرنة</button>
                     <button class="lang-toggle" onclick="toggleLanguage()" id="lang_toggle_btn">🌐 Switch to English</button>
                     <button class="btn-save-settings" onclick="saveSettings()" id="lang_save_btn">حفظ التعديلات ✅</button>
                 </div>
@@ -781,14 +864,17 @@
         const btnInstall = document.getElementById('btn-install-app');
         const btnContinue = document.getElementById('btn-continue-app');
 
-        // إخفاء الشاشة إذا كان التطبيق مثبتاً بالفعل
-        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        // إخفاء الشاشة إذا كان التطبيق مثبتاً بالفعل بذكاء
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches || navigator.standalone;
+        
+        if (isStandalone) {
             splash.style.display = 'none';
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            if(isStandalone) splash.style.display = 'none';
         });
 
         btnInstall.addEventListener('click', async () => {
@@ -799,8 +885,6 @@
                     splash.style.display = 'none';
                 }
                 deferredPrompt = null;
-            } else {
-                // إذا لم يكن PWA مدعوماً
             }
         });
 
@@ -811,7 +895,6 @@
             }, 500);
         });
 
-        // تسجيل الـ Service Worker مع فرض التحديث الفوري لتجاوز الكاش القديم
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
@@ -827,7 +910,9 @@
             });
         }
 
+        // ================= أنظمة العمل بالخلفية المتقدمة (تم إضافة حفظ الذاكرة وإزالة PIP) =================
         let wakeLock = null;
+
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
@@ -837,13 +922,50 @@
                 console.log('Wake Lock error:', err);
             }
         }
+
         document.addEventListener('visibilitychange', () => {
             if (wakeLock !== null && document.visibilityState === 'visible') {
                 requestWakeLock();
             }
         });
         
-        // خوارزمية الإشعارات الاحترافية
+        window.toggleBackgroundMode = async function(isActive, isSilentLoad = false) {
+            localStorage.setItem('n1_bg_mode', isActive);
+            const bgAudio = document.getElementById('keep-alive-audio');
+            if (isActive) {
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    Notification.requestPermission();
+                }
+                bgAudio.play().catch(e => console.log("تحتاج تفاعل لتشغيل الخلفية"));
+                
+                if(!isSilentLoad) window.showToast("تم تفعيل العمل بالخلفية وحفظه بنجاح 🛡️", false);
+            } else {
+                bgAudio.pause();
+                if(!isSilentLoad) window.showToast("تم إيقاف العمل بالخلفية", true);
+            }
+        };
+
+        // إشعار الخلفية المتفجر فقط إذا كان التطبيق مخفي
+        function sendSystemNotification(title, body) {
+            if (document.visibilityState === 'visible') return; 
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(function(registration) {
+                        registration.showNotification(title, {
+                            body: body,
+                            icon: 'logo.jpg',
+                            vibrate: [500, 250, 500, 250, 500, 250, 500],
+                            tag: 'new-order',
+                            requireInteraction: true
+                        });
+                    });
+                } else {
+                    new Notification(title, { body: body, icon: 'logo.jpg' });
+                }
+            }
+        }
+        
         window.showToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -874,7 +996,6 @@
             }, 3000);
         };
 
-        // نظام التأكيد الملكي
         let confirmCallback = null;
         window.showAppConfirm = function(msg, callback) {
             document.getElementById('custom-confirm-msg').innerText = msg;
@@ -893,7 +1014,6 @@
             confirmCallback = null;
         };
         
-        // نظام التقييم
         window.openRatingModal = function(shopId) {
             document.getElementById('rating_shop_id').value = shopId;
             document.getElementById('current_rating_val').value = "0";
@@ -1003,10 +1123,11 @@
         let globalPricesList = [];
         let verifiedCompanyId = null; 
         
-        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false };
+        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false, hotspots_active: true };
         let orderTimers = {};
         let isListenerActive = false;
         let localOrderSeen = {};
+        let activeMegaOrderId = null; 
         
         const COMMISSION_RATE = 0.10; 
 
@@ -1139,7 +1260,6 @@
                 Notification.requestPermission();
             }
             
-            // --- دالة تصفير العداد التلقائية الساعة 12 بالليل ---
             checkAndResetDailyCounter();
 
             setTimeout(() => {
@@ -1155,7 +1275,6 @@
             }, { once: true });
         };
 
-        // --- وظيفة تصفير الإنجازات اليومية ---
         function checkAndResetDailyCounter() {
             const now = new Date();
             const resetTime = new Date();
@@ -1168,7 +1287,6 @@
             const timeUntilReset = resetTime.getTime() - now.getTime();
 
             setTimeout(() => {
-                // تصفير العداد المرئي والمبالغ
                 const todayCountEl = document.getElementById('ui_today_count');
                 const todayValEl = document.getElementById('ui_today_val');
                 const todayFeeEl = document.getElementById('ui_today_fee');
@@ -1190,20 +1308,7 @@
                 audio.currentTime = 0;
             }, 3000);
             
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('N One Diamond', {
-                    body: currentLang === 'ar' ? 'إشعار تجريبي لاختبار التنبيهات' : 'Test notification for background alerts',
-                    icon: 'logo.jpg'
-                });
-            } else if ('Notification' in window && Notification.permission !== 'denied') {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        new Notification('N One', { body: currentLang === 'ar' ? 'تم تفعيل التنبيهات بنجاح 💎' : 'Notifications enabled successfully 💎' });
-                    }
-                });
-            } else {
-                window.showToast(currentLang === 'ar' ? "يرجى تفعيل التنبيهات من إعدادات المتصفح" : "Please enable notifications in browser settings", true);
-            }
+            sendSystemNotification('N One Diamond 💎', currentLang === 'ar' ? 'إشعار تجريبي لاختبار العمل بالخلفية' : 'Test background notification');
         };
 
         function checkSession() {
@@ -1223,6 +1328,16 @@
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('register-screen').classList.remove('active');
                 document.getElementById('main-screen').classList.add('active');
+                
+                const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true';
+                const bgToggle = document.getElementById('bg_mode_toggle');
+                if(bgToggle) {
+                    bgToggle.checked = savedBgMode;
+                    if(savedBgMode) {
+                        toggleBackgroundMode(true, true);
+                    }
+                }
+                
                 requestWakeLock();
                 initRealtimeListeners();
                 setupAdsAndAlerts();
@@ -1272,6 +1387,15 @@
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('main-screen').classList.add('active');
                     
+                    const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true';
+                    const bgToggle = document.getElementById('bg_mode_toggle');
+                    if(bgToggle) {
+                        bgToggle.checked = savedBgMode;
+                        if(savedBgMode) {
+                            toggleBackgroundMode(true, true);
+                        }
+                    }
+
                     requestWakeLock();
                     initRealtimeListeners();
                     setupAdsAndAlerts();
@@ -1515,50 +1639,62 @@
                 return;
             }
             try {
-                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                // استخدام API دقيق وجديد لفحص الـ IP
+                const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
-                if (data.country && data.country !== 'JO' && data.country !== 'JOR') {
+                if (data.country_code && data.country_code !== 'JO') {
                     isVpnDetected = true;
                 } else {
                     isVpnDetected = false;
                 }
             } catch(e) {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1 && tz.indexOf('Asia/Jerusalem') === -1 && tz.indexOf('Asia/Damascus') === -1);
+                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1);
             }
         }
         
         setInterval(detectVPN, 5000); 
 
+        // ================= تحديث: ربط مواسير الشركة =================
         function listenToSystemSettings() {
             const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
+            if(!master) return;
             
-            onValue(ref(db, 'settings/order_timer'), (snap) => {
-                if(snap.exists() && snap.val().seconds) {
-                    systemSettings.order_timer = parseInt(snap.val().seconds);
+            onValue(ref(db, `settings/${master}/order_timer`), (snap) => {
+                if(snap.exists() && snap.val() > 0) {
+                    systemSettings.order_timer = parseInt(snap.val());
+                } else {
+                    onValue(ref(db, 'settings/order_timer'), (fallbackSnap) => {
+                        if(fallbackSnap.exists() && fallbackSnap.val().seconds) {
+                            systemSettings.order_timer = parseInt(fallbackSnap.val().seconds);
+                        }
+                    });
                 }
             });
             
-            if (master) {
-                onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
-                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
-                });
-            } else {
-                onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => {
-                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
-                });
-            }
-
-            const handleVpnSnap = (snap) => {
+            onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
                 if(snap.exists()) {
-                    systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
-                    if(systemSettings.anti_vpn) detectVPN();
+                    systemSettings.show_phone_numbers = snap.val();
+                } else {
+                    onValue(ref(db, `settings/global_show_phone_numbers`), (fallbackSnap) => {
+                        systemSettings.show_phone_numbers = fallbackSnap.exists() ? fallbackSnap.val() : false;
+                    });
                 }
-            };
+            });
 
-            onValue(ref(db, 'settings/anti_vpn'), handleVpnSnap);
-            onValue(ref(db, 'settings/vpn_active'), handleVpnSnap);
-            onValue(ref(db, 'settings/vpn'), handleVpnSnap);
+            onValue(ref(db, `settings/${master}/anti_vpn`), (snap) => {
+                systemSettings.anti_vpn = snap.exists() ? snap.val() : false;
+                if(systemSettings.anti_vpn) detectVPN();
+            });
+
+            onValue(ref(db, `settings/${master}/hotspots_active`), (snap) => {
+                systemSettings.hotspots_active = snap.exists() ? snap.val() : true;
+                const hsSection = document.getElementById('hotspots-section');
+                const hasOrders = document.querySelectorAll('.order-card').length > 0;
+                if(hsSection && !hasOrders) {
+                    hsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
+                }
+            });
         }
 
         setInterval(() => {
@@ -1566,11 +1702,36 @@
                 const vpnWarning = document.getElementById('vpn-warning');
                 if (systemSettings.anti_vpn && isVpnDetected) {
                     vpnWarning.style.display = 'flex';
+                    // فصل الكابتن فورا إذا اكتشفنا VPN وهو أونلاين
+                    if(currentCaptain.app_status === 'online') {
+                        forceOffline();
+                        document.getElementById('toggle_status').checked = false;
+                    }
                 } else {
                     vpnWarning.style.display = 'none';
                 }
             }
         }, 2000);
+
+        // ================= خوارزمية عرض نافذة الطلب العملاقة =================
+        function showMegaOrderPopup(ord, restName, timeLeft, totalTime) {
+            if(activeMegaOrderId === ord.id) return; 
+            activeMegaOrderId = ord.id;
+            
+            document.getElementById('mega-order-rest').innerText = `🏪 ${restName}`;
+            document.getElementById('mega-order-val').innerText = `${ord.value || ord.Shop_Val} د.أ`;
+            document.getElementById('mega-order-fee').innerText = `${ord.fee || ord.Shop_Fee} د.أ`;
+            
+            document.getElementById('btn-mega-accept').onclick = function() { hideMegaOrderPopup(); acceptOrder(ord.id, ord.fee || ord.Shop_Fee, ord.linkedRadarId); };
+            document.getElementById('btn-mega-reject').onclick = function() { hideMegaOrderPopup(); rejectOrder(ord.id); };
+            
+            document.getElementById('mega-order-overlay').style.display = 'flex';
+        }
+
+        function hideMegaOrderPopup() {
+            document.getElementById('mega-order-overlay').style.display = 'none';
+            activeMegaOrderId = null;
+        }
 
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
@@ -1582,16 +1743,25 @@
                 
                 const bar = document.getElementById(`bar_timer_${orderId}`);
                 const text = document.getElementById(`text_timer_${orderId}`);
+                const megaTimer = document.getElementById('mega-order-timer');
+                const megaBar = document.getElementById('mega-timer-bar-fill');
                 
                 if(timeLeft <= 0) {
                     clearInterval(orderTimers[orderId]);
+                    if(activeMegaOrderId === orderId) hideMegaOrderPopup();
                     rejectOrderAuto(orderId); 
                 } else {
                     if(text) text.innerText = `${timeLeft} ${lblSec} ⏳`;
+                    if(activeMegaOrderId === orderId && megaTimer) megaTimer.innerText = timeLeft;
+
+                    const percent = (timeLeft / totalTime) * 100;
                     if(bar) {
-                        const percent = (timeLeft / totalTime) * 100;
                         bar.style.width = `${percent}%`;
                         if(percent < 30) bar.style.background = '#991b1b'; 
+                    }
+                    if(activeMegaOrderId === orderId && megaBar) {
+                        megaBar.style.width = `${percent}%`;
+                        if(percent < 30) megaBar.style.background = '#991b1b';
                     }
                 }
             }, 1000);
@@ -1649,24 +1819,26 @@
                 }
             });
 
+            // 🛡️ المراقبة الحية للطلبات
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
-                const statusToggleSection = document.getElementById('status-toggle-section'); // لوحة الحالة متصل/أوفلاين
+                const statusToggleSection = document.getElementById('status-toggle-section');
                 
                 let todayCount = 0;
                 let todayVal = 0;
                 let todayFee = 0;
                 let hasActive = false;
                 let hasNewRinging = false;
+                let ringingOrderData = null;
+
                 allCompletedOrders = [];
                 container.innerHTML = '';
                 
                 const todayStr = new Date().toDateString();
                 
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
-                const callSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
 
                 if (snapshot.exists()) {
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
@@ -1714,6 +1886,8 @@
 
                             hasActive = true;
                             hasNewRinging = true;
+                            ringingOrderData = {ord: ord, restName: restName, timeLeft: timeLeft};
+                            
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
                             const btnAccept = currentLang === 'ar' ? "قبول الطلب ✅" : "Accept ✅";
@@ -1752,6 +1926,9 @@
                             `;
                             
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
+
+                            // إشعار الخلفية فقط إذا كان التطبيق مخفي 
+                            sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
                         }
                         else if (['accepted', 'picked_up', 'on_way', 'arrived'].includes(ord.status)) {
                             hasActive = true;
@@ -1824,12 +2001,11 @@
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
-                // إخفاء/إظهار النقاط الساخنة ولوحة الحالة بناءً على وجود طلب نشط
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'none';
                 } else {
-                    if(hotspotsSection) hotspotsSection.style.display = 'grid';
+                    if(hotspotsSection) hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'flex';
                 }
 
@@ -1837,10 +2013,16 @@
                 if (hasNewRinging && currentCaptain.app_status === 'online') {
                     ringtoneActive = true;
                     audio.play().catch(e => console.log("تحتاج تفاعل"));
+                    
+                    // إظهار النافذة العملاقة للطلب الجديد
+                    if(ringingOrderData && document.visibilityState === 'visible') {
+                        showMegaOrderPopup(ringingOrderData.ord, ringingOrderData.restName, ringingOrderData.timeLeft, systemSettings.order_timer);
+                    }
                 } else {
                     ringtoneActive = false;
                     audio.pause();
                     audio.currentTime = 0;
+                    hideMegaOrderPopup();
                 }
                 
                 if (!hasActive) {
@@ -1852,7 +2034,7 @@
                 }
             });
 
-            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) من رادار الـ Orders ---
+            // --- وظيفة جلب أسماء الخرائط الحرارية (النقاط الساخنة) ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
                 const globalOrdersRef = ref(db, 'orders');
@@ -1862,13 +2044,11 @@
                         const areaCounts = {};
                         const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim();
                         
-                        // نجمع الطلبات للمطاعم النشطة حالياً ضمن منطقة الكابتن
                         for(let key in allOrders) {
                             const ord = allOrders[key];
                             if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
                                 const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
                                 
-                                // إذا كانت منطقة الطلب تطابق منطقة الكابتن أو الكابتن مسجل كـ "عام"
                                 if(ordArea === myArea || myArea === '' || myArea === 'عام') {
                                     let rName = ord.Shop_Name || ord.restaurant || '';
                                     rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
@@ -1881,14 +2061,11 @@
                             }
                         }
 
-                        // ترتيب المطاعم حسب عدد الطلبات (الأكثر سخونة)
                         const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
-                        
                         const hotspotsContainer = document.getElementById('ui_hotspots');
                         hotspotsContainer.innerHTML = ''; 
 
                         if(sortedRests.length > 0) {
-                            // عرض أعلى 3 مطاعم ساخنة
                             sortedRests.slice(0, 3).forEach(restName => {
                                 hotspotsContainer.innerHTML += `<div class="hotspot-tag">${restName} 🔥</div>`;
                             });
@@ -1973,6 +2150,13 @@
             if (isOnline && bal <= -1) {
                 const msg = currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online";
                 window.showToast(msg, true);
+                document.getElementById('toggle_status').checked = false;
+                return;
+            }
+
+            if (isOnline && systemSettings.anti_vpn && isVpnDetected) {
+                const msgVPN = currentLang === 'ar' ? "يرجى إغلاق الـ VPN لتتمكن من التفعيل" : "Please disable VPN";
+                window.showToast(msgVPN, true);
                 document.getElementById('toggle_status').checked = false;
                 return;
             }
