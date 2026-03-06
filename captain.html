@@ -725,8 +725,7 @@
         </div>
 
     </div>
-
-    <script>
+<script>
         // إعدادات تثبيت الـ PWA
         let deferredPrompt;
         const splash = document.getElementById('pwa-splash');
@@ -763,14 +762,15 @@
             });
         }
 
-        // ================= أنظمة العمل بالخلفية المتقدمة =================
+        // ================= أنظمة العمل بالخلفية المتقدمة (Wake Lock) =================
         let wakeLock = null;
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
+                    console.log("Wake Lock is active!");
                 }
-            } catch (err) { }
+            } catch (err) { console.log(err); }
         }
 
         document.addEventListener('visibilitychange', () => {
@@ -1606,7 +1606,7 @@
                 }
             });
 
-            // 🛡️ المراقبة الحية للطلبات (تم تحسين سرعة الأداء)
+            // 🛡️ المراقبة الحية للطلبات 
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
@@ -1616,8 +1616,8 @@
                 let todayCount = 0, todayVal = 0, todayFee = 0;
                 let hasActive = false, hasNewRinging = false;
 
-                allCompletedOrders = [];
-                let newHtmlContent = ''; // لزيادة الأداء
+                let completedCloudOrders = []; // تجميع الطلبات اللي رح تترحل للسحابة
+                let newHtmlContent = ''; 
                 const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
@@ -1648,7 +1648,7 @@
                                 todayVal += parseFloat(ord.value || ord.Shop_Val || 0);
                                 todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
                             }
-                            allCompletedOrders.push(ord);
+                            completedCloudOrders.push(ord);
                         }
                         
                         if (ord.status === 'assigned') {
@@ -1706,7 +1706,6 @@
 
                             let btnClass = '', btnText = '', nextAction = '';
 
-                            // [التعديل الجوهري لدورة حياة الطلب]
                             if (ord.status === 'accepted') {
                                 btnClass = 'btn-status-arrived-shop';
                                 btnText = currentLang === 'ar' ? 'وصلت المنشأة 🏪' : 'Arrived at Shop 🏪';
@@ -1759,9 +1758,27 @@
                     });
                 }
                 
-                document.getElementById('ui_today_count').innerText = todayCount;
-                document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
-                document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
+                // جلب سجل الإنجازات من السحابة (Firebase) وليس من المتصفح
+                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
+                    if(archiveSnap.exists()) {
+                        let cloudTodayCount = 0;
+                        let cloudTodayVal = 0;
+                        let cloudTodayFee = 0;
+                        
+                        Object.values(archiveSnap.val()).forEach(o => {
+                            if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
+                                cloudTodayCount++;
+                                cloudTodayVal += parseFloat(o.value || o.Shop_Val || 0); // يمكن أن تكون صفر إذا لم تخزن القيمة
+                                cloudTodayFee += parseFloat(o.comm || 0); // هنا أظهرت العمولة، أو يمكن استبدالها بأجر التوصيل
+                            }
+                        });
+                        
+                        document.getElementById('ui_today_count').innerText = cloudTodayCount;
+                        document.getElementById('ui_today_val').innerText = '---'; // مؤقتاً
+                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
+                    }
+                }, { onlyOnce: true });
                 
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
@@ -1787,7 +1804,7 @@
                 }
             });
 
-            // --- وظيفة جلب أسماء الخرائط الحرارية ---
+            // --- الخرائط الحرارية ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
                 const globalOrdersRef = ref(db, 'orders');
@@ -1912,11 +1929,7 @@
             updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted';
             
             if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                updates[`orders/${radarOrdId}/Cap_Name`] = currentCaptain.Cap_Name || currentCaptain.name || '';
-                updates[`orders/${radarOrdId}/Cap_Phone`] = currentCaptain.Cap_Phone || currentCaptain.phone || '';
-                updates[`orders/${radarOrdId}/Cap_CarType`] = currentCaptain.Cap_Car || '';
                 updates[`orders/${radarOrdId}/OrderStatus`] = 'accepted';
-                updates[`orders/${radarOrdId}/FinancialStatus`] = 'frozen';
             }
 
             try {
@@ -1934,51 +1947,33 @@
             });
         };
 
-        // ================= التحديث الجوهري لعملية الخصم المالي =================
+        // ================= تحديثات الخصم المالي =================
         window.updateOrderStatus = async function(appOrdId, newStatus, radarOrdId, commAmount) {
             try {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
                 
-                // الخصم المالي يتم هنا عند الوصول للمنشأة فقط!
+                // الخصم بصير هنا فقط!
                 if (newStatus === 'arrived_at_shop') {
                     const commission = parseFloat(commAmount || 0);
-                    
                     if (commission > 0) {
                         const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
                         const newBal = (currentBal - commission).toFixed(2);
 
-                        // تحديث رصيد الكابتن
                         updates[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal);
                         updates[`captains/${capNodeKey}/balance`] = parseFloat(newBal);
-                        
-                        // منع الخصم المزدوج
                         updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true;
-
-                        // ترحيل العملية للسجل المحاسبي السحابي (Financial Logs)
-                        const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
-                        const txId = "TX_" + Date.now() + Math.floor(Math.random() * 1000);
-                        updates[`financial_logs/${compId}/${txId}`] = {
-                            type: 'commission_deduction',
-                            amount: commission,
-                            captain_phone: capNodeKey,
-                            captain_name: currentCaptain.Cap_Name || currentCaptain.name || 'غير معروف',
-                            order_id: appOrdId,
-                            description: `خصم عمولة - وصول للمنشأة`,
-                            timestamp: Date.now(),
-                            date_string: new Date().toISOString()
-                        };
-
+                        
                         if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
+                            updates[`orders/${radarOrdId}/Cap_Commission`] = commission;
                             updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed';
                         }
                     }
                 }
                 
                 if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                    // مطابقة حالة الرادار مع حالة الكابتن
                     let radarStatus = newStatus;
-                    if(newStatus === 'arrived_at_shop') radarStatus = 'accepted'; // في الرادار تبقى accepted حتى يستلم
+                    if(newStatus === 'arrived_at_shop') radarStatus = 'accepted'; 
                     if(newStatus === 'arrived_at_customer') radarStatus = 'arrived';
                     updates[`orders/${radarOrdId}/OrderStatus`] = radarStatus;
                 }
@@ -2039,46 +2034,59 @@
             }
         };
 
-        window.openHistoryModal = function() {
+        // ================= سحب السجل من الفايربيس بدلا من التخزين المحلي =================
+        window.openHistoryModal = async function() {
             const container = document.getElementById('history-list-container');
-            let hHtml = '';
-            
-            if (allCompletedOrders.length === 0) {
-                hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
-            } else {
-                allCompletedOrders.sort((a,b) => b.completed_at - a.completed_at).forEach(ord => {
-                    const d = new Date(ord.completed_at || ord.timestamp);
-                    const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
-                    const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                    const comm = parseFloat(ord.commission_amount || ord.commission || 0).toFixed(2);
-                    
-                    const cleanRestName = (name) => {
-                        if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
-                        let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
-                        return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
-                    };
-                    const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
-                    
-                    hHtml += `
-                        <div class="history-item">
-                            <div class="h-row">
-                                <span>${currentLang === 'ar' ? "الوجهة" : "Destination"} ${restName}</span>
-                                <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
-                            </div>
-                            <div class="h-row">
-                                <span>${currentLang === 'ar' ? "قيمة الطلب" : "Order Val"} <span class="h-val">${ord.value || ord.Shop_Val} د.أ</span></span>
-                                <span>${currentLang === 'ar' ? "التوصيل" : "Fee"} <span class="h-val" style="color:var(--success)">${ord.fee || ord.Shop_Fee} د.أ</span></span>
-                            </div>
-                            <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                                <span>${currentLang === 'ar' ? "نسبة الشركة المقتطعة" : "Company Commission"}</span>
-                                <span class="h-commission">-${comm} د.أ</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            container.innerHTML = hHtml;
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
             document.getElementById('history-modal').style.display = 'flex';
+            
+            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            
+            try {
+                const snap = await get(ref(db, `company_archives/${compId}/orders`));
+                let hHtml = '';
+                
+                if(snap.exists()) {
+                    const myOrders = Object.values(snap.val()).filter(o => o.capKey === capNodeKey).sort((a,b) => new Date(b.date) - new Date(a.date));
+                    
+                    if(myOrders.length === 0) {
+                        hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
+                    } else {
+                        myOrders.forEach(ord => {
+                            const d = new Date(ord.date);
+                            const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+                            const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                            const comm = parseFloat(ord.comm || 0).toFixed(2);
+                            
+                            const cleanRestName = (name) => {
+                                if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
+                                let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
+                                return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
+                            };
+                            const restName = cleanRestName(ord.rest);
+                            
+                            hHtml += `
+                                <div class="history-item">
+                                    <div class="h-row">
+                                        <span>${currentLang === 'ar' ? "الوجهة" : "Destination"} ${restName}</span>
+                                        <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
+                                    </div>
+                                    <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                                        <span>${currentLang === 'ar' ? "نسبة الشركة المقتطعة" : "Company Commission"}</span>
+                                        <span class="h-commission">-${comm} د.أ</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                } else {
+                    hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
+                }
+                
+                container.innerHTML = hHtml;
+            } catch(e) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-weight:bold;">حدث خطأ في تحميل السجل</div>`;
+            }
         };
 
         window.openSettingsModal = function() {
