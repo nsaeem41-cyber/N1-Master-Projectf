@@ -666,7 +666,7 @@
                     <div class="bg-work-toggle">
                         <span>تفعيل العمل في الخلفية والنافذة العائمة 🛡️</span>
                         <label class="switch">
-                            <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked)">
+                            <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked, false)">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -912,7 +912,7 @@
             });
         }
 
-        // ================= أنظمة العمل بالخلفية المتقدمة والزر العائم =================
+        // ================= أنظمة العمل بالخلفية المتقدمة والزر العائم (تم إضافة حفظ الذاكرة) =================
         let wakeLock = null;
         let pictureInPictureWindow = null;
 
@@ -932,18 +932,16 @@
             }
         });
         
-        window.toggleBackgroundMode = async function(isActive) {
+        window.toggleBackgroundMode = async function(isActive, isSilentLoad = false) {
+            localStorage.setItem('n1_bg_mode', isActive);
             const bgAudio = document.getElementById('keep-alive-audio');
             if (isActive) {
-                // طلب إذن الإشعارات
                 if ('Notification' in window && Notification.permission !== 'granted') {
                     Notification.requestPermission();
                 }
-                // تشغيل الصوت الصامت لإبقاء الموبايل صاحي
                 bgAudio.play().catch(e => console.log("تحتاج تفاعل لتشغيل الخلفية"));
                 
-                // محاولة فتح النافذة العائمة (Picture-in-Picture) عبر الـ Document PIP API إذا كان مدعوماً
-                if ('documentPictureInPicture' in window) {
+                if ('documentPictureInPicture' in window && !isSilentLoad) {
                     try {
                         pictureInPictureWindow = await documentPictureInPicture.requestWindow({
                             width: 200, height: 100,
@@ -959,11 +957,11 @@
                         console.log("PIP Error: ", err);
                     }
                 }
-                window.showToast("تم تفعيل العمل بالخلفية والنافذة العائمة 🛡️", false);
+                if(!isSilentLoad) window.showToast("تم تفعيل العمل بالخلفية والنافذة العائمة وحفظها 🛡️", false);
             } else {
                 bgAudio.pause();
                 if(pictureInPictureWindow) { pictureInPictureWindow.close(); pictureInPictureWindow = null; }
-                window.showToast("تم إيقاف العمل بالخلفية", true);
+                if(!isSilentLoad) window.showToast("تم إيقاف العمل بالخلفية", true);
             }
         };
 
@@ -1145,7 +1143,7 @@
         let globalPricesList = [];
         let verifiedCompanyId = null; 
         
-        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false };
+        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false, hotspots_active: true };
         let orderTimers = {};
         let isListenerActive = false;
         let localOrderSeen = {};
@@ -1350,6 +1348,16 @@
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('register-screen').classList.remove('active');
                 document.getElementById('main-screen').classList.add('active');
+                
+                const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true';
+                const bgToggle = document.getElementById('bg_mode_toggle');
+                if(bgToggle) {
+                    bgToggle.checked = savedBgMode;
+                    if(savedBgMode) {
+                        toggleBackgroundMode(true, true);
+                    }
+                }
+                
                 requestWakeLock();
                 initRealtimeListeners();
                 setupAdsAndAlerts();
@@ -1399,6 +1407,15 @@
                     document.getElementById('login-screen').classList.remove('active');
                     document.getElementById('main-screen').classList.add('active');
                     
+                    const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true';
+                    const bgToggle = document.getElementById('bg_mode_toggle');
+                    if(bgToggle) {
+                        bgToggle.checked = savedBgMode;
+                        if(savedBgMode) {
+                            toggleBackgroundMode(true, true);
+                        }
+                    }
+
                     requestWakeLock();
                     initRealtimeListeners();
                     setupAdsAndAlerts();
@@ -1659,33 +1676,43 @@
 
         function listenToSystemSettings() {
             const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
+            if(!master) return;
             
-            onValue(ref(db, 'settings/order_timer'), (snap) => {
-                if(snap.exists() && snap.val().seconds) {
-                    systemSettings.order_timer = parseInt(snap.val().seconds);
+            onValue(ref(db, `settings/${master}/order_timer`), (snap) => {
+                if(snap.exists() && snap.val() > 0) {
+                    systemSettings.order_timer = parseInt(snap.val());
+                } else {
+                    onValue(ref(db, 'settings/order_timer'), (fallbackSnap) => {
+                        if(fallbackSnap.exists() && fallbackSnap.val().seconds) {
+                            systemSettings.order_timer = parseInt(fallbackSnap.val().seconds);
+                        }
+                    });
                 }
             });
             
-            if (master) {
-                onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
-                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
-                });
-            } else {
-                onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => {
-                    systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false;
-                });
-            }
-
-            const handleVpnSnap = (snap) => {
+            onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
                 if(snap.exists()) {
-                    systemSettings.anti_vpn = snap.val().active === true || snap.val() === true;
-                    if(systemSettings.anti_vpn) detectVPN();
+                    systemSettings.show_phone_numbers = snap.val();
+                } else {
+                    onValue(ref(db, `settings/global_show_phone_numbers`), (fallbackSnap) => {
+                        systemSettings.show_phone_numbers = fallbackSnap.exists() ? fallbackSnap.val() : false;
+                    });
                 }
-            };
+            });
 
-            onValue(ref(db, 'settings/anti_vpn'), handleVpnSnap);
-            onValue(ref(db, 'settings/vpn_active'), handleVpnSnap);
-            onValue(ref(db, 'settings/vpn'), handleVpnSnap);
+            onValue(ref(db, `settings/${master}/anti_vpn`), (snap) => {
+                systemSettings.anti_vpn = snap.exists() ? snap.val() : false;
+                if(systemSettings.anti_vpn) detectVPN();
+            });
+
+            onValue(ref(db, `settings/${master}/hotspots_active`), (snap) => {
+                systemSettings.hotspots_active = snap.exists() ? snap.val() : true;
+                const hsSection = document.getElementById('hotspots-section');
+                const hasOrders = document.querySelectorAll('.order-card').length > 0;
+                if(hsSection && !hasOrders) {
+                    hsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
+                }
+            });
         }
 
         setInterval(() => {
@@ -2004,7 +2031,7 @@
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'none';
                 } else {
-                    if(hotspotsSection) hotspotsSection.style.display = 'grid';
+                    if(hotspotsSection) hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'flex';
                     
                     // إعادة النافذة العائمة للوضع الهادئ
