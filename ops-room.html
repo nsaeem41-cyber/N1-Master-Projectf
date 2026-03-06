@@ -544,8 +544,9 @@
             <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
         </div>
     </div>
-
-    <script type="module">
+    
+    ```
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -611,10 +612,9 @@
                     completedOrders = [];
                 }
                 renderCompletedOrders();
-                renderRadar(); // إعادة فلترة الرادار بناء على المكتمل
+                renderRadar(); 
             });
             
-            // ذاكرة الكباتن المحلية بتضل زي ما هي للسرعة
             captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
         }
 
@@ -766,6 +766,7 @@
             });
         }
 
+        // ================= التوثيق المالي الشامل (التأكيد المزدوج المطور) =================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -799,8 +800,6 @@
                                 delete allAssignedOrders[capKey][appOrdId]; 
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                                    if(!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
-                                    radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
                                 hasUpdates = true;
                                 continue;
@@ -808,10 +807,29 @@
                         }
                     }
                     
-                    // إذا الطلب انقبل وتم توثيقه بنجاح، يتم ترحيله للخزنة السحابية
-                    if (ord.status === 'accepted') {
+                    if (ord.status === 'accepted' || ord.status === 'picked_up' || ord.status === 'on_way' || ord.status === 'arrived' || ord.status === 'delivered') {
                         const isAlreadySaved = completedOrders.some(o => o.appOrdId === appOrdId);
-                        if (!isAlreadySaved) {
+                        
+                        // الخصم المزدوج للحماية (فقط عند الاستلام أو الحالات اللي بعدها)
+                        if (!ord.is_commission_deducted && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
+                            const commission = parseFloat(ord.commission_amount || 0);
+                            if(commission > 0) {
+                                const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                                if(capData) {
+                                    const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - commission).toFixed(2);
+                                    updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                                    updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
+                                }
+                            }
+                            updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
+                            if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                            }
+                            hasUpdates = true;
+                        }
+
+                        if (!isAlreadySaved && ord.status === 'accepted') {
                             const commission = ord.commission_amount || 0;
                             const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                             
@@ -839,38 +857,16 @@
                                 live_status: 'accepted',
                                 companyId: activeCompanyName
                             };
-                            saveOrderToCloud(entry); // حفظ سحابي
-                        }
-                    }
-                    else {
-                        let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
-                        
-                        if (existingEntry) {
-                            if (!ord.is_commission_deducted && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
-                                const commission = ord.commission_amount || 0;
-                                if(commission > 0) {
-                                    const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                                    if(capData) {
-                                        const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
-                                        updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                                        updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
-                                    }
-                                }
-                                updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
-                                if (ord.linkedRadarId) {
-                                    updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
-                                    updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
-                                }
-                                hasUpdates = true;
-                            }
-
-                            if (existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
+                            saveOrderToCloud(entry); 
+                        } else if (isAlreadySaved) {
+                            let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
+                            if(existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
                                 existingEntry.live_status = ord.status;
                                 if (ord.linkedRadarId) {
                                     updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
                                     hasUpdates = true;
                                 }
-                                saveOrderToCloud(existingEntry); // تحديث سحابي
+                                saveOrderToCloud(existingEntry); 
                             }
                             
                             if (ord.status === 'delivered') {
@@ -930,8 +926,9 @@
                 selectEdit.innerHTML = optionsHtml.join('');
             });
         }
-
-        window.toggleAutoRadar = function() {
+        
+        ```
+window.toggleAutoRadar = function() {
             const myMaster = currentUser.Client_User || currentUser.user;
             const newState = !isAutoRadarActive;
             set(ref(db, `settings/${myMaster}/autoRadar`), newState);
@@ -1028,7 +1025,7 @@
             });
         }
 
-        // ================= فلترة الرادار السحابية وتوجيه اللوكيشن =================
+        // ================= فلترة الرادار السحابية الصارمة =================
         window.renderRadar = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('live-table-body');
@@ -1038,8 +1035,10 @@
             
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
+                // إذا الطلب موجود في الخزنة المكتملة، ارفض عرضه بالرادار فوراً
                 if (!ordId || completedIDs.has(ordId)) return false;
                 
+                // إذا حالة الطلب بالأساس منتهية
                 if (['accepted', 'delivered', 'canceled'].includes(o.OrderStatus)) return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
@@ -1304,7 +1303,7 @@
             document.getElementById('man_val').value = ord.Shop_Val || ord.value || '';
             document.getElementById('man_fee').value = ord.Shop_Fee || ord.fee || '';
             document.getElementById('linked_order_id').value = orderId;
-            document.getElementById('man_hidden_url').value = hiddenUrlStr; // <== استخراج الرابط الصحيح
+            document.getElementById('man_hidden_url').value = hiddenUrlStr; 
             
             document.querySelector('.side-content').scrollTop = 0;
         };
