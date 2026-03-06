@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | Diamond Ops Room 💎</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         /* ================= تصميم Ops Diamond (Royal Navy & Diamond White) ================= */
         :root {
-            --primary: #0f172a;  
+            --primary: #0f172a;    
             --accent: #1e293b;     
             --gold: #d4af37;       
             --bg: #f8fafc;         
@@ -592,6 +593,7 @@
         let allAssignedOrders = {};
         let captainRatings = {}; 
         
+        let processedAppOrders = [];
         let completedOrders = [];
         let captainMemory = {};
 
@@ -604,45 +606,37 @@
         let radarMemory = {};
         let remoteOrderTimer = 10000;
 
-        // ================= ميزة اليقظة الدائمة (Wake Lock) للرادار =================
-        let wakeLock = null;
-        async function requestWakeLock() {
+        window.applyDiamondWakeLock = async function() {
             try {
                 if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log("Wake Lock is active! Screen won't sleep.");
+                    window.nOneWakeLock = await navigator.wakeLock.request('screen');
                 }
             } catch (err) {
-                console.log('Wake Lock error:', err);
+                console.log('N One Wake Lock Active');
             }
         }
 
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock();
+        document.addEventListener('visibilitychange', async () => {
+            if (window.nOneWakeLock !== null && document.visibilityState === 'visible') {
+                await window.applyDiamondWakeLock();
             }
         });
 
-        // ================= الأرشيف السحابي الجديد (Cloud Financials) =================
-        function loadCloudArchive() {
+        // ========================================================
+        // العزل السيادي للذاكرة المحلية (LocalStorage)
+        // ========================================================
+        function loadIsolatedData() {
             const compId = activeCompanyName || 'default';
-            onValue(ref(db, `company_archives/${compId}/orders`), (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    completedOrders = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
-                } else {
-                    completedOrders = [];
-                }
-                renderCompletedOrders();
-                renderRadar(); // إعادة فلترة الرادار بناء على المكتمل
-            });
-            
+            processedAppOrders = JSON.parse(localStorage.getItem('n1_processed_app_orders_' + compId) || '[]');
+            completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders_' + compId) || '[]');
             captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
         }
 
-        async function saveOrderToCloud(entry) {
+        function saveIsolatedData() {
             const compId = activeCompanyName || 'default';
-            await set(ref(db, `company_archives/${compId}/orders/${entry.orderId}`), entry);
+            localStorage.setItem('n1_processed_app_orders_' + compId, JSON.stringify(processedAppOrders));
+            localStorage.setItem('n1_completed_orders_' + compId, JSON.stringify(completedOrders));
+            localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
         }
 
         function checkCompanyMatch(u, compName) {
@@ -692,8 +686,7 @@
                     document.getElementById('new_cap_company_id').value = activeCompanyName;
                 }
                 
-                loadCloudArchive(); 
-                requestWakeLock(); 
+                loadIsolatedData();
                 
             } else {
                 showAppNotification("يرجى إتمام تسجيل الدخول للمتابعة", "error");
@@ -710,11 +703,23 @@
             fetchLiveOrders();
             fetchGlobalUsers();
             fetchRatings();
+            renderCompletedOrders();
             setupRealtimeFreezeListener();
             
-            // [تعديل الخبير]: تم تقليل الاعتماد على الـ setInterval لزيادة الأداء
-            // يتم استدعاؤه كل 5 ثواني فقط للتحقق من الأوقات (Timeouts)، أما الرسم يتم بالاعتماد على Firebase مباشرة
-            setInterval(checkAssignedOrdersStatus, 5000); 
+            window.applyDiamondWakeLock();
+
+            const nOneWorkerCode = `
+                setInterval(() => {
+                    postMessage('radar_pulse');
+                }, 1000);
+            `;
+            const nOneBlob = new Blob([nOneWorkerCode], { type: 'application/javascript' });
+            const nOneWorker = new Worker(URL.createObjectURL(nOneBlob));
+            nOneWorker.onmessage = function(e) {
+                if (e.data === 'radar_pulse') {
+                    refreshDynamicElements();
+                }
+            };
         };
 
         function fetchRadarMemory() {
@@ -791,12 +796,10 @@
             });
         }
 
-        // [تعديل الخبير]: دالة معالجة الطلبات وخصم العمولة
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
             const updates = {};
-            const compId = activeCompanyName || 'default';
 
             for (let capKey in allAssignedOrders) {
                 for (let appOrdId in allAssignedOrders[capKey]) {
@@ -835,96 +838,77 @@
                         }
                     }
                     
-                    // إذا الطلب انقبل وتم توثيقه
-                    if (ord.status === 'accepted') {
-                        const isAlreadySaved = completedOrders.some(o => o.appOrdId === appOrdId);
-                        if (!isAlreadySaved) {
-                            const commission = ord.commission_amount || 0;
-                            const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                            
-                            if(capData && ord.linkedRadarId) {
-                                updates[`orders/${ord.linkedRadarId}/Cap_Name`] = capData.Cap_Name || capData.name || '';
-                                updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = capData.Cap_Phone || capData.phone || '';
-                                updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = capData.Cap_CarType || capData.Cap_Car || '';
-                                updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = capData.Cap_CarCode || '';
-                                updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
-                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
-                                updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'frozen';
-                                hasUpdates = true;
-                            }
-                            
-                            const entry = {
-                                orderId: ord.linkedRadarId || appOrdId,
-                                appOrdId: appOrdId,
-                                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                                cap: ord.cap_name || "كابتن",
-                                capKey: capKey,
-                                rest: ord.restaurant,
-                                comm: commission,
-                                date: new Date().toISOString(),
-                                via: ord.dispatch_method || "App",
-                                live_status: 'accepted',
-                                companyId: activeCompanyName
-                            };
-                            saveOrderToCloud(entry); 
+                    if (ord.status === 'accepted' && !processedAppOrders.includes(appOrdId)) {
+                        const commission = ord.commission_amount || 0;
+                        const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        
+                        if(capData && ord.linkedRadarId) {
+                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = capData.Cap_Name || capData.name || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = capData.Cap_Phone || capData.phone || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = capData.Cap_CarType || capData.Cap_Car || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = capData.Cap_CarCode || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
+                            updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
+                            updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'frozen';
+                            hasUpdates = true;
                         }
+                        
+                        const entry = {
+                            orderId: ord.linkedRadarId || appOrdId,
+                            appOrdId: appOrdId,
+                            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                            cap: ord.cap_name || "كابتن",
+                            capKey: capKey,
+                            rest: ord.restaurant,
+                            comm: commission,
+                            date: new Date().toISOString(),
+                            via: ord.dispatch_method || "App",
+                            live_status: 'accepted',
+                            companyId: activeCompanyName
+                        };
+                        completedOrders.unshift(entry);
+                        processedAppOrders.push(appOrdId);
+                        saveIsolatedData();
+                        
+                        renderCompletedOrders();
                     }
-                    else {
+                    else if (processedAppOrders.includes(appOrdId)) {
                         let existingEntry = completedOrders.find(o => o.appOrdId === appOrdId);
                         
-                        if (existingEntry) {
-                            // [تعديل الخبير - اللوجيك المحاسبي]: خصم العمولة وتوثيقها بمجرد الوصول (arrived)
-                            // تمت إضافة picked_up و delivered في حال الكابتن تجاوز زر "وصلت" وضغط الذي يليه مباشرة
-                            const triggerStatuses = ['arrived', 'picked_up', 'delivered'];
-                            
-                            if (!ord.is_commission_deducted && triggerStatuses.includes(ord.status)) {
-                                const commission = parseFloat(ord.commission_amount || 0);
-                                if(commission > 0) {
-                                    const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                                    if(capData) {
-                                        const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - commission).toFixed(2);
-                                        updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                                        updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
-                                        
-                                        // تسجيل العملية في السجل المالي (Financial Logs)
-                                        const txId = "TX_" + Date.now() + Math.floor(Math.random() * 1000);
-                                        updates[`financial_logs/${compId}/${txId}`] = {
-                                            type: 'commission_deduction',
-                                            amount: commission,
-                                            captain_phone: capKey,
-                                            captain_name: capData.Cap_Name || capData.name || 'غير معروف',
-                                            order_id: appOrdId,
-                                            description: `خصم عمولة طلب من ${existingEntry.rest}`,
-                                            timestamp: Date.now(),
-                                            date_string: new Date().toISOString()
-                                        };
-                                    }
+                        if (!ord.is_commission_deducted && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
+                            const commission = ord.commission_amount || 0;
+                            if(commission > 0) {
+                                const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                                if(capData) {
+                                    const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - parseFloat(commission)).toFixed(2);
+                                    updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                                    updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
                                 }
-                                updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
-                                if (ord.linkedRadarId) {
-                                    updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
-                                    updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
-                                }
-                                hasUpdates = true;
                             }
+                            updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
+                            if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                            }
+                            hasUpdates = true;
+                        }
 
-                            if (existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
-                                existingEntry.live_status = ord.status;
-                                if (ord.linkedRadarId) {
-                                    updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
-                                    hasUpdates = true;
-                                }
-                                saveOrderToCloud(existingEntry); 
-                            }
-                            
-                            if (ord.status === 'delivered') {
-                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                        if (existingEntry && existingEntry.live_status !== ord.status && ['picked_up', 'on_way', 'arrived', 'delivered'].includes(ord.status)) {
+                            existingEntry.live_status = ord.status;
+                            if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
                                 hasUpdates = true;
                             }
+                            saveIsolatedData();
+                            renderCompletedOrders();
+                        }
+                        
+                        if (ord.status === 'delivered') {
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                            hasUpdates = true;
                         }
                     }
-                    
-                    if (ord.status === 'rejected' || ord.status === 'timeout') {
+                    else if (ord.status === 'rejected' || ord.status === 'timeout') {
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                         delete allAssignedOrders[capKey][appOrdId]; 
                         if(ord.linkedRadarId) {
@@ -1068,11 +1052,11 @@
                     
                     renderRadar();
                     renderCaptainsList();
+                    renderCompletedOrders();
                 }
             });
         }
 
-        // ================= فلترة الرادار السحابية الصارمة (مع حل مشكلة الأشباح والسرعة) =================
         window.renderRadar = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('live-table-body');
@@ -1080,17 +1064,10 @@
             
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
             
-            // [تعديل الخبير]: فلترة صارمة لمنع الطلبات المنجزة من العودة للرادار
-            const processedStatuses = ['accepted', 'picked_up', 'on_way', 'arrived', 'delivered', 'canceled'];
-
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
-                
-                // منع عرض الطلب إذا كان مسجل مسبقاً في الأرشيف
                 if (!ordId || completedIDs.has(ordId)) return false;
-                
-                // منع عرض الطلب إذا كان قد تم الموافقة عليه أو استلامه (أشباح الرادار)
-                if (processedStatuses.includes(o.OrderStatus) || processedStatuses.includes(o.status)) return false;
+                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
@@ -1130,8 +1107,7 @@
                 }
             }
 
-            // [تعديل الخبير]: استخدام String Builder بدلاً من innerHTML المتكرر لزيادة سرعة الأداء
-            let radarHtmlMarkup = '';
+            tbody.innerHTML = '';
             
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
@@ -1168,7 +1144,7 @@
                 let cleanShopName = ord.Shop_Name || ord.restaurant || '';
                 cleanShopName = cleanShopName.replace(urlRegex, badgeHtml);
 
-                radarHtmlMarkup += `
+                tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ordId}">
                         <td>
                             <div style="font-size:13px; font-weight:800;">${timeStr}</div>
@@ -1190,9 +1166,6 @@
                     </tr>
                 `;
             });
-            
-            // حقن الـ HTML دفعة واحدة لعدم تشنج المتصفح
-            tbody.innerHTML = radarHtmlMarkup;
         };
 
         window.triggerAutoRadarMaster = async function(silent = false) {
@@ -1203,7 +1176,7 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                if (['accepted', 'delivered', 'canceled'].includes(o.OrderStatus)) return false;
+                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
@@ -1363,7 +1336,8 @@
         window.dismissOrder = async function(orderId) {
             if(confirm("هل تريد إخفاء الطلب")) {
                 const entry = { orderId: orderId, time: new Date().toLocaleTimeString('en-GB'), cap: "مرفوض", rest: "---", comm: 0, date: new Date().toISOString(), live_status: 'manual', companyId: activeCompanyName };
-                await saveOrderToCloud(entry);
+                completedOrders.unshift(entry);
+                saveIsolatedData();
                 renderRadar();
             }
         };
@@ -1512,9 +1486,8 @@
             }
 
             if (capName) {
-                const compId = activeCompanyName || 'default';
                 captainMemory[phone] = capName;
-                localStorage.setItem('n1_captains_' + compId, JSON.stringify(captainMemory));
+                saveIsolatedData();
             }
 
             const commission = (parseFloat(fee) * (ratio / 100)).toFixed(2);
@@ -1546,18 +1519,6 @@
                 const updates = {};
                 updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                 updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
-                
-                // توثيق مالي للتوجيه اليدوي
-                const compId = activeCompanyName || 'default';
-                const txId = "TX_" + Date.now();
-                updates[`financial_logs/${compId}/${txId}`] = {
-                    type: 'manual_commission_deduction',
-                    amount: commission,
-                    captain_phone: capKey,
-                    captain_name: capName || currentTargetCaptain.Cap_Name,
-                    description: `توجيه يدوي - ${restInfo}`,
-                    timestamp: Date.now()
-                };
                 
                 if (linkedId) {
                     updates[`orders/${linkedId}/Cap_Name`] = capName || (currentTargetCaptain ? (currentTargetCaptain.Cap_Name || currentTargetCaptain.name) : '');
@@ -1598,8 +1559,8 @@
                 live_status: 'manual',
                 companyId: activeCompanyName
             };
-            
-            await saveOrderToCloud(entry);
+            completedOrders.unshift(entry);
+            saveIsolatedData();
 
             let waPhone = phone.startsWith('0') ? '962' + phone.substring(1) : phone;
             if(!waPhone.startsWith('962')) waPhone = '962' + waPhone;
@@ -1621,6 +1582,8 @@
             document.getElementById('man_val').value = '';
             document.getElementById('man_fee').value = '';
             document.getElementById('linked_order_id').value = '';
+            renderRadar();
+            renderCompletedOrders();
         };
 
         window.renderCompletedOrders = function() {
@@ -1640,8 +1603,7 @@
                 return;
             }
 
-            // [تعديل الخبير]: استخدام String Builder لرفع كفاءة المتصفح
-            let htmlContent = '';
+            tbody.innerHTML = '';
             
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             const badgeHtml = '<br><span style="font-size:10px; background:#e2e8f0; color:#475569; padding:4px 8px; border-radius:8px; margin-top:5px; display:inline-block; border:1px solid #cbd5e1;">📍 موقع مرفق</span>';
@@ -1669,7 +1631,7 @@
                     }
                 }
 
-                htmlContent += `
+                tbody.innerHTML += `
                     <tr>
                         <td style="font-size:11px; color:#64748b;">${o.time}</td>
                         <td style="font-weight:800;">${o.cap} ${liveDot}</td>
@@ -1681,40 +1643,32 @@
                     </tr>
                 `;
             });
-            
-            tbody.innerHTML = htmlContent;
         };
 
-        window.resetDailyStats = async function() {
-            if(confirm("تصفير العمولات والطلبات لليوم من السحابة")) {
+        window.resetDailyStats = function() {
+            if(confirm("تصفير العمولات والطلبات لليوم")) {
                 const today = new Date().toDateString();
-                const compId = activeCompanyName || 'default';
-                const updates = {};
-                
-                completedOrders.forEach(o => {
-                    if(new Date(o.date).toDateString() === today) {
-                        updates[`company_archives/${compId}/orders/${o.orderId}`] = null;
-                    }
-                });
-                
-                await update(ref(db), updates);
-                showAppNotification("تم تصفير حسابات اليوم");
+                completedOrders = completedOrders.filter(o => new Date(o.date).toDateString() !== today || (o.companyId && o.companyId !== activeCompanyName));
+                saveIsolatedData();
+                renderCompletedOrders();
             }
         };
 
-        window.deleteFromArchive = async function(id) {
-            if(confirm("حذف الطلب نهائيا من الأرشيف السحابي")) {
-                const compId = activeCompanyName || 'default';
-                await remove(ref(db, `company_archives/${compId}/orders/${id}`));
-                showAppNotification("تم الحذف");
+        window.deleteFromArchive = function(id) {
+            if(confirm("حذف من الأرشيف")) {
+                completedOrders = completedOrders.filter(o => o.orderId !== id);
+                saveIsolatedData();
+                renderCompletedOrders();
+                renderRadar();
             }
         };
 
-        window.clearCompletedOrders = async function() {
-            if(confirm("تحذير سيتم مسح الأرشيف كاملا من السحابة")) {
-                const compId = activeCompanyName || 'default';
-                await remove(ref(db, `company_archives/${compId}/orders`));
-                showAppNotification("تم مسح الأرشيف");
+        window.clearCompletedOrders = function() {
+            if(confirm("مسح الأرشيف كاملا")) {
+                completedOrders = completedOrders.filter(o => o.companyId && o.companyId !== activeCompanyName);
+                saveIsolatedData();
+                renderCompletedOrders();
+                renderRadar();
             }
         };
 
@@ -1781,7 +1735,7 @@
                 Cap_Balance: bal,
                 role: "captain",
                 type: "captain",
-                company: activeCompanyName,        
+                company: activeCompanyName,       
                 Client_Master: activeCompanyName, 
                 app_sync_lock: false,
                 app_access: "granted",
@@ -1833,23 +1787,9 @@
             const cap = activeSmartCaptain;
             const newBal = (parseFloat(cap.Cap_Balance || cap.balance || 0) + amount).toFixed(2);
             const capKey = cap.Cap_User || cap.user || cap.Cap_Phone || cap.phone;
-            const compId = activeCompanyName || 'default';
-
             const updates = {};
             updates[`${cap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
             updates[`${cap._node}/${capKey}/balance`] = parseFloat(newBal);
-            
-            // [تعديل الخبير]: توثيق مالي لعملية شحن الرصيد
-            const txId = "TX_" + Date.now();
-            updates[`financial_logs/${compId}/${txId}`] = {
-                type: 'deposit',
-                amount: amount,
-                captain_phone: capKey,
-                captain_name: cap.Cap_Name || cap.name || 'غير معروف',
-                description: 'إيداع رصيد يدوي للمحفظة',
-                timestamp: Date.now(),
-                date_string: new Date().toISOString()
-            };
             
             await update(ref(db), updates);
             showAppNotification("تم إيداع الرصيد بنجاح");
@@ -1907,9 +1847,7 @@
                 return;
             }
 
-            // [تعديل الخبير]: استخدام String Builder
-            let htmlContent = '';
-
+            tbody.innerHTML = '';
             displayCaptains.forEach(cap => {
                 const capKey = cap.Cap_User || cap.user;
                 const phoneKey = cap.Cap_Phone || cap.phone;
@@ -1923,7 +1861,7 @@
                     const ratingVal = captainRatings[phoneKey] || "جديد";
                     const ratingHtml = ratingVal === "جديد" ? `<span style="font-size:11px; color:#94a3b8;">جديد</span>` : `<span class="badge bg-rating">💎 ${ratingVal}</span>`;
 
-                    htmlContent += `
+                    tbody.innerHTML += `
                         <tr>
                             <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
                             <td>${ratingHtml}</td>
@@ -1947,7 +1885,7 @@
                     `;
                 } else {
                     const reqDate = cap.created_at ? new Date(cap.created_at).toLocaleDateString('en-GB') : '---';
-                    htmlContent += `
+                    tbody.innerHTML += `
                         <tr style="background: #f8fafc;">
                             <td style="font-weight:800; color:var(--primary);">${cap.Cap_Name || cap.name}</td>
                             <td><span style="font-size:11px; color:#94a3b8;">جديد</span></td>
@@ -1971,8 +1909,6 @@
                     `;
                 }
             });
-
-            tbody.innerHTML = htmlContent;
         };
 
         window.approvePendingCaptain = async function(userKey) {
@@ -2103,6 +2039,14 @@
                 }
             }
         };
+
+        function refreshDynamicElements() {
+            checkAssignedOrdersStatus();
+            renderRadar();
+            if (isAutoRadarActive) {
+                triggerAutoRadarMaster(true);
+            }
+        }
 
     </script>
 </body>
