@@ -11,12 +11,8 @@
     <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/captain.html">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=3">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Captain App">
     <link rel="apple-touch-icon" href="logo.jpg">
     <style>
         /* ================= منع الريفرش عند السحب للأسفل (Pull-to-refresh) ================= */
@@ -868,14 +864,18 @@
         const btnInstall = document.getElementById('btn-install-app');
         const btnContinue = document.getElementById('btn-continue-app');
 
-        // إخفاء الشاشة إذا كان التطبيق مثبتاً بالفعل
-        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        // إخفاء الشاشة إذا كان التطبيق مثبتاً بالفعل بذكاء
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches || navigator.standalone;
+        
+        if (isStandalone) {
             splash.style.display = 'none';
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            // إذا كنا مش بوضع المتصفح العادي نخفيها
+            if(isStandalone) splash.style.display = 'none';
         });
 
         btnInstall.addEventListener('click', async () => {
@@ -965,14 +965,17 @@
             }
         };
 
+        // إشعار الخلفية المتفجر فقط إذا كان التطبيق مخفي
         function sendSystemNotification(title, body) {
+            if (document.visibilityState === 'visible') return; // لا ترسل الإشعار إذا كان التطبيق بوجه الكابتن
+            
             if ('Notification' in window && Notification.permission === 'granted') {
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(function(registration) {
                         registration.showNotification(title, {
                             body: body,
                             icon: 'logo.jpg',
-                            vibrate: [200, 100, 200, 100, 200, 100, 200],
+                            vibrate: [500, 250, 500, 250, 500, 250, 500],
                             tag: 'new-order',
                             requireInteraction: true
                         });
@@ -1674,6 +1677,7 @@
         
         setInterval(detectVPN, 5000); 
 
+        // ================= تحديث: ربط مواسير الشركة =================
         function listenToSystemSettings() {
             const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
             if(!master) return;
@@ -1952,9 +1956,8 @@
                                 `;
                             }
 
-                            if(document.visibilityState === 'hidden') {
-                                sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
-                            }
+                            // إشعار الخلفية فقط إذا كان التطبيق مخفي 
+                            sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
                         }
                         else if (['accepted', 'picked_up', 'on_way', 'arrived'].includes(ord.status)) {
                             hasActive = true;
