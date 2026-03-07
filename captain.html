@@ -7,8 +7,8 @@
     
     <meta property="og:title" content="انضم إلى أسطول N One 💎">
     <meta property="og:description" content="سجل الآن ككابتن في الإمبراطورية وابدأ رحلة النجاح النفاث 🚀">
-    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Project/logo.jpg">
-    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Project/captain.html">
+    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/logo.jpg">
+    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/captain.html">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="manifest" href="manifest.json?v=3">
@@ -1565,7 +1565,6 @@
             window.showToast(currentLang === 'ar' ? "انتهى الوقت تم سحب الطلب ⏳" : "Time out Order reassigned ⏳", true);
         };
 
-        // ================= الطرد السيادي الذكي =================
         function initRealtimeListeners() {
             if(!capNodeKey || isListenerActive) return;
             isListenerActive = true;
@@ -1594,11 +1593,6 @@
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
                         document.getElementById('pending-screen').style.display = 'none';
                         document.getElementById('blocked-screen').style.display = 'flex';
-                        
-                        // الإجراء السيادي: طرد الكابتن من النظام فوراً وإيقاف استقبال الطلبات
-                        if(data.app_status === 'online') {
-                            forceOffline();
-                        }
                         return;
                     } else {
                         document.getElementById('blocked-screen').style.display = 'none';
@@ -1612,14 +1606,17 @@
                 }
             });
 
-            // 🛡️ المراقبة الحية للطلبات (وإضافة الرادار الخلفي)
+            // 🛡️ المراقبة الحية للطلبات 
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
                 const statusToggleSection = document.getElementById('status-toggle-section');
                 
+                let todayCount = 0, todayVal = 0, todayFee = 0;
                 let hasActive = false, hasNewRinging = false;
+
+                let completedCloudOrders = []; // تجميع الطلبات اللي رح تترحل للسحابة
                 let newHtmlContent = ''; 
                 const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
@@ -1645,6 +1642,15 @@
                             }
                         }
 
+                        if (ord.status === 'completed') {
+                            if (new Date(ord.completed_at || ord.timestamp).toDateString() === todayStr) {
+                                todayCount++;
+                                todayVal += parseFloat(ord.value || ord.Shop_Val || 0);
+                                todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
+                            }
+                            completedCloudOrders.push(ord);
+                        }
+                        
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
@@ -1671,11 +1677,11 @@
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ord.value || ord.Shop_Val || 0} د.أ</div>
+                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
                                         </div>
                                         <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee || 0} د.أ</div>
+                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
                                         </div>
                                     </div>
                                     <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${currentLang === 'ar' ? 'ثانية للقبول' : 'sec left'} ⏳</div>
@@ -1687,31 +1693,12 @@
                                 </div>
                             `;
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
-                            
-                            // ================= محرك الإشعارات المطور للرادار الخلفي =================
-                            if (document.visibilityState !== 'visible' || !document.hasFocus()) {
-                                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                                    navigator.serviceWorker.ready.then(reg => {
-                                        reg.showNotification('🚀 طلب جديد بانتظارك!', {
-                                            body: `من منشأة: ${restName} - افتح فوراً للقبول 💎`,
-                                            icon: 'logo.jpg',
-                                            badge: 'logo.jpg',
-                                            tag: 'new-order-' + ord.id, 
-                                            vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40],
-                                            requireInteraction: true,
-                                            data: { url: './captain.html' }
-                                        });
-                                    });
-                                }
-                            } else {
-                                window.showToast(`🚀 طلب جديد من ${restName}`, false);
-                            }
+                            sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
                         }
                         else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
                             hasActive = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
-                            // تعديل الرابط للرابط القياسي لدعم الواتساب بامتياز
                             let mapQuery = (ord.restaurant || ord.Shop_Pickup || '');
                             if (mapQuery.includes('-')) mapQuery = mapQuery.split('-')[0].trim();
                             if (mapQuery.includes('+')) mapQuery = mapQuery.split('+')[0].trim();
@@ -1757,11 +1744,11 @@
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ord.value || ord.Shop_Val || 0} د.أ</div>
+                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
                                         </div>
                                         <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee || 0} د.أ</div>
+                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
                                         </div>
                                     </div>
                                     <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
@@ -1770,6 +1757,28 @@
                         }
                     });
                 }
+                
+                // جلب سجل الإنجازات من السحابة (Firebase) وليس من المتصفح
+                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
+                    if(archiveSnap.exists()) {
+                        let cloudTodayCount = 0;
+                        let cloudTodayVal = 0;
+                        let cloudTodayFee = 0;
+                        
+                        Object.values(archiveSnap.val()).forEach(o => {
+                            if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
+                                cloudTodayCount++;
+                                cloudTodayVal += parseFloat(o.value || o.Shop_Val || 0); // يمكن أن تكون صفر إذا لم تخزن القيمة
+                                cloudTodayFee += parseFloat(o.comm || 0); // هنا أظهرت العمولة، أو يمكن استبدالها بأجر التوصيل
+                            }
+                        });
+                        
+                        document.getElementById('ui_today_count').innerText = cloudTodayCount;
+                        document.getElementById('ui_today_val').innerText = '---'; // مؤقتاً
+                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
+                    }
+                }, { onlyOnce: true });
                 
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
@@ -1794,31 +1803,6 @@
                     container.innerHTML = newHtmlContent;
                 }
             });
-
-            // جلب سجل الإنجازات المالي بدقة (مستمر وبشكل حي)
-            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
-            onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
-                if(archiveSnap.exists()) {
-                    let cloudTodayCount = 0;
-                    let cloudTodayVal = 0;
-                    let cloudTodayFee = 0;
-                    const todayStr = new Date().toDateString();
-                    
-                    Object.values(archiveSnap.val()).forEach(o => {
-                        if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
-                            cloudTodayCount++;
-                            // سحب قيمة الطلب الحقيقية
-                            cloudTodayVal += parseFloat(o.value || o.Shop_Val || o.order_value || 0); 
-                            // سحب أجر التوصيل للكابتن (وليس العمولة)
-                            cloudTodayFee += parseFloat(o.fee || o.Shop_Fee || o.delivery_fee || 0); 
-                        }
-                    });
-                    
-                    document.getElementById('ui_today_count').innerText = cloudTodayCount;
-                    document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
-                    document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
-                }
-            }); // تم إزالة onlyOnce ليتحدث فوراً
 
             // --- الخرائط الحرارية ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
@@ -1858,13 +1842,6 @@
                     }
                 });
             }
-            
-            // ================= منع الفايربيس من الدخول في وضع النوم (Keep-Alive Database) =================
-            const heartBeat = setInterval(() => {
-                if (currentCaptain && currentCaptain.app_status === 'online') {
-                    update(ref(db, `captains/${capNodeKey}`), { last_active: Date.now() });
-                }
-            }, 30000); // نبضة كل 30 ثانية
         }
 
         let masterListenerRef = null;
@@ -1970,25 +1947,23 @@
             });
         };
 
-        // ================= تحديثات الخصم المالي الذكي =================
+        // ================= تحديثات الخصم المالي =================
         window.updateOrderStatus = async function(appOrdId, newStatus, radarOrdId, commAmount) {
             try {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
                 
-                // الخصم المالي الحقيقي يحدث هنا فقط (عند الوصول للمنشأة)
+                // الخصم بصير هنا فقط!
                 if (newStatus === 'arrived_at_shop') {
                     const commission = parseFloat(commAmount || 0);
                     if (commission > 0) {
                         const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
                         const newBal = (currentBal - commission).toFixed(2);
 
-                        // تحديث رصيد الكابتن
                         updates[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal);
                         updates[`captains/${capNodeKey}/balance`] = parseFloat(newBal);
                         updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true;
                         
-                        // توثيق الخصم في الرادار المركزي
                         if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
                             updates[`orders/${radarOrdId}/Cap_Commission`] = commission;
                             updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed';
@@ -1996,7 +1971,6 @@
                     }
                 }
                 
-                // مزامنة حالة الطلب مع الرادار المركزي
                 if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
                     let radarStatus = newStatus;
                     if(newStatus === 'arrived_at_shop') radarStatus = 'accepted'; 
