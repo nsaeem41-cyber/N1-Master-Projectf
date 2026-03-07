@@ -925,7 +925,6 @@
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
 
-            // التحديث الأولي من localStorage (قبل مزامنة Firebase)
             const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "المنشأة";
             const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "N/A";
             const shopLocStr = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "البيانات الجغرافية غير متوفرة";
@@ -942,7 +941,7 @@
             listenToSystemSettings();
             setupLiveOrders();
             await fetchAllData(); 
-            attachBalanceListener(); // هذه الدالة أصبحت المسؤولة عن المزامنة الشاملة
+            attachBalanceListener();
         }
 
         function listenToSystemSettings() {
@@ -1072,6 +1071,7 @@
             });
         };
 
+        // [تحديث الخبير]: نظام الفلترة الصارمة لمنع تداخل طلبات المنشآت
         function isMyOrder(ord) {
             const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
             const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase();
@@ -1087,6 +1087,7 @@
                 
                 if(snapshot.exists()) {
                     const allOrders = Object.values(snapshot.val());
+                    // العزل الصارم للطلبات
                     const myOrders = allOrders.filter(o => isMyOrder(o));
                     
                     const todayStr = new Date().toDateString();
@@ -1273,7 +1274,9 @@
                     
                     if (me) {
                         window.myNode = me._node || 'shops'; 
-                        // المزامنة تتم الآن في attachBalanceListener
+                        myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
+                        document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                        
                         loadShopPrices();
                     }
                 }
@@ -1282,37 +1285,15 @@
             }
         }
 
-        // [تحديث الخبير]: المزامنة اللحظية (Real-time Sync) الشاملة للمنشأة
         window.attachBalanceListener = function() {
             const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
             
             onValue(ref(db, `${window.myNode}/${shopKey}`), (snap) => {
                 if(snap.exists()){
                     const me = snap.val();
-                    
-                    // 1. تحديث الرصيد اللحظي
                     myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                     
-                    // 2. تحديث الاسم والموقع اللحظي (تم الإضافة هنا) 💎
-                    const newShopName = me.Shop_Name || me.Client_Name || me.name || "المنشأة";
-                    const newShopLoc = me.Shop_Location || me.Client_PricingArea || me.pricing_area || "البيانات الجغرافية غير متوفرة";
-                    
-                    document.getElementById('hdr-shop-name').innerText = newShopName;
-                    document.getElementById('hdr-shop-area').innerText = newShopLoc;
-
-                    // تحديث بيانات الجلسة المحلية حتى لا تُفقد عند تحديث الصفحة
-                    currentUser.Shop_Name = newShopName;
-                    currentUser.Client_Name = newShopName;
-                    currentUser.name = newShopName;
-                    
-                    currentUser.Shop_Location = me.Shop_Location;
-                    currentUser.Client_PricingArea = me.Client_PricingArea;
-                    currentUser.pricing_area = me.pricing_area;
-                    
-                    localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
-
-                    // 3. التحقق من حالة الإيقاف
                     const currentStatus = me.Client_Status || me.status || 'active';
                     if (currentStatus === 'paused') {
                         document.getElementById('app-container').style.display = 'none';
@@ -1495,6 +1476,7 @@
             }
         }
 
+        // [تحديث الخبير]: توثيق عمليات الشحن مالياً وتوافقها مع قواعد الحماية الجديدة
         window.executeTransfer = async function() {
             if (!verifiedCaptain) return;
             const amount = parseFloat(document.getElementById('charge_amount').value);
