@@ -623,8 +623,7 @@
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده")) {
-                    // التعديل هنا: استخدام رابط خرائط جوجل القياسي
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
                     document.getElementById('shop_location_link').value = mapLink;
                     
                     document.getElementById('green_light_status').style.background = 'var(--success)';
@@ -651,8 +650,7 @@
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده")) {
-                    // التعديل هنا: استخدام رابط خرائط جوجل القياسي
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopName)}`;
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
                     document.getElementById('edit_shop_location_link').value = mapLink;
                     
                     document.getElementById('edit_green_light_status').style.background = 'var(--success)';
@@ -1529,17 +1527,12 @@
             }
         };
 
-        // التعديل هنا: حذف المنشأة من مساري shops و users معاً لضمان عدم بقاء أي بيانات متبقية
         window.deleteShop = async function(u) {
             if(!confirm("تحذير هل أنت متأكد من الحذف النهائي لهذه المنشأة لا يمكن التراجع وسيتم تحرير المعرف")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
-                const updates = {};
-                updates['shops/' + u] = null;
-                updates['users/' + u] = null;
-                
-                await update(ref(db), updates);
+                await remove(ref(db, 'shops/' + u));
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("تم حذف المنشأة نهائيا والاسم متاح الآن");
             } catch (error) {
@@ -1548,11 +1541,15 @@
             }
         };
 
+        // ========================================================
+        // التحديث 726: دوال التحكم السيبراني (تم العزل المطلق)
+        // ========================================================
         window.fetchCyberSettings = function() {
             if(!currentUser) return;
             const myMaster = currentUser.Client_User || currentUser.user;
             if(!myMaster) return;
 
+            // استدعاء وعرض الإعدادات الخاصة بـ myMaster فقط
             onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
                 if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
             });
