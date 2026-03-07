@@ -196,6 +196,9 @@
         let currentUser = null;
         let isSuperAdmin = false;
         let myMasterId = "";
+        
+        // أوبجكت مركزي يجمع البيانات المستهدفة بدلاً من سحب الداتا بيس كاملة
+        let globalDBData = { orders: {}, shops: {}, users: {}, assigned_orders: {} };
 
         window.onload = function() {
             window.history.pushState(null, "", window.location.href);
@@ -205,19 +208,15 @@
 
             const sessionData = localStorage.getItem('currentUser');
             if (!sessionData) {
-                // window.location.replace('index.html');
-                // return;
+                // إغلاق الثغرة الأمنية: الطرد فوراً إذا لم يكن هناك تسجيل دخول
+                window.location.replace('index.html');
+                return;
             } else {
                 currentUser = JSON.parse(sessionData);
                 if (currentUser.role !== 'admin' && currentUser.role !== 'client') {
                     window.location.replace('index.html');
                     return;
                 }
-            }
-            
-            // في حال عدم وجود جلسة للتجربة، نضع قيم افتراضية
-            if(!currentUser) {
-                 currentUser = { user: "admin", name: "حبة السكر (مديرة النظام)", role: "admin" };
             }
             
             myMasterId = currentUser.Client_User || currentUser.user;
@@ -295,28 +294,36 @@
             });
         }
 
+        // التعديل الجوهري: سحب المسارات المحددة فقط بدلاً من السيرفر بالكامل
         window.loadData = async function() {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('feed-table').style.display = 'none';
 
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    processData(snapshot.val());
-                } else {
-                    processData({});
-                }
+                const [ordersSnap, shopsSnap, usersSnap, assignedSnap] = await Promise.all([
+                    get(ref(db, 'orders')),
+                    get(ref(db, 'shops')),
+                    get(ref(db, 'users')),
+                    get(ref(db, 'assigned_orders'))
+                ]);
+
+                globalDBData.orders = ordersSnap.val() || {};
+                globalDBData.shops = shopsSnap.val() || {};
+                globalDBData.users = usersSnap.val() || {};
+                globalDBData.assigned_orders = assignedSnap.val() || {};
+
+                processData(globalDBData);
             } catch (e) {
                 console.error(e);
             }
         };
 
+        // التعديل الجوهري: استماع لحظي للمسارات المحددة لتخفيف استهلاك الباندويث
         window.attachRealtimeListeners = function() {
-            onValue(ref(db), (snapshot) => {
-                if (snapshot.exists()) {
-                    processData(snapshot.val());
-                }
-            });
+            onValue(ref(db, 'orders'), (snap) => { globalDBData.orders = snap.val() || {}; processData(globalDBData); });
+            onValue(ref(db, 'shops'), (snap) => { globalDBData.shops = snap.val() || {}; processData(globalDBData); });
+            onValue(ref(db, 'users'), (snap) => { globalDBData.users = snap.val() || {}; processData(globalDBData); });
+            onValue(ref(db, 'assigned_orders'), (snap) => { globalDBData.assigned_orders = snap.val() || {}; processData(globalDBData); });
         };
 
         window.processData = function(data) {
@@ -428,7 +435,7 @@
             document.getElementById('top-area').innerText = `${bestArea} (${maxAreaCount} طلب)`;
             document.getElementById('completion-rate').innerText = myOrders.length > 0 ? Math.round((completedCount / myOrders.length) * 100) + "%" : "0%";
 
-            // بناء جدول العمليات الحية المعزول
+            // بناء جدول العمليات الحية المعزول (كما طلب المستخدم بدون تغيير في الطريقة)
             const tbody = document.getElementById('feed-body');
             let htmlContent = '';
 
