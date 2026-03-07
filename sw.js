@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v7-diamond';
+const CACHE_NAME = 'n-one-captain-v8-diamond';
 const urlsToCache = [
     './',
     './captain.html',
@@ -6,19 +6,19 @@ const urlsToCache = [
     './logo.jpg'
 ];
 
-// مرحلة التثبيت: تجهيز ملفات الكابتن في الذاكرة
+// مرحلة التثبيت تجهيز ملفات الكابتن في الذاكرة
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Captain assets cached successfully 💎');
+                console.log('Captain portal assets cached successfully 💎');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
-// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة بشكل صارم
+// مرحلة التفعيل مسح أي كاش قديم وتنظيف الذاكرة الخاصة بالكابتن
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -33,20 +33,12 @@ self.addEventListener('activate', event => {
     );
 });
 
-// إدارة الطلبات: استراتيجية ذكية للشبكة
+// إدارة الطلبات استراتيجية Network First لضمان رؤية الطلبات فورا
 self.addEventListener('fetch', event => {
-    // 1. السماح للواتساب والشبكات الاجتماعية بسحب الصور مباشرة دون تدخل الكاش
-    if (event.request.url.includes('logo.jpg')) {
-        return; // خليه يسحبها مباشرة من السيرفر عشان ما يعلق
-    }
-
-    // 2. تخطي طلبات غير الـ GET عشان ما يعلق السستم
-    if (event.request.method !== 'GET') return;
-
     event.respondWith(
         fetch(event.request)
             .then(response => {
-                // إذا الاستجابة صحيحة نخزن نسخة ونرجعها
+                // إذا الاستجابة صحيحة نخزن نسخة للكابتن ونرجعها
                 if (response && response.status === 200 && response.type === 'basic') {
                     const responseToCache = response.clone();
                     caches.open(CACHE_NAME).then(cache => {
@@ -56,20 +48,20 @@ self.addEventListener('fetch', event => {
                 return response;
             })
             .catch(() => {
-                // في حال انقطع النت نرجع النسخة المخزنة
+                // في حال انقطع النت نرجع نسخة الكابتن المخزنة
                 return caches.match(event.request);
             })
     );
 });
 
-// نظام الإشعارات الرسمي لإمبراطورية N One
+// نظام الإشعارات الرسمي لبوابة الكباتن N One
 self.addEventListener('push', event => {
     const options = {
-        body: event.data ? event.data.text() : 'لديك طلب جديد بانتظارك الآن 🔥',
+        body: event.data ? event.data.text() : 'لديك طلب ألماسي جديد بانتظارك 🔥',
         icon: 'logo.jpg',
         badge: 'logo.jpg',
-        vibrate: [200, 100, 200, 100, 200],
-        tag: 'n-one-order',
+        vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40],
+        tag: 'n-one-captain-order',
         renotify: true,
         requireInteraction: true,
         data: {
@@ -78,11 +70,11 @@ self.addEventListener('push', event => {
     };
 
     event.waitUntil(
-        self.registration.showNotification('N One - إمبراطورية التوصيل 💎', options)
+        self.registration.showNotification('بوابة الكباتن | N One 💎', options)
     );
 });
 
-// فتح التطبيق فور النقر على الإشعار
+// فتح تطبيق الكابتن فور النقر على الإشعار
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
