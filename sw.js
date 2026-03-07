@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v6-diamond';
+const CACHE_NAME = 'n-one-captain-v7-diamond';
 const urlsToCache = [
     './',
     './captain.html',
@@ -6,7 +6,7 @@ const urlsToCache = [
     './logo.jpg'
 ];
 
-// مرحلة التثبيت تجهيز ملفات الكابتن في الذاكرة
+// مرحلة التثبيت: تجهيز ملفات الكابتن في الذاكرة
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
@@ -18,7 +18,7 @@ self.addEventListener('install', event => {
     );
 });
 
-// مرحلة التفعيل مسح أي كاش قديم وتنظيف الذاكرة بشكل صارم
+// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة بشكل صارم
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -33,9 +33,14 @@ self.addEventListener('activate', event => {
     );
 });
 
-// إدارة الطلبات استراتيجية ذكية للشبكة
+// إدارة الطلبات: استراتيجية ذكية للشبكة
 self.addEventListener('fetch', event => {
-    // تخطي طلبات غير الـ GET عشان ما يعلق السستم
+    // 1. السماح للواتساب والشبكات الاجتماعية بسحب الصور مباشرة دون تدخل الكاش
+    if (event.request.url.includes('logo.jpg')) {
+        return; // خليه يسحبها مباشرة من السيرفر عشان ما يعلق
+    }
+
+    // 2. تخطي طلبات غير الـ GET عشان ما يعلق السستم
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
