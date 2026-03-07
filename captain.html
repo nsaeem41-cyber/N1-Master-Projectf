@@ -265,43 +265,328 @@
         input:checked + .slider:before { transform: translateX(26px); }
         input:disabled + .slider { background-color: #e2e8f0; cursor: not-allowed; opacity: 0.5; }
 
-        /* ================= الزر العائم للرادار (التطوير الجديد قابلة للتحريك) ================= */
-        .radar-fab {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            display: none; /* مخفي بالبداية حتى يدخل الكابتن */
-            justify-content: center;
-            align-items: center;
-            font-size: 28px;
-            color: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            cursor: grab;
-            z-index: 9999;
-            border: 3px solid white;
-            user-select: none;
-            touch-action: none;
+        /* رسائل التحذير */
+        .warning-banner, .vpn-warning-banner {
+            border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;
+            font-size: 13px; font-weight: bold; align-items: center; gap: 10px; animation: fadeIn 0.3s;
         }
-        .radar-fab:active { cursor: grabbing; }
-        .radar-fab.online {
-            background: var(--success);
-            box-shadow: 0 0 20px var(--success);
-            animation: pulseRadar 2s infinite;
+        .warning-banner { background: #fef2f2; border: 1px solid #fecaca; border-right: 4px solid var(--danger); color: #991b1b; }
+        .vpn-warning-banner { background: #fffbeb; border: 1px solid #fde68a; border-right: 4px solid var(--gold); color: #b45309; }
+        
+        .offline-banner {
+            position: fixed; top: 0; left: 0; width: 100%; background: var(--danger); color: white;
+            text-align: center; padding: 12px; font-weight: bold; font-size: 13px; z-index: 999999;
+            display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: slideDown 0.3s ease;
         }
-        .radar-fab.offline {
-            background: var(--danger);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
-            animation: none;
+
+        /* الإنجاز اليومي */
+        .achievement-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; text-align: center;
+            transition: all 0.3s ease;
         }
-        @keyframes pulseRadar {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        .ach-title { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; }
+        .financial-row { display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
+        .fin-box { text-align: center; flex: 1; }
+        .fin-lbl { font-size: 10px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
+        .fin-val { font-size: 16px; font-weight: 900; color: var(--primary); }
+        .fin-val.success { color: var(--success); }
+
+        /* الطلبات الحالية */
+        .section-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        
+        .order-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; border-right: 4px solid var(--info);
+            animation: fadeIn 0.3s; position: relative; overflow: hidden;
         }
-<div class="input-group">
+        .order-card.ringing { border-right: 4px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); animation: pulseAlert 1.5s infinite; }
+        @keyframes pulseAlert { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #64748b; font-weight: bold; }
+        .order-rest { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
+        .order-rest-phone { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;}
+        .order-details { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+        .detail-box { text-align: center; flex: 1; }
+        .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+        .detail-val { font-size: 13px; font-weight: bold; color: var(--primary); }
+        
+        .action-buttons { display: flex; gap: 10px; }
+        .btn-action {
+            flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; 
+            cursor: pointer; transition: 0.3s; border: none; color: white;
+        }
+        .btn-action:active { transform: scale(0.95); }
+        .btn-accept { background: var(--success); }
+        .btn-reject { background: var(--danger); }
+        
+        /* ألوان حالات الطلب المحدثة */
+        .btn-status-arrived-shop { background: var(--info); }
+        .btn-status-picked { background: #f97316; } 
+        .btn-status-onway { background: #8b5cf6; } 
+        .btn-status-arrived { background: #06b6d4; } 
+        .btn-status-completed { background: var(--gold); color: var(--primary); } 
+
+        .order-timer-bar { height: 4px; background: var(--danger); width: 100%; border-radius: 2px; margin-bottom: 10px; transition: width 1s linear; }
+        .order-timer-text { font-size: 12px; color: var(--danger); font-weight: bold; text-align: center; margin-bottom: 10px; }
+
+        .btn-map-link {
+            background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; 
+            width: 35px; height: 35px; border-radius: 50%; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+            flex-shrink: 0;
+        }
+        .btn-map-link:hover { transform: scale(1.1); background: #bae6fd; color: #0369a1; }
+        
+        .btn-call-shop {
+            background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
+            width: 35px; height: 35px; border-radius: 50%; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            flex-shrink: 0;
+        }
+        .btn-call-shop:hover { transform: scale(1.1); background: #d1fae5; }
+        .hidden-phone-badge { font-size: 10px; color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 10px; border: 1px solid #fecaca; }
+
+        /* سجل الطلبات والإعدادات (Modals) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: flex-end; z-index: 5000;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 480px; height: 80vh;
+            border-top-left-radius: 25px; border-top-right-radius: 25px;
+            padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;
+            animation: slideUpModal 0.4s ease-out;
+        }
+        @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        .modal-title { font-size: 18px; font-weight: 900; color: var(--primary); }
+        .close-modal { background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; color: var(--danger); cursor: pointer; }
+        
+        .history-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .history-item { 
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; 
+            padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .h-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
+        .h-val { color: var(--primary); }
+        .h-commission { color: var(--danger); background: #fef2f2; padding: 4px 8px; border-radius: 8px; font-size: 11px; border: 1px solid #fecaca; }
+
+        /* نموذج الإعدادات */
+        .settings-form { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .settings-group { margin-bottom: 20px; }
+        .settings-group label { display: block; font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .settings-group input { 
+            width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; 
+            font-size: 15px; background: #f8fafc; outline: none; transition: 0.3s; box-sizing: border-box; 
+        }
+        .settings-group input:focus { border-color: var(--gold); }
+        .lang-toggle { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-save-settings { background: var(--gold); color: var(--primary); border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; }
+
+        .bg-work-toggle { display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; border: 1px solid #bae6fd; padding: 12px 15px; border-radius: 12px; margin-top: 15px; }
+        .bg-work-toggle span { font-size: 13px; font-weight: bold; color: var(--primary); }
+
+        .blocked-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98); z-index: 9999;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 30px; box-sizing: border-box; backdrop-filter: blur(10px);
+        }
+        .blocked-icon { font-size: 60px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .blocked-title, .pending-title { font-size: 24px; font-weight: 900; margin-bottom: 15px; }
+        .blocked-title { color: var(--danger); }
+        .pending-title { color: var(--gold); }
+        .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
+
+        #loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
+            z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--gold);
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(212, 175, 55, 0.3); border-top: 4px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* شاشة الترحيب والتثبيت (PWA Splash) */
+        .pwa-splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); z-index: 99999;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(10px); transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .pwa-content { background: white; padding: 40px 30px; border-radius: 30px; text-align: center; width: 85%; max-width: 380px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); border-top: 5px solid var(--gold); animation: popIn 0.5s ease-out; }
+        .pwa-logo { width: 100px; height: 100px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3); border: 2px solid var(--gold); }
+        .pwa-title { margin: 0 0 15px 0; font-size: 28px; font-weight: 900; color: var(--primary); }
+        .pwa-text { color: var(--text); font-size: 15px; font-weight: bold; line-height: 1.6; margin-bottom: 30px; }
+        .btn-install-app { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--gold), #b48608); color: var(--primary); border: none; border-radius: 15px; font-size: 18px; font-weight: 900; cursor: pointer; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); transition: all 0.3s ease; }
+        .btn-install-app:active { transform: scale(0.95); }
+        .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
+        
+        .hotspot-tag { display: inline-block; background: #fff0f2; color: var(--danger); border: 1px solid #ffccd5; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2); animation: pulseAlert 2s infinite; }
+    </style>
+</head>
+<body id="app-body">
+
+    <audio id="keep-alive-audio" loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
+
+    <div id="offline-banner" class="offline-banner">📡 لا يوجد اتصال بالإنترنت يرجى الاتصال لتلقي الطلبات</div>
+    <div id="toast-container" style="position:fixed; top:40px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
+
+    <div id="custom-confirm-overlay" class="custom-dialog-overlay">
+        <div class="custom-dialog-box">
+            <div class="custom-dialog-icon">❓</div>
+            <div id="custom-confirm-msg" class="custom-dialog-msg">هل أنت متأكد</div>
+            <div class="custom-dialog-actions">
+                <button class="btn-dialog btn-dialog-ok" onclick="executeAppConfirm()" id="lang_confirm_ok">تأكيد ✅</button>
+                <button class="btn-dialog btn-dialog-cancel" onclick="closeAppConfirm()" id="lang_confirm_no">إلغاء ❌</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="rating-modal" class="custom-dialog-overlay">
+        <div class="rating-modal-box">
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px;">تقييم المنشأة 💎</div>
+            <div id="rating_title_desc" style="font-size: 13px; color: #64748b; font-weight: bold;">كيف كان أداء المنشأة في تجهيز الطلب</div>
+            
+            <div class="gems-container" id="gems-container">
+                <span class="gem" onclick="setRating(1)">💎</span>
+                <span class="gem" onclick="setRating(2)">💎</span>
+                <span class="gem" onclick="setRating(3)">💎</span>
+                <span class="gem" onclick="setRating(4)">💎</span>
+                <span class="gem" onclick="setRating(5)">💎</span>
+            </div>
+            
+            <div id="rating-feedback" class="rating-feedback">
+                <div id="dynamic-question" class="rating-title">ما هي المشكلة التي واجهتك</div>
+                <div class="quick-tags" id="quick-tags"></div>
+                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+            </div>
+
+            <input type="hidden" id="current_rating_val" value="0">
+            <input type="hidden" id="rating_shop_id" value="">
+            <input type="hidden" id="selected_tag" value="">
+            
+            <button class="btn-main btn-send" style="background: var(--info); color: white; margin-top: 15px; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px; cursor: pointer;" onclick="closeRatingModal()">تخطي</button>
+        </div>
+    </div>
+
+    <div id="pwa-splash" class="pwa-splash">
+        <div class="pwa-content">
+            <img src="logo.jpg" alt="Captain Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Captain'">
+            <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
+            <p class="pwa-text">للحصول على تجربة أسرع ولضمان وصول الطلبات والتحديثات فوراً حمّل تطبيق الكابتن الرسمي الآن</p>
+            <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق الآن 🚀</button>
+            <button id="btn-continue-app" class="btn-continue-app">المتابعة من المتصفح</button>
+        </div>
+    </div>
+
+    <audio id="order-ringtone" loop preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="app-container">
+        <div id="loader">
+            <img id="loader-logo" src="logo.jpg" style="width:140px; height:140px; margin-bottom:20px; border-radius:20px; object-fit:contain; box-shadow:0 0 30px rgba(212,175,55,0.2); background:transparent; padding:0;">
+            <div class="spinner"></div>
+            <div style="font-weight: 900; font-size: 18px; letter-spacing: 2px;" id="loader_dynamic_name">بوابة الكباتن</div>
+            <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;" id="lang_loader">جاري الاتصال بالنظام...</div>
+        </div>
+
+        <div id="app-popup-overlay" class="app-popup-overlay">
+            <div class="app-popup-box">
+                <div class="app-popup-icon">🚨</div>
+                <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
+                <button class="app-popup-btn" onclick="document.getElementById('app-popup-overlay').style.display='none'" id="lang_popup_btn">حسناً فهمت</button>
+            </div>
+        </div>
+
+        <div id="history-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="lang_history_title">سجل الطلبات</div>
+                    <button class="close-modal" onclick="document.getElementById('history-modal').style.display='none'">✕</button>
+                </div>
+                <div id="history-list-container" class="history-list"></div>
+            </div>
+        </div>
+
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="lang_settings_title">الإعدادات ⚙️</div>
+                    <button class="close-modal" onclick="document.getElementById('settings-modal').style.display='none'">✕</button>
+                </div>
+                <div class="settings-form">
+                    <div class="settings-group">
+                        <label id="lang_set_user">اسم المستخدم (يوزر الدخول)</label>
+                        <input type="text" id="set_user" autocomplete="off">
+                    </div>
+                    <div class="settings-group">
+                        <label id="lang_set_pass">كلمة المرور</label>
+                        <input type="password" id="set_pass">
+                    </div>
+                    <div class="bg-work-toggle">
+                        <span>تفعيل العمل في الخلفية (والاهتزاز) 🛡️</span>
+                        <label class="switch">
+                            <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked, false)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <button class="btn-save-settings" style="background: var(--info); margin-top: 15px; color: white; box-shadow: 0 4px 10px rgba(14,165,233,0.3);" onclick="testNotification()" id="lang_test_notif">🔔 تجربة التنبيهات والرنة</button>
+                    <button class="lang-toggle" onclick="toggleLanguage()" id="lang_toggle_btn">🌐 Switch to English</button>
+                    <button class="btn-save-settings" onclick="saveSettings()" id="lang_save_btn">حفظ التعديلات ✅</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="blocked-screen" class="blocked-screen">
+            <div class="blocked-icon">🛑</div>
+            <div class="blocked-title" id="lang_blocked_title">تم إيقاف حسابك</div>
+            <div class="blocked-text" id="lang_blocked_text">عذراً لقد تم إيقاف أو تجميد حسابك من قبل الإدارة<br><br>يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت</div>
+            <button class="btn-logout" style="margin-top: 30px; background: rgba(239, 68, 68, 0.2); border-color: var(--danger); padding: 10px 20px; font-weight: bold;" onclick="logout()" id="lang_blocked_btn">تسجيل الخروج</button>
+        </div>
+
+        <div id="pending-screen" class="blocked-screen" style="background: rgba(15, 23, 42, 0.98);">
+            <div class="blocked-icon">⏳</div>
+            <div class="pending-title" id="lang_pending_title">حسابك قيد الانتظار</div>
+            <div class="blocked-text" id="lang_pending_text">لقد تم استلام طلب تسجيلك بنجاح<br><br>الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات</div>
+            <button class="btn-logout" style="margin-top: 30px; background: rgba(255, 255, 255, 0.2); padding: 10px 20px; font-weight: bold;" onclick="logout()" id="lang_pending_btn">العودة للرئيسية</button>
+        </div>
+
+        <div id="login-screen" class="screen">
+            <div class="login-wrapper">
+                <div class="login-logo">بوابة <span class="gold-text" style="color:var(--gold)">الكباتن</span></div>
+                <div class="login-sub" id="lang_login_sub">المنصة الألماسية 💎</div>
+                
+                <div class="input-group">
+                    <label id="lang_login_user_lbl">اسم المستخدم (User ID)</label>
+                    <input type="text" id="login_user" placeholder="أدخل اليوزر الخاص بك" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label id="lang_login_pass_lbl">كلمة المرور (Password)</label>
+                    <input type="password" id="login_pass" placeholder="أدخل كلمة المرور">
+                </div>
+                
+                <button class="btn-login" onclick="loginCaptain()" id="lang_login_btn">دخول آمن 🚀</button>
+                <button class="btn-link" onclick="openRegisterScreen()" id="lang_register_btn">تسجيل كابتن جديد 📝</button>
+            </div>
+        </div>
+
+        <div id="register-screen" class="screen">
+            <div class="login-wrapper" style="padding: 20px;">
+                <div class="login-logo" style="font-size: 24px; margin-bottom: 25px;" id="lang_reg_title">تسجيل كابتن جديد 📝</div>
+                
+                <div class="input-group">
+                    <label id="lang_reg_comp_id">معرف الشركة (Company ID)</label>
+                    <input type="text" id="reg_company_id" placeholder="أدخل كود الشركة المراد الانضمام إليها" oninput="verifyCompanyId()">
+                    <div id="company_status_badge" class="id-status-badge"></div>
+                    <input type="hidden" id="verified_company_name" value="">
+                </div>
+                <div class="input-group">
                     <label id="lang_reg_name">الاسم الشخصي</label>
                     <input type="text" id="reg_name" placeholder="أدخل اسمك الكريم">
                 </div>
@@ -397,7 +682,7 @@
                                 <div class="fin-val" id="ui_today_count">0</div>
                             </div>
                             <div class="fin-box" style="border-left: 1px solid #e2e8f0;">
-                                <div class="fin-lbl">قيمة الطلبات</div>
+                                <div class="fin-lbl">قيم الطلبات</div>
                                 <div class="fin-val" id="ui_today_val">0.00</div>
                             </div>
                             <div class="fin-box">
@@ -439,8 +724,7 @@
         </div>
 
     </div>
-
-    <script>
+<script>
         // إعدادات تثبيت الـ PWA
         let deferredPrompt;
         const splash = document.getElementById('pwa-splash');
@@ -668,7 +952,8 @@
             document.getElementById('selected_tag').value = element.innerText;
         };
     </script>
-<script type="module">
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -818,17 +1103,24 @@
         window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display = 'block'; });
         window.addEventListener('online', () => { document.getElementById('offline-banner').style.display = 'none'; });
 
+        // ================= التعديل: إقلاع فوري لحل مشكلة الشاشة السوداء =================
         window.onload = function() {
-            checkAndResetDailyCounter();
-
             setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                checkSession();
-            }, 800);
-            
+                checkAndResetDailyCounter();
+                const loader = document.getElementById('loader');
+                if(loader) loader.style.display = 'none';
+                
+                try {
+                    checkSession();
+                } catch(e) {
+                    console.error("Session error", e);
+                    document.getElementById('login-screen').classList.add('active');
+                }
+            }, 500);
+
             document.body.addEventListener('click', () => {
                 const audio = document.getElementById('order-ringtone');
-                if(audio.paused && ringtoneActive) {
+                if(audio && audio.paused && ringtoneActive) {
                     audio.play().catch(e => console.log(e));
                 }
             }, { once: true });
@@ -1289,22 +1581,18 @@ setInterval(() => {
             onValue(profileRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    
                     if (currentCaptain && data.session_token && currentCaptain.session_token && data.session_token !== currentCaptain.session_token) {
                         window.showToast(currentLang === 'ar' ? "تم تسجيل الدخول من جهاز آخر 🔒" : "Logged in from another device 🔒", true);
                         setTimeout(() => { logout(); }, 2000);
                         return;
                     }
-                    
                     currentCaptain = data;
-                    
                     if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
                         document.getElementById('blocked-screen').style.display = 'none';
                         document.getElementById('main-screen').classList.remove('active');
                         document.getElementById('pending-screen').style.display = 'flex';
                         return;
                     }
-                    
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
                         document.getElementById('pending-screen').style.display = 'none';
                         document.getElementById('blocked-screen').style.display = 'flex';
@@ -1313,7 +1601,6 @@ setInterval(() => {
                         document.getElementById('blocked-screen').style.display = 'none';
                         document.getElementById('pending-screen').style.display = 'none';
                     }
-
                     updateUIProfile(data);
                 } else {
                     document.getElementById('blocked-screen').style.display = 'flex';
@@ -1321,7 +1608,7 @@ setInterval(() => {
                 }
             });
 
-            // 🛡️ المراقبة الحية للطلبات (ومحرك الحسابات الذكي)
+            // 🛡️ المراقبة الحية للطلبات (ومحرك الحسابات الماسي)
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
@@ -1331,26 +1618,22 @@ setInterval(() => {
                 let hasActive = false, hasNewRinging = false;
                 let newHtmlContent = ''; 
                 
-                // عدادات الإنجاز اليومي
-                let todayCount = 0;
-                let todayVal = 0;
-                let todayFee = 0;
+                // عدادات الإنجاز الماسي
+                let todayCount = 0; let todayVal = 0; let todayFee = 0;
                 const todayStr = new Date().toDateString();
                 
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                 if (snapshot.exists()) {
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
-                    
                     orders.forEach(ord => {
                         const cleanRestName = (name) => {
                             if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
-                            let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
-                            return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
+                            return name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
                         };
                         const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
                         
-                        // حساب إنجازات اليوم بدقة من نفس الطلب المكتمل!
+                        // محرك حساب الإنجاز المباشر
                         if (ord.status === 'completed') {
                             const ordDate = new Date(ord.completed_at || ord.timestamp);
                             if (ordDate.toDateString() === todayStr) {
@@ -1360,492 +1643,184 @@ setInterval(() => {
                             }
                         }
                         
-                        let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
-                        let phoneHtml = '';
-                        if (ord.shop_phone) {
-                            if (isPhoneHidden) {
-                                phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge">رقم محجوب 🛡️</span></div>`;
-                            } else {
-                                phoneHtml = `<div class="order-rest-phone">📞 هاتف المنشأة: <a href="tel:${ord.shop_phone}" style="color:var(--info); text-decoration:none;" title="اتصال بالمنشأة" target="_blank">${ord.shop_phone}</a></div>`;
-                            }
-                        }
-                        
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
-
                             if(!localOrderSeen[ord.id]) localOrderSeen[ord.id] = Date.now();
                             const elapsed = Math.floor((Date.now() - localOrderSeen[ord.id]) / 1000);
                             let timeLeft = systemSettings.order_timer - elapsed;
-
                             if(timeLeft <= 0) { rejectOrderAuto(ord.id); return; }
 
                             hasActive = true; hasNewRinging = true;
-                            
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                            const btnAccept = currentLang === 'ar' ? "قبول الطلب ✅" : "Accept ✅";
-                            const btnReject = currentLang === 'ar' ? "رفض ❌" : "Reject ❌";
-                            
-                            // استخراج القيم بدقة
-                            const ordValue = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
-                            const ordDeliveryFee = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
-                            const ordCommission = parseFloat(ord.commission_amount || ord.Shop_Comm || 0).toFixed(2);
-                            
                             newHtmlContent += `
                                 <div class="order-card ringing" id="card_${ord.id}">
-                                    <div class="order-header">
-                                        <span>${currentLang === 'ar'?'رقم':'No'} #${ord.id.substring(ord.id.length - 4)}</span>
-                                        <span>${currentLang === 'ar'?'الوقت':'Time'} ${ordTime}</span>
-                                    </div>
-                                    <div class="order-rest" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${restName}</div>
-                                    ${phoneHtml}
+                                    <div class="order-header"><span>#${ord.id.substring(ord.id.length - 4)}</span><span>${ordTime}</span></div>
+                                    <div class="order-rest">🏪 ${restName}</div>
                                     <div class="order-details">
-                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                        <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ordValue} د.أ</div>
+                                            <div class="detail-val">${parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2)} د.أ</div>
                                         </div>
                                         <div class="detail-box">
-                                            <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ordDeliveryFee} د.أ</div>
+                                            <div class="detail-lbl">${currentLang === 'ar'?'أجرة التوصيل':'Fee'}</div>
+                                            <div class="detail-val" style="color:var(--success);">${parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2)} د.أ</div>
                                         </div>
                                     </div>
-                                    <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${currentLang === 'ar' ? 'ثانية للقبول' : 'sec left'} ⏳</div>
-                                    <div class="order-timer-bar" id="bar_timer_${ord.id}" style="width: 100%;"></div>
+                                    <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ثانية ⏳</div>
+                                    <div class="order-timer-bar" id="bar_timer_${ord.id}"></div>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ordDeliveryFee}', '${ord.linkedRadarId}')">${btnAccept}</button>
-                                        <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
+                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}', '${ord.linkedRadarId}')">قبول ✅</button>
+                                        <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">رفض ❌</button>
                                     </div>
                                 </div>
                             `;
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
-                            sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
+                            sendSystemNotification('🚀 طلب جديد!', `من ${restName} - افتح فوراً للقبول`);
                         }
                         else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
                             hasActive = true;
-                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                            
-                            let mapQuery = (ord.restaurant || ord.Shop_Pickup || '');
-                            if (mapQuery.includes('-')) mapQuery = mapQuery.split('-')[0].trim();
-                            if (mapQuery.includes('+')) mapQuery = mapQuery.split('+')[0].trim();
-                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery));
-
-                            // استخراج القيم بدقة
-                            const ordValue = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
-                            const ordDeliveryFee = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
-                            const ordCommission = parseFloat(ord.commission_amount || ord.Shop_Comm || 0).toFixed(2);
-
                             let btnClass = '', btnText = '', nextAction = '';
-
-                            if (ord.status === 'accepted') {
-                                btnClass = 'btn-status-arrived-shop';
-                                btnText = currentLang === 'ar' ? 'وصلت المنشأة 🏪' : 'Arrived at Shop 🏪';
-                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${ordCommission}')`;
-                            } else if (ord.status === 'arrived_at_shop') {
-                                btnClass = 'btn-status-picked';
-                                btnText = currentLang === 'ar' ? 'استلمت الطلب 🥡' : 'Picked Up 🥡';
-                                nextAction = `updateOrderStatus('${ord.id}', 'picked_up', '${ord.linkedRadarId}', 0)`;
-                            } else if (ord.status === 'picked_up') {
-                                btnClass = 'btn-status-onway';
-                                btnText = currentLang === 'ar' ? 'أنا في الطريق للعميل 🚗' : 'On the Way 🚗';
-                                nextAction = `updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', 0)`;
-                            } else if (ord.status === 'on_way') {
-                                btnClass = 'btn-status-arrived';
-                                btnText = currentLang === 'ar' ? 'وصلت عند العميل 📍' : 'Arrived at Customer 📍';
-                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_customer', '${ord.linkedRadarId}', 0)`;
-                            } else if (ord.status === 'arrived_at_customer') {
-                                btnClass = 'btn-status-completed';
-                                btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
-                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}')`;
-                            }
+                            if (ord.status === 'accepted') { btnClass='btn-status-arrived-shop'; btnText='وصلت المنشأة 🏪'; nextAction=`updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${ord.commission_amount || 0}')`; }
+                            else if (ord.status === 'arrived_at_shop') { btnClass='btn-status-picked'; btnText='استلمت الطلب 🥡'; nextAction=`updateOrderStatus('${ord.id}', 'picked_up', '${ord.linkedRadarId}', 0)`; }
+                            else if (ord.status === 'picked_up') { btnClass='btn-status-onway'; btnText='في الطريق للعميل 🚗'; nextAction=`updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', 0)`; }
+                            else if (ord.status === 'on_way') { btnClass='btn-status-arrived'; btnText='وصلت عند العميل 📍'; nextAction=`updateOrderStatus('${ord.id}', 'arrived_at_customer', '${ord.linkedRadarId}', 0)`; }
+                            else if (ord.status === 'arrived_at_customer') { btnClass='btn-status-completed'; btnText='تم التسليم بنجاح 💎'; nextAction=`completeOrder('${ord.id}', '${ord.linkedRadarId}')`; }
 
                             newHtmlContent += `
                                 <div class="order-card" id="card_${ord.id}">
-                                    <div class="order-header">
-                                        <span>${currentLang === 'ar'?'رقم':'No'} #${ord.id.substring(ord.id.length - 4)}</span>
-                                        <span>${currentLang === 'ar'?'الوقت':'Time'} ${ordTime}</span>
-                                    </div>
-                                    <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">🏪 ${restName}</span>
-                                        <div style="display:flex; gap:8px;">
-                                            <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
-                                        </div>
-                                    </div>
-                                    ${phoneHtml}
+                                    <div class="order-rest">🏪 ${restName}</div>
                                     <div class="order-details">
-                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
-                                            <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ordValue} د.أ</div>
-                                        </div>
-                                        <div class="detail-box">
-                                            <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ordDeliveryFee} د.أ</div>
-                                        </div>
+                                        <div class="detail-box"><div class="detail-lbl">القيمة</div><div class="detail-val">${parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2)}</div></div>
+                                        <div class="detail-box"><div class="detail-lbl">التوصيل</div><div class="detail-val">${parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2)}</div></div>
                                     </div>
-                                    <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
+                                    <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width:100%">${btnText}</button>
                                 </div>
                             `;
                         }
                     });
                 }
                 
-                // تحديث عدادات الواجهة فوراً!
+                // تحديث عدادات الواجهة فوراً
                 document.getElementById('ui_today_count').innerText = todayCount;
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
                 
-                if (hasActive) {
-                    if(hotspotsSection) hotspotsSection.style.display = 'none';
-                    if(statusToggleSection) statusToggleSection.style.display = 'none';
-                } else {
-                    if(hotspotsSection) hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
-                    if(statusToggleSection) statusToggleSection.style.display = 'flex';
-                }
+                if (hasActive) { hotspotsSection.style.display = 'none'; statusToggleSection.style.display = 'none'; }
+                else { hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none'; statusToggleSection.style.display = 'flex'; }
 
                 const audio = document.getElementById('order-ringtone');
-                if (hasNewRinging && currentCaptain.app_status === 'online') {
-                    ringtoneActive = true;
-                    audio.play().catch(e => console.log("تحتاج تفاعل"));
-                } else {
-                    ringtoneActive = false;
-                    audio.pause(); audio.currentTime = 0;
-                }
-                
-                if (!hasActive) {
-                    container.innerHTML = `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">${dict[currentLang].no_orders}</div>`;
-                } else {
-                    container.innerHTML = newHtmlContent;
-                }
+                if (hasNewRinging && currentCaptain.app_status === 'online') { ringtoneActive = true; audio.play().catch(e => {}); }
+                else { ringtoneActive = false; audio.pause(); audio.currentTime = 0; }
+                container.innerHTML = hasActive ? newHtmlContent : `<div style="text-align:center; padding:30px;">${dict[currentLang].no_orders}</div>`;
             });
 
             // --- الخرائط الحرارية ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
-                const globalOrdersRef = ref(db, 'orders');
-                onValue(globalOrdersRef, (snapshot) => {
+                onValue(ref(db, 'orders'), (snapshot) => {
+                    const hotspotsContainer = document.getElementById('ui_hotspots');
                     if (snapshot.exists()) {
-                        const allOrders = snapshot.val();
                         const areaCounts = {};
-                        const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim();
-                        
-                        for(let key in allOrders) {
-                            const ord = allOrders[key];
-                            if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
-                                const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
-                                if(ordArea === myArea || myArea === '' || myArea === 'عام') {
-                                    let rName = ord.Shop_Name || ord.restaurant || '';
-                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
-                                    rName = rName.split('-')[0].trim(); 
-                                    if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
-                                }
+                        Object.values(snapshot.val()).forEach(ord => {
+                            if(ord.OrderStatus === 'new') {
+                                let rName = (ord.Shop_Name || ord.restaurant || '').split('-')[0].trim();
+                                if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
                             }
-                        }
-
+                        });
                         const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
-                        const hotspotsContainer = document.getElementById('ui_hotspots');
-                        let hsHtml = ''; 
-
-                        if(sortedRests.length > 0) {
-                            sortedRests.slice(0, 3).forEach(restName => { hsHtml += `<div class="hotspot-tag">${restName} 🔥</div>`; });
-                        } else {
-                            hsHtml = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots'}</div>`;
-                        }
-                        hotspotsContainer.innerHTML = hsHtml;
-                    } else {
-                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد ضغط طلبات بمنطقتك حالياً</div>`;
+                        hotspotsContainer.innerHTML = sortedRests.slice(0,3).map(r => `<div class="hotspot-tag">${r} 🔥</div>`).join('') || "لا يوجد ضغط حالياً";
                     }
                 });
             }
         }
 
-        let masterListenerRef = null;
         function updateUIProfile(data) {
             const masterId = data.company || data.Client_Master;
             if (masterId) {
-                if (masterListenerRef !== masterId) {
-                    masterListenerRef = masterId;
-                    onValue(ref(db, `users/${masterId}`), snap => {
-                        let mName = masterId;
-                        if (snap.exists()) mName = snap.val().Client_Name || snap.val().name || masterId;
-                        const el = document.getElementById('ui_company_name');
-                        if (el) el.innerText = mName;
-                    });
-                }
-            } else {
-                document.getElementById('ui_company_name').innerText = "N One";
+                onValue(ref(db, `users/${masterId}`), snap => {
+                    const el = document.getElementById('ui_company_name');
+                    if (el && snap.exists()) el.innerText = snap.val().Client_Name || snap.val().name || masterId;
+                }, { onlyOnce: true });
             }
-            
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
-            document.getElementById('ui_cap_car').innerText = data.Cap_Car || (currentLang==='ar'?'السيارة غير محددة':'Car info missing');
-            
+            document.getElementById('ui_cap_car').innerText = data.Cap_Car || '---';
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
             const balEl = document.getElementById('ui_cap_bal');
             balEl.innerHTML = `${bal.toFixed(2)} <span style="font-size:14px;">د.أ</span>`;
-            
-            const toggleBtn = document.getElementById('toggle_status');
-            const statusInd = document.getElementById('ui_status_indicator');
-            const statusTxt = document.getElementById('ui_status_text');
-            const warningBanner = document.getElementById('balance-warning');
-            const energyBar = document.getElementById('energy-bar');
-
             if (bal <= -1) {
-                balEl.classList.add('negative');
-                warningBanner.style.display = 'flex';
-                if (data.app_status === 'online') forceOffline();
-                toggleBtn.checked = false; toggleBtn.disabled = true;
-                statusInd.className = 'status-indicator offline';
-                statusTxt.innerText = dict[currentLang].status_blocked;
-                energyBar.classList.remove('active');
+                balEl.classList.add('negative'); document.getElementById('balance-warning').style.display = 'flex';
+                document.getElementById('toggle_status').disabled = true;
             } else {
-                balEl.classList.remove('negative');
-                warningBanner.style.display = 'none';
-                toggleBtn.disabled = false;
-                if (data.app_status === 'online') {
-                    toggleBtn.checked = true;
-                    statusInd.className = 'status-indicator online';
-                    statusTxt.innerText = dict[currentLang].status_online;
-                    energyBar.classList.add('active');
-                } else {
-                    toggleBtn.checked = false;
-                    statusInd.className = 'status-indicator offline';
-                    statusTxt.innerText = dict[currentLang].status_offline;
-                    energyBar.classList.remove('active');
-                }
+                balEl.classList.remove('negative'); document.getElementById('balance-warning').style.display = 'none';
+                document.getElementById('toggle_status').disabled = false;
             }
+            document.getElementById('toggle_status').checked = (data.app_status === 'online');
+            document.getElementById('ui_status_indicator').className = `status-indicator ${data.app_status === 'online' ? 'online' : 'offline'}`;
+            document.getElementById('energy-bar').classList.toggle('active', data.app_status === 'online');
         }
 
         window.toggleOnlineStatus = async function() {
             const isOnline = document.getElementById('toggle_status').checked;
-            const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
-            
-            if (isOnline && bal <= -1) {
-                window.showToast(currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online", true);
-                document.getElementById('toggle_status').checked = false;
-                return;
+            if (isOnline && (parseFloat(currentCaptain.Cap_Balance || 0) <= -1 || isVpnDetected)) {
+                window.showToast("لا يمكنك التفعيل، تأكد من الرصيد والـ VPN", true);
+                document.getElementById('toggle_status').checked = false; return;
             }
-
-            if (isOnline && systemSettings.anti_vpn && isVpnDetected) {
-                window.showToast(currentLang === 'ar' ? "يرجى إغلاق الـ VPN لتتمكن من التفعيل" : "Please disable VPN", true);
-                document.getElementById('toggle_status').checked = false;
-                return;
-            }
-
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
         };
 
-        async function forceOffline() {
-            await update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' });
-        }
-
         window.acceptOrder = async function(appOrdId, fee, radarOrdId) {
             if(orderTimers[appOrdId]) clearInterval(orderTimers[appOrdId]);
-            const updates = {};
-            updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted';
-            
-            if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                updates[`orders/${radarOrdId}/OrderStatus`] = 'accepted';
-            }
-
-            try {
-                await update(ref(db), updates);
-                window.showToast(currentLang === 'ar' ? "تم قبول الطلب توجه للمنشأة 🚀" : "Order accepted 🚀", false);
-            } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال حاول مجددا" : "Connection error please retry", true);
-            }
+            const updates = {}; updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted';
+            if (radarOrdId && radarOrdId !== 'undefined') updates[`orders/${radarOrdId}/OrderStatus`] = 'accepted';
+            await update(ref(db), updates); window.showToast("تم القبول 🚀");
         };
 
-        window.rejectOrder = async function(orderId) {
-            window.showAppConfirm(currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب ❌" : "Are you sure you want to reject ❌", async () => {
-                if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
-                await update(ref(db), { [`assigned_orders/${capNodeKey}/${orderId}/status`]: 'rejected' });
-            });
-        };
-
-        // ================= تحديثات الخصم المالي =================
         window.updateOrderStatus = async function(appOrdId, newStatus, radarOrdId, commAmount) {
-            try {
-                const updates = {};
-                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
-                
-                // الخصم بصير هنا فقط، وبسحب القيمة من الرادار الممررة بالدالة
-                if (newStatus === 'arrived_at_shop') {
-                    const commission = parseFloat(commAmount || 0);
-                    if (commission > 0) {
-                        const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
-                        const newBal = (currentBal - commission).toFixed(2);
-
-                        updates[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal);
-                        updates[`captains/${capNodeKey}/balance`] = parseFloat(newBal);
-                        updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true;
-                        
-                        if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                            updates[`orders/${radarOrdId}/Cap_Commission`] = commission;
-                            updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed';
-                        }
-                    }
-                }
-                
-                if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                    let radarStatus = newStatus;
-                    if(newStatus === 'arrived_at_shop') radarStatus = 'accepted'; 
-                    if(newStatus === 'arrived_at_customer') radarStatus = 'arrived';
-                    updates[`orders/${radarOrdId}/OrderStatus`] = radarStatus;
-                }
-
-                await update(ref(db), updates);
-                window.showToast(currentLang === 'ar' ? "تم تحديث الحالة بنجاح 🚀" : "Status updated 🚀", false);
-            } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
+            const updates = {}; updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
+            if (newStatus === 'arrived_at_shop' && parseFloat(commAmount) > 0) {
+                const newBal = (parseFloat(currentCaptain.Cap_Balance || 0) - parseFloat(commAmount)).toFixed(2);
+                updates[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal);
+                updates[`captains/${capNodeKey}/balance`] = parseFloat(newBal);
+                if (radarOrdId && radarOrdId !== 'undefined') { updates[`orders/${radarOrdId}/Cap_Commission`] = parseFloat(commAmount); updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed'; }
             }
+            if (radarOrdId && radarOrdId !== 'undefined') updates[`orders/${radarOrdId}/OrderStatus`] = (newStatus === 'arrived_at_customer' ? 'arrived' : (newStatus === 'arrived_at_shop' ? 'accepted' : newStatus));
+            await update(ref(db), updates); window.showToast("تم التحديث ✅");
         };
 
         window.completeOrder = async function(appOrdId, radarOrdId) {
-            try {
-                const updates = {};
-                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
-                updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
-                
-                let shopId = '';
-                if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                    updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered';
-                    const ordSnap = await get(ref(db, `orders/${radarOrdId}`));
-                    if(ordSnap.exists()) { shopId = ordSnap.val().Shop_User; }
-                }
-
-                await update(ref(db), updates);
-                window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false);
-                
-                if(shopId && shopId !== 'undefined' && shopId !== 'null') {
-                    setTimeout(() => { openRatingModal(shopId); }, 1500);
-                }
-            } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
-            }
+            const updates = {}; updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
+            updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
+            if (radarOrdId && radarOrdId !== 'undefined') updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered';
+            await update(ref(db), updates); window.showToast("تم التسليم بنجاح 💎");
         };
 
-        window.submitRating = async function() {
-            const val = parseInt(document.getElementById('current_rating_val').value);
-            const shopId = document.getElementById('rating_shop_id').value;
-            const selectedTag = document.getElementById('selected_tag').value;
-            const notes = document.getElementById('rating_notes').value.trim();
-            
-            if(val === 0) { window.showToast("الرجاء اختيار التقييم أولا", true); return; }
-            
-            try {
-                const newRatingRef = push(ref(db, `ratings/shops/${shopId}`));
-                await set(newRatingRef, {
-                    captainId: capNodeKey,
-                    rating: val,
-                    reason: selectedTag,
-                    notes: notes,
-                    timestamp: Date.now()
-                });
-                window.showToast("شكرا لتقييمك 💎");
-                closeRatingModal();
-            } catch(e) {
-                window.showToast("حدث خطأ أثناء إرسال التقييم", true);
-                closeRatingModal();
-            }
-        };
-
-        // ================= السجل المطور (يقرأ البيانات من نفس طلب الكابتن بدقة 100%) =================
+        // ================= السجل الماسي (فاتورة كاملة التفاصيل) =================
         window.openHistoryModal = async function() {
             const container = document.getElementById('history-list-container');
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
+            container.innerHTML = `<div style="text-align:center; padding:20px;">جاري التحميل...</div>`;
             document.getElementById('history-modal').style.display = 'flex';
-            
-            try {
-                // قراءة السجل من ملفات الكابتن نفسه لضمان وجود القيمة والتوصيل
-                const snap = await get(ref(db, `assigned_orders/${capNodeKey}`));
-                let hHtml = '';
-                
-                if(snap.exists()) {
-                    const myOrders = Object.values(snap.val())
-                        .filter(o => o.status === 'completed')
-                        .sort((a,b) => (b.completed_at || b.timestamp) - (a.completed_at || a.timestamp));
-                    
-                    if(myOrders.length === 0) {
-                        hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
-                    } else {
-                        myOrders.forEach(ord => {
-                            const d = new Date(ord.completed_at || ord.timestamp);
-                            const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
-                            const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                            
-                            const ordVal = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
-                            const ordFee = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
-                            const comm = parseFloat(ord.commission_amount || ord.Shop_Comm || 0).toFixed(2);
-                            
-                            const cleanRestName = (name) => {
-                                if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
-                                let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
-                                return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
-                            };
-                            const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
-                            
-                            hHtml += `
-                                <div class="history-item">
-                                    <div class="h-row">
-                                        <span>${currentLang === 'ar' ? "المنشأة" : "Shop"}: ${restName}</span>
-                                        <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
-                                    </div>
-                                    <div class="h-row" style="margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">
-                                        <div style="display:flex; flex-direction:column; align-items:center;">
-                                            <span style="font-size:10px; color:#64748b;">قيمة الطلب</span>
-                                            <span style="color:var(--primary); font-weight:900;">${ordVal} د.أ</span>
-                                        </div>
-                                        <div style="display:flex; flex-direction:column; align-items:center; border-right: 1px solid #e2e8f0; padding-right:10px; border-left: 1px solid #e2e8f0; padding-left:10px;">
-                                            <span style="font-size:10px; color:#64748b;">أجرة التوصيل</span>
-                                            <span style="color:var(--success); font-weight:900;">${ordFee} د.أ</span>
-                                        </div>
-                                        <div style="display:flex; flex-direction:column; align-items:center;">
-                                            <span style="font-size:10px; color:#64748b;">خصم الشركة</span>
-                                            <span class="h-commission">-${comm} د.أ</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    }
-                } else {
-                    hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
-                }
-                
-                container.innerHTML = hHtml;
-            } catch(e) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-weight:bold;">حدث خطأ في تحميل السجل</div>`;
+            const snap = await get(ref(db, `assigned_orders/${capNodeKey}`));
+            if(snap.exists()) {
+                const myOrders = Object.values(snap.val()).filter(o => o.status === 'completed').sort((a,b) => (b.completed_at || 0) - (a.completed_at || 0));
+                container.innerHTML = myOrders.map(ord => `
+                    <div class="history-item">
+                        <div class="h-row"><span>🏪 ${(ord.restaurant || 'موقع').split('-')[0]}</span><span style="font-size:10px;">${new Date(ord.completed_at).toLocaleString('ar-EG')}</span></div>
+                        <div class="h-row" style="margin-top:10px; border-top:1px dashed #eee; padding-top:10px;">
+                            <div><span style="font-size:10px;">الطلب</span><br><b>${parseFloat(ord.value || 0).toFixed(2)}</b></div>
+                            <div style="border-right:1px solid #eee; padding-right:10px;"><span style="font-size:10px;">ربحك</span><br><b style="color:var(--success);">${parseFloat(ord.fee || 0).toFixed(2)}</b></div>
+                            <div><span style="font-size:10px;">خصم</span><br><b style="color:var(--danger);">${parseFloat(ord.commission_amount || 0).toFixed(2)}</b></div>
+                        </div>
+                    </div>
+                `).join('') || "لا يوجد سجل اليوم";
             }
-        };
-
-        window.openSettingsModal = function() {
-            document.getElementById('set_user').value = currentCaptain.Cap_User || currentCaptain.user || '';
-            document.getElementById('set_pass').value = currentCaptain.Cap_Pass || currentCaptain.pass || '';
-            document.getElementById('settings-modal').style.display = 'flex';
         };
 
         window.saveSettings = async function() {
             const newUser = document.getElementById('set_user').value.trim();
             const newPass = document.getElementById('set_pass').value.trim();
-            if(!newUser || !newPass) { window.showToast(currentLang === 'ar' ? "البيانات فارغة" : "Fields cannot be empty", true); return; }
-
-            try {
-                if(newUser !== capNodeKey) {
-                    const newData = { ...currentCaptain, Cap_User: newUser, user: newUser, Cap_Pass: newPass, pass: newPass };
-                    const updates = {};
-                    updates[`captains/${newUser}`] = newData;
-                    updates[`captains/${capNodeKey}`] = null;
-                    await update(ref(db), updates);
-                    
-                    capNodeKey = newUser; currentCaptain = newData;
-                    localStorage.setItem('n1_captain_session', JSON.stringify(newData));
-                } else {
-                    await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass });
-                    currentCaptain.Cap_Pass = newPass; currentCaptain.pass = newPass;
-                    localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
-                }
-                window.showToast(currentLang === 'ar' ? "تم التحديث بنجاح" : "Updated successfully", false);
-                document.getElementById('settings-modal').style.display = 'none';
-            } catch(e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection Error", true);
-            }
+            if(!newUser || !newPass) return;
+            await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass });
+            window.showToast("تم الحفظ بنجاح ✅"); document.getElementById('settings-modal').style.display = 'none';
         };
 
     </script>
