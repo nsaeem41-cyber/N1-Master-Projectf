@@ -1608,21 +1608,15 @@ setInterval(() => {
                 }
             });
 
-            // 🛡️ المراقبة الحية للطلبات (ومحرك الحسابات الماسي)
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
                 const statusToggleSection = document.getElementById('status-toggle-section');
-                
                 let hasActive = false, hasNewRinging = false;
                 let newHtmlContent = ''; 
-                
-                // عدادات الإنجاز الماسي
                 let todayCount = 0; let todayVal = 0; let todayFee = 0;
                 const todayStr = new Date().toDateString();
-                
-                const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                 if (snapshot.exists()) {
                     const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
@@ -1632,8 +1626,6 @@ setInterval(() => {
                             return name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
                         };
                         const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
-                        
-                        // محرك حساب الإنجاز المباشر
                         if (ord.status === 'completed') {
                             const ordDate = new Date(ord.completed_at || ord.timestamp);
                             if (ordDate.toDateString() === todayStr) {
@@ -1642,91 +1634,62 @@ setInterval(() => {
                                 todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
                             }
                         }
-                        
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
                             if(!localOrderSeen[ord.id]) localOrderSeen[ord.id] = Date.now();
                             const elapsed = Math.floor((Date.now() - localOrderSeen[ord.id]) / 1000);
                             let timeLeft = systemSettings.order_timer - elapsed;
                             if(timeLeft <= 0) { rejectOrderAuto(ord.id); return; }
-
                             hasActive = true; hasNewRinging = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                            newHtmlContent += `
-                                <div class="order-card ringing" id="card_${ord.id}">
-                                    <div class="order-header"><span>#${ord.id.substring(ord.id.length - 4)}</span><span>${ordTime}</span></div>
-                                    <div class="order-rest">🏪 ${restName}</div>
-                                    <div class="order-details">
-                                        <div class="detail-box">
-                                            <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2)} د.أ</div>
-                                        </div>
-                                        <div class="detail-box">
-                                            <div class="detail-lbl">${currentLang === 'ar'?'أجرة التوصيل':'Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2)} د.أ</div>
-                                        </div>
-                                    </div>
-                                    <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ثانية ⏳</div>
-                                    <div class="order-timer-bar" id="bar_timer_${ord.id}"></div>
-                                    <div class="action-buttons">
-                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}', '${ord.linkedRadarId}')">قبول ✅</button>
-                                        <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">رفض ❌</button>
-                                    </div>
+                            newHtmlContent += `<div class="order-card ringing">
+                                <div class="order-header"><span>#${ord.id.substring(ord.id.length - 4)}</span><span>${ordTime}</span></div>
+                                <div class="order-rest">🏪 ${restName}</div>
+                                <div class="order-details">
+                                    <div class="detail-box"><div class="detail-lbl">القيمة</div><div class="detail-val">${parseFloat(ord.value || 0).toFixed(2)}</div></div>
+                                    <div class="detail-box"><div class="detail-lbl">التوصيل</div><div class="detail-val" style="color:var(--success)">${parseFloat(ord.fee || 0).toFixed(2)}</div></div>
                                 </div>
-                            `;
+                                <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ثانية</div>
+                                <div class="order-timer-bar" id="bar_timer_${ord.id}"></div>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee}', '${ord.linkedRadarId}')">قبول ✅</button>
+                                    <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">رفض ❌</button>
+                                </div>
+                            </div>`;
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
-                            sendSystemNotification('🚀 طلب جديد!', `من ${restName} - افتح فوراً للقبول`);
-                        }
-                        else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
+                        } else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
                             hasActive = true;
                             let btnClass = '', btnText = '', nextAction = '';
                             if (ord.status === 'accepted') { btnClass='btn-status-arrived-shop'; btnText='وصلت المنشأة 🏪'; nextAction=`updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${ord.commission_amount || 0}')`; }
                             else if (ord.status === 'arrived_at_shop') { btnClass='btn-status-picked'; btnText='استلمت الطلب 🥡'; nextAction=`updateOrderStatus('${ord.id}', 'picked_up', '${ord.linkedRadarId}', 0)`; }
-                            else if (ord.status === 'picked_up') { btnClass='btn-status-onway'; btnText='في الطريق للعميل 🚗'; nextAction=`updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', 0)`; }
-                            else if (ord.status === 'on_way') { btnClass='btn-status-arrived'; btnText='وصلت عند العميل 📍'; nextAction=`updateOrderStatus('${ord.id}', 'arrived_at_customer', '${ord.linkedRadarId}', 0)`; }
-                            else if (ord.status === 'arrived_at_customer') { btnClass='btn-status-completed'; btnText='تم التسليم بنجاح 💎'; nextAction=`completeOrder('${ord.id}', '${ord.linkedRadarId}')`; }
-
-                            newHtmlContent += `
-                                <div class="order-card" id="card_${ord.id}">
-                                    <div class="order-rest">🏪 ${restName}</div>
-                                    <div class="order-details">
-                                        <div class="detail-box"><div class="detail-lbl">القيمة</div><div class="detail-val">${parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2)}</div></div>
-                                        <div class="detail-box"><div class="detail-lbl">التوصيل</div><div class="detail-val">${parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2)}</div></div>
-                                    </div>
-                                    <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width:100%">${btnText}</button>
-                                </div>
-                            `;
+                            else if (ord.status === 'picked_up') { btnClass='btn-status-onway'; btnText='في الطريق 🚗'; nextAction=`updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', 0)`; }
+                            else if (ord.status === 'on_way') { btnClass='btn-status-arrived'; btnText='وصلت للعميل 📍'; nextAction=`updateOrderStatus('${ord.id}', 'arrived_at_customer', '${ord.linkedRadarId}', 0)`; }
+                            else if (ord.status === 'arrived_at_customer') { btnClass='btn-status-completed'; btnText='تسليم 💎'; nextAction=`completeOrder('${ord.id}', '${ord.linkedRadarId}')`; }
+                            newHtmlContent += `<div class="order-card">
+                                <div class="order-rest">🏪 ${restName}</div>
+                                <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width:100%">${btnText}</button>
+                            </div>`;
                         }
                     });
                 }
-                
-                // تحديث عدادات الواجهة فوراً
                 document.getElementById('ui_today_count').innerText = todayCount;
                 document.getElementById('ui_today_val').innerText = todayVal.toFixed(2);
                 document.getElementById('ui_today_fee').innerText = todayFee.toFixed(2);
-                
                 if (hasActive) { hotspotsSection.style.display = 'none'; statusToggleSection.style.display = 'none'; }
                 else { hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none'; statusToggleSection.style.display = 'flex'; }
-
                 const audio = document.getElementById('order-ringtone');
                 if (hasNewRinging && currentCaptain.app_status === 'online') { ringtoneActive = true; audio.play().catch(e => {}); }
                 else { ringtoneActive = false; audio.pause(); audio.currentTime = 0; }
                 container.innerHTML = hasActive ? newHtmlContent : `<div style="text-align:center; padding:30px;">${dict[currentLang].no_orders}</div>`;
             });
 
-            // --- الخرائط الحرارية ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
                 onValue(ref(db, 'orders'), (snapshot) => {
                     const hotspotsContainer = document.getElementById('ui_hotspots');
                     if (snapshot.exists()) {
                         const areaCounts = {};
-                        Object.values(snapshot.val()).forEach(ord => {
-                            if(ord.OrderStatus === 'new') {
-                                let rName = (ord.Shop_Name || ord.restaurant || '').split('-')[0].trim();
-                                if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
-                            }
-                        });
+                        Object.values(snapshot.val()).forEach(ord => { if(ord.OrderStatus === 'new') { let rName = (ord.Shop_Name || ord.restaurant || '').split('-')[0].trim(); if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1; } });
                         const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
                         hotspotsContainer.innerHTML = sortedRests.slice(0,3).map(r => `<div class="hotspot-tag">${r} 🔥</div>`).join('') || "لا يوجد ضغط حالياً";
                     }
@@ -1734,13 +1697,17 @@ setInterval(() => {
             }
         }
 
+        // ================= التعديل: جلب اسم الشركة الحقيقي بدقة =================
         function updateUIProfile(data) {
             const masterId = data.company || data.Client_Master;
             if (masterId) {
-                onValue(ref(db, `users/${masterId}`), snap => {
+                get(ref(db, `users/${masterId}`)).then(snap => {
                     const el = document.getElementById('ui_company_name');
-                    if (el && snap.exists()) el.innerText = snap.val().Client_Name || snap.val().name || masterId;
-                }, { onlyOnce: true });
+                    if (el && snap.exists()) {
+                        const compName = snap.val().Client_Name || snap.val().name || masterId;
+                        el.innerText = compName;
+                    }
+                });
             }
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
             document.getElementById('ui_cap_car').innerText = data.Cap_Car || '---';
@@ -1762,7 +1729,7 @@ setInterval(() => {
         window.toggleOnlineStatus = async function() {
             const isOnline = document.getElementById('toggle_status').checked;
             if (isOnline && (parseFloat(currentCaptain.Cap_Balance || 0) <= -1 || isVpnDetected)) {
-                window.showToast("لا يمكنك التفعيل، تأكد من الرصيد والـ VPN", true);
+                window.showToast("تأكد من الرصيد والـ VPN", true);
                 document.getElementById('toggle_status').checked = false; return;
             }
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
@@ -1794,7 +1761,6 @@ setInterval(() => {
             await update(ref(db), updates); window.showToast("تم التسليم بنجاح 💎");
         };
 
-        // ================= السجل الماسي (فاتورة كاملة التفاصيل) =================
         window.openHistoryModal = async function() {
             const container = document.getElementById('history-list-container');
             container.innerHTML = `<div style="text-align:center; padding:20px;">جاري التحميل...</div>`;
@@ -1802,25 +1768,22 @@ setInterval(() => {
             const snap = await get(ref(db, `assigned_orders/${capNodeKey}`));
             if(snap.exists()) {
                 const myOrders = Object.values(snap.val()).filter(o => o.status === 'completed').sort((a,b) => (b.completed_at || 0) - (a.completed_at || 0));
-                container.innerHTML = myOrders.map(ord => `
-                    <div class="history-item">
-                        <div class="h-row"><span>🏪 ${(ord.restaurant || 'موقع').split('-')[0]}</span><span style="font-size:10px;">${new Date(ord.completed_at).toLocaleString('ar-EG')}</span></div>
-                        <div class="h-row" style="margin-top:10px; border-top:1px dashed #eee; padding-top:10px;">
-                            <div><span style="font-size:10px;">الطلب</span><br><b>${parseFloat(ord.value || 0).toFixed(2)}</b></div>
-                            <div style="border-right:1px solid #eee; padding-right:10px;"><span style="font-size:10px;">ربحك</span><br><b style="color:var(--success);">${parseFloat(ord.fee || 0).toFixed(2)}</b></div>
-                            <div><span style="font-size:10px;">خصم</span><br><b style="color:var(--danger);">${parseFloat(ord.commission_amount || 0).toFixed(2)}</b></div>
-                        </div>
+                container.innerHTML = myOrders.map(ord => `<div class="history-item">
+                    <div class="h-row"><span>🏪 ${(ord.restaurant || 'موقع').split('-')[0]}</span><span style="font-size:10px;">${new Date(ord.completed_at).toLocaleString('ar-EG')}</span></div>
+                    <div class="h-row" style="margin-top:10px; border-top:1px dashed #eee; padding-top:10px;">
+                        <div><span style="font-size:10px;">الطلب</span><br><b>${parseFloat(ord.value || 0).toFixed(2)}</b></div>
+                        <div style="border-right:1px solid #eee; padding-right:10px; border-left:1px solid #eee; padding-left:10px;"><span style="font-size:10px;">ربحك</span><br><b style="color:var(--success)">${parseFloat(ord.fee || 0).toFixed(2)}</b></div>
+                        <div><span style="font-size:10px;">خصم</span><br><b style="color:var(--danger)">${parseFloat(ord.commission_amount || 0).toFixed(2)}</b></div>
                     </div>
-                `).join('') || "لا يوجد سجل اليوم";
+                </div>`).join('') || "لا يوجد سجل";
             }
         };
 
         window.saveSettings = async function() {
-            const newUser = document.getElementById('set_user').value.trim();
             const newPass = document.getElementById('set_pass').value.trim();
-            if(!newUser || !newPass) return;
+            if(!newPass) return;
             await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass });
-            window.showToast("تم الحفظ بنجاح ✅"); document.getElementById('settings-modal').style.display = 'none';
+            window.showToast("تم الحفظ ✅"); document.getElementById('settings-modal').style.display = 'none';
         };
 
     </script>
