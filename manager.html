@@ -282,7 +282,42 @@
             
             attachRealtimeListeners();
             fetchOverridesSettings();
+            updateCountdownTimer(); // استدعاء الدالة المحدثة
         };
+
+        // ================= دالة العداد الماسي الجديدة =================
+        function updateCountdownTimer() {
+            const timerEl = document.getElementById('sub-timer');
+            let expiryVal = currentUser.expiry || currentUser.Client_Expiry;
+
+            // 1. إذا كان الإدارة العليا أو لا يوجد تاريخ أو التاريخ 2099
+            if (isSuperAdmin || !expiryVal || expiryVal.includes('2099')) {
+                timerEl.innerText = "صلاحية ممتدة (خزنة ماسية 2099) 💎";
+                timerEl.className = "sub-countdown sub-active";
+                return;
+            }
+
+            const expiryDate = new Date(expiryVal);
+            expiryDate.setHours(23, 59, 59, 999);
+            const diffDays = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 0) {
+                // 2. إذا كان الاشتراك لأكثر من 10 سنوات (يعتبر مدى الحياة)
+                if (diffDays > 3650) { 
+                    timerEl.innerText = "صلاحية ممتدة (خزنة ماسية 2099) 💎";
+                    timerEl.className = "sub-countdown sub-active";
+                } else if (diffDays <= 3) {
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-warning";
+                } else {
+                    timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-active";
+                }
+            } else {
+                timerEl.innerText = `الاشتراك منتهي 🚫`;
+                timerEl.className = "sub-countdown sub-expired";
+            }
+        }
 
         // ==========================================
         // وظائف الريموت كنترول (التحكم السيادي)
@@ -332,14 +367,12 @@
             }
         };
 
-        // التعديل الماسي: الدالة الذكية للبحث عن اليوزر الحقيقي للكابتن وتجميده
         window.suspendCaptainRemote = async function(capPhone) {
             if(!confirm(`⚠️ تحذير: هل تريد تجميد حساب الكابتن (${capPhone}) فوراً ومنعه من العمل؟`)) return;
 
             let realCapKey = null;
             let targetNode = 'captains';
 
-            // البحث الذكي في مسار الكباتن
             if(globalDBData.captains) {
                 for(let key in globalDBData.captains) {
                     if(globalDBData.captains[key].Cap_Phone === capPhone || globalDBData.captains[key].phone === capPhone) {
@@ -349,7 +382,6 @@
                 }
             }
             
-            // للضمان، نبحث في مسار users أيضاً
             if(!realCapKey && globalDBData.users) {
                 for(let key in globalDBData.users) {
                     if(globalDBData.users[key].Cap_Phone === capPhone || globalDBData.users[key].phone === capPhone) {
@@ -362,7 +394,6 @@
                 }
             }
 
-            // إذا لم نجده، ربما اليوزر مسجل بنفس رقم الهاتف
             if(!realCapKey) {
                 realCapKey = capPhone; 
             }
@@ -382,11 +413,10 @@
 
         // ================= تحليل البيانات المباشر (الرادار والتقييمات) =================
         window.attachRealtimeListeners = function() {
-            // سحب موجه للمسارات لتخفيف الضغط وإغلاق ثغرة استنزاف السيرفر
             onValue(ref(db, 'orders'), (snap) => { globalDBData.orders = snap.val() || {}; processData(); });
             onValue(ref(db, 'shops'), (snap) => { globalDBData.shops = snap.val() || {}; processData(); });
             onValue(ref(db, 'users'), (snap) => { globalDBData.users = snap.val() || {}; processData(); });
-            onValue(ref(db, 'captains'), (snap) => { globalDBData.captains = snap.val() || {}; processData(); }); // إضافة الكباتن
+            onValue(ref(db, 'captains'), (snap) => { globalDBData.captains = snap.val() || {}; processData(); });
             onValue(ref(db, 'assigned_orders'), (snap) => { globalDBData.assigned_orders = snap.val() || {}; processData(); });
             onValue(ref(db, 'ratings/captains'), (snap) => { globalDBData.ratings = snap.val() || {}; processRatings(globalDBData.ratings); });
         };
@@ -404,7 +434,7 @@
             for(let capPhone in ratingsData) {
                 for(let pushKey in ratingsData[capPhone]) {
                     let rateObj = ratingsData[capPhone][pushKey];
-                    rateObj.capPhone = capPhone; // التقييم يُسجل برقم الهاتف
+                    rateObj.capPhone = capPhone;
                     allRatings.push(rateObj);
                 }
             }
@@ -416,7 +446,6 @@
                 let isBad = r.rating <= 2;
                 let gemClass = isBad ? 'gem-rating gem-bad' : 'gem-rating';
                 
-                // زر التجميد المرتبط بالدالة الذكية
                 let actionBtn = isBad ? `<button onclick="suspendCaptainRemote('${r.capPhone}')" style="background:#ef4444; border:none; border-radius:6px; color:white; font-size:10px; padding:4px 8px; cursor:pointer; font-weight:bold;">تجميد الكابتن 🛑</button>` : '';
 
                 html += `
@@ -540,6 +569,7 @@
             }
 
             document.getElementById('feed-body').innerHTML = feedHtml || '<tr><td colspan="5" style="text-align:center;">الرادار هادئ حالياً</td></tr>';
+            
             document.getElementById('loader').style.display = 'none';
             document.getElementById('feed-table').style.display = 'table';
         };
