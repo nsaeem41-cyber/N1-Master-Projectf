@@ -7,12 +7,15 @@
     
     <meta property="og:title" content="انضم إلى أسطول N One 💎">
     <meta property="og:description" content="سجل الآن ككابتن في الإمبراطورية وابدأ رحلة النجاح النفاث 🚀">
-    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/logo.jpg">
-    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/captain.html">
+    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Project/logo.jpg">
+    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Project/captain.html">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="manifest" href="manifest.json?v=3">
     <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Captain Portal">
     <link rel="apple-touch-icon" href="logo.jpg">
     <style>
         /* ================= منع الريفرش عند السحب للأسفل (Pull-to-refresh) ================= */
@@ -403,9 +406,11 @@
         .pending-title { color: var(--gold); }
         .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
 
+        /* تعديل هنا: حذف شاشة التحميل القديمة واستبدالها بتحميل لحظي */
         #loader {
+            display: none; /* مخفي افتراضياً، سيظهر فقط عند جلب البيانات الطويلة */
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
-            z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--gold);
+            z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: var(--gold);
         }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(212, 175, 55, 0.3); border-top: 4px solid var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -489,6 +494,7 @@
     </audio>
 
     <div class="app-container">
+        
         <div id="loader">
             <img id="loader-logo" src="logo.jpg" style="width:140px; height:140px; margin-bottom:20px; border-radius:20px; object-fit:contain; box-shadow:0 0 30px rgba(212,175,55,0.2); background:transparent; padding:0;">
             <div class="spinner"></div>
@@ -726,7 +732,7 @@
 
     </div>
 <script>
-        // إعدادات تثبيت الـ PWA
+// إعدادات تثبيت الـ PWA
         let deferredPrompt;
         const splash = document.getElementById('pwa-splash');
         const btnInstall = document.getElementById('btn-install-app');
@@ -1103,6 +1109,9 @@
         window.addEventListener('online', () => { document.getElementById('offline-banner').style.display = 'none'; });
 
         window.onload = function() {
+            // مسح أي عدادات مخزنة محلياً لضمان الاعتماد الكلي على الفايربيز
+            localStorage.removeItem('n1_captain_daily_stats');
+            
             checkAndResetDailyCounter();
 
             setTimeout(() => {
@@ -1404,8 +1413,7 @@
                     if (snap.exists()) masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
                 });
             }
-
-            const renderAd = () => {
+const renderAd = () => {
                 const now = Date.now();
                 let displayAd = null;
                 let senderLabel = "Management";
@@ -1565,6 +1573,7 @@
             window.showToast(currentLang === 'ar' ? "انتهى الوقت تم سحب الطلب ⏳" : "Time out Order reassigned ⏳", true);
         };
 
+        // ================= الطرد السيادي والمراقبة החية =================
         function initRealtimeListeners() {
             if(!capNodeKey || isListenerActive) return;
             isListenerActive = true;
@@ -1593,6 +1602,10 @@
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
                         document.getElementById('pending-screen').style.display = 'none';
                         document.getElementById('blocked-screen').style.display = 'flex';
+                        // الإجراء السيادي: طرد الكابتن من النظام فوراً وإيقاف استقبال الطلبات
+                        if(data.app_status === 'online') {
+                            forceOffline();
+                        }
                         return;
                     } else {
                         document.getElementById('blocked-screen').style.display = 'none';
@@ -1606,17 +1619,14 @@
                 }
             });
 
-            // 🛡️ المراقبة الحية للطلبات 
+            // 🛡️ المراقبة الحية للطلبات
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
                 const statusToggleSection = document.getElementById('status-toggle-section');
                 
-                let todayCount = 0, todayVal = 0, todayFee = 0;
                 let hasActive = false, hasNewRinging = false;
-
-                let completedCloudOrders = []; // تجميع الطلبات اللي رح تترحل للسحابة
                 let newHtmlContent = ''; 
                 const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
@@ -1642,15 +1652,11 @@
                             }
                         }
 
-                        if (ord.status === 'completed') {
-                            if (new Date(ord.completed_at || ord.timestamp).toDateString() === todayStr) {
-                                todayCount++;
-                                todayVal += parseFloat(ord.value || ord.Shop_Val || 0);
-                                todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
-                            }
-                            completedCloudOrders.push(ord);
-                        }
-                        
+                        // تأمين الحسابات باستخدام parseFloat للقيم القادمة من الرادار
+                        const ordValSafe = parseFloat(ord.value || ord.Shop_Val || ord.order_value || 0).toFixed(2);
+                        const ordFeeSafe = parseFloat(ord.fee || ord.Shop_Fee || ord.delivery_fee || 0).toFixed(2);
+                        const commAmountSafe = parseFloat(ord.commission_amount || ord.company_share || 0);
+
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
@@ -1677,23 +1683,41 @@
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
+                                            <div class="detail-val">${ordValSafe} د.أ</div>
                                         </div>
                                         <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
+                                            <div class="detail-val" style="color:var(--success);">${ordFeeSafe} د.أ</div>
                                         </div>
                                     </div>
                                     <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${currentLang === 'ar' ? 'ثانية للقبول' : 'sec left'} ⏳</div>
                                     <div class="order-timer-bar" id="bar_timer_${ord.id}" style="width: 100%;"></div>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.fee || ord.Shop_Fee}', '${ord.linkedRadarId}')">${btnAccept}</button>
+                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ordFeeSafe}', '${ord.linkedRadarId}')">${btnAccept}</button>
                                         <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
                                     </div>
                                 </div>
                             `;
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
-                            sendSystemNotification('🚀 طلب جديد ألماسي!', `طلب من ${restName} - افتح التطبيق فوراً للقبول`);
+                            
+                            // محرك الإشعارات العنيد (Vibrate & Background)
+                            if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+                                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                                    navigator.serviceWorker.ready.then(reg => {
+                                        reg.showNotification('🚀 طلب جديد بانتظارك!', {
+                                            body: `من منشأة: ${restName} - افتح فوراً للقبول 💎`,
+                                            icon: 'logo.jpg',
+                                            badge: 'logo.jpg',
+                                            tag: 'new-order-' + ord.id, 
+                                            vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40],
+                                            requireInteraction: true,
+                                            data: { url: './captain.html' }
+                                        });
+                                    });
+                                }
+                            } else {
+                                window.showToast(`🚀 طلب جديد من ${restName}`, false);
+                            }
                         }
                         else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
                             hasActive = true;
@@ -1709,7 +1733,7 @@
                             if (ord.status === 'accepted') {
                                 btnClass = 'btn-status-arrived-shop';
                                 btnText = currentLang === 'ar' ? 'وصلت المنشأة 🏪' : 'Arrived at Shop 🏪';
-                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${ord.commission_amount || 0}')`;
+                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${commAmountSafe}')`;
                             } else if (ord.status === 'arrived_at_shop') {
                                 btnClass = 'btn-status-picked';
                                 btnText = currentLang === 'ar' ? 'استلمت الطلب 🥡' : 'Picked Up 🥡';
@@ -1744,11 +1768,11 @@
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
+                                            <div class="detail-val">${ordValSafe} د.أ</div>
                                         </div>
                                         <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
+                                            <div class="detail-val" style="color:var(--success);">${ordFeeSafe} د.أ</div>
                                         </div>
                                     </div>
                                     <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
@@ -1757,28 +1781,6 @@
                         }
                     });
                 }
-                
-                // جلب سجل الإنجازات من السحابة (Firebase) وليس من المتصفح
-                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
-                onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
-                    if(archiveSnap.exists()) {
-                        let cloudTodayCount = 0;
-                        let cloudTodayVal = 0;
-                        let cloudTodayFee = 0;
-                        
-                        Object.values(archiveSnap.val()).forEach(o => {
-                            if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
-                                cloudTodayCount++;
-                                cloudTodayVal += parseFloat(o.value || o.Shop_Val || 0); // يمكن أن تكون صفر إذا لم تخزن القيمة
-                                cloudTodayFee += parseFloat(o.comm || 0); // هنا أظهرت العمولة، أو يمكن استبدالها بأجر التوصيل
-                            }
-                        });
-                        
-                        document.getElementById('ui_today_count').innerText = cloudTodayCount;
-                        document.getElementById('ui_today_val').innerText = '---'; // مؤقتاً
-                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
-                    }
-                }, { onlyOnce: true });
                 
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
@@ -1801,6 +1803,30 @@
                     container.innerHTML = `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">${dict[currentLang].no_orders}</div>`;
                 } else {
                     container.innerHTML = newHtmlContent;
+                }
+            });
+
+            // 💰 جلب سجل الإنجازات المالي بدقة من السحابة (إلغاء التخزين المحلي)
+            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
+                if(archiveSnap.exists()) {
+                    let cloudTodayCount = 0;
+                    let cloudTodayVal = 0;
+                    let cloudTodayFee = 0;
+                    const todayStr = new Date().toDateString();
+                    
+                    Object.values(archiveSnap.val()).forEach(o => {
+                        if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
+                            cloudTodayCount++;
+                            // استخدام parseFloat لضمان القروش والأرقام العشرية ومنع NaN
+                            cloudTodayVal += parseFloat(o.value || o.Shop_Val || o.order_value || 0) || 0; 
+                            cloudTodayFee += parseFloat(o.fee || o.Shop_Fee || o.delivery_fee || 0) || 0; 
+                        }
+                    });
+                    
+                    document.getElementById('ui_today_count').innerText = cloudTodayCount;
+                    document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
+                    document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
                 }
             });
 
@@ -1842,6 +1868,13 @@
                     }
                 });
             }
+            
+            // ================= منع الفايربيس من الدخول في وضع النوم (Keep-Alive Database) =================
+            const heartBeat = setInterval(() => {
+                if (currentCaptain && currentCaptain.app_status === 'online') {
+                    update(ref(db, `captains/${capNodeKey}`), { last_active: Date.now() });
+                }
+            }, 30000); 
         }
 
         let masterListenerRef = null;
@@ -1947,13 +1980,13 @@
             });
         };
 
-        // ================= تحديثات الخصم المالي =================
+        // 💰 الخصم المالي الديناميكي (Dynamic Commission)
         window.updateOrderStatus = async function(appOrdId, newStatus, radarOrdId, commAmount) {
             try {
                 const updates = {};
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
                 
-                // الخصم بصير هنا فقط!
+                // الخصم المالي الحقيقي يحدث هنا فقط (عند الوصول للمنشأة) لمرة واحدة
                 if (newStatus === 'arrived_at_shop') {
                     const commission = parseFloat(commAmount || 0);
                     if (commission > 0) {
@@ -2034,7 +2067,7 @@
             }
         };
 
-        // ================= سحب السجل من الفايربيس بدلا من التخزين المحلي =================
+        // 🧾 الفواتير المصغرة في سجل الطلبات
         window.openHistoryModal = async function() {
             const container = document.getElementById('history-list-container');
             container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
@@ -2056,7 +2089,11 @@
                             const d = new Date(ord.date);
                             const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
                             const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                            const comm = parseFloat(ord.comm || 0).toFixed(2);
+                            
+                            // استخراج القيم بدقة عالية
+                            const ordVal = parseFloat(ord.value || ord.Shop_Val || ord.order_value || 0).toFixed(2);
+                            const delFee = parseFloat(ord.fee || ord.Shop_Fee || ord.delivery_fee || 0).toFixed(2);
+                            const comm = parseFloat(ord.comm || ord.commission || 0).toFixed(2);
                             
                             const cleanRestName = (name) => {
                                 if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
@@ -2068,11 +2105,15 @@
                             hHtml += `
                                 <div class="history-item">
                                     <div class="h-row">
-                                        <span>${currentLang === 'ar' ? "الوجهة" : "Destination"} ${restName}</span>
+                                        <span>${currentLang === 'ar' ? "الوجهة" : "Destination"}: ${restName}</span>
                                         <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
                                     </div>
+                                    <div class="h-row" style="margin-top:8px; font-size:12px;">
+                                        <span style="color:var(--primary);">قيمة الطلب: <b>${ordVal} د.أ</b></span>
+                                        <span style="color:var(--success);">أجرة التوصيل: <b>${delFee} د.أ</b></span>
+                                    </div>
                                     <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                                        <span>${currentLang === 'ar' ? "نسبة الشركة المقتطعة" : "Company Commission"}</span>
+                                        <span>${currentLang === 'ar' ? "عمولة الشركة المخصومة" : "Company Commission"}</span>
                                         <span class="h-commission">-${comm} د.أ</span>
                                     </div>
                                 </div>
