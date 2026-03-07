@@ -1619,10 +1619,7 @@
                 const hotspotsSection = document.getElementById('hotspots-section');
                 const statusToggleSection = document.getElementById('status-toggle-section');
                 
-                let todayCount = 0, todayVal = 0, todayFee = 0;
                 let hasActive = false, hasNewRinging = false;
-
-                let completedCloudOrders = []; 
                 let newHtmlContent = ''; 
                 const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
@@ -1648,15 +1645,6 @@
                             }
                         }
 
-                        if (ord.status === 'completed') {
-                            if (new Date(ord.completed_at || ord.timestamp).toDateString() === todayStr) {
-                                todayCount++;
-                                todayVal += parseFloat(ord.value || ord.Shop_Val || 0);
-                                todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
-                            }
-                            completedCloudOrders.push(ord);
-                        }
-                        
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
 
@@ -1723,10 +1711,11 @@
                             hasActive = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
+                            // تعديل الرابط للرابط القياسي لدعم الواتساب بامتياز
                             let mapQuery = (ord.restaurant || ord.Shop_Pickup || '');
                             if (mapQuery.includes('-')) mapQuery = mapQuery.split('-')[0].trim();
                             if (mapQuery.includes('+')) mapQuery = mapQuery.split('+')[0].trim();
-                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=$' + encodeURIComponent(mapQuery));
+                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQuery));
 
                             let btnClass = '', btnText = '', nextAction = '';
 
@@ -1782,29 +1771,6 @@
                     });
                 }
                 
-                // جلب سجل الإنجازات من السحابة (Firebase) وليس من المتصفح
-                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
-                onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
-                    if(archiveSnap.exists()) {
-                        let cloudTodayCount = 0;
-                        let cloudTodayVal = 0;
-                        let cloudTodayFee = 0;
-                        
-                        Object.values(archiveSnap.val()).forEach(o => {
-                            if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
-                                cloudTodayCount++;
-                                cloudTodayVal += parseFloat(o.value || o.Shop_Val || 0); 
-                                cloudTodayFee += parseFloat(o.comm || 0); // نسبة الشركة
-                            }
-                        });
-                        
-                        document.getElementById('ui_today_count').innerText = cloudTodayCount;
-                        // تم التعديل لعرض قيمة الطلبات الفعلية
-                        document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
-                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
-                    }
-                }, { onlyOnce: true });
-                
                 if (hasActive) {
                     if(hotspotsSection) hotspotsSection.style.display = 'none';
                     if(statusToggleSection) statusToggleSection.style.display = 'none';
@@ -1828,6 +1794,31 @@
                     container.innerHTML = newHtmlContent;
                 }
             });
+
+            // جلب سجل الإنجازات المالي بدقة (مستمر وبشكل حي)
+            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
+                if(archiveSnap.exists()) {
+                    let cloudTodayCount = 0;
+                    let cloudTodayVal = 0;
+                    let cloudTodayFee = 0;
+                    const todayStr = new Date().toDateString();
+                    
+                    Object.values(archiveSnap.val()).forEach(o => {
+                        if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
+                            cloudTodayCount++;
+                            // سحب قيمة الطلب الحقيقية
+                            cloudTodayVal += parseFloat(o.value || o.Shop_Val || o.order_value || 0); 
+                            // سحب أجر التوصيل للكابتن (وليس العمولة)
+                            cloudTodayFee += parseFloat(o.fee || o.Shop_Fee || o.delivery_fee || 0); 
+                        }
+                    });
+                    
+                    document.getElementById('ui_today_count').innerText = cloudTodayCount;
+                    document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
+                    document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
+                }
+            }); // تم إزالة onlyOnce ليتحدث فوراً
 
             // --- الخرائط الحرارية ---
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
