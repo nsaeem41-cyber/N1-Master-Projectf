@@ -265,6 +265,40 @@
         input:checked + .slider:before { transform: translateX(26px); }
         input:disabled + .slider { background-color: #e2e8f0; cursor: not-allowed; opacity: 0.5; }
 
+        /* ================= الزر العائم للرادار (التطوير الجديد) ================= */
+        .radar-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            display: none; /* مخفي بالبداية حتى يدخل الكابتن */
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            border: 3px solid white;
+        }
+        .radar-fab.online {
+            background: var(--success);
+            box-shadow: 0 0 20px var(--success);
+            animation: pulseRadar 2s infinite;
+        }
+        .radar-fab.offline {
+            background: var(--danger);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        }
+        @keyframes pulseRadar {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
         /* رسائل التحذير */
         .warning-banner, .vpn-warning-banner {
             border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;
@@ -435,6 +469,10 @@
     <div id="offline-banner" class="offline-banner">📡 لا يوجد اتصال بالإنترنت يرجى الاتصال لتلقي الطلبات</div>
     <div id="toast-container" style="position:fixed; top:40px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
 
+    <div id="radar-fab" class="radar-fab offline" onclick="toggleOnlineStatusFAB()">
+        <span id="radar-fab-icon">🔴</span>
+    </div>
+
     <div id="custom-confirm-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
             <div class="custom-dialog-icon">❓</div>
@@ -586,8 +624,7 @@
                     <div id="company_status_badge" class="id-status-badge"></div>
                     <input type="hidden" id="verified_company_name" value="">
                 </div>
-
-                <div class="input-group">
+<div class="input-group">
                     <label id="lang_reg_name">الاسم الشخصي</label>
                     <input type="text" id="reg_name" placeholder="أدخل اسمك الكريم">
                 </div>
@@ -683,7 +720,7 @@
                                 <div class="fin-val" id="ui_today_count">0</div>
                             </div>
                             <div class="fin-box" style="border-left: 1px solid #e2e8f0;">
-                                <div class="fin-lbl">قيم الطلبات</div>
+                                <div class="fin-lbl">قيمة الطلبات</div>
                                 <div class="fin-val" id="ui_today_val">0.00</div>
                             </div>
                             <div class="fin-box">
@@ -725,7 +762,8 @@
         </div>
 
     </div>
-<script>
+
+    <script>
         // إعدادات تثبيت الـ PWA
         let deferredPrompt;
         const splash = document.getElementById('pwa-splash');
@@ -951,8 +989,7 @@
             document.getElementById('selected_tag').value = element.innerText;
         };
     </script>
-
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -1518,8 +1555,7 @@
                 }
             });
         }
-
-        setInterval(() => {
+setInterval(() => {
             if (currentCaptain) {
                 const vpnWarning = document.getElementById('vpn-warning');
                 if (systemSettings.anti_vpn && isVpnDetected) {
@@ -1613,10 +1649,7 @@
                 const hotspotsSection = document.getElementById('hotspots-section');
                 const statusToggleSection = document.getElementById('status-toggle-section');
                 
-                let todayCount = 0, todayVal = 0, todayFee = 0;
                 let hasActive = false, hasNewRinging = false;
-
-                let completedCloudOrders = []; // تجميع الطلبات اللي رح تترحل للسحابة
                 let newHtmlContent = ''; 
                 const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
@@ -1640,15 +1673,6 @@
                             } else {
                                 phoneHtml = `<div class="order-rest-phone">📞 هاتف المنشأة: <a href="tel:${ord.shop_phone}" style="color:var(--info); text-decoration:none;" title="اتصال بالمنشأة" target="_blank">${ord.shop_phone}</a></div>`;
                             }
-                        }
-
-                        if (ord.status === 'completed') {
-                            if (new Date(ord.completed_at || ord.timestamp).toDateString() === todayStr) {
-                                todayCount++;
-                                todayVal += parseFloat(ord.value || ord.Shop_Val || 0);
-                                todayFee += parseFloat(ord.fee || ord.Shop_Fee || 0);
-                            }
-                            completedCloudOrders.push(ord);
                         }
                         
                         if (ord.status === 'assigned') {
@@ -1677,11 +1701,11 @@
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
+                                            <div class="detail-val">${parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2)} د.أ</div>
                                         </div>
                                         <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
+                                            <div class="detail-val" style="color:var(--success);">${parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2)} د.أ</div>
                                         </div>
                                     </div>
                                     <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${currentLang === 'ar' ? 'ثانية للقبول' : 'sec left'} ⏳</div>
@@ -1744,11 +1768,11 @@
                                     <div class="order-details">
                                         <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
-                                            <div class="detail-val">${ord.value || ord.Shop_Val} د.أ</div>
+                                            <div class="detail-val">${parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2)} د.أ</div>
                                         </div>
                                         <div class="detail-box">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ord.fee || ord.Shop_Fee} د.أ</div>
+                                            <div class="detail-val" style="color:var(--success);">${parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2)} د.أ</div>
                                         </div>
                                     </div>
                                     <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
@@ -1758,7 +1782,7 @@
                     });
                 }
                 
-                // جلب سجل الإنجازات من السحابة (Firebase) وليس من المتصفح
+                // التعديل الألماسي: جلب سجل الإنجازات اليومي بدقة من السحابة وتفعيل الأرقام العشرية
                 const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
                 onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
                     if(archiveSnap.exists()) {
@@ -1769,13 +1793,13 @@
                         Object.values(archiveSnap.val()).forEach(o => {
                             if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
                                 cloudTodayCount++;
-                                cloudTodayVal += parseFloat(o.value || o.Shop_Val || 0); // يمكن أن تكون صفر إذا لم تخزن القيمة
-                                cloudTodayFee += parseFloat(o.comm || 0); // هنا أظهرت العمولة، أو يمكن استبدالها بأجر التوصيل
+                                cloudTodayVal += parseFloat(o.value || o.Shop_Val || 0);
+                                cloudTodayFee += parseFloat(o.fee || o.Shop_Fee || 0);
                             }
                         });
                         
                         document.getElementById('ui_today_count').innerText = cloudTodayCount;
-                        document.getElementById('ui_today_val').innerText = '---'; // مؤقتاً
+                        document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2);
                         document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
                     }
                 }, { onlyOnce: true });
@@ -1873,6 +1897,9 @@
             const statusTxt = document.getElementById('ui_status_text');
             const warningBanner = document.getElementById('balance-warning');
             const energyBar = document.getElementById('energy-bar');
+            
+            const fab = document.getElementById('radar-fab');
+            const fabIcon = document.getElementById('radar-fab-icon');
 
             if (bal <= -1) {
                 balEl.classList.add('negative');
@@ -1882,6 +1909,8 @@
                 statusInd.className = 'status-indicator offline';
                 statusTxt.innerText = dict[currentLang].status_blocked;
                 energyBar.classList.remove('active');
+                
+                fab.style.display = 'none'; // إخفاء الزر العائم في حال الحظر
             } else {
                 balEl.classList.remove('negative');
                 warningBanner.style.display = 'none';
@@ -1891,11 +1920,19 @@
                     statusInd.className = 'status-indicator online';
                     statusTxt.innerText = dict[currentLang].status_online;
                     energyBar.classList.add('active');
+                    
+                    fab.className = 'radar-fab online';
+                    fabIcon.innerText = '🟢';
+                    fab.style.display = 'flex';
                 } else {
                     toggleBtn.checked = false;
                     statusInd.className = 'status-indicator offline';
                     statusTxt.innerText = dict[currentLang].status_offline;
                     energyBar.classList.remove('active');
+                    
+                    fab.className = 'radar-fab offline';
+                    fabIcon.innerText = '🔴';
+                    fab.style.display = 'flex';
                 }
             }
         }
@@ -1917,6 +1954,16 @@
             }
 
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
+        };
+
+        // دالة ربط الزر العائم الجديد
+        window.toggleOnlineStatusFAB = function() {
+            if(!currentCaptain) return;
+            const toggleBtn = document.getElementById('toggle_status');
+            if(toggleBtn.disabled) return;
+            
+            toggleBtn.checked = !toggleBtn.checked;
+            toggleOnlineStatus();
         };
 
         async function forceOffline() {
@@ -2034,7 +2081,7 @@
             }
         };
 
-        // ================= سحب السجل من الفايربيس بدلا من التخزين المحلي =================
+        // ================= التعديل الألماسي لسجل الطلبات =================
         window.openHistoryModal = async function() {
             const container = document.getElementById('history-list-container');
             container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
@@ -2056,6 +2103,9 @@
                             const d = new Date(ord.date);
                             const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
                             const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                            
+                            const ordVal = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
+                            const ordFee = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
                             const comm = parseFloat(ord.comm || 0).toFixed(2);
                             
                             const cleanRestName = (name) => {
@@ -2068,12 +2118,22 @@
                             hHtml += `
                                 <div class="history-item">
                                     <div class="h-row">
-                                        <span>${currentLang === 'ar' ? "الوجهة" : "Destination"} ${restName}</span>
+                                        <span>${currentLang === 'ar' ? "المنشأة" : "Shop"}: ${restName}</span>
                                         <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
                                     </div>
-                                    <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                                        <span>${currentLang === 'ar' ? "نسبة الشركة المقتطعة" : "Company Commission"}</span>
-                                        <span class="h-commission">-${comm} د.أ</span>
+                                    <div class="h-row" style="margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">
+                                        <div style="display:flex; flex-direction:column; align-items:center;">
+                                            <span style="font-size:10px; color:#64748b;">قيمة الطلب</span>
+                                            <span style="color:var(--primary);">${ordVal} د.أ</span>
+                                        </div>
+                                        <div style="display:flex; flex-direction:column; align-items:center; border-right: 1px solid #e2e8f0; padding-right:10px; border-left: 1px solid #e2e8f0; padding-left:10px;">
+                                            <span style="font-size:10px; color:#64748b;">أجرة التوصيل</span>
+                                            <span style="color:var(--success);">${ordFee} د.أ</span>
+                                        </div>
+                                        <div style="display:flex; flex-direction:column; align-items:center;">
+                                            <span style="font-size:10px; color:#64748b;">خصم الشركة</span>
+                                            <span class="h-commission">-${comm} د.أ</span>
+                                        </div>
                                     </div>
                                 </div>
                             `;
