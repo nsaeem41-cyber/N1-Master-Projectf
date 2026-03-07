@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n-one-captain-v5-diamond';
+const CACHE_NAME = 'n-one-captain-v6-diamond';
 const urlsToCache = [
     './',
     './captain.html',
@@ -6,19 +6,19 @@ const urlsToCache = [
     './logo.jpg'
 ];
 
-// مرحلة التثبيت: تجهيز ملفات الكابتن في الذاكرة
+// مرحلة التثبيت تجهيز ملفات الكابتن في الذاكرة
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Captain assets cached successfully');
+                console.log('Captain assets cached successfully 💎');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
-// مرحلة التفعيل: مسح أي كاش قديم وتنظيف الذاكرة
+// مرحلة التفعيل مسح أي كاش قديم وتنظيف الذاكرة بشكل صارم
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -33,8 +33,11 @@ self.addEventListener('activate', event => {
     );
 });
 
-// إدارة الطلبات: استراتيجية (Network First) عشان نشوف التحديثات فوراً
+// إدارة الطلبات استراتيجية ذكية للشبكة
 self.addEventListener('fetch', event => {
+    // تخطي طلبات غير الـ GET عشان ما يعلق السستم
+    if (event.request.method !== 'GET') return;
+
     event.respondWith(
         fetch(event.request)
             .then(response => {
