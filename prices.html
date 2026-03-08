@@ -125,7 +125,7 @@
         /* صندوق الخصم الزجاجي */
         .discount-box { display: flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.05); padding: 8px 15px; border-radius: 12px; border: 1px solid var(--glass-border); flex-wrap: wrap; }
         .discount-input { width: 70px; padding: 10px; border: 1px solid rgba(212,175,55,0.4); border-radius: 8px; outline: none; text-align: center; font-weight: 900; color: white; font-size: 14px; background: rgba(0,0,0,0.5); transition: 0.3s; }
-        .discount-input:focus { border-color: var(--gold); background: rgba(212,175,55,0.1); }
+        .discount-input:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
         .btn-discount { background: linear-gradient(135deg, var(--gold), #b48608); border: none; color: #000; font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; }
         .btn-discount:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .btn-revert { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: #fca5a5; font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; }
@@ -275,7 +275,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, get, set, remove, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -312,6 +312,7 @@
             const savedToggle = localStorage.getItem('nOne_night_toggle');
             if (savedToggle !== null) document.getElementById('night-toggle').checked = (savedToggle === 'true');
             
+            setupRealtimeFreezeListener();
             checkNightMode(); 
             await fetchPricesFromCloud();
             
@@ -320,7 +321,21 @@
             setInterval(autoRevertExpiredOffers, 60000); 
         };
 
-        // 1. إصلاح مشكلة الأداء: استخدام Query لجلب أسعار الشركة الحالية فقط
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            onValue(ref(db, `users/${username}`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.Client_Status === 'paused' || data.status === 'paused') {
+                        localStorage.clear();
+                        window.location.replace('index.html');
+                    }
+                }
+            });
+        }
+
+        // تم تعديل الدالة لتقوم بفلترة أسعار الشركة في المتصفح بأمان تام (Client-side) لتعمل مع قواعدك
         async function fetchPricesFromCloud() {
             showLoader();
             pricingData = {};
@@ -329,25 +344,27 @@
             
             try {
                 const pricesRef = ref(db, 'prices');
-                const pricesQuery = query(pricesRef, orderByChild('Client_Master'), equalTo(myMaster));
-                const snapshot = await get(pricesQuery);
+                const snapshot = await get(pricesRef);
 
                 if (snapshot.exists()) {
                     const data = Object.values(snapshot.val());
                     data.forEach(r => {
-                        if (!pricingData[r.Price_Source]) {
-                            pricingData[r.Price_Source] = [];
-                            sourcesList.push(r.Price_Source);
+                        // فلترة لأسعار الماستر الحالي فقط
+                        if (r.Client_Master === myMaster) {
+                            if (!pricingData[r.Price_Source]) {
+                                pricingData[r.Price_Source] = [];
+                                sourcesList.push(r.Price_Source);
+                            }
+                            pricingData[r.Price_Source].push({
+                                id: r.Price_ID,
+                                area: r.Price_Area,
+                                price: parseFloat(r.Price_Base || 0),
+                                isOffer: r.Price_Offer === 'true',
+                                originalPrice: r.Price_Original ? parseFloat(r.Price_Original) : null,
+                                offerEndTime: r.Offer_End_Time ? parseInt(r.Offer_End_Time) : null,
+                                lastMod: r.Price_Date ? new Date(r.Price_Date).getTime() : Date.now()
+                            });
                         }
-                        pricingData[r.Price_Source].push({
-                            id: r.Price_ID,
-                            area: r.Price_Area,
-                            price: parseFloat(r.Price_Base || 0),
-                            isOffer: r.Price_Offer === 'true',
-                            originalPrice: r.Price_Original ? parseFloat(r.Price_Original) : null,
-                            offerEndTime: r.Offer_End_Time ? parseInt(r.Offer_End_Time) : null,
-                            lastMod: r.Price_Date ? new Date(r.Price_Date).getTime() : Date.now()
-                        });
                     });
                 } 
                 
@@ -359,11 +376,10 @@
                 populateSources();
                 renderMatrix();
                 
-                // فحص العروض عند أول تحميل للتأكد من عدم وجود عروض منتهية 
                 autoRevertExpiredOffers(true); 
                 
             } catch(e) {
-                alert("خطأ في الاتصال بقاعدة البيانات");
+                console.error(e);
             }
             hideLoader();
         }
@@ -401,11 +417,10 @@
             select.innerHTML = '';
             sourcesList.forEach((source, index) => {
                 const option = document.createElement('option');
-                option.value = index; // استخدام Index للحماية من الفواصل العليا
+                option.value = index; // استخدام Index
                 option.innerText = source;
                 select.appendChild(option);
             });
-            // استعادة التحديد
             if(currentVal !== "" && sourcesList[currentVal]) select.value = currentVal;
         }
 
@@ -420,7 +435,7 @@
             }
         }
 
-        // 2. إصلاح الحذف الفوري: التخزين في سلة المهملات المؤقتة
+        // الحذف المؤقت الآمن (سلة المهملات)
         window.deleteSource = function() {
             const index = document.getElementById('source-select').value;
             if(index === "") return;
@@ -515,7 +530,7 @@
             }
         }
 
-        // 3. إصلاح وهم انتهاء العرض: المزامنة التلقائية مع السيرفر
+        // المزامنة التلقائية مع السيرفر عند انتهاء العرض
         function autoRevertExpiredOffers(syncWithServer = false) {
             let needsRender = false;
             let needsSave = false;
@@ -536,9 +551,7 @@
                 });
             }
             if (needsRender) renderMatrix();
-            // إذا كان المتصفح مغلقاً لفترة، وبمجرد فتحه وجد عروضاً منتهية، سيقوم برفعها للسيرفر فوراً لحماية الأسعار
             if (needsSave && syncWithServer) {
-                console.log("Auto-Sync: Saving expired offers to server.");
                 saveData(true); 
             }
         }
@@ -576,7 +589,7 @@
             const areas = pricingData[sourceName] || [];
             const now = Date.now();
 
-            // 5. قفل الحارس الليلي بشكل حقيقي لحماية الحسابات
+            // قفل الإدخال الحقيقي
             const inputState = isNightActive ? 'disabled title="قم بإيقاف الحارس الليلي لتتمكن من التعديل"' : '';
 
             areas.forEach((item, i) => {
@@ -624,7 +637,7 @@
                     `;
                 }
 
-                // 4. الحماية من فواصل الأسماء بتمرير Index بدلاً من النص
+                // الحماية باستخدام Index
                 container.innerHTML += `
                     <div class="price-card ${offerClass}">
                         <div class="color-indicator ${colorClass}"></div>
@@ -695,7 +708,7 @@
             window.open(`http://googleusercontent.com/maps.google.com/search?q=${query}`, '_blank');
         }
 
-        // 1. إصلاح ثغرة محو بيانات الزملاء (Save Logic)
+        // حفظ آمن لا يمسح بيانات الشركات الأخرى
         window.saveData = async function(isSilent = false) {
             const btn = document.getElementById('save-btn');
             if(!isSilent) {
@@ -706,7 +719,7 @@
             try {
                 let promises = [];
                 
-                // إضافة وتحديث المناطق الموجودة في الشاشة فقط (دون المساس بالشركات الأخرى أو إضافات الزملاء)
+                // 1. إضافة وتحديث الموجود بالشاشة
                 for (const source in pricingData) {
                     pricingData[source].forEach(item => {
                         const payload = {
@@ -724,7 +737,7 @@
                     });
                 }
                 
-                // حذف الملفات التي ضغط المستخدم على زر مسحها في هذه الجلسة فقط
+                // 2. حذف ما تم حذفه من هذه الشاشة فقط 
                 deletedDbIds.forEach(id => {
                     promises.push(remove(ref(db, `prices/${id}`)));
                 });
@@ -743,7 +756,7 @@
                 }
             } catch(e) {
                 if(!isSilent) {
-                    alert("حدث خطأ أثناء الحفظ تأكد من الإنترنت");
+                    alert("حدث خطأ أثناء الحفظ، تأكد من اتصال الإنترنت.");
                     btn.innerHTML = "💾 حفظ واعتماد الأسعار";
                     btn.style.background = "linear-gradient(135deg, var(--success), #047857)";
                 }
