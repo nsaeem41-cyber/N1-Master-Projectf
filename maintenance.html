@@ -278,33 +278,50 @@
         window.fetchHealthStatus = async function() {
             showLoader("جاري فحص نبض السيرفر ⏳");
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    systemData = snapshot.val();
+                // التعديل الألماسي: استدعاء جراحي فقط للغرف المطلوبة بدل تحميل كل السيرفر
+                const [usersSnap, shopsSnap, captainsSnap, ordersSnap, pricesSnap, radarSnap, assignedSnap] = await Promise.all([
+                    get(ref(db, 'users')),
+                    get(ref(db, 'shops')),
+                    get(ref(db, 'captains')),
+                    get(ref(db, 'orders')),
+                    get(ref(db, 'prices')),
+                    get(ref(db, 'radar_history')),
+                    get(ref(db, 'assigned_orders'))
+                ]);
+
+                systemData = {
+                    users: usersSnap.exists() ? usersSnap.val() : null,
+                    shops: shopsSnap.exists() ? shopsSnap.val() : null,
+                    captains: captainsSnap.exists() ? captainsSnap.val() : null,
+                    orders: ordersSnap.exists() ? ordersSnap.val() : null,
+                    prices: pricesSnap.exists() ? pricesSnap.val() : null,
+                    radar_history: radarSnap.exists() ? radarSnap.val() : null,
+                    assigned_orders: assignedSnap.exists() ? assignedSnap.val() : null
+                };
                     
-                    let totalRows = 0;
-                    if(systemData.users) totalRows += Object.keys(systemData.users).length;
-                    if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
-                    if(systemData.captains) totalRows += Object.keys(systemData.captains).length; // تمت إضافة الكباتن
-                    if(systemData.orders) totalRows += Object.keys(systemData.orders).length;
-                    if(systemData.prices) totalRows += Object.keys(systemData.prices).length;
-                    if(systemData.radar_history) totalRows += Object.keys(systemData.radar_history).length;
-                    if(systemData.assigned_orders) totalRows += Object.keys(systemData.assigned_orders).length; // تمت الإضافة
+                let totalRows = 0;
+                if(systemData.users) totalRows += Object.keys(systemData.users).length;
+                if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
+                if(systemData.captains) totalRows += Object.keys(systemData.captains).length; // تمت إضافة الكباتن
+                if(systemData.orders) totalRows += Object.keys(systemData.orders).length;
+                if(systemData.prices) totalRows += Object.keys(systemData.prices).length;
+                if(systemData.radar_history) totalRows += Object.keys(systemData.radar_history).length;
+                if(systemData.assigned_orders) totalRows += Object.keys(systemData.assigned_orders).length; // تمت الإضافة
 
-                    const maxRows = 10000; 
-                    let percentage = (totalRows / maxRows) * 100;
-                    if(percentage > 100) percentage = 100;
+                const maxRows = 10000; 
+                let percentage = (totalRows / maxRows) * 100;
+                if(percentage > 100) percentage = 100;
 
-                    const bar = document.getElementById('server-load-bar');
-                    bar.style.width = percentage + '%';
-                    
-                    if(percentage < 50) bar.style.background = "#2e7d32"; 
-                    else if(percentage < 80) bar.style.background = "#f57f17"; 
-                    else bar.style.background = "#c62828"; 
+                const bar = document.getElementById('server-load-bar');
+                bar.style.width = percentage + '%';
+                
+                if(percentage < 50) bar.style.background = "#2e7d32"; 
+                else if(percentage < 80) bar.style.background = "#f57f17"; 
+                else bar.style.background = "#c62828"; 
 
-                    document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
-                    document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
-                }
+                document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
+                document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
+                
             } catch (e) {
                 console.error(e);
             } finally {
@@ -514,21 +531,36 @@
 
         // ============================================================================== //
 
-        window.backupData = function() {
-            if(!systemData || Object.keys(systemData).length === 0) return alert("لا توجد بيانات للسحب");
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(systemData, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+        window.backupData = async function() {
+            showLoader("جاري سحب نسخة احتياطية شاملة للمملكة ⏳");
+            try {
+                // التعديل الألماسي: سحب كل البيانات فقط عند طلب النسخ الاحتياطي!
+                const fullSnap = await get(ref(db));
+                if(!fullSnap.exists()) {
+                    hideLoader();
+                    return alert("لا توجد بيانات للسحب");
+                }
+                
+                const fullData = fullSnap.val();
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 2));
+                
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
 
-            const msg = document.getElementById('backup-msg');
-            msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ✅";
-            msg.style.display = "block";
-            setTimeout(() => msg.style.display = "none", 4000);
+                const msg = document.getElementById('backup-msg');
+                msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ✅";
+                msg.style.display = "block";
+                setTimeout(() => msg.style.display = "none", 4000);
+            } catch (error) {
+                alert("حدث خطأ أثناء سحب النسخة");
+                console.error(error);
+            } finally {
+                hideLoader();
+            }
         }
 
         window.autoArchive = async function() {
