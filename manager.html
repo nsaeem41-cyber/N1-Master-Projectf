@@ -196,6 +196,9 @@
         let currentUser = null;
         let isSuperAdmin = false;
         let myMasterId = "";
+        
+        // المتغيرات المركزية لتجميع البيانات الجراحية بدون تحميل القاعدة كاملة
+        let globalDataState = { orders: {}, shops: {}, users: {}, assigned_orders: {} };
 
         window.onload = function() {
             window.history.pushState(null, "", window.location.href);
@@ -295,28 +298,55 @@
             });
         }
 
+        // التعديل الألماسي الأول: استدعاء جراحي فقط للغرف المطلوبة بدل كامل القاعدة
         window.loadData = async function() {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('feed-table').style.display = 'none';
 
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    processData(snapshot.val());
-                } else {
-                    processData({});
-                }
+                const [ordersSnap, shopsSnap, usersSnap, assignedSnap] = await Promise.all([
+                    get(ref(db, 'orders')),
+                    get(ref(db, 'shops')),
+                    get(ref(db, 'users')),
+                    get(ref(db, 'assigned_orders'))
+                ]);
+
+                globalDataState.orders = ordersSnap.exists() ? ordersSnap.val() : {};
+                globalDataState.shops = shopsSnap.exists() ? shopsSnap.val() : {};
+                globalDataState.users = usersSnap.exists() ? usersSnap.val() : {};
+                globalDataState.assigned_orders = assignedSnap.exists() ? assignedSnap.val() : {};
+
+                processData(globalDataState);
             } catch (e) {
                 console.error(e);
             }
         };
 
+        // التعديل الألماسي الثاني: استماع جراحي منفصل عشان السيرفر ما يعمل بلوك
         window.attachRealtimeListeners = function() {
-            onValue(ref(db), (snapshot) => {
-                if (snapshot.exists()) {
-                    processData(snapshot.val());
-                }
+            let isFirstLoad = true;
+            const triggerUpdate = () => {
+                if(!isFirstLoad) processData(globalDataState);
+            };
+
+            onValue(ref(db, 'orders'), (snapshot) => {
+                globalDataState.orders = snapshot.exists() ? snapshot.val() : {};
+                triggerUpdate();
             });
+            onValue(ref(db, 'shops'), (snapshot) => {
+                globalDataState.shops = snapshot.exists() ? snapshot.val() : {};
+                triggerUpdate();
+            });
+            onValue(ref(db, 'users'), (snapshot) => {
+                globalDataState.users = snapshot.exists() ? snapshot.val() : {};
+                triggerUpdate();
+            });
+            onValue(ref(db, 'assigned_orders'), (snapshot) => {
+                globalDataState.assigned_orders = snapshot.exists() ? snapshot.val() : {};
+                triggerUpdate();
+            });
+            
+            isFirstLoad = false;
         };
 
         window.processData = function(data) {
