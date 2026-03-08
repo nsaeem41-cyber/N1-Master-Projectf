@@ -406,7 +406,6 @@
         .pending-title { color: var(--gold); }
         .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
 
-        /* تعديل هنا: حذف شاشة التحميل القديمة واستبدالها بتحميل لحظي */
         #loader {
             display: none; /* مخفي افتراضياً، سيظهر فقط عند جلب البيانات الطويلة */
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
@@ -732,6 +731,7 @@
 
     </div>
 <script>
+
 // إعدادات تثبيت الـ PWA
         let deferredPrompt;
         const splash = document.getElementById('pwa-splash');
@@ -1190,7 +1190,7 @@
                 
                 requestWakeLock();
                 initRealtimeListeners();
-                setupAdsAndAlerts();
+                // setupAdsAndAlerts(); // هاي الدالة رح تكون بالجزء الثالث
             } else {
                 document.getElementById('login-screen').classList.add('active');
             }
@@ -1246,7 +1246,7 @@
 
                     requestWakeLock();
                     initRealtimeListeners();
-                    setupAdsAndAlerts();
+                    // setupAdsAndAlerts(); // هاي الدالة رح تكون بالجزء الثالث
                 } else {
                     document.getElementById('loader').style.display = 'none';
                     window.showToast(currentLang === 'ar' ? "بيانات الدخول غير صحيحة يرجى التأكد" : "Incorrect login details", true);
@@ -1402,17 +1402,6 @@
             window.location.reload();
         };
 
-        function setupAdsAndAlerts() {
-            const master = currentCaptain.company || currentCaptain.Client_Master;
-            let activeAds = { admin: null, client: null };
-            let activeAlerts = { admin: null, client: null };
-            
-            let masterNameForAlerts = master || "N One";
-            if (master) {
-                get(ref(db, `users/${master}`)).then(snap => {
-                    if (snap.exists()) masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
-                });
-            }
 const renderAd = () => {
                 const now = Date.now();
                 let displayAd = null;
@@ -1641,6 +1630,8 @@ const renderAd = () => {
                             return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
                         };
                         const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
+                        // تأمين الاسم لمنع الأخطاء في دوال الجافاسكريبت
+                        const safeRestName = restName.replace(/'/g, "");
                         
                         let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
                         let phoneHtml = '';
@@ -1749,7 +1740,8 @@ const renderAd = () => {
                             } else if (ord.status === 'arrived_at_customer') {
                                 btnClass = 'btn-status-completed';
                                 btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
-                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}')`;
+                                // التعديل الألماسي هون تمرير القيم للتوثيق النهائي
+                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}', '${ordValSafe}', '${ordFeeSafe}', '${commAmountSafe}', '${safeRestName}')`;
                             }
 
                             newHtmlContent += `
@@ -1806,16 +1798,17 @@ const renderAd = () => {
                 }
             });
 
-            // 💰 جلب سجل الإنجازات المالي بدقة من السحابة (إلغاء التخزين المحلي)
+            // 💰 جلب سجل الإنجازات المالي بدقة من السحابة
             const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
             onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
                 if(archiveSnap.exists()) {
                     let cloudTodayCount = 0;
                     let cloudTodayVal = 0;
                     let cloudTodayFee = 0;
-                    const todayStr = new Date().toDateString();
+                    const todayStr = new Date().toDateString(); // هاد اللي بصفر العدادات الساعة 12
                     
                     Object.values(archiveSnap.val()).forEach(o => {
+                        // التأكد من إن الطلب لهاد الكابتن ومسجل اليوم
                         if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
                             cloudTodayCount++;
                             // استخدام parseFloat لضمان القروش والأرقام العشرية ومنع NaN
@@ -1824,6 +1817,7 @@ const renderAd = () => {
                         }
                     });
                     
+                    // طباعة الأرقام المجمعة في الواجهة الرئيسية
                     document.getElementById('ui_today_count').innerText = cloudTodayCount;
                     document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
                     document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
@@ -1869,7 +1863,7 @@ const renderAd = () => {
                 });
             }
             
-            // ================= منع الفايربيس من الدخول في وضع النوم (Keep-Alive Database) =================
+            // ================= منع الفايربيس من الدخول في وضع النوم =================
             const heartBeat = setInterval(() => {
                 if (currentCaptain && currentCaptain.app_status === 'online') {
                     update(ref(db, `captains/${capNodeKey}`), { last_active: Date.now() });
@@ -2018,12 +2012,28 @@ const renderAd = () => {
             }
         };
 
-        window.completeOrder = async function(appOrdId, radarOrdId) {
+        // 🎯 ترحيل البيانات للأرشيف السحابي وقت التسليم
+        window.completeOrder = async function(appOrdId, radarOrdId, ordVal, ordFee, ordComm, restName) {
             try {
+                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
                 const updates = {};
+                
+                // 1. تحديث حالة الطلب عند الكابتن
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
                 
+                // 2. توثيق الفاتورة بالأرشيف السحابي للشركة عشان العدادات والسجل
+                const newArchiveRef = push(ref(db, `company_archives/${compId}/orders`));
+                updates[`company_archives/${compId}/orders/${newArchiveRef.key}`] = {
+                    capKey: capNodeKey,
+                    date: new Date().toISOString(),
+                    value: ordVal,
+                    fee: ordFee,
+                    comm: ordComm,
+                    rest: restName,
+                    appOrdId: appOrdId
+                };
+
                 let shopId = '';
                 if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
                     updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered';
@@ -2067,7 +2077,7 @@ const renderAd = () => {
             }
         };
 
-        // 🧾 الفواتير المصغرة في سجل الطلبات
+        // 🧾 الفواتير المصغرة في سجل الطلبات بشكل منفرد
         window.openHistoryModal = async function() {
             const container = document.getElementById('history-list-container');
             container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
