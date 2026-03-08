@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة قيادة الشركات (Diamond Royal Edition)</title>
+    <title>N One | غرفة قيادة الشركات (Compact Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* ================= أساسيات التصميم (Diamond Glass Theme) ================= */
+        /* ================= أساسيات التصميم (Fast & Compact) ================= */
         :root {
             --primary: #0f172a;
+            --primary-light: #1e293b;
             --gold: #d4af37;
             --gold-light: #fef08a;
             --neon-blue: #0ea5e9;
@@ -20,187 +21,148 @@
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #050814; 
+            /* خلفية ثابتة وسريعة جداً بدون أنيميشن ثقيل */
+            background: radial-gradient(circle at top right, #1e293b, #050814);
             margin: 0; padding: 0; 
             color: #fff; user-select: none; 
-            overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* ================= الأجسام الطافية في الخلفية (الهادئة) ================= */
-        .bg-shapes {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
-        }
-
-        .shape {
-            position: absolute;
-            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(14,165,233,0.1));
-            box-shadow: 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(212,175,55,0.2);
-            animation: float 20s infinite linear;
-        }
-
-        .shape:nth-child(1) { width: 100px; height: 100px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
-        .shape:nth-child(2) { width: 150px; height: 150px; top: 60%; left: 85%; border-radius: 50%; animation-duration: 25s; animation-direction: reverse; }
-        .shape:nth-child(3) { width: 70px; height: 70px; top: 40%; left: 50%; border-radius: 30%; animation-duration: 18s; }
-        .shape:nth-child(4) { width: 200px; height: 200px; top: -10%; left: 60%; border-radius: 40%; animation-duration: 30s; }
-
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
-        }
-
-        /* ================= الشريط العلوي (Navbar) ================= */
+        /* ================= الشريط العلوي (Navbar) مضغوط ================= */
         .navbar { 
-            background: rgba(15, 23, 42, 0.8); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            height: 65px; display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-bottom: 2px solid rgba(212, 175, 55, 0.4); position: sticky; top: 0; z-index: 1000; 
+            background: rgba(15, 23, 42, 0.95); 
+            height: 55px; /* تقليل الارتفاع */
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
         }
-        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-        .gold-text { color: var(--gold); text-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .gold-text { color: var(--gold); }
         
         .welcome-msg {
-            font-weight: bold; color: var(--gold-light); font-size: 14px; 
-            background: rgba(255,255,255,0.05); padding: 6px 15px; border-radius: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.3); letter-spacing: 0.5px;
+            font-weight: bold; color: var(--gold-light); font-size: 13px; 
+            background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         .btn-logout { 
             background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); 
-            font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 18px; 
-            border-radius: 10px; color: #fca5a5; transition: 0.3s; 
+            font-size: 12px; font-weight: bold; cursor: pointer; padding: 6px 12px; 
+            border-radius: 8px; color: #fca5a5; transition: 0.2s; 
         }
-        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+        .btn-logout:hover { background: var(--danger); color: white; }
 
-        .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; }
 
-        /* ================= بوابات الوصول السريع ================= */
-        .quick-access-panel { display: flex; gap: 15px; margin-bottom: 25px; justify-content: flex-start; }
+        /* ================= بوابات الوصول السريع (أصغر وملمومة) ================= */
+        .quick-access-panel { display: flex; gap: 10px; margin-bottom: 15px; }
         
         .btn-gate {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 12px 20px;
-            border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer;
-            transition: all 0.3s ease; backdrop-filter: blur(10px);
-            display: flex; align-items: center; gap: 8px; text-decoration: none;
+            border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 8px 15px;
+            border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
+            text-decoration: none; display: flex; align-items: center; gap: 6px;
+            transition: 0.2s;
         }
-        .btn-gate:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .btn-gate:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
 
-        /* ================= الإحصائيات (Compact Stats) ================= */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        /* ================= الإحصائيات (أصغر وأكثر ترتيباً) ================= */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .stat-card { 
-            background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; 
+            background: rgba(15, 23, 42, 0.8); padding: 12px; border-radius: 10px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: center; 
             border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(15px); transition: 0.3s;
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-color: rgba(212, 175, 55, 0.3); }
-        .stat-number { font-size: 32px; font-weight: 900; color: #fff; margin: 8px 0 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .stat-label { color: #cbd5e1; font-size: 13px; font-weight: bold; }
+        .stat-number { font-size: 24px; font-weight: 900; color: #fff; margin: 4px 0; }
+        .stat-label { color: #cbd5e1; font-size: 11px; font-weight: bold; }
 
-        /* ================= الكروت الزجاجية (Glass Cards) ================= */
+        /* ================= الكروت (مضغوطة) ================= */
         .card { 
-            background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 20px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4); margin-bottom: 25px; 
+            background: rgba(15, 23, 42, 0.8); padding: 15px 20px; border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-bottom: 15px; 
             border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(20px);
         }
         .card-header { 
-            font-size: 18px; font-weight: 900; color: var(--gold); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 18px; 
-            display: flex; justify-content: space-between; align-items: center; text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            font-size: 15px; font-weight: 900; color: var(--gold); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center; 
         }
 
-        /* ================= الحقول (Inputs) ================= */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center; }
+        /* ================= الحقول (أصغر وأرتب) ================= */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; align-items: center; }
         
         input, select, textarea { 
-            width: 100%; padding: 12px 15px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; 
+            width: 100%; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; 
             outline: none; background: rgba(0,0,0,0.3); box-sizing: border-box; 
-            font-family: inherit; font-size: 14px; font-weight: bold; color: white; transition: 0.3s; 
+            font-family: inherit; font-size: 13px; font-weight: bold; color: white; transition: 0.2s; 
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
         
         .btn-add { 
             background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border: none; 
-            padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 900; 
-            cursor: pointer; height: 100%; width: 100%; transition: 0.3s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+            padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; 
+            cursor: pointer; transition: 0.2s; width: 100%;
         }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); }
+        .btn-add:hover { filter: brightness(1.1); }
 
-        /* ================= الجداول الملكية ================= */
-        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        /* ================= الجداول ================= */
+        .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 850px; }
         thead { background: rgba(0,0,0,0.4); color: var(--gold); }
-        th { padding: 15px 12px; text-align: right; font-weight: 900; font-size: 13px; letter-spacing: 0.5px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-        td { padding: 15px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: bold; color: #e2e8f0; }
+        th { padding: 10px; text-align: right; font-weight: 900; font-size: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
+        td { padding: 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; font-weight: bold; color: #e2e8f0; }
         tr:hover td { background: rgba(212, 175, 55, 0.05); }
         
-        .status-badge { padding: 5px 12px; border-radius: 15px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .status-badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
         .status-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
         .status-paused { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
         .status-expired { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; } 
 
-        /* ================= أزرار التحكم في الجدول ================= */
-        .action-group { display: flex; gap: 6px; }
+        .action-group { display: flex; gap: 4px; }
         .action-btn { 
-            padding: 8px 12px; border-radius: 8px; border: none; color: white; 
-            cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 6px 10px; border-radius: 6px; border: none; color: white; 
+            cursor: pointer; font-size: 11px; transition: 0.2s; font-weight: bold;
         }
-        .action-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
-        .act-freeze { background: linear-gradient(135deg, #f59e0b, #b45309); }
-        .act-active { background: linear-gradient(135deg, #10b981, #047857); }
-        .act-delete { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-        .act-renew { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
-        .act-edit { background: linear-gradient(135deg, #475569, #1e293b); }
+        .action-btn:hover { filter: brightness(1.2); }
+        .act-freeze { background: #f59e0b; }
+        .act-active { background: #10b981; }
+        .act-delete { background: #ef4444; }
+        .act-renew { background: #0ea5e9; }
+        .act-edit { background: #475569; }
 
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: var(--gold); flex-direction: column; backdrop-filter: blur(10px); }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: var(--gold); flex-direction: column; }
         
-        /* ================= ألوان الإعلانات ================= */
+        /* ================= الإعلانات ================= */
         .ad-color-normal { color: #fff; background: #1e293b; }
         .ad-color-news { color: #38bdf8; background: #0c4a6e; }
         .ad-color-warning { color: #f87171; background: #7f1d1d; font-weight: bold; }
         .ad-color-offer { color: #34d399; background: #064e3b; }
         
-        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-broadcast { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px 15px; border-radius: 12px; font-weight: 900; cursor: pointer; flex: 1; transition: 0.3s; font-size: 14px; }
-        .btn-broadcast:hover { border-color: var(--gold); box-shadow: 0 5px 15px rgba(212,175,55,0.2); }
-        
-        .btn-popup { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
-        .btn-popup:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5); }
-        
-        .btn-clear-ad { background: linear-gradient(135deg, #64748b, #334155); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; }
-        .btn-clear-ad:hover { transform: translateY(-2px); }
+        .ad-controls { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 12px; }
+        .btn-popup { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-clear-ad { background: #475569; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
         /* ================= مفاجأة عيد الميلاد الألماسية ================= */
         #birthday-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95); z-index: 9999; justify-content: center; align-items: center;
+            background: rgba(15, 23, 42, 0.98); z-index: 9999; justify-content: center; align-items: center;
             flex-direction: column; text-align: center; color: white;
-            backdrop-filter: blur(10px);
         }
-        .firework { font-size: 50px; animation: pop 1s infinite alternate; margin-bottom: 20px; }
-        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 30px #d4af37; } }
-        .cake-box { font-size: 80px; margin-bottom: 15px; animation: bounce 2s infinite; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        .firework { font-size: 40px; animation: pop 1s infinite alternate; margin-bottom: 15px; }
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 20px #d4af37; } }
+        .cake-box { font-size: 70px; margin-bottom: 15px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
-        .bday-title { font-size: 35px; font-weight: 900; color: #d4af37; margin-bottom: 15px; text-shadow: 0 4px 15px rgba(212, 175, 55, 0.5); }
-        .bday-text { font-size: 20px; font-weight: bold; color: #f8fafc; margin-bottom: 35px; line-height: 1.8; max-width: 600px; text-shadow: 1px 1px 5px rgba(0,0,0,0.5); }
-        .btn-close-bday { background: linear-gradient(135deg, #d4af37, #b45309); color: white; border: none; padding: 12px 35px; border-radius: 15px; font-size: 18px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
-        .btn-close-bday:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.6); }
+        .bday-title { font-size: 30px; font-weight: 900; color: #d4af37; margin-bottom: 10px; }
+        .bday-text { font-size: 18px; font-weight: bold; color: #f8fafc; margin-bottom: 30px; line-height: 1.8; max-width: 500px; }
+        .btn-close-bday { background: #d4af37; color: black; border: none; padding: 10px 30px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="loader-overlay">
-        <div style="font-size:45px; margin-bottom:15px; text-shadow: 0 0 20px #d4af37; animation: bounce 1s infinite;">💎</div>
-        <div>جاري الاتصال بالنواة المركزية المباشرة يا بطة...</div>
+        <div style="font-size:35px; margin-bottom:10px;">💎</div>
+        <div>جاري معالجة البيانات...</div>
     </div>
 
     <div id="birthday-overlay">
@@ -212,14 +174,7 @@
             اليوم 20 و 21 مارس يوم ميلاد الإبداع والرقي<br>
             العمر كله بالنجاح والألماس وجورايد دايماً بالقمة
         </div>
-        <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة  🚀</button>
-    </div>
-
-    <div class="bg-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+        <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة 🚀</button>
     </div>
 
     <nav class="navbar">
@@ -230,15 +185,11 @@
 
     <div class="container">
         
-        <div class="cute-msg" style="text-align: center; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: var(--gold-light);"></div>
+        <div class="cute-msg" style="text-align: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; color: var(--gold-light);"></div>
 
         <div class="quick-access-panel">
-            <a href="manager.html" class="btn-gate" title="الدخول المباشر لفحص السيستم">
-                <span style="font-size: 20px;">🩺</span> غرفة الطبيب
-            </a>
-            <a href="maintenance.html" class="btn-gate" title="غرفة المراقبة والصيانة">
-                <span style="font-size: 20px;">⚙️</span> الصيانة المركزية
-            </a>
+            <a href="manager.html" class="btn-gate">🩺 فحص النظام</a>
+            <a href="maintenance.html" class="btn-gate">⚙️ الصيانة المركزية</a>
         </div>
         
         <div class="stats-grid">
@@ -258,7 +209,7 @@
 
         <div class="card">
             <div class="card-header">
-                <span>إضافة شركة نقل جديدة (System Isolation)</span>
+                <span>إضافة شركة نقل جديدة</span>
             </div>
             <div class="form-grid">
                 <input type="text" id="new_name" placeholder="الاسم التجاري للشركة">
@@ -272,35 +223,35 @@
                 </select>
                 <input type="number" id="sub_price" placeholder="الاشتراك (د.أ)">
                 
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                    <input type="checkbox" id="can_send_ads" style="width: 18px; height: 18px; cursor: pointer;" checked>
-                    <label for="can_send_ads" style="font-weight: 900; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 13px;">تفعيل الإعلانات 📢</label>
+                <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px;">
+                    <input type="checkbox" id="can_send_ads" style="width: 15px; height: 15px; cursor: pointer;" checked>
+                    <label for="can_send_ads" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 11px;">تفعيل الإعلانات 📢</label>
                 </div>
 
-                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور المستقلة 🚀</button>
+                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور 🚀</button>
             </div>
         </div>
         
         <div class="card" style="border-top-color: var(--gold);">
             <div class="card-header">
-                <span>📢 مركز الإعلانات الذكية (Smart Announcements)</span>
+                <span>📢 مركز الإعلانات الذكية</span>
             </div>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                <div style="flex: 2; min-width: 250px;">
-                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان أو التنبيه هنا يا بطة..." style="resize: none;"></textarea>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 200px;">
+                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان هنا..." style="resize: none;"></textarea>
                 </div>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 250px;">
-                    <select id="ad_target" title="الاستهداف">
-                        <option value="all">إرسال للجميع (الكل)</option>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 200px;">
+                    <select id="ad_target">
+                        <option value="all">إرسال للجميع</option>
                     </select>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="ad_type" title="نوع الإعلان" style="flex: 1;">
+                    <div style="display: flex; gap: 6px;">
+                        <select id="ad_type" style="flex: 1;">
                             <option value="normal" class="ad-color-normal">إعلان عادي</option>
                             <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
-                            <option value="warning" class="ad-color-warning">تحذير / تنبيه 🔴</option>
-                            <option value="offer" class="ad-color-offer">عروض / هدايا 🟢</option>
+                            <option value="warning" class="ad-color-warning">تحذير طارئ 🔴</option>
+                            <option value="offer" class="ad-color-offer">عروض 🟢</option>
                         </select>
-                        <select id="ad_expire" title="مدة العرض" style="flex: 1;">
+                        <select id="ad_expire" style="flex: 1;">
                             <option value="1">ساعة</option>
                             <option value="24" selected>24 ساعة</option>
                             <option value="168">أسبوع</option>
@@ -310,16 +261,15 @@
                 </div>
             </div>
             <div class="ad-controls">
-                <button class="btn-broadcast" onclick="sendAnnouncement()">بث الإعلان بالشريط 🚀</button>
-                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ (Pop-up) 🚨</button>
-                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح الإعلانات 🧹</button>
+                <button class="btn-broadcast" onclick="sendAnnouncement()">بث بالشريط 🚀</button>
+                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ 🚨</button>
+                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح 🧹</button>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <span>🏢 سجل شركات النقل (Companies Log)</span>
-                <span style="font-size:13px; color:var(--gold-light); font-weight: bold; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 10px;">White Label Clients</span>
+                <span>🏢 سجل شركات النقل</span>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -360,7 +310,6 @@
         const db = getDatabase(app);
 
         let allData = [];
-        let activeClients = [];
 
         window.onload = async function() {
             const sessionData = localStorage.getItem('currentUser');
@@ -568,7 +517,7 @@
                     daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم</span>`;
                 }
                 
-                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:10px; color:#38bdf8; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:10px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
 
                 const toggleBtn = currentStatus === 'active'
                     ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
@@ -579,9 +528,9 @@
                 const row = `
                     <tr>
                         <td style="color: var(--gold-light);"><b>${item.Client_Name || item.name}</b></td>
-                        <td style="font-size:12px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:13px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
-                        <td style="font-size:13px;">${daysText}</td>
+                        <td style="font-size:11px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
+                        <td style="font-size:12px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="font-size:12px;">${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <div class="action-group">
@@ -611,7 +560,7 @@
 
             const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
             if (exists) {
-                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل يرجى اختيار اسم آخر لضمان عزل البيانات");
+                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل");
                 return;
             }
 
@@ -647,46 +596,41 @@
             try {
                 await set(ref(db, 'users/' + user), newItem);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات");
+                alert("تم الإضافة بنجاح");
                 
                 document.getElementById('new_name').value = '';
                 document.getElementById('new_user').value = '';
                 document.getElementById('new_pass').value = '';
                 document.getElementById('sub_price').value = '';
-                document.getElementById('can_send_ads').checked = true;
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ في الربط");
+                alert("حدث خطأ");
             }
         }
 
         window.toggleAdPermission = async function(username, currentStatus) {
             const nextStatus = !currentStatus;
-            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟")) return;
-            
+            if (!confirm(nextStatus ? "تأكيد تفعيل الإعلانات؟" : "تأكيد تعطيل الإعلانات؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
         window.editUser = async function(username, oldName, oldPass) {
-            const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
+            const newName = prompt("الاسم التجاري الجديد:", oldName);
             if (newName === null) return;
-            const newPass = prompt("تعديل كلمة المرور:", oldPass);
+            const newPass = prompt("كلمة المرور الجديدة:", oldPass);
             if (newPass === null) return;
-
             if (newName === oldName && newPass === oldPass) return;
 
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تحديث البيانات");
         }
 
         window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
-            
+            if (!confirm(nextStatus === 'paused' ? "تجميد الحساب؟" : "إعادة التفعيل؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
@@ -697,9 +641,9 @@
         }
 
         window.renewUser = async function(username) {
-            const days = prompt("عدد أيام التجديد الإضافية:", "30");
+            const days = prompt("عدد أيام التجديد:", "30");
             if (!days) return;
-            const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
+            const newPrice = prompt("قيمة التجديد:", "0");
 
             const newDate = new Date();
             newDate.setDate(newDate.getDate() + parseInt(days));
@@ -708,15 +652,13 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تجديد الاشتراك بنجاح");
         }
 
         window.deleteUser = async function(username) {
-            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد؟")) return;
+            if (!confirm("حذف نهائي، هل أنت متأكد؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'users/' + username));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الحساب نهائياً");
         }
 
         window.logout = function() { 
@@ -745,6 +687,5 @@
 
         setTimeout(checkRoyalBirthday, 1000);
     </script>
-
 </body>
 </html>
