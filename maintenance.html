@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | صيانة النظام الذكية</title>
     <style>
+        /* ================= أساسيات التصميم (لم تتغير لأنها ممتازة) ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0a0a0a; color: #e0e0e0;
@@ -61,27 +62,13 @@
             font-size: 15px; font-weight: bold; cursor: pointer; color: white;
             transition: 0.3s;
         }
-        .btn-backup { background: #1a237e; }
-        .btn-backup:hover { background: #283593; }
-        
-        .btn-archive { background: #e65100; }
-        .btn-archive:hover { background: #ef6c00; }
-        
-        .btn-clean { background: #2e7d32; }
-        .btn-clean:hover { background: #388e3c; }
-
-        .btn-doctor { background: #0277bd; }
-        .btn-doctor:hover { background: #01579b; }
-
-        .btn-alert { background: #d32f2f; }
-        .btn-alert:hover { background: #c62828; }
-
-        .btn-analytics { background: #6a1b9a; }
-        .btn-analytics:hover { background: #4a148c; }
-
-        /* ستايل المكنسة الألماسية */
-        .btn-purge { background: #00838f; }
-        .btn-purge:hover { background: #006064; }
+        .btn-backup { background: #1a237e; } .btn-backup:hover { background: #283593; }
+        .btn-archive { background: #e65100; } .btn-archive:hover { background: #ef6c00; }
+        .btn-clean { background: #2e7d32; } .btn-clean:hover { background: #388e3c; }
+        .btn-doctor { background: #0277bd; } .btn-doctor:hover { background: #01579b; }
+        .btn-alert { background: #d32f2f; } .btn-alert:hover { background: #c62828; }
+        .btn-analytics { background: #6a1b9a; } .btn-analytics:hover { background: #4a148c; }
+        .btn-purge { background: #00838f; } .btn-purge:hover { background: #006064; }
 
         #loader-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -89,10 +76,8 @@
             flex-direction: column;
         }
         .loader-text { color: #d4af37; font-size: 20px; font-weight: bold; margin-top: 20px; }
-        
         .status-msg { margin-top: 15px; font-size: 13px; font-weight: bold; display: none; }
 
-        /* ستايل المودال (النافذة المنبثقة) للتحليلات والإنذارات */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 4000; justify-content: center; align-items: center;
@@ -122,7 +107,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <span>📈 محلل الأداء اليومي</span>
-                <span class="close-modal" onclick="closeModal('analytics-modal')">✕</span>
+                <span class="close-modal" id="close-analytics">✕</span>
             </div>
             <div id="analytics-results">جاري التحليل...</div>
         </div>
@@ -132,7 +117,7 @@
         <div class="modal-content" style="border-color: #d32f2f;">
             <div class="modal-header" style="color: #d32f2f;">
                 <span>🚨 نظام الإنذار المبكر</span>
-                <span class="close-modal" onclick="closeModal('alerts-modal')">✕</span>
+                <span class="close-modal" id="close-alerts">✕</span>
             </div>
             <div id="alerts-results">جاري الفحص...</div>
         </div>
@@ -144,7 +129,6 @@
     </div>
 
     <div class="container">
-        
         <div class="health-dashboard">
             <div class="health-title">📊 مؤشر صحة السيرفر المركزي</div>
             <div class="progress-wrapper">
@@ -160,61 +144,59 @@
         </div>
 
         <div class="tools-grid">
-            
             <div class="tool-card">
                 <div class="tool-icon">👨‍⚕️</div>
-                <div class="tool-title">طبيب النظام الشامل (Data Doctor)</div>
-                <div class="tool-desc">إصلاح عدادات الأيام المصلبة وتحديث مسميات الشركات وتفعيل الطرد اللحظي للحسابات المجمدة وعزلها</div>
-                <button class="btn-action btn-doctor" onclick="runDataDoctor()">بدء الفحص والإصلاح 🚀</button>
+                <div class="tool-title">طبيب النظام الشامل</div>
+                <div class="tool-desc">إصلاح عدادات الأيام المصلبة وتحديث مسميات الشركات وتفعيل الطرد اللحظي.</div>
+                <button id="btn-doctor" class="btn-action btn-doctor">بدء الفحص والإصلاح 🚀</button>
                 <div id="doctor-msg" class="status-msg" style="color:#29b6f6;"></div>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">🚨</div>
-                <div class="tool-title">نظام الإنذار المبكر (Smart Alert)</div>
-                <div class="tool-desc">فحص فوري للطلبات المعلقة في الرادار واكتشاف التأخيرات لتدخل الإدارة السريع بكل رقي</div>
-                <button class="btn-action btn-alert" onclick="runSmartAlerts()">فحص الرادار الآن 🚀</button>
+                <div class="tool-title">نظام الإنذار المبكر</div>
+                <div class="tool-desc">فحص فوري للطلبات المعلقة في الرادار واكتشاف التأخيرات للتدخل السريع.</div>
+                <button id="btn-alert" class="btn-action btn-alert">فحص الرادار الآن 🚀</button>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">📈</div>
-                <div class="tool-title">محلل الأداء اليومي (Performance Analytics)</div>
-                <div class="tool-desc">تقرير فوري عن أبطال اليوم من الكباتن وأكثر المنشآت نشاطاً لدعمهم بالحوافز</div>
-                <button class="btn-action btn-analytics" onclick="runPerformanceAnalytics()">توليد تقرير الأداء 🚀</button>
+                <div class="tool-title">محلل الأداء اليومي</div>
+                <div class="tool-desc">تقرير حقيقي من السيرفر المركزي عن أبطال اليوم وأكثر المنشآت نشاطاً.</div>
+                <button id="btn-analytics" class="btn-action btn-analytics">توليد تقرير الأداء 🚀</button>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">💾</div>
                 <div class="tool-title">النسخ الاحتياطي الشامل</div>
-                <div class="tool-desc">تنزيل نسخة آمنة ومفرغة من جميع بيانات والشركات والطلبات كملف JSON مشفر</div>
-                <button class="btn-action btn-backup" onclick="backupData()">سحب نسخة احتياطية 🚀</button>
+                <div class="tool-desc">تنزيل نسخة آمنة من جميع البيانات كملف JSON مشفر.</div>
+                <button id="btn-backup" class="btn-action btn-backup">سحب نسخة احتياطية 🚀</button>
                 <div id="backup-msg" class="status-msg" style="color:#64b5f6;"></div>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">📦</div>
                 <div class="tool-title">الأرشفة التلقائية الذكية</div>
-                <div class="tool-desc">تنزيل الطلبات المكتملة وحذفها من السيرفر المركزي لتخفيف الضغط وتسريع استجابة النظام</div>
-                <button class="btn-action btn-archive" onclick="autoArchive()">بدء الأرشفة والتفريغ 🚀</button>
+                <div class="tool-desc">حفظ ومسح الطلبات القديمة (أكثر من 24 ساعة) لتخفيف الضغط.</div>
+                <button id="btn-archive" class="btn-action btn-archive">بدء الأرشفة والتفريغ 🚀</button>
                 <div id="archive-msg" class="status-msg" style="color:#ffb74d;"></div>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">🧹</div>
                 <div class="tool-title">تنظيف الذاكرة الميتة</div>
-                <div class="tool-desc">مسح الجلسات المنتهية والشوائب البرمجية من الذاكرة المحلية لضمان عمل المتصفح بأقصى سرعة</div>
-                <button class="btn-action btn-clean" onclick="cleanMemory()">تنظيف الذاكرة الآن 🚀</button>
+                <div class="tool-desc">مسح الجلسات المنتهية لتسريع المتصفح.</div>
+                <button id="btn-clean" class="btn-action btn-clean">تنظيف الذاكرة الآن 🚀</button>
                 <div id="clean-msg" class="status-msg" style="color:#81c784;"></div>
             </div>
 
             <div class="tool-card" style="border-top: 4px solid #00e5ff;">
                 <div class="tool-icon">💎</div>
-                <div class="tool-title">المكنسة الألماسية (Smart Purge)</div>
-                <div class="tool-desc">فلترة ذكية لضربات الجرس وتنبيهات الرادار المنتهية لتخفيف الأسطر وإبقاء السيرفر مستعداً</div>
-                <button class="btn-action btn-purge" onclick="runDiamondPurge()">تشغيل المكنسة 🚀</button>
+                <div class="tool-title">المكنسة الألماسية</div>
+                <div class="tool-desc">فلترة تنبيهات الرادار المنتهية لتخفيف الأسطر وإبقاء السيرفر مستعداً.</div>
+                <button id="btn-purge" class="btn-action btn-purge">تشغيل المكنسة 🚀</button>
                 <div id="purge-msg" class="status-msg" style="color:#00e5ff;"></div>
             </div>
-
         </div>
     </div>
 
@@ -238,11 +220,9 @@
         let systemData = {};
         let myMaster = null;
 
-        window.onload = async function() {
+        window.addEventListener('DOMContentLoaded', async () => {
             window.history.pushState(null, "", window.location.href);
-            window.onpopstate = function() {
-                window.history.pushState(null, "", window.location.href);
-            };
+            window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
             const user = JSON.parse(localStorage.getItem('currentUser'));
             if (!user || user.role !== 'admin') {
@@ -251,13 +231,27 @@
             }
             myMaster = user.Client_User || user.user;
             
+            setupEvents();
             await fetchHealthStatus();
             setupRealtimeFreezeListener();
             
-            // تشغيل المكنسة الألماسية في الخلفية بصمت عند التحميل وكل ساعة
             runDiamondPurge(true);
             setInterval(() => runDiamondPurge(true), 3600000);
-        };
+        });
+
+        // ربط الأزرار بالدوال (طريقة احترافية بدلاً من onclick في HTML)
+        function setupEvents() {
+            document.getElementById('btn-doctor').addEventListener('click', runDataDoctor);
+            document.getElementById('btn-alert').addEventListener('click', runSmartAlerts);
+            document.getElementById('btn-analytics').addEventListener('click', runPerformanceAnalytics);
+            document.getElementById('btn-backup').addEventListener('click', backupData);
+            document.getElementById('btn-archive').addEventListener('click', autoArchive);
+            document.getElementById('btn-clean').addEventListener('click', cleanMemory);
+            document.getElementById('btn-purge').addEventListener('click', () => runDiamondPurge(false));
+            
+            document.getElementById('close-analytics').addEventListener('click', () => { document.getElementById('analytics-modal').style.display = 'none'; });
+            document.getElementById('close-alerts').addEventListener('click', () => { document.getElementById('alerts-modal').style.display = 'none'; });
+        }
 
         function setupRealtimeFreezeListener() {
             const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -275,64 +269,42 @@
             });
         }
 
-        window.fetchHealthStatus = async function() {
+        async function fetchHealthStatus() {
             showLoader("جاري فحص نبض السيرفر ⏳");
             try {
-                // التعديل الألماسي: استدعاء جراحي فقط للغرف المطلوبة بدل تحميل كل السيرفر
                 const [usersSnap, shopsSnap, captainsSnap, ordersSnap, pricesSnap, radarSnap, assignedSnap] = await Promise.all([
-                    get(ref(db, 'users')),
-                    get(ref(db, 'shops')),
-                    get(ref(db, 'captains')),
-                    get(ref(db, 'orders')),
-                    get(ref(db, 'prices')),
-                    get(ref(db, 'radar_history')),
-                    get(ref(db, 'assigned_orders'))
+                    get(ref(db, 'users')), get(ref(db, 'shops')), get(ref(db, 'captains')),
+                    get(ref(db, 'orders')), get(ref(db, 'prices')), get(ref(db, 'radar_history')), get(ref(db, 'assigned_orders'))
                 ]);
 
                 systemData = {
-                    users: usersSnap.exists() ? usersSnap.val() : null,
-                    shops: shopsSnap.exists() ? shopsSnap.val() : null,
-                    captains: captainsSnap.exists() ? captainsSnap.val() : null,
-                    orders: ordersSnap.exists() ? ordersSnap.val() : null,
-                    prices: pricesSnap.exists() ? pricesSnap.val() : null,
-                    radar_history: radarSnap.exists() ? radarSnap.val() : null,
-                    assigned_orders: assignedSnap.exists() ? assignedSnap.val() : null
+                    users: usersSnap.val() || null, shops: shopsSnap.val() || null, captains: captainsSnap.val() || null,
+                    orders: ordersSnap.val() || null, prices: pricesSnap.val() || null,
+                    radar_history: radarSnap.val() || null, assigned_orders: assignedSnap.val() || null
                 };
                     
                 let totalRows = 0;
-                if(systemData.users) totalRows += Object.keys(systemData.users).length;
-                if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
-                if(systemData.captains) totalRows += Object.keys(systemData.captains).length; // تمت إضافة الكباتن
-                if(systemData.orders) totalRows += Object.keys(systemData.orders).length;
-                if(systemData.prices) totalRows += Object.keys(systemData.prices).length;
-                if(systemData.radar_history) totalRows += Object.keys(systemData.radar_history).length;
-                if(systemData.assigned_orders) totalRows += Object.keys(systemData.assigned_orders).length; // تمت الإضافة
+                ['users', 'shops', 'captains', 'orders', 'prices', 'radar_history', 'assigned_orders'].forEach(key => {
+                    if(systemData[key]) totalRows += Object.keys(systemData[key]).length;
+                });
 
                 const maxRows = 10000; 
-                let percentage = (totalRows / maxRows) * 100;
-                if(percentage > 100) percentage = 100;
+                let percentage = Math.min((totalRows / maxRows) * 100, 100);
 
                 const bar = document.getElementById('server-load-bar');
                 bar.style.width = percentage + '%';
-                
-                if(percentage < 50) bar.style.background = "#2e7d32"; 
-                else if(percentage < 80) bar.style.background = "#f57f17"; 
-                else bar.style.background = "#c62828"; 
+                bar.style.background = percentage < 50 ? "#2e7d32" : percentage < 80 ? "#f57f17" : "#c62828"; 
 
                 document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
                 document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
                 
-            } catch (e) {
-                console.error(e);
-            } finally {
-                hideLoader();
-            }
+            } catch (e) { console.error(e); } 
+            finally { hideLoader(); }
         }
 
-        window.runDataDoctor = async function() {
-            if(!confirm("سيقوم الطبيب بفحص وصيانة البيانات بالكامل ومزامنة الأيام المصلبة هل تريد الاستمرار")) return;
-            
-            showLoader("جاري إجراء جراحة للبيانات لإصلاح التواريخ والأسماء ⏳");
+        async function runDataDoctor() {
+            if(!confirm("سيقوم الطبيب بفحص وصيانة البيانات بالكامل ومزامنة الأيام المصلبة هل تريد الاستمرار؟")) return;
+            showLoader("جاري إجراء جراحة للبيانات ⏳");
             
             try {
                 if(systemData.users) {
@@ -357,34 +329,20 @@
                         updates[`users/${key}/status`] = statusToSync;
                         updates[`users/${key}/Client_Status`] = statusToSync;
                         
-                        if (statusToSync === 'paused') {
-                            updates[`users/${key}/force_logout`] = true;
-                        }
+                        if (statusToSync === 'paused') updates[`users/${key}/force_logout`] = true;
                     });
-                    
                     await update(ref(db), updates);
                 }
 
-                const msg = document.getElementById('doctor-msg');
-                msg.innerText = "تمت الصيانة بنجاح العدادات والأسماء أصبحت دقيقة ✅";
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 4000);
-                
+                showMessage('doctor-msg', "تمت الصيانة بنجاح ✅");
                 await fetchHealthStatus(); 
-
-            } catch (error) {
-                alert("حدث خطأ أثناء الفحص والصيانة");
-                console.error(error);
-            } finally {
-                hideLoader();
-            }
+            } catch (error) { alert("حدث خطأ أثناء الفحص"); } 
+            finally { hideLoader(); }
         }
 
-        // ================= الأفكار المجنونة: الإنذار المبكر والتحليلات ================= //
-
-        window.runSmartAlerts = async function() {
-            showLoader("جاري فحص رادارات الإمبراطورية ⏳");
-            await fetchHealthStatus(); // تحديث البيانات
+        async function runSmartAlerts() {
+            showLoader("جاري فحص الرادار ⏳");
+            await fetchHealthStatus(); 
             
             const alertsContainer = document.getElementById('alerts-results');
             alertsContainer.innerHTML = '';
@@ -396,53 +354,43 @@
             if (systemData.orders) {
                 Object.values(systemData.orders).forEach(ord => {
                     if (ord.Shop_Type === 'shop_order') {
-                        // التحقق من أن الطلب يخص الشركة الحالية (أو الإدارة العامة)
-                        let isMyOrder = false;
-                        if (myMaster === 'admin' || myMaster === 'naseem') {
-                            isMyOrder = true;
-                        } else {
-                             // فحص ما إذا كان المستخدم (المنشأة) تابع للماستر الحالي
+                        let isMyOrder = (myMaster === 'admin' || myMaster === 'naseem');
+                        if (!isMyOrder) {
                              let shopBelongsToMe = false;
                              if(systemData.shops) {
-                                 const shopArr = Object.values(systemData.shops);
-                                 shopBelongsToMe = shopArr.some(s => (s.Shop_User === ord.Shop_User || s.user === ord.Shop_User) && (s.Client_Master === myMaster || s.company === myMaster));
-                             }
-                             if(systemData.users) {
-                                 const userArr = Object.values(systemData.users);
-                                 if(!shopBelongsToMe) shopBelongsToMe = userArr.some(s => (s.Client_User === ord.Shop_User || s.user === ord.Shop_User) && (s.Client_Master === myMaster || s.master === myMaster));
+                                 shopBelongsToMe = Object.values(systemData.shops).some(s => (s.Shop_User === ord.Shop_User || s.user === ord.Shop_User) && (s.Client_Master === myMaster || s.company === myMaster));
                              }
                              if(ord.Shop_User === myMaster || shopBelongsToMe) isMyOrder = true;
                         }
 
-                        if (isMyOrder) {
-                            const ordTime = new Date(ord.Shop_Date).getTime();
-                            const diff = now - ordTime;
-                            
-                            // التحقق إذا كان الطلب ما زال معلق ولم يقبل
-                            let isAccepted = false;
-                            if(systemData.assigned_orders) {
-                                for(let capKey in systemData.assigned_orders) {
-                                    for(let appOrdKey in systemData.assigned_orders[capKey]) {
-                                        if(systemData.assigned_orders[capKey][appOrdKey].linkedRadarId === ord.Shop_Ord_ID) {
-                                             if(systemData.assigned_orders[capKey][appOrdKey].status === 'accepted' || systemData.assigned_orders[capKey][appOrdKey].status === 'completed') {
+                        if (isMyOrder && ord.Shop_Date) {
+                            const ordDate = new Date(ord.Shop_Date);
+                            if(!isNaN(ordDate)) {
+                                const diff = now - ordDate.getTime();
+                                let isAccepted = false;
+                                
+                                if(systemData.assigned_orders) {
+                                    for(let capKey in systemData.assigned_orders) {
+                                        for(let appOrdKey in systemData.assigned_orders[capKey]) {
+                                            const asgOrd = systemData.assigned_orders[capKey][appOrdKey];
+                                            if(asgOrd.linkedRadarId === ord.Shop_Ord_ID && (asgOrd.status === 'accepted' || asgOrd.status === 'completed')) {
                                                  isAccepted = true;
-                                             }
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if (!isAccepted && diff > delayThreshold) {
-                                issuesFound++;
-                                const minutesDelayed = Math.floor(diff / 60000);
-                                alertsContainer.innerHTML += `
-                                    <div class="alert-item">
-                                        <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">⚠️ تأخير في الرادار</div>
-                                        <div style="font-size:13px; color:#ccc;">المنشأة: <span style="color:white;">${ord.Shop_Name}</span></div>
-                                        <div style="font-size:13px; color:#ccc;">الوجهة: <span style="color:white;">${ord.Shop_Pickup}</span></div>
-                                        <div style="font-size:13px; color:#ccc;">وقت التأخير: <span style="color:#ffb74d; font-weight:bold;">${minutesDelayed} دقيقة</span></div>
-                                    </div>
-                                `;
+                                if (!isAccepted && diff > delayThreshold) {
+                                    issuesFound++;
+                                    const minutesDelayed = Math.floor(diff / 60000);
+                                    alertsContainer.innerHTML += `
+                                        <div class="alert-item">
+                                            <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">⚠️ تأخير في الرادار</div>
+                                            <div style="font-size:13px; color:#ccc;">المنشأة: <span style="color:white;">${ord.Shop_Name || 'غير معروف'}</span></div>
+                                            <div style="font-size:13px; color:#ccc;">وقت التأخير: <span style="color:#ffb74d; font-weight:bold;">${minutesDelayed} دقيقة</span></div>
+                                        </div>
+                                    `;
+                                }
                             }
                         }
                     }
@@ -450,244 +398,200 @@
             }
 
             if (issuesFound === 0) {
-                alertsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#81c784; font-weight:bold;">الرادار يعمل بكفاءة ولا توجد أي طلبات متأخرة ✅</div>';
+                alertsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#81c784; font-weight:bold;">الرادار يعمل بكفاءة ولا توجد طلبات متأخرة ✅</div>';
             }
 
             hideLoader();
             document.getElementById('alerts-modal').style.display = 'flex';
-        };
+        }
 
-        window.runPerformanceAnalytics = async function() {
-            showLoader("جاري تحليل  ⏳");
-            // استخدام البيانات التراكمية من localStorage لتكون أكثر دقة للأداء اليومي
-            let completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders') || '[]');
+        // تم إصلاح الكارثة الثانية: التحليلات الآن تقرأ من السيرفر مباشرة وليس من المتصفح
+        async function runPerformanceAnalytics() {
+            showLoader("جاري استخراج بيانات الأداء من السيرفر ⏳");
+            await fetchHealthStatus();
             
-            const today = new Date().toDateString();
-            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض");
-            
-            const analyticsContainer = document.getElementById('analytics-results');
-            analyticsContainer.innerHTML = '';
-
-            if (todayOrders.length === 0) {
-                analyticsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا توجد بيانات كافية لتحليل أداء اليوم</div>';
-                hideLoader();
-                document.getElementById('analytics-modal').style.display = 'flex';
-                return;
-            }
-
-            // تحليل الكباتن
+            const today = new Date().toISOString().split('T')[0];
             let captainsCount = {};
-            // تحليل المنشآت
             let shopsCount = {};
+            let totalToday = 0;
 
-            todayOrders.forEach(ord => {
-                // الكباتن
-                if(ord.cap) {
-                    captainsCount[ord.cap] = (captainsCount[ord.cap] || 0) + 1;
+            if (systemData.assigned_orders) {
+                for(let capKey in systemData.assigned_orders) {
+                    for(let ordKey in systemData.assigned_orders[capKey]) {
+                        const ord = systemData.assigned_orders[capKey][ordKey];
+                        // التحقق من أن الطلب مكتمل وتم اليوم
+                        if (ord.status === 'completed' && ord.date && ord.date.startsWith(today)) {
+                            totalToday++;
+                            
+                            // حساب الكابتن
+                            const capName = ord.captainName || capKey;
+                            captainsCount[capName] = (captainsCount[capName] || 0) + 1;
+                            
+                            // حساب المنشأة
+                            const shopName = ord.shopName || 'منشأة غير محددة';
+                            shopsCount[shopName] = (shopsCount[shopName] || 0) + 1;
+                        }
+                    }
                 }
-                // المنشآت
-                if(ord.rest) {
-                    let restName = ord.rest.split(' - ')[0]; // أخذ اسم المنشأة فقط بدون المنطقة إن وجد
-                    shopsCount[restName] = (shopsCount[restName] || 0) + 1;
-                }
-            });
-
-            // إيجاد 
-            let topCap = "لا يوجد";
-            let topCapCount = 0;
-            for (const [cap, count] of Object.entries(captainsCount)) {
-                if (count > topCapCount) { topCapCount = count; topCap = cap; }
             }
 
-            // إيجاد أنشط منشأة
-            let topShop = "لا يوجد";
-            let topShopCount = 0;
-            for (const [shop, count] of Object.entries(shopsCount)) {
-                if (count > topShopCount) { topShopCount = count; topShop = shop; }
-            }
+            const analyticsContainer = document.getElementById('analytics-results');
+            if (totalToday === 0) {
+                analyticsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا توجد طلبات مكتملة مسجلة لليوم على السيرفر.</div>';
+            } else {
+                let topCap = Object.keys(captainsCount).reduce((a, b) => captainsCount[a] > captainsCount[b] ? a : b);
+                let topShop = Object.keys(shopsCount).reduce((a, b) => shopsCount[a] > shopsCount[b] ? a : b);
 
-            analyticsContainer.innerHTML = `
-                <div class="analytics-item" style="border-color: var(--success);">
-                    <div class="analytics-label">🏆 بطل اليوم (أكثر كابتن إنجازاً)</div>
-                    <div class="analytics-value" style="color: var(--success);">🦸‍♂️ ${topCap} <span style="font-size:14px; color:#888; font-weight:normal;">(${topCapCount} طلبات)</span></div>
-                </div>
-                <div class="analytics-item" style="border-color: #0288d1;">
-                    <div class="analytics-label">🏪 المنشأة الأنشط</div>
-                    <div class="analytics-value" style="color: #0288d1;">${topShop} <span style="font-size:14px; color:#888; font-weight:normal;">(${topShopCount} طلبات)</span></div>
-                </div>
-                <div class="analytics-item">
-                    <div class="analytics-label">📊 إجمالي الطلبات المكتملة لليوم</div>
-                    <div class="analytics-value">${todayOrders.length} طلب</div>
-                </div>
-            `;
+                analyticsContainer.innerHTML = `
+                    <div class="analytics-item" style="border-color: #2e7d32;">
+                        <div class="analytics-label">🏆 بطل اليوم</div>
+                        <div class="analytics-value" style="color: #4caf50;">🦸‍♂️ ${topCap} <span style="font-size:14px; color:#888;">(${captainsCount[topCap]} طلبات)</span></div>
+                    </div>
+                    <div class="analytics-item" style="border-color: #0288d1;">
+                        <div class="analytics-label">🏪 المنشأة الأنشط</div>
+                        <div class="analytics-value" style="color: #0288d1;">${topShop} <span style="font-size:14px; color:#888;">(${shopsCount[topShop]} طلبات)</span></div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-label">📊 إجمالي الطلبات المكتملة لليوم</div>
+                        <div class="analytics-value">${totalToday} طلب</div>
+                    </div>
+                `;
+            }
 
             hideLoader();
             document.getElementById('analytics-modal').style.display = 'flex';
-        };
+        }
 
-        window.closeModal = function(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        };
-
-        // ============================================================================== //
-
-        window.backupData = async function() {
-            showLoader("جاري سحب نسخة احتياطية شاملة للمملكة ⏳");
+        async function backupData() {
+            showLoader("جاري سحب نسخة احتياطية ⏳\n(قد يستغرق وقتاً إذا كانت البيانات ضخمة)");
             try {
-                // التعديل الألماسي: سحب كل البيانات فقط عند طلب النسخ الاحتياطي!
                 const fullSnap = await get(ref(db));
-                if(!fullSnap.exists()) {
-                    hideLoader();
-                    return alert("لا توجد بيانات للسحب");
-                }
+                if(!fullSnap.exists()) return alert("لا توجد بيانات للسحب");
                 
-                const fullData = fullSnap.val();
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 2));
-                
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullSnap.val(), null, 2));
+                const dlNode = document.createElement('a');
+                dlNode.href = dataStr;
+                dlNode.download = "N_One_Backup_" + new Date().toISOString().split('T')[0] + ".json";
+                document.body.appendChild(dlNode);
+                dlNode.click();
+                dlNode.remove();
 
-                const msg = document.getElementById('backup-msg');
-                msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ✅";
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 4000);
-            } catch (error) {
-                alert("حدث خطأ أثناء سحب النسخة");
-                console.error(error);
-            } finally {
-                hideLoader();
-            }
+                showMessage('backup-msg', "تم حفظ النسخة بنجاح ✅");
+            } catch (error) { alert("حدث خطأ أثناء السحب"); } 
+            finally { hideLoader(); }
         }
 
-        window.autoArchive = async function() {
-            if(!confirm("هل أنت متأكد من بدء عملية الأرشفة سيتم تفريغ الطلبات لتخفيف السيرفر")) return;
+        // تم إصلاح الكارثة الأولى: الأرشفة الآن تمسح الطلبات القديمة جداً فقط (مر عليها 24 ساعة)
+        async function autoArchive() {
+            if(!confirm("تحذير: سيتم سحب الطلبات التي مر عليها أكثر من 24 ساعة ومسحها من السيرفر لتخفيف الضغط. هل أنت متأكد؟")) return;
             
-            if(!systemData.orders || Object.keys(systemData.orders).length === 0) {
-                alert("السيرفر نظيف ولا يوجد طلبات للأرشفة");
-                return;
+            if(!systemData.orders) return alert("السيرفر نظيف ولا يوجد طلبات للأرشفة");
+
+            showLoader("جاري فرز وأرشفة الطلبات القديمة ⏳");
+            const now = Date.now();
+            const oneDayInMs = 24 * 60 * 60 * 1000;
+            
+            let oldOrders = {};
+            let updates = {};
+            let hasOldOrders = false;
+
+            Object.keys(systemData.orders).forEach(key => {
+                const ord = systemData.orders[key];
+                if(ord.Shop_Date) {
+                    const ordDate = new Date(ord.Shop_Date).getTime();
+                    if(!isNaN(ordDate) && (now - ordDate) > oneDayInMs) {
+                        oldOrders[key] = ord;
+                        updates[`orders/${key}`] = null; // نضع قيمة null لكي يتم مسحها برمجياً
+                        hasOldOrders = true;
+                    }
+                }
+            });
+
+            if(!hasOldOrders) {
+                hideLoader();
+                return alert("لا يوجد طلبات قديمة تجاوزت 24 ساعة. السيرفر بحالة ممتازة.");
             }
-
-            const ordersToArchive = systemData.orders;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ordersToArchive, null, 2));
-            const dlNode = document.createElement('a');
-            dlNode.setAttribute("href", dataStr);
-            dlNode.setAttribute("download", "Archive_Orders_" + new Date().toISOString().split('T')[0] + ".json");
-            document.body.appendChild(dlNode);
-            dlNode.click();
-            dlNode.remove();
-
-            showLoader("جاري تنظيف السيرفر من الطلبات المؤرشفة الرجاء عدم إغلاق الصفحة ⏳");
 
             try {
-                await remove(ref(db, 'orders'));
-                
-                const msg = document.getElementById('archive-msg');
-                msg.innerText = "تمت الأرشفة وتفريغ السيرفر بنجاح ✅";
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 4000);
-                
-                await fetchHealthStatus(); 
+                // 1. تنزيل نسخة من الطلبات القديمة
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(oldOrders, null, 2));
+                const dlNode = document.createElement('a');
+                dlNode.href = dataStr;
+                dlNode.download = "Archive_Old_Orders_" + new Date().toISOString().split('T')[0] + ".json";
+                document.body.appendChild(dlNode);
+                dlNode.click();
+                dlNode.remove();
 
-            } catch (error) {
-                alert("حدث خطأ أثناء التفريغ");
-            } finally {
-                hideLoader();
-            }
+                // 2. مسح الطلبات القديمة فقط بأمان
+                await update(ref(db), updates);
+                
+                showMessage('archive-msg', "تمت أرشفة الطلبات القديمة بنجاح ✅");
+                await fetchHealthStatus(); 
+            } catch (error) { alert("حدث خطأ أثناء الأرشفة"); } 
+            finally { hideLoader(); }
         }
 
-        window.cleanMemory = function() {
-            const current = localStorage.getItem('currentUser');
-            // الحفاظ على بيانات الكباتن والأرشيف لتطبيق الأفكار 
-            const completedOrders = localStorage.getItem('n1_completed_orders');
-            const processedOrders = localStorage.getItem('n1_processed_app_orders');
-            const captainMem = localStorage.getItem('n1_captains');
-            const commissionRatio = localStorage.getItem('n1_commission_ratio');
-
+        function cleanMemory() {
+            const keysToKeep = ['currentUser', 'n1_completed_orders', 'n1_processed_app_orders', 'n1_captains', 'n1_commission_ratio'];
+            const savedData = {};
+            keysToKeep.forEach(k => { if(localStorage.getItem(k)) savedData[k] = localStorage.getItem(k); });
+            
             localStorage.clear();
             sessionStorage.clear();
             
-            if(current) localStorage.setItem('currentUser', current);
-            if(completedOrders) localStorage.setItem('n1_completed_orders', completedOrders);
-            if(processedOrders) localStorage.setItem('n1_processed_app_orders', processedOrders);
-            if(captainMem) localStorage.setItem('n1_captains', captainMem);
-            if(commissionRatio) localStorage.setItem('n1_commission_ratio', commissionRatio);
-
-            const msg = document.getElementById('clean-msg');
-            msg.innerText = "تم تنظيف الشوائب والذاكرة الميتة ✅";
-            msg.style.display = "block";
-            setTimeout(() => msg.style.display = "none", 4000);
+            Object.keys(savedData).forEach(k => localStorage.setItem(k, savedData[k]));
+            showMessage('clean-msg', "تم تنظيف الذاكرة الميتة بنجاح ✅");
         }
 
-        // =================== دالة المكنسة الألماسية الجديدة (Smart Purge) =================== //
-        window.runDiamondPurge = async function(isAuto = false) {
-            if(!isAuto) showLoader("جاري تشغيل المكنسة الألماسية لتطهير السيرفر ⏳");
+        async function runDiamondPurge(isAuto = false) {
+            if(!isAuto) showLoader("جاري تشغيل المكنسة الألماسية ⏳");
             try {
                 const now = Date.now();
                 const sixHoursAgo = now - (6 * 60 * 60 * 1000);
 
-                // 1. تنظيف ضربات الجرس والتنبيهات القديمة
-                const alertsRef = ref(db, 'alerts');
-                const alertsSnap = await get(alertsRef);
-                if (alertsSnap.exists()) {
-                    const alertsData = alertsSnap.val();
-                    if(alertsData.global && alertsData.global.timestamp && alertsData.global.timestamp < sixHoursAgo) {
-                         await remove(ref(db, 'alerts/global'));
-                    }
+                const alertsSnap = await get(ref(db, 'alerts'));
+                if (alertsSnap.exists() && alertsSnap.val().global?.timestamp < sixHoursAgo) {
+                    await remove(ref(db, 'alerts/global'));
                 }
 
-                // 2. تنظيف الإعلانات المنتهية الصلاحية
-                const adsRef = ref(db, 'announcements');
-                const adsSnap = await get(adsRef);
+                const adsSnap = await get(ref(db, 'announcements'));
                 if(adsSnap.exists()) {
                     const adsData = adsSnap.val();
-                    if(adsData.global && adsData.global.expireAt && adsData.global.expireAt < now) {
-                        await remove(ref(db, 'announcements/global'));
-                    }
+                    if(adsData.global?.expireAt < now) await remove(ref(db, 'announcements/global'));
                     if(adsData.users) {
                         for(let u in adsData.users) {
-                            if(adsData.users[u].expireAt && adsData.users[u].expireAt < now) {
-                                await remove(ref(db, `announcements/users/${u}`));
-                            }
+                            if(adsData.users[u].expireAt < now) await remove(ref(db, `announcements/users/${u}`));
                         }
                     }
                 }
 
-                // 3. تنظيف ضجيج الرادار القديم إذا كان مخزن
                 if(systemData.radar_history) {
                     for(let key in systemData.radar_history) {
-                        if(systemData.radar_history[key].timestamp && systemData.radar_history[key].timestamp < sixHoursAgo) {
+                        if(systemData.radar_history[key].timestamp < sixHoursAgo) {
                             await remove(ref(db, `radar_history/${key}`));
                         }
                     }
                 }
 
                 if(!isAuto) {
-                    const msg = document.getElementById('purge-msg');
-                    msg.innerText = "تمت الفلترة بنجاح ✅";
-                    msg.style.display = "block";
-                    setTimeout(() => msg.style.display = "none", 4000);
+                    showMessage('purge-msg', "تمت الفلترة بنجاح ✅");
                     await fetchHealthStatus();
                 }
-            } catch(e) {
-                if(!isAuto) alert("حدث خطأ أثناء الفلترة");
-            } finally {
-                if(!isAuto) hideLoader();
-            }
+            } catch(e) { if(!isAuto) alert("حدث خطأ أثناء الفلترة"); } 
+            finally { if(!isAuto) hideLoader(); }
         }
 
         function showLoader(text) {
             document.getElementById('loader-msg').innerText = text;
             document.getElementById('loader-overlay').style.display = 'flex';
         }
-
-        function hideLoader() {
-            document.getElementById('loader-overlay').style.display = 'none';
+        function hideLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
+        function showMessage(id, txt) {
+            const msg = document.getElementById(id);
+            msg.innerText = txt;
+            msg.style.display = "block";
+            setTimeout(() => msg.style.display = "none", 4000);
         }
     </script>
-
 </body>
 </html>
