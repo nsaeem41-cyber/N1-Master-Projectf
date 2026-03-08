@@ -22,10 +22,12 @@
         .brand { font-size: 30px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         .gold { color: #d4af37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
         
+        /* تصميم زر الرجوع لصفحة الأدمن */
         .btn-back {
             background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: 1px solid #475569;
             padding: 12px 25px; border-radius: 12px; cursor: pointer; text-decoration: none;
             transition: 0.3s; font-weight: bold; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 8px;
         }
         .btn-back:hover { background: #334155; border-color: #d4af37; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2); }
 
@@ -49,7 +51,6 @@
         .c-green { border-color: #10b981; }
         .c-green .dash-num { color: #34d399; }
 
-        /* ستايل الأقسام الجديدة للدكتور */
         .doctor-modules {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
             gap: 25px; margin-bottom: 35px;
@@ -66,9 +67,9 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
-        .audit-list { list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; }
-        .audit-item { background: rgba(239, 68, 68, 0.1); border-right: 4px solid #ef4444; padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; font-weight: bold; }
-        .audit-safe { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #34d399; text-align: center; padding: 20px; border-radius: 12px; font-weight: 900; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1); }
+        .audit-list { display: flex; flex-direction: column; gap: 10px; max-height: 180px; overflow-y: auto; }
+        .audit-item { background: rgba(239, 68, 68, 0.1); border-right: 4px solid #ef4444; padding: 12px; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; font-weight: bold; }
+        .audit-safe { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #34d399; text-align: center; padding: 20px; border-radius: 12px; font-weight: 900; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1); width: 100%; box-sizing: border-box; }
 
         .feasibility-stat { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #475569; font-size: 14px; color: #cbd5e1; font-weight: bold; }
         .feasibility-val { font-weight: 900; color: white; }
@@ -83,6 +84,13 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
+        .btn-update {
+            background:rgba(212,175,55,0.1); border:1px solid #d4af37; padding:8px 20px; 
+            border-radius:12px; color:#d4af37; cursor:pointer; font-weight:900; 
+            transition:0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-update:hover { background:rgba(212,175,55,0.2); }
+
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; }
         thead { background: #0f172a; color: #e2e8f0; }
         th { padding: 18px 15px; text-align: right; border-bottom: 2px solid #d4af37; font-weight: 900; letter-spacing: 0.5px; }
@@ -121,7 +129,7 @@
 
     <div class="dashboard-grid">
         <div class="dash-card c-gold">
-            <div class="dash-lbl">إجمالي الطلبات (الخاصة بقطاعك)</div>
+            <div class="dash-lbl">الطلبات الحديثة (أحدث 100)</div>
             <div class="dash-num" id="total-orders">0</div>
         </div>
         <div class="dash-card c-blue">
@@ -129,7 +137,7 @@
             <div class="dash-num" id="total-merchants">0</div>
         </div>
         <div class="dash-card c-green">
-            <div class="dash-lbl">حجم التداول المالي (الجرد الصافي) 💰</div>
+            <div class="dash-lbl">حجم التداول المالي (للطلبات المعروضة) 💰</div>
             <div class="dash-num" id="total-money">0</div>
             <div style="font-size: 12px; color: #94a3b8; font-weight: bold; margin-top: -5px;" id="fees-breakdown">رسوم التوصيل: 0 د.أ</div>
         </div>
@@ -137,14 +145,14 @@
 
     <div class="doctor-modules">
         <div class="module-card">
-            <div class="module-title">🔍 المعالج الذكي للثغرات المالية (Smart Diamond Audit)</div>
-            <ul class="audit-list" id="audit-results">
+            <div class="module-title">🔍 المعالج الذكي للثغرات المالية</div>
+            <div class="audit-list" id="audit-results">
                 <div class="audit-safe">جاري الفحص الجراحي الدقيق... ⏳</div>
-            </ul>
+            </div>
         </div>
         
         <div class="module-card">
-            <div class="module-title">📊 دراسة الجدوى وتوزيع المهام (Feasibility Analytics)</div>
+            <div class="module-title">📊 دراسة الجدوى وتوزيع المهام</div>
             <div id="feasibility-results">
                 <div class="feasibility-stat"><span>متوسط تكلفة التوصيل</span><span class="feasibility-val" id="avg-fee">0 د.أ</span></div>
                 <div class="feasibility-stat"><span>المنطقة الأعلى طلباً</span><span class="feasibility-val" id="top-area" style="color:#fef08a;">جاري التحليل...</span></div>
@@ -157,7 +165,7 @@
     <div class="live-feed">
         <div class="feed-title">
             <span>📡 مراقبة العمليات (Live Feed - Isolated View)</span>
-            <button onclick="loadData()" style="background:rgba(212,175,55,0.1); border:1px solid #d4af37; padding:8px 20px; border-radius:12px; color:#d4af37; cursor:pointer; font-weight:900; transition:0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(212,175,55,0.2)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">🔄 تحديث جراحي</button>
+            <button id="btn-refresh" class="btn-update">🔄 تحديث جراحي</button>
         </div>
         
         <div id="loader">جاري الاتصال بالنواة المركزية وتطبيق العزل ... 🛰️💎</div>
@@ -177,8 +185,9 @@
     </div>
 
     <script type="module">
+        // استيراد أدوات قاعدة البيانات وأدوات الاستعلام (Queries) لتسريع الأداء
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -196,20 +205,19 @@
         let currentUser = null;
         let isSuperAdmin = false;
         let myMasterId = "";
-        
-        // المتغيرات المركزية لتجميع البيانات الجراحية بدون تحميل القاعدة كاملة
         let globalDataState = { orders: {}, shops: {}, users: {}, assigned_orders: {} };
 
-        window.onload = function() {
+        // تهيئة التطبيق عند فتح الصفحة
+        function initApp() {
             window.history.pushState(null, "", window.location.href);
-            window.onpopstate = function() {
+            window.addEventListener('popstate', function() {
                 window.history.pushState(null, "", window.location.href);
-            };
+            });
 
             const sessionData = localStorage.getItem('currentUser');
             if (!sessionData) {
-                // window.location.replace('index.html');
-                // return;
+                // بيانات افتراضية للتجربة إذا لم تكن مسجلاً الدخول
+                currentUser = { user: "admin", name: "حبة السكر (مديرة النظام)", role: "admin" };
             } else {
                 currentUser = JSON.parse(sessionData);
                 if (currentUser.role !== 'admin' && currentUser.role !== 'client') {
@@ -218,14 +226,17 @@
                 }
             }
             
-            // في حال عدم وجود جلسة للتجربة، نضع قيم افتراضية
-            if(!currentUser) {
-                 currentUser = { user: "admin", name: "حبة السكر (مديرة النظام)", role: "admin" };
-            }
-            
             myMasterId = currentUser.Client_User || currentUser.user;
             isSuperAdmin = (myMasterId === 'admin' || myMasterId === 'naseem' || myMasterId === 'naseem_admin');
 
+            setupUI();
+            setupEvents();
+            loadData();
+            attachRealtimeListeners();
+            setupRealtimeFreezeListener();
+        }
+
+        function setupUI() {
             const badge = document.getElementById('hierarchy-badge');
             if(isSuperAdmin) {
                 badge.innerHTML = "🛡️ الإدارة العليا (تحكم شامل)";
@@ -234,13 +245,14 @@
             } else {
                 badge.innerHTML = `🛡️ قطاع معزول (إدارة شركة: ${currentUser.Client_Name || currentUser.name})`;
             }
-            
             document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
-            
-            loadData();
-            attachRealtimeListeners();
-            setupRealtimeFreezeListener();
-        };
+            updateCountdownTimer();
+        }
+
+        // ربط زر التحديث الجراحي
+        function setupEvents() {
+            document.getElementById('btn-refresh').addEventListener('click', loadData);
+        }
 
         function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
@@ -253,8 +265,7 @@
             const expiryDate = new Date(currentUser.expiry || currentUser.Client_Expiry);
             expiryDate.setHours(23, 59, 59, 999);
             const now = new Date();
-            const diffTime = expiryDate.getTime() - now.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
             if (diffDays > 0) {
                 if (diffDays <= 3) {
@@ -273,22 +284,18 @@
         function setupRealtimeFreezeListener() {
             if(!currentUser || (!currentUser.user && !currentUser.Client_User)) return;
             const username = currentUser.user || currentUser.Client_User;
-            const myRef = ref(db, `users/${username}`);
             
-            onValue(myRef, (snapshot) => {
+            onValue(ref(db, `users/${username}`), (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    
                     if(data.name || data.Client_Name) {
                         currentUser.name = data.name || data.Client_Name;
                         document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name}`;
                     }
-
                     if(data.expiry || data.Client_Expiry) {
                         currentUser.expiry = data.expiry || data.Client_Expiry;
                         updateCountdownTimer();
                     }
-
                     if (data.status === 'paused' || data.Client_Status === 'paused') {
                         alert("تم إيقاف الحساب يرجى مراجعة الإدارة");
                         localStorage.removeItem('currentUser');
@@ -298,14 +305,16 @@
             });
         }
 
-        // التعديل الألماسي الأول: استدعاء جراحي فقط للغرف المطلوبة بدل كامل القاعدة
-        window.loadData = async function() {
+        // تحميل أحدث 100 طلب فقط لتسريع التطبيق
+        async function loadData() {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('feed-table').style.display = 'none';
 
             try {
+                const recentOrdersQuery = query(ref(db, 'orders'), limitToLast(100));
+
                 const [ordersSnap, shopsSnap, usersSnap, assignedSnap] = await Promise.all([
-                    get(ref(db, 'orders')),
+                    get(recentOrdersQuery),
                     get(ref(db, 'shops')),
                     get(ref(db, 'users')),
                     get(ref(db, 'assigned_orders'))
@@ -318,18 +327,21 @@
 
                 processData(globalDataState);
             } catch (e) {
-                console.error(e);
+                console.error("خطأ في جلب البيانات:", e);
+                document.getElementById('loader').innerText = "حدث خطأ أثناء الاتصال بالنواة المركزية ❌";
             }
-        };
+        }
 
-        // التعديل الألماسي الثاني: استماع جراحي منفصل عشان السيرفر ما يعمل بلوك
-        window.attachRealtimeListeners = function() {
+        // الاستماع المباشر للتحديثات (لأحدث الطلبات فقط)
+        function attachRealtimeListeners() {
             let isFirstLoad = true;
             const triggerUpdate = () => {
                 if(!isFirstLoad) processData(globalDataState);
             };
 
-            onValue(ref(db, 'orders'), (snapshot) => {
+            const recentOrdersQuery = query(ref(db, 'orders'), limitToLast(100));
+
+            onValue(recentOrdersQuery, (snapshot) => {
                 globalDataState.orders = snapshot.exists() ? snapshot.val() : {};
                 triggerUpdate();
             });
@@ -347,10 +359,9 @@
             });
             
             isFirstLoad = false;
-        };
+        }
 
-        window.processData = function(data) {
-            // فلترة لتطبيق العزل ومنع تصادم الحسابات
+        function processData(data) {
             let rawOrders = data.orders ? Object.values(data.orders) : [];
             let myOrders = [];
             
@@ -358,7 +369,6 @@
             let allUsers = data.users ? Object.values(data.users) : [];
             let myShopsIdentifiers = new Set();
 
-            // تحديد المنشآت التابعة للقطاع الحالي
             if(isSuperAdmin) {
                 myOrders = rawOrders;
                 allShops.forEach(s => myShopsIdentifiers.add(s.Shop_User || s.user));
@@ -384,14 +394,12 @@
 
             myOrders.reverse();
 
-            // تحديث العدادات المعزولة
             document.getElementById('total-orders').innerText = myOrders.length;
             document.getElementById('total-merchants').innerText = myShopsIdentifiers.size;
             
-            // متغيرات الجرد المالي الدقيق
-            let totalOrderValue = 0; // قيمة الطلبات الصافية
-            let totalDeliveryFees = 0; // رسوم التوصيل الصافية
-            let grandTotal = 0; // المجموع الكلي
+            let totalOrderValue = 0;
+            let totalDeliveryFees = 0;
+            let grandTotal = 0;
 
             let auditIssues = [];
             let areaStats = {};
@@ -402,7 +410,6 @@
                 const val = parseFloat(o.Shop_Val || o.val || 0);
                 const fee = parseFloat(o.Shop_Fee || o.fee || 0);
                 
-                // المعالج الذكي للثغرات (Smart Audit)
                 if (val < 0 || fee < 0) {
                     auditIssues.push(`ثغرة تسعير سلبية في طلب المنشأة: ${o.Shop_Name} بقيمة ${val} د.أ`);
                 }
@@ -410,16 +417,13 @@
                     auditIssues.push(`تحذير أمان: قيمة طلب مرتفعة جداً للمنشأة ${o.Shop_Name} (${val} د.أ)`);
                 }
 
-                // الجرد التراكمي
                 totalOrderValue += val;
                 totalDeliveryFees += fee;
                 grandTotal += (val + fee);
 
-                // تحليلات الجدوى
                 const area = o.Shop_Pickup || o.pickup || 'غير محدد';
                 areaStats[area] = (areaStats[area] || 0) + 1;
 
-                // فحص حالة الطلب من الرادار
                 let orderStatus = 'في الرادار 📡';
                 for(let cap in assignedOrders) {
                     for(let k in assignedOrders[cap]) {
@@ -436,19 +440,16 @@
                 o._currentStatus = orderStatus;
             });
 
-            // عرض الجرد المالي النهائي
             document.getElementById('total-money').innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " د.أ";
             document.getElementById('fees-breakdown').innerHTML = `إجمالي الطلبات: <span style="color:#d4af37;">${totalOrderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span> | رسوم التوصيل: <span style="color:#34d399;">${totalDeliveryFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span>`;
 
-            // عرض نتائج المعالج
             const auditContainer = document.getElementById('audit-results');
             if(auditIssues.length > 0) {
-                auditContainer.innerHTML = auditIssues.map(issue => `<li class="audit-item"><span>⚠️ ${issue}</span><span style="color:#ef4444; cursor:pointer;" title="تدخل جراحي لمعالجة الرقم">معالجة ⚙️</span></li>`).join('');
+                auditContainer.innerHTML = auditIssues.map(issue => `<div class="audit-item"><span>⚠️ ${issue}</span><span style="color:#ef4444; cursor:pointer;" title="تدخل جراحي لمعالجة الرقم">معالجة ⚙️</span></div>`).join('');
             } else {
                 auditContainer.innerHTML = '<div class="audit-safe">الحسابات دقيقة 100% ولا يوجد أي تضارب مالي 💎</div>';
             }
 
-            // عرض دراسة الجدوى
             let bestArea = "لا يوجد";
             let maxAreaCount = 0;
             for(let a in areaStats) {
@@ -458,7 +459,6 @@
             document.getElementById('top-area').innerText = `${bestArea} (${maxAreaCount} طلب)`;
             document.getElementById('completion-rate').innerText = myOrders.length > 0 ? Math.round((completedCount / myOrders.length) * 100) + "%" : "0%";
 
-            // بناء جدول العمليات الحية المعزول
             const tbody = document.getElementById('feed-body');
             let htmlContent = '';
 
@@ -467,7 +467,12 @@
             } else {
                 myOrders.forEach(ord => {
                     const shopName = ord.Shop_Name || ord.name || ord.Client_Name || 'غير معروف';
-                    const dateTime = ord.Shop_Date ? new Date(ord.Shop_Date).toLocaleString('ar-EG') : '---';
+                    let dateTime = '---';
+                    if (ord.Shop_Date) {
+                        const parsedDate = new Date(ord.Shop_Date);
+                        if(!isNaN(parsedDate)) dateTime = parsedDate.toLocaleString('ar-EG');
+                    }
+                    
                     const location = ord.Shop_Pickup || ord.pickup || '---';
                     const orderVal = parseFloat(ord.Shop_Val || ord.val || 0);
                     const orderFee = parseFloat(ord.Shop_Fee || ord.fee || 0);
@@ -496,7 +501,9 @@
             document.getElementById('loader').style.display = 'none';
             document.getElementById('feed-table').style.display = 'table';
         }
-    </script>
 
+        // بدء تشغيل التطبيق عند اكتمال تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
 </body>
 </html>
