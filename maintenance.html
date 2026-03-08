@@ -597,4 +597,92 @@
                 msg.style.display = "block";
                 setTimeout(() => msg.style.display = "none", 4000);
                 
-                await fetch
+                await fetchHealthStatus(); 
+
+            } catch (error) {
+                alert("حدث خطأ أثناء التفريغ ☺️");
+            } finally {
+                hideLoader();
+            }
+        }
+
+        window.cleanMemory = function() {
+            const keysToKeep = ['currentUser', 'n1_completed_orders', 'n1_processed_app_orders', 'n1_captains', 'n1_commission_ratio'];
+            const savedData = {};
+            keysToKeep.forEach(k => { if(localStorage.getItem(k)) savedData[k] = localStorage.getItem(k); });
+            
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            Object.keys(savedData).forEach(k => localStorage.setItem(k, savedData[k]));
+            
+            const msg = document.getElementById('clean-msg');
+            msg.innerText = "تم تنظيف الشوائب والذاكرة الميتة ☺️✅";
+            msg.style.display = "block";
+            setTimeout(() => msg.style.display = "none", 4000);
+        }
+
+        window.runDiamondPurge = async function(isAuto = false) {
+            if(!isAuto) showLoader("جاري تشغيل المكنسة الألماسية لتطهير السيرفر ⏳");
+            try {
+                const now = Date.now();
+                const sixHoursAgo = now - (6 * 60 * 60 * 1000);
+
+                const alertsRef = ref(db, 'alerts');
+                const alertsSnap = await get(alertsRef);
+                if (alertsSnap.exists()) {
+                    const alertsData = alertsSnap.val();
+                    if(alertsData.global && alertsData.global.timestamp && alertsData.global.timestamp < sixHoursAgo) {
+                         await remove(ref(db, 'alerts/global'));
+                    }
+                }
+
+                const adsRef = ref(db, 'announcements');
+                const adsSnap = await get(adsRef);
+                if(adsSnap.exists()) {
+                    const adsData = adsSnap.val();
+                    if(adsData.global && adsData.global.expireAt && adsData.global.expireAt < now) {
+                        await remove(ref(db, 'announcements/global'));
+                    }
+                    if(adsData.users) {
+                        for(let u in adsData.users) {
+                            if(adsData.users[u].expireAt && adsData.users[u].expireAt < now) {
+                                await remove(ref(db, `announcements/users/${u}`));
+                            }
+                        }
+                    }
+                }
+
+                if(systemData.radar_history) {
+                    for(let key in systemData.radar_history) {
+                        if(systemData.radar_history[key].timestamp && systemData.radar_history[key].timestamp < sixHoursAgo) {
+                            await remove(ref(db, `radar_history/${key}`));
+                        }
+                    }
+                }
+
+                if(!isAuto) {
+                    const msg = document.getElementById('purge-msg');
+                    msg.innerText = "تمت الفلترة الألماسية بنجاح ☺️✅";
+                    msg.style.display = "block";
+                    setTimeout(() => msg.style.display = "none", 4000);
+                    await fetchHealthStatus();
+                }
+            } catch(e) {
+                if(!isAuto) alert("حدث خطأ أثناء الفلترة الألماسية ☺️");
+            } finally {
+                if(!isAuto) hideLoader();
+            }
+        }
+
+        function showLoader(text) {
+            document.getElementById('loader-msg').innerText = text;
+            document.getElementById('loader-overlay').style.display = 'flex';
+        }
+
+        function hideLoader() {
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
