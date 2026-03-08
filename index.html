@@ -16,7 +16,7 @@
     <meta name="twitter:image" content="n_one_logo_new.png">
 
     <style>
-        /* ================= تصميم البوابة الإمبراطورية (Royal & Official) ================= */
+        /* ================= تصميم البوابة الإمبراطورية ================= */
         :root {
             --primary: #0f172a;
             --accent: #1e293b;
@@ -106,7 +106,7 @@
             letter-spacing: 0.5px;
         }
         
-        input {
+        input[type="text"], input[type="password"] {
             width: 100%; 
             padding: 16px 18px; 
             border: 1px solid rgba(212, 175, 55, 0.2); 
@@ -121,7 +121,7 @@
             font-family: inherit;
         }
         
-        input:focus { 
+        input[type="text"]:focus, input[type="password"]:focus { 
             border-color: var(--gold); 
             background: rgba(255, 255, 255, 0.08); 
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.15); 
@@ -147,6 +147,10 @@
             transform: translateY(-2px); 
             box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4); 
             background: linear-gradient(135deg, #e5c158, #c59719);
+        }
+        
+        .btn-login:disabled {
+            background: #475569; color: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;
         }
 
         .msg-box {
@@ -196,7 +200,7 @@
             <input type="password" id="password" placeholder="أدخل رمز المرور السري">
         </div>
 
-        <button class="btn-login" onclick="loginNow()" id="loginBtn">تسجيل الدخول للنظام</button>
+        <button class="btn-login" id="loginBtn">تسجيل الدخول للنظام</button>
 
         <div id="msg" class="msg-box error"></div>
 
@@ -207,6 +211,7 @@
     </div>
 
     <script type="module">
+        // 1. استدعاء أدوات قاعدة البيانات
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -223,12 +228,37 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.onload = function() {
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('n1_captain_session');
-        }
+        // 2. التهيئة وربط الأحداث عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            // فحص ذكي: إذا كان المستخدم مسجلاً بالفعل، يتم تحويله مباشرة لصفحته
+            const activeSession = localStorage.getItem('currentUser');
+            if (activeSession) {
+                const userData = JSON.parse(activeSession);
+                if (userData.role === 'admin') {
+                    window.location.replace('admin.html');
+                    return;
+                } else if (userData.role === 'client' || userData.Client_Role === 'client') {
+                    window.location.replace('client.html');
+                    return;
+                }
+            }
 
-        window.loginNow = async function() {
+            // تنظيف أي جلسات كباتن قديمة (بما أننا ألغيناهم من هذه البوابة)
+            localStorage.removeItem('n1_captain_session');
+
+            // ربط زر الدخول بشكل آمن
+            document.getElementById('loginBtn').addEventListener('click', performLogin);
+
+            // ميزة إضافية: تسجيل الدخول عند الضغط على زر Enter في لوحة المفاتيح
+            document.getElementById('password').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    performLogin();
+                }
+            });
+        });
+
+        // 3. دالة تسجيل الدخول (سريعة ومحصورة للشركات والإدارة فقط)
+        async function performLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             const btn = document.getElementById('loginBtn');
@@ -241,69 +271,54 @@
                 return;
             }
 
-            btn.innerHTML = "جاري التحقق من الهوية...";
+            btn.innerHTML = "جاري التحقق من الهوية... ⏳";
             btn.disabled = true;
 
             try {
                 const dbRef = ref(db);
-                let userRecord = null;
-                let foundNode = "users";
-                
+                // بحث صاروخي مباشر في عقدة المستخدمين (users) فقط
                 let snapshot = await get(child(dbRef, `users/${u}`));
+                
                 if(snapshot.exists()) {
-                    userRecord = snapshot.val();
-                    foundNode = "users";
-                } else {
-                    snapshot = await get(child(dbRef, `shops/${u}`));
-                    if(snapshot.exists()) {
-                        userRecord = snapshot.val();
-                        foundNode = "shops";
-                    } else {
-                        snapshot = await get(child(dbRef, `captains/${u}`));
-                        if(snapshot.exists()) {
-                            userRecord = snapshot.val();
-                            foundNode = "captains";
-                        }
-                    }
-                }
-
-                if (userRecord) {
-                    const dbPass = userRecord.Client_Pass || userRecord.pass || userRecord.Cap_Pass || userRecord.Shop_Pass || "";
+                    const userRecord = snapshot.val();
+                    
+                    // استخراج الباسوورد من قاعدة البيانات
+                    const dbPass = userRecord.Client_Pass || userRecord.pass || "";
                     let encodedP = "";
-                    try { encodedP = btoa(p); } catch(e) {}
+                    try { encodedP = btoa(p); } catch(e) {} // دعم تشفير Base64 إذا كان مستخدماً
 
+                    // التحقق من صحة كلمة المرور
                     if (dbPass === p || dbPass === encodedP) {
-                        const status = userRecord.Client_Status || userRecord.status || userRecord.Cap_Status || userRecord.Shop_Status;
+                        
+                        // التحقق من حالة الحساب (يجب أن يكون نشطاً)
+                        const status = userRecord.Client_Status || userRecord.status;
                         if (status !== 'active') {
-                            showError("عذراً، هذا الحساب غير نشط حالياً. يرجى مراجعة الإدارة.");
+                            showError("عذراً، هذا الحساب مجمد أو غير نشط حالياً. يرجى مراجعة الإدارة.");
                             resetBtn();
                             return;
                         }
 
+                        // إنشاء الجلسة الآمنة
                         const secureSession = {
                             ...userRecord,
-                            user: userRecord.Client_User || userRecord.user || userRecord.Cap_User || userRecord.Shop_User,
-                            pass: userRecord.Client_Pass || userRecord.pass || userRecord.Cap_Pass || userRecord.Shop_Pass,
-                            name: userRecord.Client_Name || userRecord.name || userRecord.Cap_Name || userRecord.Shop_Name,
-                            role: userRecord.Client_Role || userRecord.role || userRecord.Cap_Role,
+                            user: userRecord.Client_User || userRecord.user,
+                            pass: dbPass,
+                            name: userRecord.Client_Name || userRecord.name,
+                            role: userRecord.Client_Role || userRecord.role,
                             type: userRecord.Client_Type || userRecord.type,
                             status: status,
-                            _node: foundNode,
                             loginTime: Date.now()
                         };
                         
                         localStorage.setItem('currentUser', JSON.stringify(secureSession));
                         
-                        if (foundNode === "captains") {
-                            localStorage.setItem('n1_captain_session', JSON.stringify(secureSession));
-                            window.location.replace('captain.html');
-                        } else if (foundNode === "shops") {
-                            window.location.replace('shop.html');
-                        } else if (secureSession.role === 'admin') {
+                        // التوجيه الذكي للإدارة أو الشركات
+                        if (secureSession.role === 'admin') {
                             window.location.replace('admin.html');
                         } else {
                             window.location.replace('client.html');
                         }
+
                     } else {
                         showError("بيانات الدخول غير صحيحة.");
                         resetBtn();
@@ -314,11 +329,13 @@
                 }
 
             } catch (err) {
+                console.error(err);
                 showError("خطأ في الاتصال بالخادم. يرجى التحقق من الإنترنت.");
                 resetBtn();
             }
         }
 
+        // 4. دوال مساعدة لعرض الأخطاء وإعادة ضبط الزر
         function showError(text) {
             const msg = document.getElementById('msg');
             msg.innerText = text;
