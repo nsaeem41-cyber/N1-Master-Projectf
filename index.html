@@ -25,7 +25,6 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            /* تم إزالة منظور الـ 3D لمنع تعليق الأزرار */
         }
 
         /* ================= الأجسام الطافية في الخلفية ================= */
@@ -57,7 +56,7 @@
             100% { transform: translateY(0) rotate(360deg); opacity: 0.5; }
         }
 
-        /* ================= بطاقة الدخول المركزية ================= */
+        /* ================= بطاقة الدخول المركزية (الزجاج الثابت والأنيق) ================= */
         .card-container {
             display: flex;
             justify-content: center;
@@ -71,12 +70,15 @@
             width: 90%;
             max-width: 400px;
             padding: 45px 35px;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 30px;
             text-align: center;
             position: relative;
+            /* أضفنا إطاراً ذهبياً ثابتاً وفخماً بدلاً من الإطار المتحرك المزعج */
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-top: 4px solid var(--gold);
             box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
             animation: slideUp 0.8s ease-out;
         }
@@ -86,32 +88,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ================= الإضاءة المتحركة (Animated Glowing Border) ================= */
-        .login-card::before {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            border-radius: 32px;
-            background: conic-gradient(from 0deg, transparent 70%, var(--gold) 80%, var(--neon-blue) 100%);
-            z-index: -1;
-            animation: rotate-border 4s linear infinite;
-        }
-        
-        .login-card::after {
-            content: '';
-            position: absolute;
-            top: 2px; left: 2px; right: 2px; bottom: 2px;
-            border-radius: 28px;
-            background: rgba(15, 23, 42, 0.85); /* لتغطية الإضاءة من المنتصف */
-            z-index: -1;
-        }
-
-        @keyframes rotate-border {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* ================= العناصر الداخلية (بدون الـ 3D المزعج) ================= */
+        /* ================= العناصر الداخلية ================= */
         .brand {
             margin-bottom: 5px;
         }
@@ -239,7 +216,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // إعدادات قاعدة البيانات الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
             authDomain: "n-one-global.firebaseapp.com",
@@ -255,7 +231,6 @@
 
         // عند تحميل الصفحة
         window.addEventListener('DOMContentLoaded', () => {
-            // التوجيه التلقائي في حال كان هناك جلسة مفتوحة
             const activeSession = localStorage.getItem('currentUser');
             if (activeSession) {
                 const userData = JSON.parse(activeSession);
@@ -268,14 +243,12 @@
                 }
             }
 
-            // تنظيف أي جلسات كباتن قديمة 
+            // تنظيف الجلسات القديمة
             localStorage.removeItem('n1_captain_session');
 
-            // ربط زر الدخول برمجياً لضمان عمله
             const loginBtn = document.getElementById('loginBtn');
             loginBtn.addEventListener('click', performLogin);
 
-            // تفعيل الدخول عبر زر Enter
             document.getElementById('password').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
                     performLogin();
@@ -288,7 +261,7 @@
             });
         });
 
-        // عملية تسجيل الدخول السريعة
+        // دالة الدخول الصاروخية
         async function performLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
@@ -302,13 +275,12 @@
                 return;
             }
 
-            // تغيير حالة الزر أثناء التحميل
             btn.innerHTML = "جاري التحقق... ⏳";
             btn.disabled = true;
 
             try {
                 const dbRef = ref(db);
-                // بحث سريع جداً في عقدة (users) فقط كما طلبنا سابقاً
+                // بحث في جدول المستخدمين والشركات
                 let snapshot = await get(child(dbRef, `users/${u}`));
                 
                 if(snapshot.exists()) {
@@ -318,7 +290,6 @@
                     let encodedP = "";
                     try { encodedP = btoa(p); } catch(e) {}
 
-                    // مطابقة كلمة المرور
                     if (dbPass === p || dbPass === encodedP) {
                         
                         const status = userRecord.Client_Status || userRecord.status;
@@ -328,7 +299,6 @@
                             return;
                         }
 
-                        // حفظ الجلسة
                         const secureSession = {
                             ...userRecord,
                             user: userRecord.Client_User || userRecord.user,
@@ -342,7 +312,6 @@
                         
                         localStorage.setItem('currentUser', JSON.stringify(secureSession));
                         
-                        // تأثير بصري للنجاح ثم التوجيه
                         btn.innerHTML = "تم الدخول بنجاح ✅";
                         btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
                         
@@ -370,14 +339,12 @@
             }
         }
 
-        // عرض رسالة الخطأ
         function showError(text) {
             const msg = document.getElementById('msg');
             msg.innerText = text;
             msg.style.display = 'block';
         }
 
-        // إعادة الزر لوضعه الطبيعي
         function resetBtn() {
             const btn = document.getElementById('loginBtn');
             btn.innerHTML = "تسجيل الدخول للنظام";
