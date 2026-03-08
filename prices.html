@@ -101,10 +101,18 @@
         .mini-circle-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
         
         /* البحث والأزرار */
-        .search-box { flex: 2; position: relative; }
+        .search-box { flex: 1; position: relative; }
         .search-input { width: 100%; padding: 14px 45px 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; background: #f8fafc; font-size: 15px; font-weight: 700; color: var(--primary); box-sizing: border-box; transition: 0.3s; }
         .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
         .search-icon { position: absolute; right: 15px; top: 14px; font-size: 16px; color: #94a3b8; }
+
+        /* صندوق الخصم النجمي السحري */
+        .discount-box { display: flex; align-items: center; gap: 8px; background: #fefce8; padding: 8px 15px; border-radius: 12px; border: 1px solid #fde68a; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.05); }
+        .discount-input { width: 70px; padding: 10px; border: 2px solid #fcd34d; border-radius: 8px; outline: none; text-align: center; font-weight: 900; color: #b45309; font-size: 15px; background: white; transition: 0.3s; }
+        .discount-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+        .btn-discount { background: var(--gold); border: none; color: var(--primary); font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); font-size: 14px; }
+        .btn-discount:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 175, 55, 0.4); }
+        .btn-discount:active { transform: scale(0.95); }
 
         /* المصفوفة (الجدول المزدوج) */
         .matrix-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; }
@@ -162,7 +170,7 @@
         /* ================= تصميم الطباعة ================= */
         @media print {
             body { background: white; -webkit-print-color-adjust: exact; }
-            .navbar, .controls-panel, .night-control-bar, .card-tools, .btn-royal, .night-badge { display: none !important; }
+            .navbar, .controls-panel, .night-control-bar, .card-tools, .btn-royal, .night-badge, .discount-box { display: none !important; }
             .container { margin: 0; padding: 0; max-width: 100%; }
             .print-header { display: block; }
             .matrix-container { display: block; column-count: 2; column-gap: 25px; }
@@ -214,6 +222,12 @@
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-input" class="search-input" placeholder="بحث ذكي عن منطقة..." oninput="renderMatrix()">
+                </div>
+                
+                <div class="discount-box">
+                    <span style="font-size: 18px;" title="الخصم النجمي العام لجميع أصحاب النجوم">🌟</span>
+                    <input type="number" id="global-discount-input" class="discount-input" placeholder="خصم %" min="0" max="100">
+                    <button class="btn-discount" onclick="applyGlobalDiscount()">تطبيق الخصم 🪄</button>
                 </div>
             </div>
 
@@ -422,6 +436,40 @@
                 if (Object.keys(pricingData).length === 0) pricingData["القائمة الافتراضية"] = [];
                 populateSources();
                 renderMatrix();
+            }
+        }
+
+        // عصا ميمي السحرية للخصم الشامل (الخانة الصغنونة)
+        window.applyGlobalDiscount = function() {
+            const source = document.getElementById('source-select').value;
+            const discountInput = document.getElementById('global-discount-input').value;
+            const discountPercent = parseFloat(discountInput);
+
+            if(!source || !pricingData[source]) return;
+            if(isNaN(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+                alert("يا قلبي، يرجى إدخال نسبة خصم صحيحة بين 0 و 100"); 
+                return;
+            }
+
+            if(confirm(`سيتم تطبيق خصم ${discountPercent}% على جميع المنشآت المميزة بنجمة 🌟 في القائمة الحالية، متأكدة يا ملكة؟`)) {
+                let affectedCount = 0;
+                pricingData[source].forEach((item, index) => {
+                    if(item.isOffer && item.price > 0) {
+                        // الحسبة الدقيقة للخصم
+                        let newPrice = item.price - (item.price * (discountPercent / 100));
+                        
+                        // تقريب لأقرب قرشين عشان المنظر المالي
+                        newPrice = Math.max(0, newPrice);
+                        
+                        pricingData[source][index].price = newPrice;
+                        pricingData[source][index].lastMod = Date.now();
+                        affectedCount++;
+                    }
+                });
+
+                renderMatrix();
+                alert(`نفاااااااااااث 🚀 تم تعديل سعر ${affectedCount} منشأة مميزة بنجاح. لا تنسي تضغطي "حفظ واعتماد" لتثبيت الخصم بالخزنة!`);
+                document.getElementById('global-discount-input').value = ''; // تصفير الخانة بعد الضرب
             }
         }
 
