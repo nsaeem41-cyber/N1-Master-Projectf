@@ -100,7 +100,6 @@
         }
         .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
 
-        /* ترتيب الباجات للهاتف وتوحيد الألوان */
         .badges-wrapper {
             display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; width: 100%; padding: 0 10px;
         }
@@ -330,9 +329,16 @@
         .btn-install-app:active { transform: scale(0.95); }
         .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
+        /* نظام الإشعارات المنسدلة */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid var(--gold); padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateX(120%); animation: slideIn 0.4s forwards, fadeOut 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
+        @keyframes slideIn { to { transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
     </style>
 </head>
 <body>
+
+    <div id="toast-container"></div>
 
     <div id="pwa-splash" class="pwa-splash">
         <div class="pwa-content">
@@ -407,7 +413,7 @@
             </div>
             
             <button class="btn-main btn-send" id="btn-login" onclick="executeLogin()">تسجيل الدخول 🔒</button>
-            <div class="auth-link" onclick="toggleAuth('register')">تقديم طلب تسجيل منشأة جديدة </div>
+            <div class="auth-link" onclick="openRegisterPage()">تقديم طلب تسجيل منشأة جديدة </div>
         </div>
 
         <div id="register-card" class="auth-card" style="display: none; border-top-color: var(--success);">
@@ -427,8 +433,12 @@
             <div class="input-group">
                 <input type="tel" id="reg-phone" placeholder="رقم الهاتف للتواصل (7xxxxxxxx)" maxlength="9" style="direction:ltr; text-align:right;">
             </div>
+            
             <div class="input-group">
-                <input type="text" id="reg-master" placeholder="معرف الشركة المرجعية (إن وجد)">
+                <select id="reg-master" style="cursor: pointer;">
+                    <option value="">-- يرجى اختيار الشركة المرجعية --</option>
+                    <option value="loading">جاري تحميل قائمة الشركات...</option>
+                </select>
             </div>
             
             <button class="btn-main" id="btn-register" style="background: var(--success);" onclick="executeRegister()">إرسال الطلب 🚀</button>
@@ -590,7 +600,8 @@
 
                     <div class="input-group">
                         <label>معرف المستخدم (User ID)</label>
-                        <input type="text" id="profile_user" readonly title="بيانات المعرف غير قابلة للتعديل">
+                        <input type="text" id="profile_user" readonly title="بيانات المعرف غير قابلة للتعديل للحفاظ على استقرار العمليات المالية">
+                        <div style="font-size: 11px; color: var(--danger); font-weight: bold; margin-top: 6px;">🛡️ هذا المعرف محمي ومغلق لضمان سلامة السجلات المالية.</div>
                     </div>
 
                     <div class="input-group">
@@ -609,8 +620,6 @@
 
         </div>
     </div>
-
-    <div id="toast" class="toast">تمت العملية بنجاح</div>
 
     <script>
         // إعدادات PWA 
@@ -637,7 +646,7 @@
                 }
                 deferredPrompt = null;
             } else {
-                showCustomAlert('يرجى استخدام خيار التثبيت المتوفر في قائمة المتصفح');
+                showAppToast('يرجى استخدام خيار التثبيت المتوفر في قائمة المتصفح', true);
             }
         });
 
@@ -651,11 +660,6 @@
                 navigator.serviceWorker.register('sw_shop.js').catch(err => console.log('SW registration failed'));
             });
         }
-        
-        window.showCustomAlert = function(msg) {
-            document.getElementById('app-popup-msg').innerHTML = msg;
-            document.getElementById('app-popup-overlay').style.display = 'flex';
-        };
         
         window.closeAppPopup = function() {
             document.getElementById('app-popup-overlay').style.display = 'none';
@@ -677,6 +681,17 @@
             document.getElementById('custom-confirm-overlay').style.display = 'none';
             if(confirmCallback) confirmCallback();
             confirmCallback = null;
+        };
+
+        // نظام الإشعارات الذكي (بديل Alert)
+        window.showAppToast = function(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'app-toast';
+            if(isError) toast.style.borderLeftColor = '#ef4444';
+            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
         };
         
         window.openRatingModal = function(capId) {
@@ -713,7 +728,7 @@
             if (val === 1) {
                 desc.innerText = "ضعيف جداً ⚠️";
                 desc.style.color = "var(--danger)";
-                question.innerText = "نأسف لسماع ذلك ما هي المشكلة؟";
+                question.innerText = "نأسف لسماع ذلك. ما هي المشكلة؟";
                 tagsContainer.innerHTML = `
                     <span class="tag" onclick="selectTag(this)">تأخير كبير</span>
                     <span class="tag" onclick="selectTag(this)">أسلوب غير لائق</span>
@@ -730,7 +745,7 @@
                     <span class="tag" onclick="selectTag(this)">تصرفات غير مهنية</span>
                 `;
             } else if (val === 3) {
-                desc.innerText = "متوسط - نص نص 😐";
+                desc.innerText = "متوسط - مقبول 😐";
                 desc.style.color = "#8b5cf6";
                 question.innerText = "كيف يمكن للكابتن التحسن؟";
                 tagsContainer.innerHTML = `
@@ -747,13 +762,13 @@
                     <span class="tag" onclick="selectTag(this)">أسرع قليلاً المرة القادمة</span>
                 `;
             } else if (val === 5) {
-                desc.innerText = "ألماسي ممتاز 🌟";
+                desc.innerText = "أداء ممتاز 🌟";
                 desc.style.color = "var(--success)";
                 question.innerText = "شكراً لتعاونكم مع أبطالنا";
                 tagsContainer.innerHTML = `
                     <span class="tag" onclick="selectTag(this)">سريع جداً</span>
                     <span class="tag" onclick="selectTag(this)">أسلوب راقي</span>
-                    <span class="tag" onclick="selectTag(this)">كابتن بطل</span>
+                    <span class="tag" onclick="selectTag(this)">كابتن مميز</span>
                 `;
             }
         };
@@ -821,11 +836,39 @@
             if(mode === 'register') document.getElementById('register-card').style.display = 'block';
         };
 
+        // التحديث الألماسي: جلب أسماء الشركات للقائمة المنسدلة عند فتح صفحة التسجيل
+        window.openRegisterPage = async function() {
+            toggleAuth('register');
+            const masterSelect = document.getElementById('reg-master');
+            
+            try {
+                const usersSnap = await get(child(ref(db), 'users'));
+                let optionsHtml = '<option value="">-- يرجى اختيار الشركة المرجعية --</option>';
+                
+                if (usersSnap.exists()) {
+                    const usersData = usersSnap.val();
+                    Object.values(usersData).forEach(u => {
+                        // جلب الإدارة العليا والشركات التي تدعم التسجيل الخارجي
+                        if (u.role === 'admin' || (u.external_reg_enabled && u.external_reg_id)) {
+                            const dispName = u.name || u.Client_Name || u.user;
+                            const valId = u.external_reg_id || u.user || u.Client_User;
+                            optionsHtml += `<option value="${valId}">${dispName}</option>`;
+                        }
+                    });
+                }
+                
+                masterSelect.innerHTML = optionsHtml;
+            } catch (error) {
+                masterSelect.innerHTML = '<option value="">حدث خطأ في جلب الشركات</option>';
+                showAppToast("تعذر جلب قائمة الشركات المرجعية", true);
+            }
+        };
+
         window.executeLogin = async function() {
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value;
 
-            if(!user || !pass) { showToast("المعلومات المدخلة غير مكتملة"); return; }
+            if(!user || !pass) { showAppToast("المعلومات المدخلة غير مكتملة", true); return; }
             
             setLoading('btn-login', true);
 
@@ -851,7 +894,7 @@
                             setLoading('btn-login', false, "تسجيل الدخول 🔒");
                             return;
                         } else if (status === 'pending') {
-                            showToast("طلب تسجيل المنشأة قيد المعالجة الإدارية");
+                            showAppToast("طلب تسجيل المنشأة قيد المعالجة الإدارية");
                             setLoading('btn-login', false, "تسجيل الدخول 🔒");
                             return;
                         }
@@ -861,13 +904,13 @@
                         localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                         initializePortal();
                     } else {
-                        showToast("بيانات الاعتماد غير صحيحة");
+                        showAppToast("بيانات الاعتماد غير صحيحة", true);
                     }
                 } else {
-                    showToast("لم يتم العثور على سجل للمنشأة المطلوبة");
+                    showAppToast("لم يتم العثور على سجل للمنشأة المطلوبة", true);
                 }
             } catch (e) {
-                showToast("تعذر الاتصال بالخادم يرجى المحاولة لاحقا");
+                showAppToast("تعذر الاتصال بالخادم. يرجى المحاولة لاحقاً", true);
             } finally {
                 setLoading('btn-login', false, "تسجيل الدخول 🔒");
             }
@@ -878,9 +921,9 @@
             const user = document.getElementById('reg-user').value.trim();
             const pass = document.getElementById('reg-pass').value;
             const phone = document.getElementById('reg-phone').value.trim();
-            const masterId = document.getElementById('reg-master').value.trim();
+            const masterId = document.getElementById('reg-master').value; // التحديث: أخذ القيمة من القائمة
 
-            if(!name || !user || !pass || !phone || !masterId) { showToast("يرجى إكمال كافة المتطلبات الإلزامية"); return; }
+            if(!name || !user || !pass || !phone || !masterId) { showAppToast("يرجى إكمال كافة المتطلبات الإلزامية", true); return; }
 
             setLoading('btn-register', true);
 
@@ -889,7 +932,7 @@
                 const checkSnap2 = await get(child(ref(db), `users/${user}`));
                 
                 if (checkSnap1.exists() || checkSnap2.exists()) {
-                    showToast("المعرف المدخل مستخدم مسبقا يرجى تغييره");
+                    showAppToast("المعرف المدخل مستخدم مسبقاً. يرجى تغييره", true);
                     setLoading('btn-register', false, "إرسال الطلب 🚀");
                     return;
                 }
@@ -901,7 +944,7 @@
                     Client_Name: name,
                     Client_Role: "shop", 
                     Client_Type: "shop", 
-                    Client_Master: masterId, 
+                    Client_Master: masterId, // الربط الآلي مع الشركة الأم
                     Client_Status: "pending", 
                     Client_Phone: phone, 
                     name: name, user: user, pass: pass,
@@ -912,7 +955,7 @@
 
                 await set(ref(db, `shops/${user}`), newShop);
                 
-                showToast("تم تحويل الطلب للجهات المختصة لمعالجته");
+                showAppToast("تم تحويل الطلب للشركة المرجعية لمعالجته");
                 toggleAuth('login');
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-user').value = '';
@@ -921,7 +964,7 @@
                 document.getElementById('reg-master').value = '';
 
             } catch(e) {
-                showToast("تعذر استكمال إجراءات الطلب");
+                showAppToast("تعذر استكمال إجراءات الطلب", true);
             } finally {
                 setLoading('btn-register', false, "إرسال الطلب 🚀");
             }
@@ -999,30 +1042,27 @@
         function fetchMasterInfo() {
             const myMaster = currentUser.Client_Master || currentUser.master;
             if (myMaster) {
+                // البحث في الـ users ثم في الـ shops للتأكد من جلب اسم الشركة الأم بشكل صحيح
                 onValue(ref(db, `users/${myMaster}`), snap => {
                     if(snap.exists()) {
                         masterName = snap.val().name || snap.val().Client_Name || myMaster;
                         document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`;
                     } else {
-                        document.getElementById('parent-company-brand').innerText = myMaster;
+                        // إذا لم تكن في users، ابحث في shops
+                        get(child(ref(db), `shops/${myMaster}`)).then(shopSnap => {
+                            if(shopSnap.exists()){
+                                masterName = shopSnap.val().Client_Name || shopSnap.val().name || myMaster;
+                                document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`;
+                            } else {
+                                document.getElementById('parent-company-brand').innerText = myMaster;
+                            }
+                        });
                     }
                 });
             } else {
                 document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> الإدارة المركزية`;
             }
         }
-
-        window.togglePasswordVisibility = function() {
-            const passInput = document.getElementById('profile_pass');
-            const passIcon = document.getElementById('toggle_pass_icon');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                passIcon.innerText = '🙈';
-            } else {
-                passInput.type = 'password';
-                passIcon.innerText = '👁️';
-            }
-        };
 
         function setupAdsAndAlerts() {
             const master = currentUser.Client_Master || currentUser.master;
@@ -1089,15 +1129,15 @@
         }
 
         window.cancelOrder = function(orderId) {
-            showCustomConfirm("هل تود فعلاً إلغاء هذا الطلب بشكل نهائي", async () => {
+            showCustomConfirm("هل أنت متأكد من إلغاء هذا الطلب بشكل نهائي؟", async () => {
                 try {
                     await update(ref(db, `orders/${orderId}`), {
                         Shop_Status: 'cancelled',
                         OrderStatus: 'cancelled'
                     });
-                    showToast("تم إلغاء الطلب بنجاح");
+                    showAppToast("تم إلغاء الطلب بنجاح.");
                 } catch (e) {
-                    showToast("تعذر إلغاء الطلب يرجى المحاولة لاحقاً");
+                    showAppToast("تعذر إلغاء الطلب. يرجى المحاولة لاحقاً.", true);
                 }
             });
         };
@@ -1128,14 +1168,14 @@
                     const recentOrders = myOrders.reverse().slice(0, 20);
                     
                     if(recentOrders.length === 0) {
-                        listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
+                        listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للعمليات الحالية</div>';
                     } else {
                         const statusMap = {
                             'new': { text: 'قيد الانتظار', color: '#d97706', bg: '#fef3c7' },
                             'accepted': { text: 'تم القبول (جاري التجهيز)', color: '#2563eb', bg: '#dbeafe' },
-                            'picked_up': { text: 'تم الاستلام من المنشأة', color: '#7c3aed', bg: '#ede9fe' },
+                            'picked_up': { text: 'في عهدة الكابتن', color: '#7c3aed', bg: '#ede9fe' },
                             'on_way': { text: 'في الطريق', color: '#7c3aed', bg: '#ede9fe' },
-                            'arrived': { text: 'الكابتن عند العميل', color: '#db2777', bg: '#fce7f3' },
+                            'arrived': { text: 'الكابتن وصل للعميل', color: '#db2777', bg: '#fce7f3' },
                             'delivered': { text: 'تم التسليم بنجاح', color: '#059669', bg: '#d1fae5' },
                             'cancelled': { text: 'ملغي', color: '#dc2626', bg: '#fee2e2' }
                         };
@@ -1149,12 +1189,12 @@
                             const statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8', bg: '#f1f5f9' };
                             
                             if (orderStatesHistory[item.Shop_Ord_ID] && orderStatesHistory[item.Shop_Ord_ID] !== currentStatus) {
-                                if (currentStatus === 'accepted') { snd_accept.play().catch(e=>{}); showToast('كابتن بطل وافق على الطلب'); }
-                                if (currentStatus === 'picked_up') { snd_pickup.play().catch(e=>{}); showToast('الكابتن استلم الطلب وطلع'); }
-                                if (currentStatus === 'arrived') { snd_arrive.play().catch(e=>{}); showToast('الكابتن وصل عند العميل'); }
+                                if (currentStatus === 'accepted') { snd_accept.play().catch(e=>{}); showAppToast('تم قبول الطلب من قبل الكابتن'); }
+                                if (currentStatus === 'picked_up') { snd_pickup.play().catch(e=>{}); showAppToast('الكابتن في طريقه للعميل'); }
+                                if (currentStatus === 'arrived') { snd_arrive.play().catch(e=>{}); showAppToast('الكابتن في موقع العميل'); }
                                 if (currentStatus === 'delivered') { 
                                     snd_deliver.play().catch(e=>{}); 
-                                    showToast('تم تسليم الطلب بنجاح وقبضنا'); 
+                                    showAppToast('اكتملت عملية التسليم بنجاح'); 
                                     
                                     if(!askedToRate[item.Shop_Ord_ID] && item.Cap_Phone) {
                                         setTimeout(() => { openRatingModal(item.Cap_Phone); }, 1500);
@@ -1168,7 +1208,7 @@
                             let phoneHtml = '';
                             if (item.Cap_Phone) {
                                 if (isPhoneHidden) {
-                                    phoneHtml = `<span class="hidden-phone-badge">رقم محجوب 🛡️</span>`;
+                                    phoneHtml = `<span class="hidden-phone-badge">رقم محمي 🛡️</span>`;
                                 } else {
                                     phoneHtml = `<span style="direction:ltr; text-align:right; font-size:12px; font-weight:bold; color:var(--text-main); margin-left:8px;">${item.Cap_Phone}</span><a href="tel:${item.Cap_Phone}" class="btn-call-cap" title="اتصال بالكابتن">📞</a>`;
                                 }
@@ -1208,11 +1248,11 @@
 
                                     <div style="display:flex; justify-content:space-between; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9; margin-top:10px;">
                                         <div style="text-align:center; flex:1; border-left:1px solid #e2e8f0;">
-                                            <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">تكلفة الطلب</div>
+                                            <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">قيمة الفاتورة</div>
                                             <div style="font-size:14px; font-weight:900; color:var(--primary);">${item.Shop_Val} د.أ</div>
                                         </div>
                                         <div style="text-align:center; flex:1;">
-                                            <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">قيمة التوصيل</div>
+                                            <div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">تكلفة التوصيل</div>
                                             <div style="font-size:14px; font-weight:900; color:var(--success);">${item.Shop_Fee || item.fee || '0.00'} د.أ</div>
                                         </div>
                                     </div>
@@ -1225,7 +1265,7 @@
                 } else {
                     document.getElementById('orders-today').innerText = 0;
                     document.getElementById('orders-total').innerText = 0;
-                    listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
+                    listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للعمليات الحالية</div>';
                 }
                 
                 list.innerHTML = listHtml;
@@ -1239,7 +1279,7 @@
             const notes = document.getElementById('rating_notes').value.trim();
             
             if(val === 0) {
-                showToast("الرجاء اختيار التقييم أولاً");
+                showAppToast("الرجاء تحديد التقييم أولاً", true);
                 return;
             }
             
@@ -1254,16 +1294,17 @@
                     timestamp: Date.now()
                 });
                 
-                showToast("شكراً لتقييمك 💎");
+                showAppToast("تم تسجيل التقييم بنجاح. شكراً لك.");
                 closeRatingModal();
             } catch(e) {
-                showToast("حدث خطأ أثناء إرسال التقييم");
+                showAppToast("تعذر إرسال التقييم.", true);
                 closeRatingModal();
             }
         };
 
         window.fetchAllData = async function() {
             try {
+                // فلترة ذكية: سحب البيانات المتعلقة بالمنشأة فقط
                 const snapshot = await get(ref(db));
                 if(snapshot.exists()) {
                     const data = snapshot.val();
@@ -1427,8 +1468,8 @@
             const dest = String(document.getElementById('destination').value).trim();
             const val = document.getElementById('order_val').value;
 
-            if (!dest || !val) { showToast("البيانات المدخلة للطلب غير مكتملة"); return; }
-            if (pricingMatrix[dest] === undefined) { showToast("لا توجد تسعيرة معتمدة للوجهة المحددة"); return; }
+            if (!dest || !val) { showAppToast("يرجى استكمال بيانات الوجهة وقيمة الفاتورة", true); return; }
+            if (pricingMatrix[dest] === undefined) { showAppToast("الوجهة المدخلة غير متوفرة في مصفوفة الأسعار", true); return; }
             
             let secureFee = pricingMatrix[dest];
             const offer = window.offerMatrix && window.offerMatrix[dest];
@@ -1466,7 +1507,7 @@
 
             try {
                 await set(ref(db, `orders/${orderId}`), orderData);
-                showToast("تم تحويل الطلب لعمليات التوصيل بنجاح");
+                showAppToast("تم إدراج الطلب في نظام العمليات بنجاح");
                 
                 document.getElementById('destination').value = '';
                 document.getElementById('order_val').value = '';
@@ -1477,7 +1518,7 @@
                 if (window.currentOfferInterval) clearInterval(window.currentOfferInterval);
 
             } catch (e) {
-                showToast("حدث خطأ تقني يرجى المحاولة لاحقاً");
+                showAppToast("حدث خطأ تقني. يرجى إعادة المحاولة", true);
             } finally {
                 setLoading('btn-send', false, "إرسال الطلب للعمليات 🚀");
             }
@@ -1487,58 +1528,52 @@
             const capId = String(document.getElementById('cap_id').value).trim();
             const amount = parseFloat(document.getElementById('charge_amount').value);
 
-            if (!capId || !amount) { showToast("يجب إدخال المعرف والمبلغ للتحقق"); return; }
-            if (amount <= 0) { showToast("الرقم المدخل غير صالح"); return; }
+            if (!capId || !amount) { showAppToast("البيانات المطلوبة للتحقق غير مكتملة", true); return; }
+            if (amount <= 0) { showAppToast("قيمة التحويل غير صحيحة", true); return; }
             
             if (myBalance < amount) { 
-                showCustomAlert(`رصيد المنشأة المتاح لا يغطي العملية`); 
+                showAppToast(`الرصيد التشغيلي لا يغطي قيمة العملية`, true); 
                 return; 
             }
 
             setLoading('btn-check', true);
 
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    let flatData = [];
-                    
-                    const addWithNode = (obj, nodeName) => {
-                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
-                    };
-                    
-                    addWithNode(data.users, 'users');
-                    addWithNode(data.shops, 'shops');
-                    addWithNode(data.captains, 'captains');
-
-                    const cap = flatData.find(c => 
-                        (String(c.Cap_User || "").trim() === capId || 
-                        String(c.user || "").trim() === capId || 
-                        String(c.Cap_Phone || "").trim() === capId || 
-                        String(c.Client_Phone || "").trim() === capId || 
-                        String(c.phone || "").trim() === capId)
-                    );
-                    
-                    if (!cap) {
-                        showCustomAlert("لا توجد قيود للمستلم يرجى مراجعة المعرف المدخل");
-                        verifiedCaptain = null;
-                        document.getElementById('cap-check-result').style.display = 'none';
-                        document.getElementById('btn-charge').style.display = 'none';
-                    } else {
-                        verifiedCaptain = cap;
-                        const capName = cap.Cap_Name || cap.name || "سائق معتمد";
-                        const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0);
-
-                        document.getElementById('found-cap-name').innerText = capName;
-                        document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
-                        document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
-                        
-                        document.getElementById('cap-check-result').style.display = 'block';
-                        document.getElementById('btn-charge').style.display = 'block';
+                // بحث دقيق عن الكابتن لتوفير الداتا
+                let capData = null;
+                let capNode = 'captains';
+                
+                const capSnap1 = await get(child(ref(db), `captains/${capId}`));
+                if (capSnap1.exists()) {
+                    capData = capSnap1.val();
+                } else {
+                    const capSnap2 = await get(child(ref(db), `users/${capId}`));
+                    if (capSnap2.exists()) {
+                        capData = capSnap2.val();
+                        capNode = 'users';
                     }
                 }
+                
+                if (!capData) {
+                    showAppToast("لم يتم العثور على سجل للمستلم", true);
+                    verifiedCaptain = null;
+                    document.getElementById('cap-check-result').style.display = 'none';
+                    document.getElementById('btn-charge').style.display = 'none';
+                } else {
+                    capData._node = capNode;
+                    verifiedCaptain = capData;
+                    const capName = capData.Cap_Name || capData.name || "سائق معتمد";
+                    const capBal = parseFloat(capData.Cap_Balance || capData.balance || 0);
+
+                    document.getElementById('found-cap-name').innerText = capName;
+                    document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
+                    document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
+                    
+                    document.getElementById('cap-check-result').style.display = 'block';
+                    document.getElementById('btn-charge').style.display = 'block';
+                }
             } catch (e) {
-                showToast("تعذر إتمام التحقق");
+                showAppToast("تعذر إتمام عملية التحقق", true);
             } finally {
                 setLoading('btn-check', false, "التحقق من بيانات المستلم 🔍");
             }
@@ -1547,9 +1582,9 @@
         window.executeTransfer = async function() {
             if (!verifiedCaptain) return;
             const amount = parseFloat(document.getElementById('charge_amount').value);
-            if (myBalance < amount) { showCustomAlert("رصيد العمليات غير كاف"); return; }
+            if (myBalance < amount) { showAppToast("رصيد العمليات غير كافٍ", true); return; }
 
-            showCustomConfirm("تأكيد العملية المالية سيتم خصم المبلغ من رصيد المنشأة وتحويله للمستلم المعتمد", async () => {
+            showCustomConfirm("تأكيد أمر التحويل. سيتم قيد المبلغ في حساب المستلم فوراً.", async () => {
                 setLoading('btn-charge', true);
 
                 try {
@@ -1579,7 +1614,7 @@
                         captain_name: verifiedCaptain.Cap_Name || verifiedCaptain.name || "كابتن",
                         shop_user: shopKey,
                         shop_name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "منشأة",
-                        description: `شحن رصيد من المنشأة للكابتن المعتمد`,
+                        description: `شحن رصيد من نقطة شحن معتمدة`,
                         timestamp: Date.now(),
                         date_string: new Date().toISOString()
                     };
@@ -1589,7 +1624,7 @@
                     myBalance = newShopBal;
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                     
-                    showCustomAlert(`اكتملت المعاملة المالية وتم قيد الرصيد للمستلم بنجاح`);
+                    showAppToast(`تم إنجاز التحويل المالي بنجاح`);
                     
                     document.getElementById('cap_id').value = '';
                     document.getElementById('charge_amount').value = '';
@@ -1598,7 +1633,7 @@
                     verifiedCaptain = null;
 
                 } catch (e) {
-                    showToast("فشلت عملية التحويل المالي يرجى التأكد من صلاحيات الحماية");
+                    showAppToast("فشلت المعاملة المالية. يرجى مراجعة الدعم.", true);
                 } finally {
                     setLoading('btn-charge', false, "تنفيذ عملية التحويل ✅");
                 }
@@ -1609,7 +1644,8 @@
             const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
             const newPass = document.getElementById('profile_pass').value;
 
-            if(!newPass) { showCustomAlert("يتطلب إدخال بيانات التحديث لتنفيذ العملية"); return; }
+            // تم إزالة تعديل الـ ID، يتم تعديل الباسوورد فقط
+            if(!newPass) { showAppToast("لم يتم إدخال بيانات جديدة للتحديث", true); return; }
             
             setLoading('btn-save-settings', true);
 
@@ -1626,9 +1662,9 @@
                 currentUser.pass = newPass;
                 localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                 
-                showCustomAlert("تم تحديث بيانات الوصول للنظام بنجاح");
+                showAppToast("تم تحديث مفتاح التشفير بنجاح");
             } catch(e) {
-                showCustomAlert("تعذر حفظ التحديثات يرجى إعادة المحاولة");
+                showAppToast("فشل الاتصال. تعذر التحديث", true);
             } finally {
                 setLoading('btn-save-settings', false, "تحديث البيانات 💾");
             }
@@ -1642,17 +1678,10 @@
         }
 
         window.logout = function() {
-            showCustomConfirm("تأكيد تسجيل الخروج من البوابة", () => {
+            showCustomConfirm("هل أنت متأكد من إنهاء الجلسة الحالية؟", () => {
                 localStorage.removeItem('n1_shop_session');
                 window.location.reload(); 
             });
-        }
-
-        window.showToast = function(msg) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 3000);
         }
 
         window.setLoading = function(btnId, isLoading, originalText) {
@@ -1660,7 +1689,7 @@
             const loader = document.getElementById('loader');
             if (isLoading) {
                 btn.dataset.text = btn.innerText;
-                btn.innerText = "معالجة...";
+                btn.innerText = "جاري الاتصال...";
                 btn.style.opacity = 0.7;
                 btn.disabled = true;
                 loader.style.width = "100%";
