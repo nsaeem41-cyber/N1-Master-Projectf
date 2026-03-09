@@ -3,271 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | بوابة إدارة المنشآت (Compact Royal)</title>
+    <title>N One | بوابة إدارة الشركات</title>
     
     <style>
-        /* ================= تصميم Diamond Royal (نسخة المساحات المدمجة) ================= */
+        /* ================= تصميم Client Diamond (Royal Navy & Gold Theme) المدمج والرشيق ================= */
         :root {
-            --primary: #0f172a;
-            --gold: #d4af37;
-            --gold-light: #fef08a;
-            --neon-blue: #0ea5e9;
-            --glass: rgba(15, 23, 42, 0.75);
-            --glass-border: rgba(212, 175, 55, 0.3);
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
+            --primary: #0f172a;    
+            --accent: #1e293b;     
+            --gold: #d4af37;       
+            --bg: #f8fafc;         
+            --text: #334155;       
+            --success: #10b981;    
+            --danger: #ef4444;     
+            --warning: #f59e0b;    
+            --money: #047857;      
+            --info: #0ea5e9;       
+            --diamond: #e0f2fe;    
         }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #050814; margin: 0; padding: 0; 
-            color: #fff; user-select: none; overflow-x: hidden; 
-            min-height: 100vh;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: var(--text); user-select: none; }
 
-        /* ================= الأجسام الطافية في الخلفية ================= */
-        .bg-shapes {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
-        }
-        .shape {
-            position: absolute;
-            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(14,165,233,0.08));
-            box-shadow: 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(212,175,55,0.15);
-            animation: float 25s infinite linear;
-        }
-        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
-        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 85%; border-radius: 50%; animation-duration: 30s; animation-direction: reverse; }
+        .navbar { background: var(--primary); height: 65px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2); border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
+        .brand { font-size: 20px; font-weight: 900; color: white; white-space: nowrap; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .gold-text { color: var(--gold); }
+        .btn-logout { background: var(--danger); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
+        .btn-logout:hover { background: #b91c1c; transform: translateY(-1px); }
 
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
-        }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
 
-        /* ================= الهيدر الملكي (مضغوط) ================= */
-        .navbar { 
-            background: var(--glass); height: 60px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
-            border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000;
-            backdrop-filter: blur(20px);
-        }
-        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
-        .gold-text { color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        /* التبويبات الألماسية المدمجة */
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto; }
+        .tab-btn { padding: 10px 20px; border: 1px solid rgba(15, 23, 42, 0.1); background: white; border-radius: 10px; cursor: pointer; font-weight: bold; color: #64748b; font-size: 13px; transition: 0.3s; white-space: nowrap; }
+        .tab-btn:hover { background: #f1f5f9; color: var(--primary); }
+        .tab-btn.active { background: var(--gold); color: var(--primary); border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); }
         
-        .btn-logout { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 11px; }
-        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); transform: translateY(-2px); }
+        .tab-link { background: var(--diamond); color: var(--info); border: 1px solid #bae6fd; display: flex; align-items: center; gap: 5px; }
+        .tab-link:hover { background: #bae6fd; color: #0369a1; }
 
-        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; }
-
-        /* ================= التبويبات (مضغوطة) ================= */
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; overflow-x: auto; }
-        .tab-btn { 
-            padding: 10px 20px; border: 1px solid var(--glass-border); 
-            background: rgba(15, 23, 42, 0.6); border-radius: 10px; cursor: pointer; 
-            font-weight: 900; color: #cbd5e1; font-size: 13px; transition: 0.3s; white-space: nowrap; 
-            backdrop-filter: blur(10px);
-        }
-        .tab-btn:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--gold); color: white; }
-        .tab-btn.active { background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); }
-        
-        .tab-link { background: rgba(14, 165, 233, 0.1); color: var(--neon-blue); border-color: rgba(14, 165, 233, 0.3); }
-        .tab-link:hover { background: var(--neon-blue); color: #000; }
-
+        /* المحتوى */
         .tab-content { display: none; animation: fadeIn 0.3s; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ================= الكروت الزجاجية (ملمومة) ================= */
-        .card { 
-            background: var(--glass); padding: 15px 20px; border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-bottom: 15px; 
-            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(20px);
-        }
-        .card-header { 
-            font-size: 15px; font-weight: 900; color: var(--gold); margin-bottom: 15px; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-
-        /* ================= الحقول (Inputs مضغوطة) ================= */
+        /* الكروت والجداول المدمجة */
+        .card { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); margin-bottom: 15px; border-top: 4px solid var(--primary); position: relative; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .card-header { font-size: 15px; font-weight: 800; color: var(--primary); margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-        input, select, textarea { 
-            width: 100%; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; 
-            outline: none; background: rgba(0,0,0,0.4); transition: 0.3s; box-sizing: border-box; 
-            font-family: inherit; font-size: 13px; font-weight: bold; color: white; 
-        }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        input, select, textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; background: #f8fafc; transition: 0.3s; box-sizing: border-box; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--primary); }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
         
-        label { font-size:11px; font-weight:bold; color:#cbd5e1; margin-bottom: 6px; display: block; }
+        .btn-action { width: 100%; padding: 10px; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; color: white; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-add { background: var(--primary); } .btn-add:hover { background: var(--accent); transform: translateY(-2px); }
+        .btn-check { background: var(--gold); color: var(--primary); width: auto; padding: 0 12px; margin-top: 2px; font-size: 12px; font-weight:bold; cursor: pointer; border:none; border-radius: 8px; height: 35px; box-shadow: 0 2px 5px rgba(212,175,55,0.4); transition: 0.3s; }
+        .btn-check:hover { background: #fbbf24; }
 
-        .btn-action { 
-            width: 100%; padding: 10px; border: none; border-radius: 10px; 
-            font-weight: 900; font-size: 13px; cursor: pointer; color: #000; 
-            transition: 0.3s; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2); 
-        }
-        .btn-add { background: linear-gradient(135deg, var(--gold), #b48608); } 
-        .btn-add:hover { transform: translateY(-1px); filter: brightness(1.1); }
-        
-        .btn-check { 
-            background: rgba(212, 175, 55, 0.15); color: var(--gold); width: auto; 
-            padding: 0 12px; font-size: 12px; font-weight:900; cursor: pointer; 
-            border: 1px solid var(--gold); border-radius: 8px; height: 38px; transition: 0.3s; 
-        }
-        .btn-check:hover { background: var(--gold); color: #000; }
-
-        /* ================= الجدول الملكي (مضغوط) ================= */
-        .table-wrapper { overflow-x: auto; max-height: 450px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .table-wrapper { overflow-x: auto; max-height: 500px; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        thead { background: rgba(0,0,0,0.6); color: var(--gold); position: sticky; top: 0; z-index: 10; }
-        th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; font-weight: bold; }
-        th { font-weight: 900; letter-spacing: 0.5px; }
-        tr:hover td { background: rgba(212, 175, 55, 0.05); }
+        thead { background: #f1f5f9; color: #475569; position: sticky; top: 0; z-index: 10; }
+        th, td { padding: 10px 15px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; }
+        th { font-weight: 800; font-size: 12px; }
         
-        .badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; display: inline-block; }
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
         
-        .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 11px; margin-left:2px; transition: 0.2s; font-weight: bold; }
-        .controls button:hover { filter: brightness(1.2); }
-        .btn-edit { background: linear-gradient(135deg, var(--warning), #b45309); }
-        .btn-freeze { background: linear-gradient(135deg, #64748b, #334155); }
-        .btn-delete { background: linear-gradient(135deg, var(--danger), #991b1b); }
-        .btn-active { background: linear-gradient(135deg, var(--success), #047857); }
+        .phone-wrapper { display: flex; align-items: center; border: 2px solid #e2e8f0; border-radius: 10px; background: #f8fafc; overflow: hidden; transition: 0.3s; }
+        .phone-wrapper:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); background: white; }
+        .phone-prefix { background: #e2e8f0; padding: 10px 12px; font-size: 12px; font-weight: 800; color: var(--primary); border-left: 1px solid #cbd5e1; direction: ltr; }
+        .phone-wrapper input[type="tel"] { border: none; box-shadow: none; background: transparent; margin: 0; direction: ltr; text-align: left; width: 100%; padding: 10px; }
 
-        /* ================= عناصر خاصة ================= */
-        .phone-wrapper { display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; background: rgba(0,0,0,0.4); overflow: hidden; transition: 0.3s; }
-        .phone-wrapper:focus-within { border-color: var(--gold); }
-        .phone-prefix { background: rgba(255,255,255,0.05); padding: 10px; font-size: 12px; font-weight: 900; color: var(--gold); border-left: 1px solid rgba(255,255,255,0.1); direction: ltr; }
-        .phone-wrapper input[type="tel"] { border: none; background: transparent; margin: 0; direction: ltr; text-align: left; width: 100%; padding: 10px; font-size: 13px; }
-
-        /* مركز الحماية السيبراني */
-        .cyber-panel { border-top-color: var(--neon-blue); background: linear-gradient(to left, rgba(15, 23, 42, 0.8), rgba(14, 165, 233, 0.1)); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 15px 20px; }
+        .controls button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; font-size: 12px; margin-left:4px; transition: 0.2s; font-weight: bold; }
+        .controls button:hover { transform: scale(1.05); }
+        .btn-edit { background: var(--warning); }
+        .btn-freeze { background: #64748b; }
+        .btn-delete { background: var(--danger); }
+        .btn-active { background: var(--success); }
         
-        .switch-small { position: relative; display: inline-block; width: 32px; height: 18px; }
-        .switch-small input { opacity: 0; width: 0; height: 0; }
-        .slider-small { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; border: 1px solid #475569; }
-        .slider-small:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider-small { background-color: var(--success); border-color: var(--success); }
-        input:checked + .slider-small:before { transform: translateX(14px); }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: bold; color: var(--primary); }
+        
+        #commission-field, #edit-commission-field { display: none; background: #ecfdf5; padding: 12px; border-radius: 10px; border: 1px solid #a7f3d0; grid-column: span 1; }
+        
+        /* تصميم معلومات المستخدم والاشتراك */
+        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
+        .sub-countdown { font-size: 11px; padding: 4px 8px; border-radius: 10px; margin-bottom: 4px; font-weight: 800; border: 1px solid transparent; transition: 0.3s; }
+        .sub-active { background: rgba(255,255,255,0.1); color: var(--gold); border-color: rgba(212,175,55,0.5); }
+        .sub-warning { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .sub-expired { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: 900; color: var(--gold); backdrop-filter: blur(10px); }
+        /* تصميم الإعدادات الاحترافي الفخم */
+        .settings-card { max-width: 600px; margin: 0 auto; padding: 0; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.05); }
+        .settings-header-royal { background: linear-gradient(135deg, var(--primary), var(--accent)); padding: 30px 20px; display: flex; align-items: center; gap: 20px; border-bottom: 4px solid var(--gold); position: relative; overflow: hidden; }
+        .settings-header-royal::after { content: '👑'; position: absolute; left: -10px; bottom: -20px; font-size: 100px; opacity: 0.05; }
+        .settings-avatar { width: 70px; height: 70px; background: rgba(255,255,255,0.1); border: 2px solid var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 0 20px rgba(212,175,55,0.3); z-index: 1; }
+        .settings-title-area { z-index: 1; }
+        .settings-title-area h2 { margin: 0 0 5px 0; color: white; font-weight: 900; font-size: 22px; }
+        .settings-title-area span { color: var(--gold); font-size: 12px; font-weight: 800; background: rgba(212, 175, 55, 0.1); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); }
+        
+        .settings-body { padding: 30px; background: white; }
+        .settings-group { margin-bottom: 20px; }
+        .settings-group label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; color: #475569; margin-bottom: 8px; }
+        .settings-group input { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 12px; padding: 14px 15px; font-size: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .settings-group input:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 4px rgba(212,175,55,0.1); }
+        .settings-hint { font-size: 11px; color: var(--danger); font-weight: bold; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
 
-        /* نافذة التعديل المنبثقة (Modal) */
-        .app-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        .app-popup-box { background: rgba(15, 23, 42, 0.95); padding: 25px; border-radius: 20px; text-align: center; max-width: 550px; width: 90%; border: 1px solid var(--gold); max-height: 90vh; overflow-y: auto; }
-        .app-popup-box h3 { color: var(--gold); font-size:16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top:0;}
-
-        /* الإعلانات الذكية */
-        .app-ad-container { display: none; align-items: center; background: rgba(15, 23, 42, 0.8); margin: 10px auto 0; max-width: 1400px; padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); border-right: 4px solid var(--gold); backdrop-filter: blur(10px); }
-        .ad-n-one-badge { background: linear-gradient(135deg, var(--gold), #b48608); color: #000; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; margin-left: 10px; white-space: nowrap; }
+        /* تصميم الإعلانات الذكية */
+        .app-ad-container { display: none; align-items: center; background: white; margin: 15px auto 0; max-width: 1400px; padding: 12px 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.04); border-right: 5px solid var(--primary); animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .ad-n-one-badge { background: var(--gold); color: var(--primary); padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; margin-left: 12px; white-space: nowrap; box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3); }
+        
         .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
-        .ad-text-scroll { font-weight: bold; font-size: 13px; width: 100%; color: white; }
+        .ad-text-scroll { font-weight: 800; font-size: 14px; width: 100%; }
 
-        .ad-type-warning { border-right-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
-        .ad-type-warning .ad-text-scroll { color: #fca5a5; }
+        .ad-type-normal { border-right-color: var(--primary); }
+        .ad-type-news { border-right-color: var(--info); }
+        .ad-type-news .ad-text-scroll { color: var(--info); }
+        .ad-type-warning { border-right-color: var(--danger); background-color: #fef2f2; }
+        .ad-type-warning .ad-text-scroll { color: var(--danger); }
         .ad-type-offer { border-right-color: var(--success); }
-        .ad-type-offer .ad-text-scroll { color: #86efac; }
-        
-        .user-info-area { display: flex; flex-direction: column; align-items: flex-end; }
-        .sub-countdown { font-size: 10px; padding: 4px 8px; border-radius: 8px; margin-bottom: 4px; font-weight: 900; border: 1px solid transparent; }
-        .sub-active { background: rgba(212, 175, 55, 0.1); color: var(--gold); border-color: rgba(212, 175, 55, 0.3); }
-        .sub-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
-        .sub-expired { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+        .ad-type-offer .ad-text-scroll { color: var(--success); }
+
+        /* تصميم التنبيه الطارئ وواجهة التعديل Pop-up */
+        .app-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .app-popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-top: 6px solid var(--danger); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        .app-popup-icon { font-size: 50px; margin-bottom: 12px; }
+        .app-popup-msg { font-size: 18px; font-weight: 900; color: var(--primary); line-height: 1.5; margin-bottom: 20px; }
+        .app-popup-btn { background: var(--danger); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; font-size: 15px; transition: 0.3s; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
+        .app-popup-btn:hover { background: #b91c1c; transform: translateY(-2px); }
+
+        /* ازرار التبديل الصغيرة (Toggle) */
+        .switch-small { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch-small input { opacity: 0; width: 0; height: 0; }
+        .slider-small { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider-small:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-small { background-color: var(--success); }
+        input:checked + .slider-small:before { transform: translateX(14px); }
     </style>
 </head>
 <body> 
 
-    <div class="bg-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-
     <div id="loader-overlay">
-        <div style="font-size:45px; margin-bottom:10px; text-shadow: 0 0 20px #d4af37; animation: bounce 1s infinite;">💎</div>
-        <div style="font-size: 14px;">جاري مزامنة الشبكة الألماسية...</div>
+        <div style="font-size:40px; margin-bottom:10px;">💎</div>
+        <div style="font-size: 16px;">جاري معالجة البيانات الألماسية...</div>
     </div>
 
-    <div id="app-popup-overlay" class="app-popup-overlay" style="z-index: 5000;">
-        <div class="app-popup-box" style="border-top: 4px solid var(--danger); max-width: 350px;">
-            <div style="font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 15px #ef4444;">🚨</div>
-            <div id="app-popup-msg" style="font-size: 15px; font-weight: 900; color: white; line-height: 1.5; margin-bottom: 20px;">رسالة إدارية هامة</div>
-            <button class="btn-action" style="background: linear-gradient(135deg, var(--danger), #991b1b); color: white;" onclick="closeAppPopup()">حسناً، فهمت</button>
+    <div id="app-popup-overlay" class="app-popup-overlay">
+        <div class="app-popup-box">
+            <div class="app-popup-icon">🚨</div>
+            <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
+            <button class="app-popup-btn" onclick="closeAppPopup()">حسناً، فهمت</button>
         </div>
     </div>
 
     <div id="edit-shop-modal" class="app-popup-overlay">
-        <div class="app-popup-box">
-            <h3>تعديل بيانات المنشأة 🛠️</h3>
+        <div class="app-popup-box" style="max-width: 600px; text-align: right; border-top-color: var(--gold);">
+            <h3 style="color:var(--primary); margin-top:0; border-bottom:2px solid #f1f5f9; padding-bottom:10px; font-weight:900;">تعديل شامل لبيانات المنشأة 🛠️</h3>
             <input type="hidden" id="edit_original_user">
-            <div class="form-grid" style="text-align: right; margin-bottom: 20px;">
+            <div class="form-grid" style="margin-bottom: 20px; text-align: right;">
                 <div>
-                    <label>الاسم التجاري</label>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">اسم المنشأة التجارية أو المطعم</label>
                     <input type="text" id="edit_shop_name" placeholder="اسم الشركة">
                 </div>
                 <div>
-                    <label>اسم المستخدم (User ID) <span style="color:#ef4444; font-size:9px;">*مفتوح للتجربة*</span></label>
-                    <input type="text" id="edit_shop_user" placeholder="English Only" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">اسم المستخدم (User ID)</label>
+                    <input type="text" id="edit_shop_user" placeholder="اسم المستخدم (English)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
                 </div>
                 <div>
-                    <label>كلمة المرور</label>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">كلمة المرور</label>
                     <input type="password" id="edit_shop_pass" placeholder="كلمة المرور">
                 </div>
                 <div>
-                    <label>رقم الهاتف</label>
-                    <div class="phone-wrapper">
-                        <div class="phone-prefix">+962</div>
-                        <input type="tel" id="edit_shop_phone" placeholder="7xxxxxxxx" maxlength="9">
-                    </div>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">رقم الهاتف</label>
+                    <input type="tel" id="edit_shop_phone" placeholder="7xxxxxxxx" maxlength="9" style="direction:ltr; text-align:right;">
                 </div>
                 
-                <div style="grid-column: 1 / -1; background: rgba(212,175,55,0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.2);">
-                    <label style="color:var(--gold-light);">📋 منطقة التسعير المعتمدة</label>
-                    <select id="edit_shop_pricing_area" style="cursor:pointer; background: rgba(0,0,0,0.5);">
-                        <option value="">جاري سحب المناطق...</option>
+                <div style="grid-column: 1 / -1; background: #fefce8; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; margin-bottom: 5px;">
+                    <label style="font-size:13px; font-weight:900; color:#b45309; margin-bottom:10px; display:block;">📋 منطقة التسعير المعتمدة (للحسابات المالية)</label>
+                    <select id="edit_shop_pricing_area" style="border-color:#fcd34d; background:white; cursor:pointer;">
+                        <option value="">جاري سحب المناطق من مصفوفة الأسعار...</option>
                     </select>
                 </div>
 
-                <div style="grid-column: 1 / -1; background: rgba(14,165,233,0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(14,165,233,0.2);">
-                    <label style="color:var(--neon-blue);">📍 بروتوكول التوجيه الجغرافي</label>
-                    <div style="display:flex; gap:8px; margin-bottom:10px;">
-                        <input type="text" id="edit_smart_search_input" placeholder="بحث خرائط جوجل (اختياري)">
-                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; padding: 0 15px;" onclick="smartMapSearchEdit()">بحث 🔍</button>
+                <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
+                    <label style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:10px; display:block;">📍 بروتوكول التوجيه الجغرافي (مستقل عن منطقة التسعير)</label>
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <input type="text" id="edit_smart_search_input" placeholder="اسم المنشأة للبحث في خرائط جوجل (اختياري)">
+                        <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:42px; padding: 0 20px;" onclick="smartMapSearchEdit()">بحث ذكي 🔍</button>
                     </div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع النهائي" style="flex: 1;">
-                        <div style="display:flex; align-items:center; gap:6px; background:rgba(0,0,0,0.5); padding: 6px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); height:38px; box-sizing:border-box;">
-                            <div id="edit_green_light_status" style="width: 12px; height: 12px; border-radius: 50%; background: #475569; transition:0.3s;"></div>
-                            <span id="edit_green_light_text" style="font-size:11px; font-weight:bold; color:#cbd5e1;">بانتظار التأكيد</span>
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <input type="text" id="edit_shop_location_link" placeholder="رابط الموقع الجغرافي النهائي" style="flex: 1; border-color:#cbd5e1;">
+                        <div style="display:flex; align-items:center; gap:8px; background:white; padding: 8px 15px; border-radius:10px; border:1px solid #e2e8f0; height:42px; box-sizing:border-box;">
+                            <div id="edit_green_light_status" style="width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition:0.3s;"></div>
+                            <span id="edit_green_light_text" style="font-size:12px; font-weight:900; color:#64748b; white-space:nowrap;">بانتظار التأكيد</span>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label>الرصيد المتاح (د.أ)</label>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">الرصيد المتاح</label>
                     <input type="number" id="edit_shop_balance" placeholder="الرصيد المتاح" step="0.5">
                 </div>
                 
                 <div>
-                    <label>نوع الاشتراك</label>
+                    <label style="font-size:12px; font-weight:bold; color:#64748b;">نوع الاشتراك</label>
                     <select id="edit_sub_type" onchange="toggleEditCommissionField()">
-                        <option value="free">مجاني (بدون عمولة)</option>
-                        <option value="commission">بعمولة (نسبة على الطلب)</option>
-                        <option value="paid">مدفوع (مشمول بعمولة)</option>
+                        <option value="free">اشتراك مجاني (بدون عمولة)</option>
+                        <option value="commission">اشتراك بعمولة (نسبة على الطلب)</option>
+                        <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
                     </select>
                 </div>
-                <div id="edit-commission-field" style="display: none; background: rgba(16,185,129,0.1); padding: 10px; border-radius: 10px; border: 1px solid rgba(16,185,129,0.3); grid-column: span 1;">
-                    <label style="color:var(--success);">💰 قيمة العمولة الثابتة</label>
-                    <input type="number" id="edit_fixed_commission" placeholder="مثلاً 0.50" step="0.01">
+                <div id="edit-commission-field">
+                    <label style="font-size:11px; font-weight:900; color:var(--money);">💰 قيمة العمولة الثابتة</label>
+                    <input type="number" id="edit_fixed_commission" placeholder="مثلاً 0.50" step="0.01" style="margin-top:6px;">
                 </div>
             </div>
             <div style="display:flex; gap:10px;">
-                <button class="btn-action btn-add" onclick="saveShopEdit()">حفظ التعديلات 💾</button>
-                <button class="btn-action" style="background: rgba(255,255,255,0.1); color: white;" onclick="closeEditModal()">إلغاء ❌</button>
+                <button class="btn-action btn-add" style="background:var(--gold); color:var(--primary);" onclick="saveShopEdit()">حفظ التعديلات الألماسية 💾</button>
+                <button class="btn-action btn-delete" onclick="closeEditModal()">إلغاء ❌</button>
             </div>
         </div>
     </div>
@@ -277,53 +229,53 @@
         
         <div style="display:flex; gap:15px; align-items:center;">
             <div class="user-info-area">
-                <div id="sub-timer" class="sub-countdown sub-active">جاري الحساب...</div>
-                <span id="welcome-msg" style="font-size:13px; font-weight:900; color:white;">مرحباً</span>
+                <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
+                <span id="welcome-msg" style="font-size:14px; font-weight:900; color:white;">مرحباً</span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-                <button style="background:var(--gold); color:#000; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:900; font-size:11px; transition:0.3s;" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
-                <button class="btn-logout" onclick="logout()">تسجيل خروج 🔒</button>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <button style="background:var(--gold); color:var(--primary); border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:800; font-size:11px; transition:0.3s; width: 100%; box-shadow: 0 2px 8px rgba(212,175,55,0.3);" onclick="switchTab('settings', event)">⚙️ إعدادات الحساب</button>
+                <button class="btn-logout" style="padding:6px 12px; font-size:11px; width: 100%;" onclick="logout()">تسجيل خروج 🔒</button>
             </div>
         </div>
     </nav>
 
     <div style="padding: 0 15px;">
         <div id="smart-ad-container" class="app-ad-container">
-            <div class="ad-n-one-badge">إشعار N One</div>
+            <div class="ad-n-one-badge">إشعار من N One 👑</div>
             <div class="ad-content-wrapper">
-                <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="5"></marquee>
+                <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
             </div>
         </div>
     </div>
 
     <div class="container">
 
-        <div class="card cyber-panel">
+        <div class="card" style="border-top-color: var(--danger); background: linear-gradient(to left, #f8fafc, #ffffff); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 24px; text-shadow: 0 0 10px var(--neon-blue);">🛡️</span>
+                <span style="font-size: 24px;">🛡️</span>
                 <div>
-                    <h3 style="margin: 0; color: white; font-size: 14px; font-weight: 900;">مركز الحماية السيبراني</h3>
-                    <small style="color: var(--neon-blue); font-weight: bold; font-size: 11px;">أدوات التحكم للشبكة</small>
+                    <h3 style="margin: 0; color: var(--primary); font-size: 14px;">مركز الحماية والتحكم السيبراني</h3>
+                    <small style="color: #64748b; font-weight: bold;">أدوات التحكم المتقدمة للإدارة</small>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                    <label style="font-size: 11px; font-weight: bold; color: white; margin:0;">⏱️ وقت الطلب:</label>
-                    <input type="number" id="remote_timer_val" style="width: 45px; padding: 4px; text-align: center; font-size:12px;" min="5" max="60" placeholder="10">
-                    <button class="btn-check" style="background: var(--info); color: white; border:none; height: 30px; padding: 0 10px;" onclick="updateRemoteTimer()">حفظ</button>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <label style="font-size: 11px; font-weight: bold; color: var(--primary);">⏱️ وقت الطلب (ثواني):</label>
+                    <input type="number" id="remote_timer_val" style="width: 50px; height: 28px; padding: 0 5px; text-align: center; border-color: var(--info); border-radius: 6px;" min="5" max="60" placeholder="10">
+                    <button class="btn-check" style="background: var(--info); color: white; height: 28px; margin: 0; border-radius: 6px;" onclick="updateRemoteTimer()">حفظ</button>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(239,68,68,0.1); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.3);">
-                    <span style="font-size: 11px; font-weight: 900; color: #fca5a5;">حظر VPN 🔒</span>
+                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <span style="font-size: 11px; font-weight: bold; color: var(--danger);">🛡️ حظر VPN</span>
                     <label class="switch-small" style="margin: 0;">
                         <input type="checkbox" id="remote_toggle_vpn" onchange="toggleRemoteVPN(this.checked)">
                         <span class="slider-small"></span>
                     </label>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(245,158,11,0.1); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(245,158,11,0.3);">
-                    <span style="font-size: 11px; font-weight: 900; color: var(--gold-light);">النقاط الساخنة 🔥</span>
+                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <span style="font-size: 11px; font-weight: bold; color: #b45309;">🔥 النقاط الساخنة</span>
                     <label class="switch-small" style="margin: 0;">
                         <input type="checkbox" id="remote_toggle_hotspots" onchange="toggleRemoteHotspots(this.checked)">
                         <span class="slider-small"></span>
@@ -331,47 +283,47 @@
                 </div>
             </div>
         </div>
-
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 لوحة المعلومات</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة المنشآت</button>
+            
             <button class="tab-btn tab-link" onclick="window.open('ops-room.html', '_blank')">📡 غرفة العمليات ↗️</button>
-            <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 مصفوفة الأسعار ↗️</button>
+            <button class="tab-btn tab-link" onclick="window.open('prices.html', '_blank')">📋 قائمة الأسعار ↗️</button>
         </div>
 
         <div id="dashboard" class="tab-content active">
             <div class="form-grid">
                 
                 <div class="card" style="text-align:center;">
-                    <h3 style="margin:0; color:#cbd5e1; font-size:13px;">إجمالي المنشآت</h3>
-                    <h1 id="total-shops" style="color:white; font-size:38px; margin:10px 0; font-weight:900; text-shadow:0 0 15px rgba(255,255,255,0.3);">0</h1>
-                    <small style="color:var(--gold); font-weight:bold; font-size:11px;">نشطة ومسجلة</small>
+                    <h3 style="margin:0; color:#64748b; font-size:14px;">إجمالي المنشآت التابعة</h3>
+                    <h1 id="total-shops" style="color:var(--primary); font-size:40px; margin:10px 0; font-weight:900;">0</h1>
+                    <small style="color:#94a3b8; font-weight:bold; font-size:11px;">منشأة نشطة ومسجلة</small>
                 </div>
                 
                 <div class="card" style="text-align:center; border-top-color:var(--gold);">
-                    <h3 style="margin:0; color:#cbd5e1; font-size:13px;">حالة الاشتراكات</h3>
+                    <h3 style="margin:0; color:#64748b; font-size:14px;">حالة الاشتراكات للمنشآت</h3>
                     <div style="margin-top:15px; display:flex; justify-content:space-around;">
                         <div>
-                            <span style="font-size:24px; font-weight:900; color:var(--success); text-shadow:0 0 10px rgba(16,185,129,0.5);" id="count-paid">0</span><br>
-                            <span style="font-size:11px; font-weight:bold; color:white;">مدفوع</span>
+                            <span style="font-size:22px; font-weight:900; color:var(--money);" id="count-paid">0</span><br>
+                            <span style="font-size:12px; font-weight:bold; color:#64748b;">مدفوع</span>
                         </div>
                         <div>
-                            <span style="font-size:24px; font-weight:900; color:#94a3b8;" id="count-free">0</span><br>
-                            <span style="font-size:11px; font-weight:bold; color:white;">مجاني</span>
+                            <span style="font-size:22px; font-weight:900; color:#94a3b8;" id="count-free">0</span><br>
+                            <span style="font-size:12px; font-weight:bold; color:#64748b;">مجاني</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="card" style="text-align:center; border-top-color:var(--success);">
-                    <h3 style="margin:0; color:#cbd5e1; font-size:13px;">الملخص المالي</h3>
+                    <h3 style="margin:0; color:#64748b; font-size:14px;">الملخص المالي</h3>
                     <div style="margin-top:15px; display:flex; justify-content:space-around;">
                         <div>
                             <span style="font-size:20px; font-weight:900; color:var(--success);" id="total-balance">0 د.أ</span><br>
-                            <span style="font-size:11px; font-weight:bold; color:white;">مجموع الرصيد</span>
+                            <span style="font-size:11px; font-weight:bold; color:#64748b;">مجموع رصيد المنشآت</span>
                         </div>
                         <div>
-                            <span style="font-size:20px; font-weight:900; color:var(--gold-light);" id="total-comm">0 د.أ</span><br>
-                            <span style="font-size:11px; font-weight:bold; color:white;">العمولات المحصلة</span>
+                            <span style="font-size:20px; font-weight:900; color:var(--gold);" id="total-comm">0 د.أ</span><br>
+                            <span style="font-size:11px; font-weight:bold; color:#64748b;">مجموع العمولات المحصلة</span>
                         </div>
                     </div>
                 </div>
@@ -382,129 +334,107 @@
         <div id="shops" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <span>➕ إضافة منشأة جديدة</span>
-                    <div style="display:flex; align-items:center; gap:8px; background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 10px;">
-                        <span style="font-size:11px; font-weight:bold; color:white;">تسجيل خارجي</span>
+                    <span> إضافة منشأة جديدة</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:11px; font-weight:bold; color:#64748b;">تسجيل خارجي</span>
                         <label class="switch-small">
                             <input type="checkbox" id="toggle_external_reg" onchange="toggleExternalRegInput()">
                             <span class="slider-small"></span>
                         </label>
-                        <input type="text" id="external_reg_id" placeholder="ID الاستقبال" style="display:none; width:100px; padding:6px; font-size:11px;">
-                        <button id="btn_save_ext_id" class="btn-check" style="display:none; height:28px; padding:0 10px;" onclick="saveExternalRegData()">حفظ</button>
+                        <input type="text" id="external_reg_id" placeholder="ID الاستقبال" style="display:none; width:100px; padding:6px 10px; font-size:11px;">
+                        <button id="btn_save_ext_id" class="btn-check" style="display:none; height:28px; padding:0 8px; font-size:11px;" onclick="saveExternalRegData()">حفظ</button>
                     </div>
                 </div>
                 <div class="form-grid">
-                    <div>
-                        <label>الاسم التجاري</label>
-                        <input type="text" id="shop_name" placeholder="اسم المنشأة">
-                    </div>
+                    <input type="text" id="shop_name" placeholder="اسم المنشأة التجارية أو المطعم">
                     
-                    <div>
-                        <label>معرف الدخول (User ID)</label>
-                        <div style="display:flex; gap:6px;">
-                            <input type="text" id="shop_user" placeholder="English Only" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
-                            <button class="btn-check" onclick="checkAvailability()">فحص 🔍</button>
-                        </div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="shop_user" placeholder="اسم المستخدم (English)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                        <button class="btn-check" onclick="checkAvailability()">فحص 🔍</button>
                     </div>
 
-                    <div>
-                        <label>كلمة المرور</label>
-                        <input type="password" id="shop_pass" placeholder="الرقم السري للمنشأة">
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="shop_pass" placeholder="كلمة المرور الخاصة بالمنشأة">
                     </div>
                     
-                    <div>
-                        <label>رقم الهاتف</label>
-                        <div class="phone-wrapper">
-                            <div class="phone-prefix">+962</div>
-                            <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
-                        </div>
+                    <div class="phone-wrapper">
+                        <div class="phone-prefix">+962</div>
+                        <input type="tel" id="shop_phone" placeholder="7xxxxxxxx" maxlength="9">
                     </div>
 
-                    <div style="grid-column: 1 / -1; background: rgba(212,175,55,0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.2); margin-bottom: 5px;">
-                        <label style="color:var(--gold-light);">📋 منطقة التسعير المعتمدة</label>
-                        <select id="shop_pricing_area" style="cursor:pointer; background: rgba(0,0,0,0.5);">
-                            <option value="">جاري سحب المناطق...</option>
+                    <div style="grid-column: 1 / -1; background: #fefce8; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; margin-bottom: 5px;">
+                        <label style="font-size:13px; font-weight:900; color:#b45309; margin-bottom:10px; display:block;">📋 منطقة التسعير المعتمدة (للحسابات المالية)</label>
+                        <select id="shop_pricing_area" style="border-color:#fcd34d; background:white; cursor:pointer;">
+                            <option value="">جاري سحب المناطق من مصفوفة الأسعار...</option>
                         </select>
                     </div>
 
-                    <div style="grid-column: 1 / -1; background: rgba(14,165,233,0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(14,165,233,0.2);">
-                        <label style="color:var(--neon-blue);">📍 بروتوكول التوجيه الجغرافي</label>
-                        <div style="display:flex; gap:8px; margin-bottom:10px;">
-                            <input type="text" id="smart_search_input" placeholder="بحث خرائط جوجل (اختياري)">
-                            <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; padding: 0 15px;" onclick="smartMapSearch()">بحث 🔍</button>
+                    <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="font-size:13px; font-weight:900; color:var(--primary); margin-bottom:10px; display:block;">📍 بروتوكول التوجيه الجغرافي (مستقل عن منطقة التسعير)</label>
+                        <div style="display:flex; gap:10px; margin-bottom:15px;">
+                            <input type="text" id="smart_search_input" placeholder="اسم المنشأة للبحث في خرائط جوجل (اختياري)">
+                            <button type="button" class="btn-check" style="background:var(--info); color:white; border:none; height:42px; padding: 0 20px;" onclick="smartMapSearch()">بحث ذكي 🔍</button>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <input type="text" id="shop_location_link" placeholder="رابط الموقع الجغرافي" style="flex: 1;">
-                            <div style="display:flex; align-items:center; gap:6px; background:rgba(0,0,0,0.5); padding: 6px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); height:38px; box-sizing:border-box;">
-                                <div id="green_light_status" style="width: 12px; height: 12px; border-radius: 50%; background: #475569; transition:0.3s;"></div>
-                                <span id="green_light_text" style="font-size:11px; font-weight:bold; color:#cbd5e1;">بانتظار التأكيد</span>
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            <input type="text" id="shop_location_link" placeholder="رابط الموقع الجغرافي النهائي (يستخدم لتوجيه الكابتن فقط)" style="flex: 1; border-color:#cbd5e1;">
+                            <div style="display:flex; align-items:center; gap:8px; background:white; padding: 8px 15px; border-radius:10px; border:1px solid #e2e8f0; height:42px; box-sizing:border-box;">
+                                <div id="green_light_status" style="width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition:0.3s;"></div>
+                                <span id="green_light_text" style="font-size:12px; font-weight:900; color:#64748b; white-space:nowrap;">بانتظار التأكيد</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div>
-                        <label>الرصيد المبدئي (د.أ)</label>
-                        <input type="number" id="shop_balance" placeholder="اختياري" step="0.5">
+
+                    <input type="number" id="shop_balance" placeholder="رصيد مبدئي للطلبات (اختياري)" step="0.5" style="border-color:var(--money);">
+
+                    <select id="sub_type" onchange="toggleCommissionField()">
+                        <option value="free">اشتراك مجاني (بدون عمولة)</option>
+                        <option value="commission">اشتراك بعمولة (نسبة على الطلب)</option>
+                        <option value="paid">اشتراك مدفوع (مشمول بعمولة)</option>
+                    </select>
+
+                    <div id="commission-field">
+                        <label style="font-size:11px; font-weight:900; color:var(--money);">💰 قيمة العمولة الثابتة (لكل طلب)</label>
+                        <input type="number" id="fixed_commission" placeholder="مثلاً 0.50" step="0.01" style="margin-top:6px;">
                     </div>
 
-                    <div>
-                        <label>خطة الاشتراك</label>
-                        <select id="sub_type" onchange="toggleCommissionField()">
-                            <option value="free">مجاني (بدون عمولة)</option>
-                            <option value="commission">بعمولة (نسبة)</option>
-                            <option value="paid">مدفوع (مشمول)</option>
-                        </select>
-                    </div>
+                    <select id="sub_duration">
+                        <option value="30">شهر (30 يوم)</option>
+                        <option value="90">3 أشهر</option>
+                        <option value="180">6 أشهر</option>
+                        <option value="365">سنة كاملة</option>
+                    </select>
 
-                    <div id="commission-field" style="display:none;">
-                        <label style="color:var(--success);">💰 قيمة العمولة الثابتة</label>
-                        <input type="number" id="fixed_commission" placeholder="0.50" step="0.01">
-                    </div>
-
-                    <div>
-                        <label>صلاحية الحساب</label>
-                        <select id="sub_duration">
-                            <option value="30">شهر (30 يوم)</option>
-                            <option value="90">3 أشهر</option>
-                            <option value="180">6 أشهر</option>
-                            <option value="365">سنة كاملة</option>
-                        </select>
-                    </div>
-
-                    <div style="grid-column: 1 / -1; margin-top: 5px;">
-                        <button class="btn-action btn-add" onclick="addShop()">إضافة وتفعيل المنشأة 🚀</button>
-                    </div>
+                    <button class="btn-action btn-add" onclick="addShop()">إضافة وتفعيل المنشأة 🚀</button>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header" style="flex-direction:row; flex-wrap:wrap; gap:10px;">
-                    <span>📋 سجل المنشآت التابعة</span>
-                    <div style="display:flex; gap:8px;">
-                        <button id="btn_filter_active" class="tab-btn active" style="padding:6px 12px; font-size:11px;" onclick="setShopFilter('active')">المفعّلة ✅</button>
-                        <button id="btn_filter_pending" class="tab-btn" style="padding:6px 12px; font-size:11px;" onclick="setShopFilter('pending')">المعلقة ⏳</button>
+                <div class="card-header" style="display:flex; flex-direction:column; gap:10px; align-items:stretch;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <span>📋 سجل المنشآت التابعة</span>
+                        <div style="display:flex; gap:5px;">
+                            <button id="btn_filter_active" class="tab-btn active" style="padding:6px 12px; font-size:11px;" onclick="setShopFilter('active')">المنشآت المفعّلة ✅</button>
+                            <button id="btn_filter_pending" class="tab-btn" style="padding:6px 12px; font-size:11px;" onclick="setShopFilter('pending')">طلبات المنشآت ⏳</button>
+                        </div>
                     </div>
-                    <div style="position: relative; flex:1; min-width: 200px;">
-                        <span class="search-icon" style="top:10px;">🔍</span>
-                        <input type="text" id="search-input" class="search-input" placeholder="ابحث برقم الهاتف أو الاسم..." onkeyup="filterTable()" style="padding: 10px 35px 10px 10px;">
-                    </div>
+                    <input type="text" id="search-input" placeholder="🔍 ابحث برقم الهاتف أو اسم المنشأة..." onkeyup="filterTable()" style="border-color:var(--gold); width:100%;">
                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>اسم المنشأة</th>
+                                <th>اسم المنشأة التجارية أو المطعم</th>
                                 <th>بيانات الدخول</th>
-                                <th>الهاتف / الموقع / التسعير</th>
+                                <th>الهاتف / الموقع / منطقة التسعير</th>
                                 <th>النوع / العمولة</th>
-                                <th>الرصيد</th>
+                                <th>الرصيد المتاح</th>
                                 <th>الصلاحية</th>
                                 <th>الحالة</th>
                                 <th>التحكم</th>
                             </tr>
                         </thead>
                         <tbody id="shops-table-body">
-                            <tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:var(--gold);">جاري سحب البيانات الماسية... ⏳</td></tr>
+                            <tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#94a3b8;">جاري تحميل البيانات الألماسية... ⏳</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -512,45 +442,43 @@
         </div>
 
         <div id="settings" class="tab-content">
-            <div class="card" style="max-width: 550px; margin: 0 auto; padding: 0; overflow: hidden;">
-                <div style="background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9)); padding: 25px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 3px solid var(--gold); position: relative;">
-                    <div style="width: 60px; height: 60px; background: rgba(212,175,55,0.1); border: 2px solid var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 0 15px rgba(212,175,55,0.3); z-index: 1;">💎</div>
-                    <div style="z-index: 1;">
-                        <h2 id="display_company_name" style="margin: 0 0 5px 0; color: white; font-weight: 900; font-size: 20px;">الشركة</h2>
-                        <span style="color: var(--gold-light); font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">حساب الإدارة المركزي</span>
+            <div class="settings-card">
+                <div class="settings-header-royal">
+                    <div class="settings-avatar">💎</div>
+                    <div class="settings-title-area">
+                        <h2 id="display_company_name">الشركة</h2>
+                        <span>حساب الادارة</span>
                     </div>
                 </div>
-                
-                <div style="padding: 25px;">
-                    <div style="margin-bottom: 15px;">
-                        <label>🏢 اسم الإمبراطورية الرسمي</label>
+                <div class="settings-body">
+                    <div class="settings-group">
+                        <label>🏢 اسم المنشأة الرسمي</label>
                         <input type="text" id="profile_name" placeholder="الاسم الذي يظهر في الواجهات">
                     </div>
-                    <div style="margin-bottom: 15px;">
+                    <div class="settings-group">
                         <label>🔑 معرف الدخول (User ID)</label>
-                        <input type="text" id="profile_user" placeholder="English Only" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
-                        <div style="font-size: 10px; color: var(--danger); font-weight: bold; margin-top: 6px;">⚠️ تغيير المعرف سيؤدي لتسجيل الخروج وتحديث هويتك في الشبكة</div>
+                        <input type="text" id="profile_user" placeholder="اسم الدخول باللغة الإنجليزية" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                        <div class="settings-hint">⚠️ تغيير المعرف سيؤدي لتسجيل الخروج وتحديث هويتك في الشبكة</div>
                     </div>
-                    <div style="margin-bottom: 20px;">
-                        <label>🔒 الرمز السري</label>
+                    <div class="settings-group">
+                        <label>🔒 الرمز السري الجديد</label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="password" id="profile_pass" placeholder="أدخل الرمز السري الجديد" style="padding-left: 40px;">
-                            <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 12px; cursor: pointer; font-size: 16px; color: #94a3b8;" title="إظهار/إخفاء">👁️</span>
+                            <input type="password" id="profile_pass" placeholder="أدخل الرمز السري الجديد أو اتركه كما هو" style="width: 100%; padding-left: 40px;">
+                            <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 15px; cursor: pointer; font-size: 18px; color: #94a3b8;" title="إظهار/إخفاء">👁️</span>
                         </div>
                     </div>
-                    
-                    <button class="btn-action btn-add" onclick="updateProfileData()">تحديث الهوية الألماسية 💾</button>
+                    <button class="btn-action" style="background:var(--gold); color:var(--primary); font-size:15px; margin-top:10px; box-shadow:0 8px 15px rgba(212,175,55,0.2);" onclick="updateProfileData()">حفظ وتوثيق التعديلات الألماسية 💾</button>
 
-                    <div id="integrated-ad-center" style="display: none; margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <div style="color: var(--gold); font-size: 14px; font-weight: 900; margin-bottom: 12px;">📢 مركز البث المباشر</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <textarea id="client_ad_text" rows="2" placeholder="اكتب رسالتك لشبكتك هنا..." style="resize: none; font-weight: bold;"></textarea>
+                    <div id="integrated-ad-center" style="display: none; margin-top: 30px; padding-top: 25px; border-top: 2px dashed #e2e8f0;">
+                        <div style="color: var(--info); font-size: 15px; font-weight: 800; margin-bottom: 15px;">📢 مركز إرسال الإعلانات والتنبيهات</div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <textarea id="client_ad_text" rows="3" placeholder="اكتب إعلانك أو رسالتك هنا..." style="resize: none; font-weight: bold;"></textarea>
                             
                             <div style="display: flex; gap: 8px;">
                                 <select id="client_ad_group" onchange="updateClientAdTargets()" style="flex: 1;">
                                     <option value="shops">المنشآت التجارية</option>
                                     <option value="captains">الكباتن</option>
-                                    <option value="customers">الزبائن</option>
+                                    <option value="customers">الزبائن (قيد التحديث ⏳)</option>
                                 </select>
                                 <select id="client_ad_target" style="flex: 1;">
                                     <option value="all">إرسال للجميع</option>
@@ -559,24 +487,25 @@
                             
                             <div style="display: flex; gap: 8px;">
                                 <select id="client_ad_type" style="flex: 1;">
-                                    <option value="normal" style="color:black;">إعلان عادي</option>
-                                    <option value="news" style="color:blue;">أخبار عامة 🔵</option>
-                                    <option value="warning" style="color:red;">تحذير 🔴</option>
-                                    <option value="offer" style="color:green;">عروض 🟢</option>
+                                    <option value="normal">إعلان عادي</option>
+                                    <option value="news">أخبار عامة 🔵</option>
+                                    <option value="warning">تحذير / تنبيه 🔴</option>
+                                    <option value="offer">عروض / هدايا 🟢</option>
                                 </select>
                                 <select id="client_ad_expire" style="flex: 1;">
                                     <option value="1">لمدة ساعة</option>
-                                    <option value="24" selected>24 ساعة</option>
-                                    <option value="168">أسبوع</option>
+                                    <option value="24" selected>لمدة 24 ساعة</option>
+                                    <option value="168">لمدة أسبوع</option>
                                     <option value="permanent">دائم</option>
                                 </select>
                             </div>
                             
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                <button class="btn-action" style="background:linear-gradient(135deg, var(--info), #0369a1); color:white; font-size:12px;" onclick="sendClientAd()">بث الإعلان 🚀</button>
-                                <button class="btn-action" style="background:linear-gradient(135deg, var(--danger), #991b1b); color:white; font-size:12px;" onclick="sendClientPopup()">تنبيه طارئ 🚨</button>
+                            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                <button class="btn-action" style="background-color: var(--info);" onclick="sendClientAd()">بث الإعلان اللحظي 🚀</button>
+                                <button class="btn-action" style="background-color: var(--danger);" onclick="sendClientPopup()">إرسال تنبيه طارئ 🚨</button>
                             </div>
-                            <button class="btn-action" style="background: rgba(255,255,255,0.1); color: white; margin-top: 4px; font-size:12px;" onclick="clearClientAds()">مسح الإعلانات 🗑️</button>
+
+                            <button class="btn-action" style="background-color: #64748b; margin-top: 5px;" onclick="clearClientAds()">مسح الإعلان / التنبيه 🗑️</button>
                         </div>
                     </div>
                 </div>
@@ -603,7 +532,6 @@
         const db = getDatabase(app);
 
         let currentUser = null;
-        let myMasterId = "";
         let allData = [];
         let allCaptains = [];
         let allCustomers = [];
@@ -613,84 +541,49 @@
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             
-            if (!savedUser) {
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+            } else {
                 window.location.replace('index.html');
-                return; 
+                return;
             }
-
-            currentUser = JSON.parse(savedUser);
-            myMasterId = currentUser.Client_User || currentUser.user;
 
             const dispName = currentUser.Client_Name || currentUser.name || 'الشركة';
             document.getElementById('welcome-msg').innerText = `أهلاً بك يا ${dispName}`;
             document.getElementById('display_company_name').innerText = dispName;
             
             document.getElementById('profile_name').value = dispName;
-            document.getElementById('profile_user').value = myMasterId;
+            document.getElementById('profile_user').value = currentUser.Client_User || currentUser.user || '';
             document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
 
-            if(typeof window.checkAdPermission === 'function') window.checkAdPermission();
-            if(typeof window.updateCountdownTimer === 'function') window.updateCountdownTimer();
-            if(typeof window.setupRealtimeFreezeListener === 'function') window.setupRealtimeFreezeListener(); 
-            if(typeof window.setupSmartAdsListener === 'function') window.setupSmartAdsListener();
-            if(typeof window.setupAlertsListener === 'function') window.setupAlertsListener(); 
-            
-            window.fetchData();
-            if(typeof window.fetchCyberSettings === 'function') window.fetchCyberSettings(); 
-        };
-
-        window.fetchData = function() {
-            window.fetchPricingAreas();
-            
-            const shopsRef = ref(db, 'shops');
-            onValue(shopsRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const rawShops = Object.values(snapshot.val());
-                    allData = rawShops.filter(s => s.Client_Master === myMasterId || s.master === myMasterId);
-                } else {
-                    allData = [];
-                }
-                if(typeof window.renderShops === 'function') window.renderShops();
-                if(typeof window.updateClientAdTargets === 'function') window.updateClientAdTargets(); 
-            });
-
-            const captainsRef = ref(db, 'captains');
-            onValue(captainsRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const rawCaps = Object.values(snapshot.val());
-                    allCaptains = rawCaps.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
-                } else {
-                    allCaptains = [];
-                }
-                if(typeof window.updateClientAdTargets === 'function') window.updateClientAdTargets();
-            });
-
-            const customersRef = ref(db, 'customers');
-            onValue(customersRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const rawCusts = Object.values(snapshot.val());
-                    allCustomers = rawCusts.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
-                } else {
-                    allCustomers = [];
-                }
-                if(typeof window.updateClientAdTargets === 'function') window.updateClientAdTargets();
-            });
+            checkAdPermission();
+            updateCountdownTimer();
+            setupRealtimeFreezeListener(); 
+            setupSmartAdsListener();
+            setupAlertsListener(); 
+            fetchData();
+            fetchCyberSettings(); 
         };
 
         window.fetchPricingAreas = function() {
-            onValue(ref(db, 'prices'), (snapshot) => {
+            const pricesRef = ref(db, 'prices');
+            onValue(pricesRef, (snapshot) => {
                 availablePricingAreas = [];
+                const currentUserRef = currentUser.Client_User || currentUser.user;
                 if (snapshot.exists()) {
                     const data = Object.values(snapshot.val());
                     const uniqueSources = new Set();
                     data.forEach(r => {
-                        if (r.Client_Master === myMasterId || r.company === myMasterId) {
-                            if (r.Price_Source) uniqueSources.add(r.Price_Source);
+                        if (r.Client_Master === currentUserRef || r.company === currentUserRef) {
+                            const sourceName = r.Price_Source;
+                            if (sourceName) {
+                                uniqueSources.add(sourceName);
+                            }
                         }
                     });
                     availablePricingAreas = Array.from(uniqueSources).sort();
                 }
-                if(typeof window.populatePricingDropdowns === 'function') window.populatePricingDropdowns();
+                populatePricingDropdowns();
             });
         };
 
@@ -698,9 +591,9 @@
             const addSelect = document.getElementById('shop_pricing_area');
             const editSelect = document.getElementById('edit_shop_pricing_area');
             
-            let optionsHtml = '<option value="" style="color:black;">-- يرجى اختيار منطقة التسعير --</option>';
+            let optionsHtml = '<option value="">-- يرجى اختيار منطقة التسعير --</option>';
             availablePricingAreas.forEach(area => {
-                optionsHtml += `<option value="${area}" style="color:black;">${area}</option>`;
+                optionsHtml += `<option value="${area}">${area}</option>`;
             });
             
             if(addSelect) {
@@ -721,7 +614,7 @@
             if (!shopName) shopName = document.getElementById('shop_name').value.trim();
             
             if (!shopName) {
-                alert("اكتب اسم المنشأة أولا للبحث عن موقعها");
+                alert("اكتب اسم المنشأة أولا لحتى أبحث لك عن موقعها");
                 return;
             }
             
@@ -729,8 +622,8 @@
             
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
-                if(confirm("تم تحديد الموقع الجغرافي بنجاح، هل ترغب باعتماده؟")) {
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$$?q=${encodeURIComponent(shopName)}`;
+                if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده")) {
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
                     document.getElementById('shop_location_link').value = mapLink;
                     
                     document.getElementById('green_light_status').style.background = 'var(--success)';
@@ -756,8 +649,8 @@
             
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
-                if(confirm("تم تحديد الموقع الجغرافي بنجاح، هل ترغب باعتماده؟")) {
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$$?q=${encodeURIComponent(shopName)}`;
+                if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده")) {
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
                     document.getElementById('edit_shop_location_link').value = mapLink;
                     
                     document.getElementById('edit_green_light_status').style.background = 'var(--success)';
@@ -770,9 +663,9 @@
             }, 1200);
         };
 
-        window.checkAdPermission = function() {
-            if (!myMasterId) return;
-            const userRef = ref(db, `users/${myMasterId}`);
+        function checkAdPermission() {
+            const username = currentUser.Client_User || currentUser.user;
+            const userRef = ref(db, `users/${username}`);
             onValue(userRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
@@ -783,7 +676,7 @@
                     }
                 }
             });
-        };
+        }
 
         window.togglePasswordVisibility = function() {
             const passInput = document.getElementById('profile_pass');
@@ -797,8 +690,9 @@
             }
         };
 
-        window.setupSmartAdsListener = function() {
-            if(!myMasterId) return;
+        function setupSmartAdsListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
             const adsRef = ref(db, 'announcements');
             
             onValue(adsRef, (snapshot) => {
@@ -806,8 +700,8 @@
                 const now = Date.now();
                 let activeAd = null;
                 
-                if (ads.users && ads.users[myMasterId]) {
-                    const specificAd = ads.users[myMasterId];
+                if (ads.users && ads.users[username]) {
+                    const specificAd = ads.users[username];
                     if (!specificAd.expireAt || specificAd.expireAt > now) {
                         activeAd = specificAd;
                     }
@@ -831,38 +725,39 @@
                     adContainer.style.display = 'none';
                 }
             });
-        };
+        }
 
-        window.setupAlertsListener = function() {
-            if(!myMasterId) return;
+        function setupAlertsListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
             const alertsRef = ref(db, 'alerts');
             
             onValue(alertsRef, (snapshot) => {
                 const alerts = snapshot.val() || {};
                 let activeAlert = null;
                 
-                if (alerts.users && alerts.users[myMasterId]) {
-                    activeAlert = alerts.users[myMasterId];
+                if (alerts.users && alerts.users[username]) {
+                    activeAlert = alerts.users[username];
                 } else if (alerts.global) {
                     activeAlert = alerts.global;
                 }
                 
                 if (activeAlert && activeAlert.message) {
-                    const lastSeen = localStorage.getItem('last_seen_alert_' + myMasterId) || 0;
+                    const lastSeen = localStorage.getItem('last_seen_alert_' + username) || 0;
                     if (activeAlert.timestamp > lastSeen) {
                         document.getElementById('app-popup-msg').innerText = activeAlert.message;
                         document.getElementById('app-popup-overlay').style.display = 'flex';
-                        localStorage.setItem('last_seen_alert_' + myMasterId, activeAlert.timestamp);
+                        localStorage.setItem('last_seen_alert_' + username, activeAlert.timestamp);
                     }
                 }
             });
-        };
+        }
 
         window.closeAppPopup = function() {
             document.getElementById('app-popup-overlay').style.display = 'none';
         }
 
-        window.updateCountdownTimer = function() {
+        function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
             if (!currentUser.Client_Expiry && !currentUser.expiry) {
                 timerEl.innerText = "صلاحية غير محددة";
@@ -878,21 +773,22 @@
 
             if (diffDays > 0) {
                 if (diffDays <= 3) {
-                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم`;
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم لانتهاء الاشتراك`;
                     timerEl.className = "sub-countdown sub-warning";
                 } else {
-                    timerEl.innerText = `متبقي: ${diffDays} يوم`;
+                    timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
                     timerEl.className = "sub-countdown sub-active";
                 }
             } else {
                 timerEl.innerText = `الاشتراك منتهي`;
                 timerEl.className = "sub-countdown sub-expired";
             }
-        };
+        }
 
-        window.setupRealtimeFreezeListener = function() {
-            if(!myMasterId) return;
-            const myRef = ref(db, `users/${myMasterId}`);
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const myRef = ref(db, `users/${username}`);
             
             onValue(myRef, (snapshot) => {
                 if (snapshot.exists()) {
@@ -906,7 +802,7 @@
 
                     if(data.Client_Expiry || data.expiry) {
                         currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
-                        window.updateCountdownTimer();
+                        updateCountdownTimer();
                     }
 
                     if (data.external_reg_enabled) {
@@ -933,7 +829,7 @@
                     window.location.replace('index.html');
                 }
             });
-        };
+        }
 
         window.toggleExternalRegInput = function() {
             const isChecked = document.getElementById('toggle_external_reg').checked;
@@ -946,11 +842,12 @@
             } else {
                 idInput.style.display = 'none';
                 saveBtn.style.display = 'none';
-                window.saveExternalRegData(false);
+                saveExternalRegData(false);
             }
         };
 
         window.saveExternalRegData = async function(isEnabled = null) {
+            const username = currentUser.Client_User || currentUser.user;
             const toggleState = isEnabled !== null ? isEnabled : document.getElementById('toggle_external_reg').checked;
             const extId = document.getElementById('external_reg_id').value.trim();
 
@@ -961,12 +858,12 @@
 
             document.getElementById('loader-overlay').style.display = 'flex';
             try {
-                await update(ref(db, `users/${myMasterId}`), {
+                await update(ref(db, `users/${username}`), {
                     external_reg_enabled: toggleState,
                     external_reg_id: toggleState ? extId : null
                 });
                 document.getElementById('loader-overlay').style.display = 'none';
-                if (toggleState) alert("تم تفعيل الاستقبال الخارجي بنجاح 🚀");
+                if (toggleState) alert("تم تفعيل الاستقبال الخارجي وحفظ المعرف الرسمي بنجاح 🚀");
                 else alert("تم تعطيل ميزة الاستقبال الخارجي");
             } catch (error) {
                 document.getElementById('loader-overlay').style.display = 'none';
@@ -975,7 +872,7 @@
         };
 
         window.updateProfileData = async function() {
-            const oldUser = myMasterId;
+            const oldUser = currentUser.Client_User || currentUser.user;
             const newName = document.getElementById('profile_name').value.trim();
             const newUser = document.getElementById('profile_user').value.trim();
             const newPass = document.getElementById('profile_pass').value;
@@ -1028,7 +925,7 @@
                         localStorage.setItem('current_company_user', JSON.stringify(currentUser));
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
                         
-                        alert("تم تحديث بياناتك بنجاح وتغيير هويتك سيتم إعادة تحميل الصفحة");
+                        alert("تم تحديث بياناتك بنجاح وتغيير هويتك سيتم إعادة تحميل الصفحة لحفظ التعديلات");
                         window.location.reload();
                     }
                 } else {
@@ -1083,7 +980,30 @@
             if(filter === 'active') document.getElementById('btn_filter_active').classList.add('active');
             else document.getElementById('btn_filter_pending').classList.add('active');
             
-            window.renderShops();
+            renderShops();
+        };
+
+        window.fetchData = function() {
+            window.fetchPricingAreas();
+            
+            const shopsRef = ref(db, 'shops');
+            onValue(shopsRef, (snapshot) => {
+                allData = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                renderShops();
+                updateClientAdTargets(); 
+            });
+
+            const captainsRef = ref(db, 'captains');
+            onValue(captainsRef, (snapshot) => {
+                allCaptains = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                updateClientAdTargets();
+            });
+
+            const customersRef = ref(db, 'customers');
+            onValue(customersRef, (snapshot) => {
+                allCustomers = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                updateClientAdTargets();
+            });
         };
 
         window.updateClientAdTargets = function() {
@@ -1091,21 +1011,26 @@
             const targetSelect = document.getElementById('client_ad_target');
             
             if (!targetSelect) return;
-            targetSelect.innerHTML = '<option value="all" style="color:black;">إرسال للجميع</option>';
             
-            if (!myMasterId) return;
+            targetSelect.innerHTML = '<option value="all">إرسال للجميع</option>';
+            
+            if (!currentUser) return;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
             
             if (group === 'shops') {
-                allData.forEach(s => {
-                    targetSelect.innerHTML += `<option value="${s.Client_User || s.user}" style="color:black;">${s.Client_Name || s.name}</option>`;
+                const myShops = allData.filter(i => (i.Client_Master === currentUserRef));
+                myShops.forEach(s => {
+                    targetSelect.innerHTML += `<option value="${s.Client_User || s.user}">${s.Client_Name || s.name}</option>`;
                 });
             } else if (group === 'captains') {
-                allCaptains.forEach(c => {
-                    targetSelect.innerHTML += `<option value="${c.Cap_User || c.user || c.Cap_Phone}" style="color:black;">${c.Cap_Name || c.name}</option>`;
+                const myCaps = allCaptains.filter(i => (i.Client_Master === currentUserRef || i.company === currentUserRef));
+                myCaps.forEach(c => {
+                    targetSelect.innerHTML += `<option value="${c.Cap_User || c.user || c.Cap_Phone}">${c.Cap_Name || c.name}</option>`;
                 });
             } else if (group === 'customers') {
-                allCustomers.forEach(c => {
-                    targetSelect.innerHTML += `<option value="${c.cust_user || c.user}" style="color:black;">${c.cust_name || c.name}</option>`;
+                const myCusts = allCustomers.filter(i => (i.Client_Master === currentUserRef || i.company === currentUserRef));
+                myCusts.forEach(c => {
+                    targetSelect.innerHTML += `<option value="${c.cust_user || c.user}">${c.cust_name || c.name}</option>`;
                 });
             }
         };
@@ -1124,6 +1049,7 @@
                 expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
             }
             
+            const currentUserRef = currentUser.Client_User || currentUser.user;
             const senderName = currentUser.Client_Name || currentUser.name || 'الشركة';
 
             const adData = {
@@ -1132,13 +1058,13 @@
                 expireAt: expireTimestamp,
                 timestamp: Date.now(),
                 sender: senderName,
-                senderId: myMasterId
+                senderId: currentUserRef
             };
 
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
-                const basePath = `client_announcements/${myMasterId}/${group}`;
+                const basePath = `client_announcements/${currentUserRef}/${group}`;
                 let targetNode = group === 'captains' ? 'captains' : 'users';
 
                 if(target === 'all') {
@@ -1163,6 +1089,7 @@
 
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
             const senderName = currentUser.Client_Name || currentUser.name || 'الشركة';
 
             const alertData = {
@@ -1174,7 +1101,7 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
-                const basePath = `client_alerts/${myMasterId}/${group}`;
+                const basePath = `client_alerts/${currentUserRef}/${group}`;
                 let targetNode = group === 'captains' ? 'captains' : 'users';
 
                 if(target === 'all') {
@@ -1192,16 +1119,17 @@
         };
 
         window.clearClientAds = async function() {
-            if(!confirm("هل أنت متأكد من مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين؟")) return;
+            if(!confirm("هل أنت متأكد من مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين")) return;
             
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
 
             document.getElementById('loader-overlay').style.display = 'flex';
 
             try {
-                const basePathAd = `client_announcements/${myMasterId}/${group}`;
-                const basePathAlert = `client_alerts/${myMasterId}/${group}`;
+                const basePathAd = `client_announcements/${currentUserRef}/${group}`;
+                const basePathAlert = `client_alerts/${currentUserRef}/${group}`;
                 let targetNode = group === 'captains' ? 'captains' : 'users';
                 
                 if(target === 'all') {
@@ -1294,7 +1222,7 @@
                 Client_Name: name,
                 Client_Role: "shop", 
                 Client_Type: "shop", 
-                Client_Master: myMasterId, 
+                Client_Master: currentUser.Client_User || currentUser.user, 
                 Client_Status: "active",
                 Client_Phone: phone, 
                 Client_PricingArea: pricingArea,
@@ -1327,10 +1255,10 @@
                 document.getElementById('shop_balance').value = '';
                 document.getElementById('smart_search_input').value = '';
                 
-                document.getElementById('green_light_status').style.background = '#475569';
+                document.getElementById('green_light_status').style.background = '#cbd5e1';
                 document.getElementById('green_light_status').style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.1)';
                 document.getElementById('green_light_text').innerText = 'بانتظار التأكيد';
-                document.getElementById('green_light_text').style.color = '#cbd5e1';
+                document.getElementById('green_light_text').style.color = '#64748b';
 
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
@@ -1340,18 +1268,26 @@
 
         window.renderShops = function() {
             const tbody = document.getElementById('shops-table-body');
+            const currentUserRef = currentUser.Client_User || currentUser.user;
             
             const myShops = allData.filter(i => {
+                const isMyShop = (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === currentUserRef);
                 const stat = i.Client_Status || i.status;
                 const isPending = stat === 'pending';
-                if (currentShopFilter === 'active') return !isPending; 
-                else return isPending; 
+                
+                if (!isMyShop) return false;
+                
+                if (currentShopFilter === 'active') {
+                    return !isPending; 
+                } else {
+                    return isPending; 
+                }
             }).reverse();
             
             let totalBalance = 0;
             let totalComm = 0;
             
-            const allMyActiveShops = allData.filter(i => (i.Client_Status !== 'pending' && i.status !== 'pending'));
+            const allMyActiveShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === currentUserRef) && (i.Client_Status !== 'pending' && i.status !== 'pending'));
             
             allMyActiveShops.forEach(s => {
                 totalBalance += Number(s.Client_Balance || s.Shop_Balance || 0);
@@ -1374,21 +1310,21 @@
             myShops.forEach(shop => {
                 const commVal = Number(shop.Client_Comm || shop.company_share || 0);
                 const subBadge = commVal > 0 
-                    ? `<span class="badge" style="background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.3);">مدفوع (${commVal})</span>` 
-                    : `<span class="badge" style="background:rgba(255,255,255,0.1); color:#cbd5e1; border:1px solid rgba(255,255,255,0.2);">مجاني</span>`;
+                    ? `<span class="badge" style="background:#ecfdf5; color:var(--money); border:1px solid #a7f3d0;">مدفوع (${commVal} د.أ)</span>` 
+                    : `<span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">مجاني</span>`;
 
                 const stat = shop.Client_Status || shop.status;
                 let statusBadge = '';
                 let toggleBtn = '';
                 
                 if (stat === 'pending') {
-                    statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">بانتظار التفعيل</span>';
-                    toggleBtn = `<button class="btn-active" title="تفعيل وقبول المنشأة" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل</button>`;
+                    statusBadge = '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">بانتظار التفعيل ⏳</span>';
+                    toggleBtn = `<button class="btn-active" title="تفعيل وقبول المنشأة" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل ✅</button>`;
                 } else if (stat === 'paused') {
-                    statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">مجمد ❄️</span>';
+                    statusBadge = '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">مجمد ❄️</span>';
                     toggleBtn = `<button class="btn-active" title="إعادة تفعيل" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>`;
                 } else {
-                    statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.3);">نشط ✅</span>';
+                    statusBadge = '<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">نشط ✅</span>';
                     toggleBtn = `<button class="btn-freeze" title="تجميد مؤقت" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">❄️</button>`;
                 }
                 
@@ -1398,23 +1334,23 @@
                     exp.setHours(23, 59, 59, 999);
                     const diff = exp.getTime() - new Date().getTime();
                     const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    daysLeft = d > 0 ? `<span style="color:var(--success);">${d} يوم</span>` : `<span style="color:var(--danger);">منتهي</span>`;
+                    daysLeft = d > 0 ? d + " يوم" : "منتهي";
                 }
                 
-                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:10px; font-weight:bold; color:var(--neon-blue); text-decoration:none;">📍 الموقع</a>` : '';
-                let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:9px; background:rgba(212,175,55,0.1); color:var(--gold); padding:2px 4px; border-radius:4px; border:1px solid rgba(212,175,55,0.3); display:inline-block; margin-top:3px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
+                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 الموقع الجغرافي</a>` : '';
+                let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:10px; background:#fefce8; color:#b45309; padding:2px 6px; border-radius:4px; border:1px solid #fde68a; display:inline-block; margin-top:4px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
 
                 const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
                 const shopPassDisplay = shop.Client_Pass || shop.pass || 'غير متوفرة';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><b style="color:var(--gold-light);">${shop.Client_Name || shop.name}</b></td>
-                        <td style="font-size:10px; direction:ltr; text-align:right; color:#cbd5e1;">U: <b>${shop.Client_User || shop.user}</b><br>P: <b style="color:white;">${shopPassDisplay}</b></td>
-                        <td style="font-size:11px; direction:ltr; text-align:right;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}${pricingBadge}</td>
+                        <td><b style="color:var(--primary);">${shop.Client_Name || shop.name}</b></td>
+                        <td style="font-size:12px; direction:ltr; text-align:right; color:#475569;">User: <b>${shop.Client_User || shop.user}</b><br>Pass: <b>${shopPassDisplay}</b></td>
+                        <td style="font-size:12px; direction:ltr; text-align:right; font-family:monospace; font-weight:bold;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}${pricingBadge}</td>
                         <td>${subBadge}</td>
-                        <td style="font-weight:900; color:var(--gold); font-size:13px;">${currentBalance} د.أ</td>
-                        <td style="font-size:11px; font-weight:bold;">${daysLeft}</td>
+                        <td style="font-weight:900; color:var(--money); font-size:14px;">${currentBalance} د.أ</td>
+                        <td style="font-size:12px; font-weight:bold; color:#64748b;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
                             <button class="btn-edit" onclick="openEditModal('${shop.Client_User || shop.user}')">✏️</button>
@@ -1479,10 +1415,10 @@
                 document.getElementById('edit_green_light_text').innerText = 'مؤكد مسبقا ✅';
                 document.getElementById('edit_green_light_text').style.color = 'var(--success)';
             } else {
-                document.getElementById('edit_green_light_status').style.background = '#475569';
+                document.getElementById('edit_green_light_status').style.background = '#cbd5e1';
                 document.getElementById('edit_green_light_status').style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.1)';
                 document.getElementById('edit_green_light_text').innerText = 'بانتظار التأكيد';
-                document.getElementById('edit_green_light_text').style.color = '#cbd5e1';
+                document.getElementById('edit_green_light_text').style.color = '#64748b';
             }
             
             const commVal = Number(shop.Client_Comm || shop.company_share || 0);
@@ -1584,7 +1520,7 @@
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 closeEditModal();
-                alert("تم حفظ التعديلات الألماسية بنجاح 💎");
+                alert("تم حفظ التعديلات الألماسية بنجاح");
             } catch (error) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء حفظ التعديلات");
@@ -1598,25 +1534,31 @@
             try {
                 await remove(ref(db, 'shops/' + u));
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم حذف المنشأة نهائيا والاسم متاح الآن 🗑️");
+                alert("تم حذف المنشأة نهائيا والاسم متاح الآن");
             } catch (error) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 alert("حدث خطأ أثناء عملية الحذف");
             }
         };
 
+        // ========================================================
+        // التحديث 726: دوال التحكم السيبراني (تم العزل المطلق)
+        // ========================================================
         window.fetchCyberSettings = function() {
-            if(!myMasterId) return;
+            if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            if(!myMaster) return;
 
-            onValue(ref(db, `settings/${myMasterId}/order_timer`), (snap) => {
+            // استدعاء وعرض الإعدادات الخاصة بـ myMaster فقط
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
                 if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
             });
             
-            onValue(ref(db, `settings/${myMasterId}/anti_vpn`), (snap) => {
+            onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
                 document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
             });
             
-            onValue(ref(db, `settings/${myMasterId}/hotspots_active`), (snap) => {
+            onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
                 document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
             });
         };
@@ -1627,8 +1569,9 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
-                if(myMasterId) {
-                    await set(ref(db, `settings/${myMasterId}/order_timer`), parseInt(timeVal));
+                const myMaster = currentUser.Client_User || currentUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
                     alert("تم تحديث وقت قبول الطلب الخاص بشركتك بنجاح ⏱️🚀");
                 }
                 document.getElementById('loader-overlay').style.display = 'none';
@@ -1640,9 +1583,10 @@
 
         window.toggleRemoteVPN = async function(isActive) {
             try {
-                if(myMasterId) {
-                    await set(ref(db, `settings/${myMasterId}/anti_vpn`), isActive);
-                    if(isActive) alert("تم تفعيل كاشف الـ VPN وحظر المتلاعبين بنجاح 🔒💎");
+                const myMaster = currentUser.Client_User || currentUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
+                    if(isActive) alert("تم تفعيل كاشف الـ VPN وحظر المتلاعبين بالموقع لكباتن شركتك بنجاح 🔒💎");
                     else alert("تم إيقاف كاشف الـ VPN 🔓");
                 }
             } catch(e) { alert("حدث خطأ أثناء التعديل"); }
@@ -1650,8 +1594,9 @@
 
         window.toggleRemoteHotspots = async function(isActive) {
             try {
-                if(myMasterId) {
-                    await set(ref(db, `settings/${myMasterId}/hotspots_active`), isActive);
+                const myMaster = currentUser.Client_User || currentUser.user;
+                if(myMaster) {
+                    await set(ref(db, `settings/${myMaster}/hotspots_active`), isActive);
                     if(isActive) alert("تم تفعيل مؤشر النقاط الساخنة لكباتن شركتك 🔥🚀");
                     else alert("تم إيقاف مؤشر النقاط الساخنة ❌");
                 }
