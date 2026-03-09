@@ -3,23 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | مصفوفة الأسعار الماسية (Final Edition)</title>
+    <title>N One | مصفوفة الأسعار المركزية (Pricing Matrix)</title>
     
     <style>
         /* ================= تصميم Diamond Matrix (Royal Navy & Gold) ================= */
         :root {
-            --primary: #0f172a;      /* نيفي بلو عميق */
-            --accent: #1e293b;       /* نيفي بلو فاتح */
-            --gold: #d4af37;         /* ذهبي ملكي */
-            --bg: #f8fafc;           /* خلفية هادئة */
+            --primary: #0f172a;      
+            --accent: #1e293b;       
+            --gold: #d4af37;         
+            --bg: #f8fafc;           
             --panel: #ffffff;      
             --text: #334155;       
             --success: #10b981;    
             --danger: #ef4444;     
             --info: #0ea5e9;
             --diamond: #e0f2fe;
-            --night: #311b92;        /* لون الوضع الليلي الساحر */
-            --app-color: #6366f1;
+            --night: #311b92;        
         }
 
         body { 
@@ -37,7 +36,6 @@
             border-bottom: 4px solid var(--gold); 
             position: sticky; top: 0; z-index: 1000; transition: 0.5s;
         }
-        /* وضع الهيدر الليلي */
         .navbar.night-mode { background: linear-gradient(45deg, #0f172a, #311b92); border-bottom-color: #7c4dff; }
 
         .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 15px; }
@@ -47,92 +45,88 @@
         .btn-back { background: var(--accent); color: white; border: 1px solid #475569; padding: 10px 20px; border-radius: 12px; cursor: pointer; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; }
         .btn-back:hover { background: #334155; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        /* التصميم الرئيسي المقسم (Sidebar + Main Content) */
+        .layout-wrapper { display: flex; max-width: 1600px; margin: 30px auto; padding: 0 20px; gap: 25px; align-items: flex-start; }
+
+        /* القائمة الجانبية (الشريط الطولي) */
+        .sidebar {
+            width: 320px; background: white; padding: 25px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border-top: 5px solid var(--primary);
+            border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 100px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .main-content { flex: 1; }
 
         /* بنر التحكم الليلي */
         .night-control-bar {
-            background: white; padding: 15px 25px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 25px;
+            background: #f8fafc; padding: 15px; border-radius: 15px;
             display: flex; justify-content: space-between; align-items: center;
-            border-left: 6px solid var(--night);
-            border-right: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
+            border-right: 4px solid var(--night); border-left: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
         }
         
         /* زر التبديل (Switch) */
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: var(--night); }
-        input:checked + .slider:before { transform: translateX(24px); }
+        input:checked + .slider:before { transform: translateX(20px); }
 
-        /* لوحة التحكم */
-        .controls-panel { 
-            background: white; padding: 25px; border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 30px;
-            border-top: 5px solid var(--primary);
-            border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .controls-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
-        
         /* اختيار المصدر */
-        .source-group { display: flex; gap: 12px; align-items: center; flex: 1; }
-        .source-select { padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-weight: 800; color: var(--primary); outline: none; flex: 1; font-size: 15px; background: #f8fafc; transition: 0.3s; }
+        .source-group { display: flex; flex-direction: column; gap: 10px; }
+        .source-select { padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-weight: 800; color: var(--primary); outline: none; width: 100%; font-size: 15px; background: #f8fafc; transition: 0.3s; }
         .source-select:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
         
-        /* أزرار الرادار الملكية */
-        .btn-royal {
-            padding: 12px 20px; border: none; border-radius: 12px; font-weight: 800;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
-            background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1); font-size: 14px;
-        }
-        .btn-royal:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(15, 23, 42, 0.15); }
-        .btn-royal:active { transform: scale(0.98); }
-        .btn-gold { background: var(--gold); color: var(--primary); }
-        .btn-save { background: var(--success); }
-
-        .action-btns { display: flex; gap: 8px; }
+        /* أزرار المصدر الصغيرة */
+        .source-actions { display: flex; gap: 8px; justify-content: center; }
         .mini-circle-btn { 
             width: 40px; height: 40px; border-radius: 50%; border: none; 
             display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
             font-size: 16px; background: #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
         .mini-circle-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
-        
-        /* البحث والأزرار */
-        .search-box { flex: 1; position: relative; }
-        .search-input { width: 100%; padding: 14px 45px 14px 15px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; background: #f8fafc; font-size: 15px; font-weight: 700; color: var(--primary); box-sizing: border-box; transition: 0.3s; }
-        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
-        .search-icon { position: absolute; right: 15px; top: 14px; font-size: 16px; color: #94a3b8; }
 
-        /* صندوق الخصم النجمي السحري */
-        .discount-box { display: flex; align-items: center; gap: 8px; background: #fefce8; padding: 8px 15px; border-radius: 12px; border: 1px solid #fde68a; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.05); flex-wrap: wrap; }
-        .discount-input { width: 65px; padding: 10px; border: 2px solid #fcd34d; border-radius: 8px; outline: none; text-align: center; font-weight: 900; color: #b45309; font-size: 14px; background: white; transition: 0.3s; }
+        /* البحث */
+        .search-box { position: relative; width: 100%; }
+        .search-input { width: 100%; padding: 12px 40px 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; background: #f8fafc; font-size: 14px; font-weight: 700; color: var(--primary); box-sizing: border-box; transition: 0.3s; }
+        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
+        .search-icon { position: absolute; right: 12px; top: 12px; font-size: 16px; color: #94a3b8; }
+
+        /* صندوق الخصم */
+        .discount-box { background: #fefce8; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; display: flex; flex-direction: column; gap: 10px; }
+        .discount-inputs { display: flex; gap: 10px; }
+        .discount-input { width: 100%; padding: 10px; border: 2px solid #fcd34d; border-radius: 8px; outline: none; text-align: center; font-weight: 900; color: #b45309; font-size: 14px; background: white; transition: 0.3s; }
         .discount-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
-        .btn-discount { background: var(--gold); border: none; color: var(--primary); font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); font-size: 13px; }
-        .btn-discount:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 175, 55, 0.4); }
-        .btn-discount:active { transform: scale(0.95); }
-        .btn-revert { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; }
+        .btn-discount { background: var(--gold); border: none; color: var(--primary); font-weight: 900; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-discount:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4); }
+        .btn-revert { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); font-weight: 900; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-revert:hover { background: #fecaca; }
 
+        /* أزرار التحكم الرئيسية الطولية */
+        .main-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-royal {
+            padding: 14px 20px; border: none; border-radius: 12px; font-weight: 900;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1); font-size: 14px; width: 100%;
+        }
+        .btn-royal:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(15, 23, 42, 0.15); }
+        .btn-royal:active { transform: scale(0.98); }
+        .btn-save { background: var(--success); }
+
         /* المصفوفة (الجدول المزدوج) */
-        .matrix-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 20px; }
+        .matrix-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
 
         .price-card {
-            background: white; border-radius: 20px; padding: 18px 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;
+            background: white; border-radius: 20px; padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
             display: flex; align-items: center; gap: 15px; transition: 0.3s;
             position: relative; overflow: hidden;
         }
         .price-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: var(--gold); }
 
         /* الكرت الذهبي (عرض خاص) */
-        .price-card.gold-offer {
-            background: linear-gradient(135deg, #fefce8, #fef9c3);
-            border: 1px solid var(--gold);
-            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2);
-        }
+        .price-card.gold-offer { background: linear-gradient(135deg, #fefce8, #fef9c3); border: 1px solid var(--gold); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2); }
         .price-card.gold-offer .area-name-input { color: #b45309; }
 
         /* مؤشر الترند ومؤقت العرض */
@@ -145,13 +139,14 @@
         .med-price { background: #f59e0b; } 
         .high-price { background: #ef4444; } 
 
-        .area-name-input { border: none; font-weight: 900; font-size: 16px; color: var(--primary); flex: 1; outline: none; background: transparent; transition: 0.3s; padding: 8px; border-radius: 8px; }
+        .area-name-input { border: none; font-weight: 900; font-size: 16px; color: var(--primary); flex: 1; outline: none; background: transparent; transition: 0.3s; padding: 8px; border-radius: 8px; width: 100%; }
         .area-name-input:focus { background: #f1f5f9; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
 
         /* خانة السعر */
         .price-wrapper { position: relative; display: flex; align-items: center; justify-content: center; }
         .price-val-input { width: 80px; padding: 10px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; font-weight: 900; color: var(--primary); outline: none; font-size: 16px; transition: 0.3s; background: #f8fafc; }
         .price-val-input:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+        .price-val-input:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
         
         /* شارة الزيادة الليلية */
         .night-badge { 
@@ -167,101 +162,101 @@
         .btn-offer { color: #94a3b8; } 
         .btn-offer.active { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.5); background: #fefce8; border-color: #fde68a; }
 
+        /* نظام الإشعارات الذكي المنسدل */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid var(--gold); padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateX(120%); animation: slideIn 0.4s forwards, fadeOut 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
+        @keyframes slideIn { to { transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
         /* ترويسة الطباعة المخفية */
         .print-header { display: none; text-align: center; border-bottom: 4px solid var(--gold); padding-bottom: 15px; margin-bottom: 25px; }
 
         /* ================= تصميم الطباعة ================= */
         @media print {
             body { background: white; -webkit-print-color-adjust: exact; }
-            .navbar, .controls-panel, .night-control-bar, .card-tools, .btn-royal, .night-badge, .discount-box, .offer-timer { display: none !important; }
-            .container { margin: 0; padding: 0; max-width: 100%; }
+            .navbar, .sidebar { display: none !important; }
+            .layout-wrapper { display: block; padding: 0; margin: 0; }
             .print-header { display: block; }
             .matrix-container { display: block; column-count: 2; column-gap: 25px; }
             .price-card { break-inside: avoid; border: 1px solid #cbd5e1; box-shadow: none; margin-bottom: 12px; padding: 10px 15px; border-radius: 10px; }
             .area-name-input, .price-val-input { border: none; background: transparent; font-size: 14px; }
             .price-val-input { text-align: left; }
+            .card-tools, .trend-icon, .color-indicator { display: none; }
         }
     </style>
 </head>
 <body>
+
+    <div id="toast-container"></div>
 
     <nav class="navbar" id="main-nav">
         <div class="brand">
             N <span class="gold-text">One</span> Diamond Matrix 💎
             <span id="header-company-name" class="company-name-badge">جاري التحميل...</span>
         </div>
-        <a href="client.html" class="btn-back">🔙 عودة للإدارة</a>
+        <a href="client.html" class="btn-back">⬅️ إغلاق المصفوفة</a>
     </nav>
 
-    <div class="container">
-        
-        <div class="night-control-bar">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <span style="font-size:28px;">🌙</span>
-                <div>
-                    <div style="font-weight:900; font-size:16px; color:var(--primary);">الحارس الليلي (التسعير التلقائي الذكي)</div>
-                    <div style="font-size:12px; font-weight:bold; color:#64748b; margin-top:3px;">يقوم السيستم بإضافة 0.50 د.أ تلقائياً بعد الساعة 11:00 م وتعود الأسعار لطبيعتها صباحاً</div>
-                </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="night-toggle" onchange="toggleNightModeOverride()" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div class="controls-panel">
-            <div class="controls-row">
-                <div class="source-group">
-                    <label style="font-weight:900; font-size:14px; color:var(--primary);">المصدر المعتمد:</label>
-                    <select id="source-select" class="source-select" onchange="renderMatrix()">
-                        </select>
-                    <div class="action-btns">
-                        <button class="mini-circle-btn" onclick="addSource()" title="إضافة مصدر جديد">➕</button>
-                        <button class="mini-circle-btn" onclick="duplicateSource()" title="نسخ القائمة (Quick Duplicate)" style="background:#f0f9ff; color:var(--info); border: 1px solid #bae6fd;">📑</button>
-                        <button class="mini-circle-btn" onclick="deleteSource()" title="حذف المصدر" style="background:#fef2f2; color:var(--danger); border: 1px solid #fecaca;">🗑️</button>
-                    </div>
-                </div>
-
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" class="search-input" placeholder="بحث ذكي عن منطقة..." oninput="renderMatrix()">
-                </div>
-            </div>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
             
-            <div class="controls-row" style="justify-content: flex-end; margin-bottom: 0;">
-                <div class="discount-box">
-                    <span style="font-size: 18px;" title="الخصم النجمي العام لجميع أصحاب النجوم">🌟</span>
+            <div class="source-group">
+                <label style="font-weight:900; font-size:14px; color:var(--primary);">المصدر المعتمد للنطاق</label>
+                <select id="source-select" class="source-select" onchange="renderMatrix()">
+                </select>
+                <div class="source-actions">
+                    <button class="mini-circle-btn" onclick="addSource()" title="إضافة مصدر جديد">➕</button>
+                    <button class="mini-circle-btn" onclick="duplicateSource()" title="استنساخ القائمة" style="background:#f0f9ff; color:var(--info); border: 1px solid #bae6fd;">📑</button>
+                    <button class="mini-circle-btn" onclick="deleteSource()" title="مسح المصدر" style="background:#fef2f2; color:var(--danger); border: 1px solid #fecaca;">🗑️</button>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="فلترة الوجهات..." oninput="renderMatrix()">
+            </div>
+
+            <div class="night-control-bar">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="font-weight:900; font-size:13px; color:var(--primary);">بروتوكول الحارس الليلي 🌙</div>
+                    <div style="font-size:10px; font-weight:bold; color:#64748b;">إضافة 0.50 د.أ (يمنع التعديل اليدوي)</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="night-toggle" onchange="toggleNightModeOverride()" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="discount-box">
+                <div style="font-size: 13px; font-weight: 900; color: #b45309; text-align: center;">تفعيل العروض الخاصة 🌟</div>
+                <div class="discount-inputs">
                     <input type="number" id="global-discount-input" class="discount-input" placeholder="خصم %" min="0" max="100">
-                    <input type="number" id="discount-duration" class="discount-input" placeholder="ساعات ⏳" min="1" style="width: 80px;">
-                    <button class="btn-discount" onclick="applyGlobalDiscount()">تطبيق العرض 🪄</button>
-                    <button class="btn-revert" onclick="revertGlobalDiscount()">إلغاء وإرجاع 🔄</button>
+                    <input type="number" id="discount-duration" class="discount-input" placeholder="ساعات ⏳" min="1">
                 </div>
+                <button class="btn-discount" onclick="applyGlobalDiscount()">تطبيق العرض الآلي 🪄</button>
+                <button class="btn-revert" onclick="revertGlobalDiscount()">إلغاء وإرجاع التسعيرة 🔄</button>
             </div>
 
-            <div class="controls-row" style="justify-content: flex-end; margin-bottom:0; padding-top: 15px; border-top: 1px solid #e2e8f0; margin-top: 15px;">
-                <div class="action-btns" style="gap: 15px;">
-                    <button class="btn-royal" style="background:var(--accent);" onclick="addArea()">➕ إضافة منطقة</button>
-                    <button class="btn-royal" style="background:#64748b;" onclick="window.print()">🖨️ طباعة الكشف</button>
-                    <button class="btn-royal btn-save" id="save-btn" onclick="saveData()">💾 حفظ واعتماد الأسعار</button>
+            <div class="main-actions">
+                <button class="btn-royal" style="background:var(--accent);" onclick="addArea()">➕ إدراج وجهة جديدة</button>
+                <button class="btn-royal btn-save" id="save-btn" onclick="saveData()">💾 توثيق واعتماد البيانات</button>
+                <button class="btn-royal" style="background:#64748b;" onclick="window.print()">🖨️ طباعة السجل الرسمي</button>
+            </div>
+
+        </aside>
+
+        <main class="main-content">
+            <div class="print-header">
+                <h1 style="color:var(--primary); margin:0; font-weight:900;">N <span style="color:var(--gold)">One</span> Delivery</h1>
+                <p style="margin:8px 0; color:#475569; font-size:15px; font-weight:bold;">مصفوفة الأسعار المعتمدة - <span id="print-source-name" style="color:var(--primary);"></span></p>
+            </div>
+
+            <div id="matrix-grid" class="matrix-container">
                 </div>
-            </div>
-        </div>
-
-        <div class="print-header">
-            <h1 style="color:var(--primary); margin:0; font-weight:900;">N <span style="color:var(--gold)">One</span> Delivery</h1>
-            <p style="margin:8px 0; color:#475569; font-size:15px; font-weight:bold;">قائمة الأسعار المعتمدة - <span id="print-source-name" style="color:var(--primary);"></span></p>
-        </div>
-
-        <div id="matrix-grid" class="matrix-container">
-            </div>
-
+        </main>
     </div>
 
     <script type="module">
-        // ========================================================
-        // كود المصفوفة الماسية - v9.5 (Smart Discount & Timer Edition)
-        // ========================================================
-        
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -282,15 +277,25 @@
         let isNightActive = false; 
         let currentUser = null;
 
+        // نظام الإشعارات الذكي (Toast)
+        window.showAppToast = function(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'app-toast';
+            if(isError) toast.style.borderLeftColor = '#ef4444';
+            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
+        };
+
         window.onload = async function() {
-            // التحقق من الجلسة وسحب بيانات الشركة للاندماج الكلي
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('header-company-name').innerText = currentUser.Client_Name || currentUser.name || "الشركة";
             } else {
-                alert("يرجى تسجيل الدخول أولاً من لوحة التحكم");
-                window.location.replace('index.html');
+                showAppToast("الجلسة غير صالحة. يرجى تسجيل الدخول.", true);
+                setTimeout(() => window.location.replace('index.html'), 2000);
                 return;
             }
 
@@ -304,8 +309,8 @@
             fetchPricesFromCloud();
             
             setInterval(checkNightMode, 60000);
-            setInterval(updateTimersUI, 60000); // تحديث العدادات التنازلية كل دقيقة
-            setInterval(autoRevertExpiredOffers, 60000); // فحص انتهاء العروض تلقائياً
+            setInterval(updateTimersUI, 60000); 
+            setInterval(autoRevertExpiredOffers, 60000); // المزامنة السحابية لانتهاء العروض
         };
 
         function setupRealtimeFreezeListener() {
@@ -317,16 +322,12 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية");
-                        localStorage.removeItem('current_company_user');
-                        localStorage.removeItem('currentUser');
-                        window.location.replace('index.html');
+                        showAppToast("تم تقييد الوصول للوحة التحكم. يرجى مراجعة الإدارة.", true);
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace('index.html');
+                        }, 3000);
                     }
-                } else {
-                    alert("تم حذف الحساب نهائياً سيتم تسجيل الخروج فوراً");
-                    localStorage.removeItem('current_company_user');
-                    localStorage.removeItem('currentUser');
-                    window.location.replace('index.html');
                 }
             });
         }
@@ -358,7 +359,7 @@
                 } 
                 
                 if (Object.keys(pricingData).length === 0) {
-                    pricingData["القائمة الافتراضية"] = [];
+                    pricingData["القائمة الأساسية"] = [];
                 }
                 
                 populateSources();
@@ -402,12 +403,13 @@
         }
 
         window.addSource = function() {
-            const name = prompt("اسم المصدر أو الشركة الجديدة");
+            const name = prompt("أدخل اسم المصدر أو نقطة الانطلاق الجديدة:");
             if (name && !pricingData[name]) {
                 pricingData[name] = [];
                 populateSources();
                 document.getElementById('source-select').value = name;
                 renderMatrix();
+                showAppToast(`تم إنشاء مصدر جديد: ${name}`);
             }
         }
 
@@ -415,13 +417,14 @@
             const current = document.getElementById('source-select').value;
             if(!current || !pricingData[current]) return;
             
-            const newName = prompt(`نسخ قائمة ${current} إلى مصدر جديد باسم`);
+            const newName = prompt(`سيتم استنساخ الوجهات والأسعار من (${current}). أدخل اسم المصدر الجديد:`);
             if (newName && !pricingData[newName]) {
                 pricingData[newName] = JSON.parse(JSON.stringify(pricingData[current]));
                 pricingData[newName].forEach(item => { item.id = "PRC_" + Date.now() + Math.floor(Math.random()*1000); });
                 populateSources();
                 document.getElementById('source-select').value = newName;
                 renderMatrix();
+                showAppToast("تم استنساخ القائمة بنجاح. لا تنسَ الحفظ.");
             }
         }
 
@@ -429,20 +432,21 @@
             const current = document.getElementById('source-select').value;
             if(!current || !pricingData[current]) return;
 
-            if (confirm(`هل أنت متأكد من حذف قائمة ${current} نهائيا`)) {
+            if (confirm(`تحذير أمني: هل أنت متأكد من حذف قائمة (${current}) نهائياً من قاعدة البيانات؟`)) {
                 const idsToDelete = pricingData[current].map(i => i.id);
                 idsToDelete.forEach(async (id) => {
                     await remove(ref(db, `prices/${id}`));
                 });
 
                 delete pricingData[current];
-                if (Object.keys(pricingData).length === 0) pricingData["القائمة الافتراضية"] = [];
+                if (Object.keys(pricingData).length === 0) pricingData["القائمة الأساسية"] = [];
                 populateSources();
                 renderMatrix();
+                showAppToast("تم حذف المصدر وجميع وجهاته من النظام.");
             }
         }
 
-        // ================= عصا ميمي السحرية للخصم والتوقيت =================
+        // ================= العصا السحرية للخصم والتوقيت السحابي =================
         window.applyGlobalDiscount = function() {
             const source = document.getElementById('source-select').value;
             const discountInput = document.getElementById('global-discount-input').value;
@@ -454,26 +458,25 @@
             if(!source || !pricingData[source]) return;
             
             if(isNaN(discountPercent) || discountPercent < 0 || discountPercent > 100) {
-                alert("يا قلبي يرجى إدخال نسبة خصم صحيحة بين 0 و 100"); 
+                showAppToast("يرجى إدخال نسبة خصم صحيحة (0-100).", true); 
                 return;
             }
             if(isNaN(durationHours) || durationHours <= 0) {
-                alert("يا روحي حددي كم ساعة رح يستمر العرض عشان العداد يشتغل صح"); 
+                showAppToast("يرجى تحديد مدة العرض بالساعات.", true); 
                 return;
             }
 
-            if(confirm(`سيتم تطبيق خصم ${discountPercent}% لمدة ${durationHours} ساعة على المنشآت المميزة بنجمة متأكدة يا ملكة؟`)) {
+            if(confirm(`سيتم تطبيق خصم ${discountPercent}% لمدة ${durationHours} ساعة على الوجهات المميزة بنجمة. تأكيد؟`)) {
                 const endTime = Date.now() + (durationHours * 60 * 60 * 1000);
                 let affectedCount = 0;
                 
                 pricingData[source].forEach((item, index) => {
                     if(item.isOffer && item.price > 0) {
-                        // حفظ السعر الأساسي إذا لم يكن محفوظاً مسبقاً
-                        const basePriceForCalc = item.originalPrice ? item.originalPrice : item.price;
+                        const basePriceForCalc = item.originalPrice !== null ? item.originalPrice : item.price;
                         item.originalPrice = basePriceForCalc; 
                         
                         let newPrice = basePriceForCalc - (basePriceForCalc * (discountPercent / 100));
-                        newPrice = Math.max(0, newPrice); // منع الأسعار السالبة
+                        newPrice = Math.max(0, newPrice); 
                         
                         pricingData[source][index].price = newPrice;
                         pricingData[source][index].offerEndTime = endTime;
@@ -483,18 +486,17 @@
                 });
 
                 renderMatrix();
-                alert(`نفاااااااااااث 🚀 تم تفعيل العرض لـ ${affectedCount} منشأة.. لا تنسي تضغطي "حفظ" لتثبيته في السوق`);
+                showAppToast(`تم تفعيل العرض لـ ${affectedCount} وجهة. يرجى توثيق البيانات (حفظ).`);
                 document.getElementById('global-discount-input').value = '';
                 document.getElementById('discount-duration').value = '';
             }
         }
 
-        // إرجاع الأسعار لطبيعتها يدوياً
         window.revertGlobalDiscount = function() {
             const source = document.getElementById('source-select').value;
             if(!source || !pricingData[source]) return;
 
-            if(confirm("بدك نلغي العروض ونرجع الأسعار الأصلية زي ما كانت؟")) {
+            if(confirm("سيتم إنهاء العروض الحالية واسترجاع الأسعار الأصلية. تأكيد؟")) {
                 let revertedCount = 0;
                 pricingData[source].forEach((item, index) => {
                     if(item.originalPrice !== null && item.originalPrice !== undefined) {
@@ -507,17 +509,19 @@
                 });
                 renderMatrix();
                 if(revertedCount > 0) {
-                    alert(`تم إرجاع أسعار ${revertedCount} منشأة لطبيعتها بكل رقي.. اضغطي حفظ لتثبيت التعديل`);
+                    showAppToast(`تم إرجاع أسعار ${revertedCount} وجهة. يرجى توثيق البيانات (حفظ).`);
                 } else {
-                    alert("ما في أي عروض فعالة حالياً يا بطة");
+                    showAppToast("لا توجد عروض نشطة حالياً لإلغائها.");
                 }
             }
         }
 
-        // فحص تلقائي لانتهاء العروض
-        function autoRevertExpiredOffers() {
-            let needsRender = false;
+        // الحارس الذكي لانتهاء العروض (مزامنة سحابية)
+        window.autoRevertExpiredOffers = async function() {
+            let needsSave = false;
             const now = Date.now();
+            const myMaster = currentUser.Client_User || currentUser.user;
+
             for (const src in pricingData) {
                 pricingData[src].forEach((item, index) => {
                     if (item.offerEndTime && now > item.offerEndTime) {
@@ -527,14 +531,26 @@
                         pricingData[src][index].originalPrice = null;
                         pricingData[src][index].offerEndTime = null;
                         pricingData[src][index].lastMod = now;
-                        needsRender = true;
+                        needsSave = true;
                     }
                 });
             }
-            if (needsRender) {
+
+            if (needsSave) {
                 renderMatrix();
-                // يفضل حفظ البيانات تلقائياً أو تنبيه الإدارة
-                console.log("تم إرجاع بعض الأسعار تلقائياً لانتهاء وقت العرض");
+                // حفظ صامت في الفايربيز عشان نضمن تحديث الأطراف (المنشآت) فورا
+                let updates = {};
+                for (const source in pricingData) {
+                    pricingData[source].forEach(item => {
+                         updates[`prices/${item.id}/Price_Base`] = item.price;
+                         updates[`prices/${item.id}/Price_Original`] = item.originalPrice !== null ? item.originalPrice : null;
+                         updates[`prices/${item.id}/Offer_End_Time`] = item.offerEndTime !== null ? item.offerEndTime : null;
+                    });
+                }
+                try {
+                    await update(ref(db), updates);
+                    console.log("تم تحديث أسعار العروض المنتهية سحابياً.");
+                } catch(e) {}
             }
         }
 
@@ -545,13 +561,13 @@
                 if(endTime) {
                     const diff = endTime - now;
                     if (diff <= 0) {
-                        el.innerText = "انتهى العرض ⏳";
+                        el.innerText = "انتهى التوقيت ⏳";
                         el.style.color = "var(--danger)";
                         el.style.background = "#fef2f2";
                     } else {
                         const h = Math.floor(diff / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        el.innerText = `⏳ باقي ${h}س و ${m}د`;
+                        el.innerText = `⏳ متبقي ${h}س و ${m}د`;
                     }
                 }
             });
@@ -575,10 +591,12 @@
                 const basePrice = parseFloat(item.price);
                 let displayPrice = basePrice;
                 let nightBadgeHtml = '';
+                // قفل التعديل إذا كان الحارس الليلي مفعل
+                let disableInput = isNightActive ? 'disabled title="مغلق. يرجى إيقاف الحارس الليلي لتعديل السعر الأساسي"' : '';
                 
                 if (isNightActive) {
                     displayPrice += 0.50;
-                    nightBadgeHtml = `<span class="night-badge">+0.50 ليلي 🌙</span>`;
+                    nightBadgeHtml = `<span class="night-badge">+0.50 تعرفة ليلية 🌙</span>`;
                 }
 
                 let colorClass = 'med-price';
@@ -591,11 +609,10 @@
                 let trendHtml = '';
                 const oneDay = 24 * 60 * 60 * 1000;
                 if (item.lastMod && (now - item.lastMod < oneDay)) {
-                    trendHtml = '<span class="trend-icon">📈 محدث</span>';
+                    trendHtml = '<span class="trend-icon">📈 محدث حديثاً</span>';
                 }
 
-                // عرض السعر الأصلي المشطوب والعداد إذا كان العرض سارياً
-                let priceSectionHtml = `<input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" onchange="updateItem('${source}', ${index}, 'price', this.value)">`;
+                let priceSectionHtml = `<input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" ${disableInput} onchange="updateItem('${source}', ${index}, 'price', this.value)">`;
                 let timerHtml = '';
 
                 if (item.originalPrice !== null && item.originalPrice !== undefined && item.offerEndTime) {
@@ -605,15 +622,15 @@
                     if (diff > 0) {
                         const h = Math.floor(diff / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}">⏳ باقي ${h}س و ${m}د</div>`;
+                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}">⏳ متبقي ${h}س و ${m}د</div>`;
                     } else {
-                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}" style="color:var(--danger); background:#fef2f2;">انتهى العرض ⏳</div>`;
+                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}" style="color:var(--danger); background:#fef2f2;">انتهى التوقيت ⏳</div>`;
                     }
                     
                     priceSectionHtml = `
                         <div style="display:flex; flex-direction:column; align-items:center;">
                             <del style="color:var(--danger); font-size:12px; font-weight:bold; margin-bottom:2px;">${displayOriginal.toFixed(2)}</del>
-                            <input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" onchange="updateItem('${source}', ${index}, 'price', this.value)" style="border-color:var(--success); color:var(--success); box-shadow: 0 0 5px rgba(16, 185, 129, 0.2);">
+                            <input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" ${disableInput} onchange="updateItem('${source}', ${index}, 'price', this.value)" style="border-color:var(--success); color:var(--success); box-shadow: 0 0 5px rgba(16, 185, 129, 0.2);">
                         </div>
                     `;
                 }
@@ -624,7 +641,7 @@
                         ${trendHtml}
                         ${timerHtml}
                         
-                        <input type="text" class="area-name-input" value="${item.area}" onchange="updateItem('${source}', ${index}, 'area', this.value)">
+                        <input type="text" class="area-name-input" placeholder="اسم الوجهة" value="${item.area}" onchange="updateItem('${source}', ${index}, 'area', this.value)">
                         
                         <div class="price-wrapper">
                             ${nightBadgeHtml}
@@ -633,9 +650,9 @@
                         
                         <div class="card-tools">
                             <span style="font-size:12px; font-weight:bold; color:#64748b; margin-left:10px;">د.أ</span>
-                            <button class="mini-circle-btn btn-map" onclick="openMap('${item.area}', '${source}')" title="موقع المنطقة">📍</button>
-                            <button class="mini-circle-btn btn-offer ${starClass}" onclick="toggleOffer('${source}', ${index})" title="تمييز كعرض خاص">⭐</button>
-                            <button class="mini-circle-btn" onclick="deleteItem('${source}', ${index})" style="color:var(--danger);" title="حذف المنطقة">✕</button>
+                            <button class="mini-circle-btn btn-map" onclick="openMap('${item.area}', '${source}')" title="فحص الإحداثيات الجغرافية">📍</button>
+                            <button class="mini-circle-btn btn-offer ${starClass}" onclick="toggleOffer('${source}', ${index})" title="إدراج في قائمة العروض">⭐</button>
+                            <button class="mini-circle-btn" onclick="deleteItem('${source}', ${index})" style="color:var(--danger);" title="إزالة الوجهة">✕</button>
                         </div>
                     </div>
                 `;
@@ -644,15 +661,16 @@
 
         window.updateItem = function(source, index, field, value) {
             if (field === 'price') {
-                let newVal = parseFloat(value);
                 if (isNightActive) {
-                    newVal -= 0.50; 
+                    showAppToast("لا يمكن تعديل السعر الأساسي أثناء تفعيل بروتوكول الحارس الليلي.", true);
+                    renderMatrix(); // إعادة رسم لإلغاء التغيير في الواجهة
+                    return;
                 }
+                let newVal = parseFloat(value);
                 if (newVal < 0) newVal = 0;
                 
                 pricingData[source][index].price = newVal;
                 pricingData[source][index].lastMod = Date.now();
-                // لو عدل السعر يدوياً أثناء العرض رح يعتمد السعر الجديد مع بقاء العرض
             } else {
                 pricingData[source][index][field] = value;
             }
@@ -661,22 +679,22 @@
 
         window.addArea = function() {
             const source = document.getElementById('source-select').value;
-            if(!source) return;
-            
-            const name = prompt("اسم المنطقة الجديدة");
-            if (name) {
-                pricingData[source].push({ 
-                    id: "PRC_" + Date.now() + Math.floor(Math.random()*1000), 
-                    area: name, price: 0, isOffer: false, 
-                    originalPrice: null, offerEndTime: null, 
-                    lastMod: Date.now() 
-                });
-                renderMatrix();
+            if(!source) {
+                showAppToast("يرجى تحديد المصدر المعتمد أولاً", true);
+                return;
             }
+            
+            pricingData[source].push({ 
+                id: "PRC_" + Date.now() + Math.floor(Math.random()*1000), 
+                area: "", price: 0, isOffer: false, 
+                originalPrice: null, offerEndTime: null, 
+                lastMod: Date.now() 
+            });
+            renderMatrix();
         }
 
         window.deleteItem = async function(source, index) {
-            if(confirm("هل أنت متأكد من حذف هذه المنطقة")) {
+            if(confirm("إزالة هذه الوجهة سيمنع المنشآت من طلبها. تأكيد؟")) {
                 const item = pricingData[source][index];
                 if (item.id) {
                     await remove(ref(db, `prices/${item.id}`));
@@ -698,7 +716,7 @@
 
         window.saveData = async function() {
             const btn = document.getElementById('save-btn');
-            btn.innerHTML = "جاري اللحام ⏳";
+            btn.innerHTML = "جاري التوثيق ⏳";
             btn.style.background = "#f59e0b";
             
             const myMaster = currentUser.Client_User || currentUser.user;
@@ -720,7 +738,7 @@
                         const payload = {
                             Price_ID: item.id,
                             Price_Source: source,
-                            Price_Area: item.area,
+                            Price_Area: item.area || 'وجهة غير مسماة',
                             Price_Base: item.price,
                             Price_Offer: item.isOffer ? 'true' : 'false',
                             Price_Original: item.originalPrice !== null ? item.originalPrice : null,
@@ -735,23 +753,22 @@
                     await Promise.all(promises);
                 }
                 
-                const dbIds = dbPrices.map(p => p.Price_ID);
-                const deletedIds = dbIds.filter(id => !currentIds.includes(id));
+                const existingDbIds = dbPrices.map(p => p.Price_ID);
+                const deletedIds = existingDbIds.filter(id => !currentIds.includes(id));
                 
                 const deletePromises = deletedIds.map(id => remove(ref(db, `prices/${id}`)));
                 await Promise.all(deletePromises);
                 
-                btn.innerHTML = "تم التعميم 📡";
+                btn.innerHTML = "تم الاعتماد 📡";
                 btn.style.background = "#047857";
                 setTimeout(() => {
-                    btn.innerHTML = "💾 حفظ واعتماد الأسعار";
+                    btn.innerHTML = "💾 توثيق واعتماد البيانات";
                     btn.style.background = "var(--success)";
-                    alert("تم حفظ المصفوفة والعروض وتثبيتها في الخزنة الحديدية بنجاح");
+                    showAppToast("تم حفظ المصفوفة وتعميمها بنجاح عبر الشبكة.");
                 }, 1500);
             } catch(e) {
-                alert("حدث خطأ أثناء الحفظ يا بطة");
-                console.error(e);
-                btn.innerHTML = "💾 حفظ واعتماد الأسعار";
+                showAppToast("حدث خطأ تقني أثناء محاولة الحفظ.", true);
+                btn.innerHTML = "💾 توثيق واعتماد البيانات";
                 btn.style.background = "var(--success)";
             }
         }
