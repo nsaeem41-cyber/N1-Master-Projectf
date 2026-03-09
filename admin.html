@@ -1,750 +1,683 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة قيادة الشركات (Diamond Royal Edition)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        /* ================= أساسيات التصميم (Diamond Glass Theme) ================= */
-        :root {
-            --primary: #0f172a;
-            --gold: #d4af37;
-            --gold-light: #fef08a;
-            --neon-blue: #0ea5e9;
-            --success: #10b981; 
-            --danger: #ef4444; 
-            --warning: #f59e0b; 
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N One | غرفة قيادة الشركات (Compact Edition)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* ================= أساسيات التصميم (Fast & Compact) ================= */
+        :root {
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --gold: #d4af37;
+            --gold-light: #fef08a;
+            --neon-blue: #0ea5e9;
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b; 
+        }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #050814; 
-            margin: 0; padding: 0; 
-            color: #fff; user-select: none; 
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            /* خلفية ثابتة وسريعة جداً بدون أنيميشن ثقيل */
+            background: radial-gradient(circle at top right, #1e293b, #050814);
+            margin: 0; padding: 0; 
+            color: #fff; user-select: none; 
+            min-height: 100vh;
+        }
 
-        /* ================= الأجسام الطافية في الخلفية (الهادئة) ================= */
-        .bg-shapes {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
-        }
+        /* ================= الشريط العلوي (Navbar) مضغوط ================= */
+        .navbar { 
+            background: rgba(15, 23, 42, 0.95); 
+            height: 55px; /* تقليل الارتفاع */
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
+        }
+        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .gold-text { color: var(--gold); }
+        
+        .welcome-msg {
+            font-weight: bold; color: var(--gold-light); font-size: 13px; 
+            background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
 
-        .shape {
-            position: absolute;
-            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(14,165,233,0.1));
-            box-shadow: 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(212,175,55,0.2);
-            animation: float 20s infinite linear;
-        }
+        .btn-logout { 
+            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); 
+            font-size: 12px; font-weight: bold; cursor: pointer; padding: 6px 12px; 
+            border-radius: 8px; color: #fca5a5; transition: 0.2s; 
+        }
+        .btn-logout:hover { background: var(--danger); color: white; }
 
-        .shape:nth-child(1) { width: 100px; height: 100px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
-        .shape:nth-child(2) { width: 150px; height: 150px; top: 60%; left: 85%; border-radius: 50%; animation-duration: 25s; animation-direction: reverse; }
-        .shape:nth-child(3) { width: 70px; height: 70px; top: 40%; left: 50%; border-radius: 30%; animation-duration: 18s; }
-        .shape:nth-child(4) { width: 200px; height: 200px; top: -10%; left: 60%; border-radius: 40%; animation-duration: 30s; }
+        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; }
 
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
-        }
+        /* ================= بوابات الوصول السريع (أصغر وملمومة) ================= */
+        .quick-access-panel { display: flex; gap: 10px; margin-bottom: 15px; }
+        
+        .btn-gate {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 8px 15px;
+            border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
+            text-decoration: none; display: flex; align-items: center; gap: 6px;
+            transition: 0.2s;
+        }
+        .btn-gate:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
 
-        /* ================= الشريط العلوي (Navbar) ================= */
-        .navbar { 
-            background: rgba(15, 23, 42, 0.8); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            height: 65px; display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-bottom: 2px solid rgba(212, 175, 55, 0.4); position: sticky; top: 0; z-index: 1000; 
-        }
-        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-        .gold-text { color: var(--gold); text-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
-        
-        .welcome-msg {
-            font-weight: bold; color: var(--gold-light); font-size: 14px; 
-            background: rgba(255,255,255,0.05); padding: 6px 15px; border-radius: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.3); letter-spacing: 0.5px;
-        }
+        /* ================= الإحصائيات (أصغر وأكثر ترتيباً) ================= */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .stat-card { 
+            background: rgba(15, 23, 42, 0.8); padding: 12px; border-radius: 10px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: center; 
+            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
+        }
+        .stat-number { font-size: 24px; font-weight: 900; color: #fff; margin: 4px 0; }
+        .stat-label { color: #cbd5e1; font-size: 11px; font-weight: bold; }
 
-        .btn-logout { 
-            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); 
-            font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 18px; 
-            border-radius: 10px; color: #fca5a5; transition: 0.3s; 
-        }
-        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+        /* ================= الكروت (مضغوطة) ================= */
+        .card { 
+            background: rgba(15, 23, 42, 0.8); padding: 15px 20px; border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-bottom: 15px; 
+            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
+        }
+        .card-header { 
+            font-size: 15px; font-weight: 900; color: var(--gold); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
 
-        .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
+        /* ================= الحقول (أصغر وأرتب) ================= */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; align-items: center; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; 
+            outline: none; background: rgba(0,0,0,0.3); box-sizing: border-box; 
+            font-family: inherit; font-size: 13px; font-weight: bold; color: white; transition: 0.2s; 
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        
+        .btn-add { 
+            background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border: none; 
+            padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; 
+            cursor: pointer; transition: 0.2s; width: 100%;
+        }
+        .btn-add:hover { filter: brightness(1.1); }
 
-        /* ================= بوابات الوصول السريع ================= */
-        .quick-access-panel { display: flex; gap: 15px; margin-bottom: 25px; justify-content: flex-start; }
-        
-        .btn-gate {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 12px 20px;
-            border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer;
-            transition: all 0.3s ease; backdrop-filter: blur(10px);
-            display: flex; align-items: center; gap: 8px; text-decoration: none;
-        }
-        .btn-gate:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        /* ================= الجداول ================= */
+        .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 850px; }
+        thead { background: rgba(0,0,0,0.4); color: var(--gold); }
+        th { padding: 10px; text-align: right; font-weight: 900; font-size: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
+        td { padding: 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; font-weight: bold; color: #e2e8f0; }
+        tr:hover td { background: rgba(212, 175, 55, 0.05); }
+        
+        .status-badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
+        .status-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .status-paused { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+        .status-expired { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; } 
 
-        /* ================= الإحصائيات (Compact Stats) ================= */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { 
-            background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; 
-            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(15px); transition: 0.3s;
-        }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-color: rgba(212, 175, 55, 0.3); }
-        .stat-number { font-size: 32px; font-weight: 900; color: #fff; margin: 8px 0 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .stat-label { color: #cbd5e1; font-size: 13px; font-weight: bold; }
+        .action-group { display: flex; gap: 4px; }
+        .action-btn { 
+            padding: 6px 10px; border-radius: 6px; border: none; color: white; 
+            cursor: pointer; font-size: 11px; transition: 0.2s; font-weight: bold;
+        }
+        .action-btn:hover { filter: brightness(1.2); }
+        .act-freeze { background: #f59e0b; }
+        .act-active { background: #10b981; }
+        .act-delete { background: #ef4444; }
+        .act-renew { background: #0ea5e9; }
+        .act-edit { background: #475569; }
 
-        /* ================= الكروت الزجاجية (Glass Cards) ================= */
-        .card { 
-            background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 20px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4); margin-bottom: 25px; 
-            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(20px);
-        }
-        .card-header { 
-            font-size: 18px; font-weight: 900; color: var(--gold); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 18px; 
-            display: flex; justify-content: space-between; align-items: center; text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: var(--gold); flex-direction: column; }
+        
+        /* ================= الإعلانات ================= */
+        .ad-color-normal { color: #fff; background: #1e293b; }
+        .ad-color-news { color: #38bdf8; background: #0c4a6e; }
+        .ad-color-warning { color: #f87171; background: #7f1d1d; font-weight: bold; }
+        .ad-color-offer { color: #34d399; background: #064e3b; }
+        
+        .ad-controls { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 12px; }
+        .btn-popup { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-clear-ad { background: #475569; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
-        /* ================= الحقول (Inputs) ================= */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center; }
-        
-        input, select, textarea { 
-            width: 100%; padding: 12px 15px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; 
-            outline: none; background: rgba(0,0,0,0.3); box-sizing: border-box; 
-            font-family: inherit; font-size: 14px; font-weight: bold; color: white; transition: 0.3s; 
-        }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
-        
-        .btn-add { 
-            background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border: none; 
-            padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 900; 
-            cursor: pointer; height: 100%; width: 100%; transition: 0.3s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
-        }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); }
-
-        /* ================= الجداول الملكية ================= */
-        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 950px; }
-        thead { background: rgba(0,0,0,0.4); color: var(--gold); }
-        th { padding: 15px 12px; text-align: right; font-weight: 900; font-size: 13px; letter-spacing: 0.5px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-        td { padding: 15px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: bold; color: #e2e8f0; }
-        tr:hover td { background: rgba(212, 175, 55, 0.05); }
-        
-        .status-badge { padding: 5px 12px; border-radius: 15px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        .status-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-        .status-paused { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-        .status-expired { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; } 
-
-        /* ================= أزرار التحكم في الجدول ================= */
-        .action-group { display: flex; gap: 6px; }
-        .action-btn { 
-            padding: 8px 12px; border-radius: 8px; border: none; color: white; 
-            cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .action-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
-        .act-freeze { background: linear-gradient(135deg, #f59e0b, #b45309); }
-        .act-active { background: linear-gradient(135deg, #10b981, #047857); }
-        .act-delete { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-        .act-renew { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
-        .act-edit { background: linear-gradient(135deg, #475569, #1e293b); }
-
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: var(--gold); flex-direction: column; backdrop-filter: blur(10px); }
-        
-        /* ================= ألوان الإعلانات ================= */
-        .ad-color-normal { color: #fff; background: #1e293b; }
-        .ad-color-news { color: #38bdf8; background: #0c4a6e; }
-        .ad-color-warning { color: #f87171; background: #7f1d1d; font-weight: bold; }
-        .ad-color-offer { color: #34d399; background: #064e3b; }
-        
-        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-broadcast { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px 15px; border-radius: 12px; font-weight: 900; cursor: pointer; flex: 1; transition: 0.3s; font-size: 14px; }
-        .btn-broadcast:hover { border-color: var(--gold); box-shadow: 0 5px 15px rgba(212,175,55,0.2); }
-        
-        .btn-popup { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
-        .btn-popup:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5); }
-        
-        .btn-clear-ad { background: linear-gradient(135deg, #64748b, #334155); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; }
-        .btn-clear-ad:hover { transform: translateY(-2px); }
-
-        /* ================= مفاجأة عيد الميلاد الألماسية ================= */
-        #birthday-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95); z-index: 9999; justify-content: center; align-items: center;
-            flex-direction: column; text-align: center; color: white;
-            backdrop-filter: blur(10px);
-        }
-        .firework { font-size: 50px; animation: pop 1s infinite alternate; margin-bottom: 20px; }
-        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 30px #d4af37; } }
-        .cake-box { font-size: 80px; margin-bottom: 15px; animation: bounce 2s infinite; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
-        .bday-title { font-size: 35px; font-weight: 900; color: #d4af37; margin-bottom: 15px; text-shadow: 0 4px 15px rgba(212, 175, 55, 0.5); }
-        .bday-text { font-size: 20px; font-weight: bold; color: #f8fafc; margin-bottom: 35px; line-height: 1.8; max-width: 600px; text-shadow: 1px 1px 5px rgba(0,0,0,0.5); }
-        .btn-close-bday { background: linear-gradient(135deg, #d4af37, #b45309); color: white; border: none; padding: 12px 35px; border-radius: 15px; font-size: 18px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
-        .btn-close-bday:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.6); }
-    </style>
+        /* ================= مفاجأة عيد الميلاد الألماسية ================= */
+        #birthday-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98); z-index: 9999; justify-content: center; align-items: center;
+            flex-direction: column; text-align: center; color: white;
+        }
+        .firework { font-size: 40px; animation: pop 1s infinite alternate; margin-bottom: 15px; }
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 20px #d4af37; } }
+        .cake-box { font-size: 70px; margin-bottom: 15px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+        .bday-title { font-size: 30px; font-weight: 900; color: #d4af37; margin-bottom: 10px; }
+        .bday-text { font-size: 18px; font-weight: bold; color: #f8fafc; margin-bottom: 30px; line-height: 1.8; max-width: 500px; }
+        .btn-close-bday { background: #d4af37; color: black; border: none; padding: 10px 30px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-    <div id="loader-overlay">
-        <div style="font-size:45px; margin-bottom:15px; text-shadow: 0 0 20px #d4af37; animation: bounce 1s infinite;">💎</div>
-        <div>جاري الاتصال بالنواة المركزية المباشرة يا بطة...</div>
-    </div>
+    <div id="loader-overlay">
+        <div style="font-size:35px; margin-bottom:10px;">💎</div>
+        <div>جاري معالجة البيانات...</div>
+    </div>
 
-    <div id="birthday-overlay">
-        <div class="firework">🎆🎇✨🎇🎆</div>
-        <div class="cake-box">🎂</div>
-        <div class="bday-title">كل عام وإمبراطوريتنا بألف خير 👑</div>
-        <div class="bday-text">
-            يا أحلى حبة سكر وأغلى خالتو ميمي<br>
-            اليوم 20 و 21 مارس يوم ميلاد الإبداع والرقي<br>
-            العمر كله بالنجاح والألماس وجورايد دايماً بالقمة
-        </div>
-        <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة  🚀</button>
-    </div>
+    <div id="birthday-overlay">
+        <div class="firework">🎆🎇✨🎇🎆</div>
+        <div class="cake-box">🎂</div>
+        <div class="bday-title">كل عام وإمبراطوريتنا بألف خير 👑</div>
+        <div class="bday-text">
+            يا أحلى حبة سكر وأغلى خالتو ميمي<br>
+            اليوم 20 و 21 مارس يوم ميلاد الإبداع والرقي<br>
+            العمر كله بالنجاح والألماس وجورايد دايماً بالقمة
+        </div>
+        <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة 🚀</button>
+    </div>
 
-    <div class="bg-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
+    <nav class="navbar">
+        <div class="brand">N <span class="gold-text">One</span> Admin</div>
+        <div class="welcome-msg">N One 👑</div>
+        <button class="btn-logout" onclick="logout()">إغلاق الخزنة 🔒</button>
+    </nav>
 
-    <nav class="navbar">
-        <div class="brand">N <span class="gold-text">One</span> Admin</div>
-        <div class="welcome-msg">N One 👑</div>
-        <button class="btn-logout" onclick="logout()">إغلاق الخزنة 🔒</button>
-    </nav>
+    <div class="container">
+        
+        <div class="cute-msg" style="text-align: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; color: var(--gold-light);"></div>
 
-    <div class="container">
-        
-        <div class="cute-msg" style="text-align: center; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: var(--gold-light);"></div>
+        <div class="quick-access-panel">
+            <a href="manager.html" class="btn-gate">🩺 فحص النظام</a>
+            <a href="maintenance.html" class="btn-gate">⚙️ الصيانة المركزية</a>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">شركات النقل (العملاء)</div>
+                <div class="stat-number" id="count-clients">0</div>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--success);">
+                <div class="stat-label">شركات نشطة</div>
+                <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
+            </div>
+            <div class="stat-card" style="border-top-color: var(--gold);">
+                <div class="stat-label">المردود المالي</div>
+                <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
+            </div>
+        </div>
 
-        <div class="quick-access-panel">
-            <a href="manager.html" class="btn-gate" title="الدخول المباشر لفحص السيستم">
-                <span style="font-size: 20px;">🩺</span> غرفة الطبيب
-            </a>
-            <a href="maintenance.html" class="btn-gate" title="غرفة المراقبة والصيانة">
-                <span style="font-size: 20px;">⚙️</span> الصيانة المركزية
-            </a>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">شركات النقل (العملاء)</div>
-                <div class="stat-number" id="count-clients">0</div>
-            </div>
-            <div class="stat-card" style="border-top-color: var(--success);">
-                <div class="stat-label">شركات نشطة</div>
-                <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
-            </div>
-            <div class="stat-card" style="border-top-color: var(--gold);">
-                <div class="stat-label">المردود المالي</div>
-                <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
-            </div>
-        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>إضافة شركة نقل جديدة</span>
+            </div>
+            <div class="form-grid">
+                <input type="text" id="new_name" placeholder="الاسم التجاري للشركة">
+                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
+                <input type="password" id="new_pass" placeholder="كلمة المرور">
+                <select id="sub_duration">
+                    <option value="30">30 يوم</option>
+                    <option value="90">3 أشهر</option>
+                    <option value="180">6 أشهر</option>
+                    <option value="365">سنة كاملة</option>
+                </select>
+                <input type="number" id="sub_price" placeholder="الاشتراك (د.أ)">
+                
+                <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px;">
+                    <input type="checkbox" id="can_send_ads" style="width: 15px; height: 15px; cursor: pointer;" checked>
+                    <label for="can_send_ads" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 11px;">تفعيل الإعلانات 📢</label>
+                </div>
 
-        <div class="card">
-            <div class="card-header">
-                <span>إضافة شركة نقل جديدة (System Isolation)</span>
-            </div>
-            <div class="form-grid">
-                <input type="text" id="new_name" placeholder="الاسم التجاري للشركة">
-                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
-                <input type="password" id="new_pass" placeholder="كلمة المرور">
-                <select id="sub_duration">
-                    <option value="30">30 يوم</option>
-                    <option value="90">3 أشهر</option>
-                    <option value="180">6 أشهر</option>
-                    <option value="365">سنة كاملة</option>
-                </select>
-                <input type="number" id="sub_price" placeholder="الاشتراك (د.أ)">
-                
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                    <input type="checkbox" id="can_send_ads" style="width: 18px; height: 18px; cursor: pointer;" checked>
-                    <label for="can_send_ads" style="font-weight: 900; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 13px;">تفعيل الإعلانات 📢</label>
-                </div>
+                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور 🚀</button>
+            </div>
+        </div>
+        
+        <div class="card" style="border-top-color: var(--gold);">
+            <div class="card-header">
+                <span>📢 مركز الإعلانات الذكية</span>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 200px;">
+                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان هنا..." style="resize: none;"></textarea>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 200px;">
+                    <select id="ad_target">
+                        <option value="all">إرسال للجميع</option>
+                    </select>
+                    <div style="display: flex; gap: 6px;">
+                        <select id="ad_type" style="flex: 1;">
+                            <option value="normal" class="ad-color-normal">إعلان عادي</option>
+                            <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
+                            <option value="warning" class="ad-color-warning">تحذير طارئ 🔴</option>
+                            <option value="offer" class="ad-color-offer">عروض 🟢</option>
+                        </select>
+                        <select id="ad_expire" style="flex: 1;">
+                            <option value="1">ساعة</option>
+                            <option value="24" selected>24 ساعة</option>
+                            <option value="168">أسبوع</option>
+                            <option value="permanent">دائم</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="ad-controls">
+                <button class="btn-broadcast" onclick="sendAnnouncement()">بث بالشريط 🚀</button>
+                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ 🚨</button>
+                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح 🧹</button>
+            </div>
+        </div>
 
-                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور المستقلة 🚀</button>
-            </div>
-        </div>
-        
-        <div class="card" style="border-top-color: var(--gold);">
-            <div class="card-header">
-                <span>📢 مركز الإعلانات الذكية (Smart Announcements)</span>
-            </div>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                <div style="flex: 2; min-width: 250px;">
-                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان أو التنبيه هنا يا بطة..." style="resize: none;"></textarea>
-                </div>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 250px;">
-                    <select id="ad_target" title="الاستهداف">
-                        <option value="all">إرسال للجميع (الكل)</option>
-                    </select>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="ad_type" title="نوع الإعلان" style="flex: 1;">
-                            <option value="normal" class="ad-color-normal">إعلان عادي</option>
-                            <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
-                            <option value="warning" class="ad-color-warning">تحذير / تنبيه 🔴</option>
-                            <option value="offer" class="ad-color-offer">عروض / هدايا 🟢</option>
-                        </select>
-                        <select id="ad_expire" title="مدة العرض" style="flex: 1;">
-                            <option value="1">ساعة</option>
-                            <option value="24" selected>24 ساعة</option>
-                            <option value="168">أسبوع</option>
-                            <option value="permanent">دائم</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="ad-controls">
-                <button class="btn-broadcast" onclick="sendAnnouncement()">بث الإعلان بالشريط 🚀</button>
-                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ (Pop-up) 🚨</button>
-                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح الإعلانات 🧹</button>
-            </div>
-        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>🏢 سجل شركات النقل</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الشركة</th>
+                            <th>بيانات الدخول (ID)</th>
+                            <th>الخطة / السعر</th>
+                            <th>الصلاحية</th>
+                            <th>الحالة</th>
+                            <th>التحكم الشامل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-table">
+                        <tr><td colspan="6" style="text-align:center;">جاري تحميل البيانات...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        <div class="card">
-            <div class="card-header">
-                <span>🏢 سجل شركات النقل (Companies Log)</span>
-                <span style="font-size:13px; color:var(--gold-light); font-weight: bold; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 10px;">White Label Clients</span>
-            </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الشركة</th>
-                            <th>بيانات الدخول (ID)</th>
-                            <th>الخطة / السعر</th>
-                            <th>الصلاحية</th>
-                            <th>الحالة</th>
-                            <th>التحكم الشامل</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clients-table">
-                        <tr><td colspan="6" style="text-align:center;">جاري تحميل البيانات...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    </div>
 
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, update, remove, onValue, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
-            authDomain: "n-one-global.firebaseapp.com",
-            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
-            projectId: "n-one-global",
-            storageBucket: "n-one-global.firebasestorage.app",
-            messagingSenderId: "627262885530",
-            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
-        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        let allData = [];
 
-        let allData = [];
-        let activeClients = [];
+        window.onload = async function() {
+            const sessionData = localStorage.getItem('currentUser');
+            if (!sessionData) {
+                // window.location.replace('index.html');
+                // return;
+            } else {
+                const currentUser = JSON.parse(sessionData);
+                if (currentUser.role !== 'admin') {
+                    window.location.replace('index.html');
+                    return;
+                }
+            }
+            fetchData();
+        };
 
-        window.onload = async function() {
-            const sessionData = localStorage.getItem('currentUser');
-            if (!sessionData) {
-                // window.location.replace('index.html');
-                // return;
-            } else {
-                const currentUser = JSON.parse(sessionData);
-                if (currentUser.role !== 'admin') {
-                    window.location.replace('index.html');
-                    return;
-                }
-            }
-            fetchData();
-        };
+        // التعديل الألماسي: سحب "الشركات" فقط، بدون ما يسحب المنشآت والكباتن ويخنق السيرفر
+        window.fetchData = function() {
+            const usersQuery = query(ref(db, 'users'), orderByChild('role'), equalTo('client'));
+            onValue(usersQuery, (snapshot) => {
+                if (snapshot.exists()) {
+                    allData = Object.values(snapshot.val());
+                } else {
+                    allData = [];
+                }
+                renderTables();
+                populateAdTargets();
+            });
+        }
+        
+        window.populateAdTargets = function() {
+            const targetSelect = document.getElementById('ad_target');
+            
+            targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
+            targetSelect.innerHTML += '<option value="clients_only">الشركات الصغيرة فقط</option>';
+            targetSelect.innerHTML += '<option value="shops_only">المنشآت التجارية فقط</option>';
+            
+            allData.forEach(c => {
+                const username = c.Client_User || c.user;
+                const name = c.Client_Name || c.name;
+                targetSelect.innerHTML += `<option value="${username}">موجه لـ: ${name}</option>`;
+            });
+        }
 
-        window.fetchData = function() {
-            const usersRef = ref(db, 'users');
-            onValue(usersRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    allData = Object.values(snapshot.val());
-                } else {
-                    allData = [];
-                }
-                renderTables();
-                populateAdTargets();
-            });
-        }
-        
-        window.populateAdTargets = function() {
-            const targetSelect = document.getElementById('ad_target');
-            const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
-            
-            targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
-            targetSelect.innerHTML += '<option value="clients_only">الشركات الصغيرة فقط</option>';
-            targetSelect.innerHTML += '<option value="shops_only">المنشآت التجارية فقط</option>';
-            
-            clients.forEach(c => {
-                const username = c.Client_User || c.user;
-                const name = c.Client_Name || c.name;
-                targetSelect.innerHTML += `<option value="${username}">موجه لـ: ${name}</option>`;
-            });
-        }
+        // التعديل الألماسي: الإرسال المباشر بدون سحب داتا للفلترة
+        window.sendAnnouncement = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
+            
+            const target = document.getElementById('ad_target').value;
+            const type = document.getElementById('ad_type').value;
+            const expireHours = document.getElementById('ad_expire').value;
+            
+            let expireTimestamp = null;
+            if(expireHours !== 'permanent') {
+                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
+            }
+            
+            const adData = {
+                text: text,
+                type: type,
+                expireAt: expireTimestamp,
+                timestamp: Date.now()
+            };
 
-        window.sendAnnouncement = async function() {
-            const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
-            
-            const target = document.getElementById('ad_target').value;
-            const type = document.getElementById('ad_type').value;
-            const expireHours = document.getElementById('ad_expire').value;
-            
-            let expireTimestamp = null;
-            if(expireHours !== 'permanent') {
-                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
-            }
-            
-            const adData = {
-                text: text,
-                type: type,
-                expireAt: expireTimestamp,
-                timestamp: Date.now()
-            };
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                if(target === 'all') {
+                    await update(ref(db, 'announcements/global'), adData);
+                } else if(target === 'clients_only' || target === 'shops_only') {
+                    // هون بيبعث إشارة للمسار بدون ما يحمل كل اليوزرز
+                    const roleTarget = target === 'clients_only' ? 'client' : 'shop';
+                    const usersRef = ref(db, 'users');
+                    const snap = await get(usersRef); // هاد ممكن نلغيه لقدام لو بنينا مسار للإعلانات مستقل
+                    if(snap.exists()) {
+                        const updates = {};
+                        Object.values(snap.val()).forEach(u => {
+                            if(u.role === roleTarget || u.type === roleTarget || u.Client_Role === roleTarget) {
+                                const uName = u.Client_User || u.user;
+                                if(uName) updates[`announcements/users/${uName}`] = adData;
+                            }
+                        });
+                        if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                    }
+                } else {
+                    await update(ref(db, `announcements/users/${target}`), adData);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم بث الإعلان بنجاح");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال الإعلان");
+            }
+        }
 
-            document.getElementById('loader-overlay').style.display = 'flex';
-            
-            try {
-                const snap = await get(ref(db));
-                const dbData = snap.val() || {};
-                let allUsers = [];
-                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
-                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+        window.sendPopupAlert = async function() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
+            
+            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
 
-                if(target === 'all') {
-                    await update(ref(db, 'announcements/global'), adData);
-                } else if(target === 'clients_only') {
-                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
-                    const updates = {};
-                    clients.forEach(c => {
-                        const uName = c.Client_User || c.user;
-                        if(uName) updates[`announcements/users/${uName}`] = adData;
-                    });
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else if(target === 'shops_only') {
-                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
-                    const updates = {};
-                    shops.forEach(s => {
-                        const uName = s.Shop_User || s.user || s.Client_User;
-                        if(uName) updates[`announcements/users/${uName}`] = adData;
-                    });
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else {
-                    await update(ref(db, `announcements/users/${target}`), adData);
-                }
-                
-                document.getElementById('loader-overlay').style.display = 'none';
-                document.getElementById('ad_text').value = '';
-                alert("تم بث الإعلان بنجاح");
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال الإعلان");
-            }
-        }
+            const target = document.getElementById('ad_target').value;
+            const alertData = {
+                message: text,
+                timestamp: Date.now()
+            };
 
-        window.sendPopupAlert = async function() {
-            const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
-            
-            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                if(target === 'all') {
+                    await update(ref(db, 'alerts/global'), alertData);
+                } else if(target === 'clients_only' || target === 'shops_only') {
+                    const roleTarget = target === 'clients_only' ? 'client' : 'shop';
+                    const usersRef = ref(db, 'users');
+                    const snap = await get(usersRef); 
+                    if(snap.exists()) {
+                        const updates = {};
+                        Object.values(snap.val()).forEach(u => {
+                            if(u.role === roleTarget || u.type === roleTarget || u.Client_Role === roleTarget) {
+                                const uName = u.Client_User || u.user;
+                                if(uName) updates[`alerts/users/${uName}`] = alertData;
+                            }
+                        });
+                        if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                    }
+                } else {
+                    await update(ref(db, `alerts/users/${target}`), alertData);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم إرسال التنبيه الطارئ بنجاح");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال التنبيه");
+            }
+        }
 
-            const target = document.getElementById('ad_target').value;
-            const alertData = {
-                message: text,
-                timestamp: Date.now()
-            };
+        window.clearAnnouncement = async function() {
+            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await remove(ref(db, 'announcements'));
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تنظيف واجهات الإعلانات");
+        }
 
-            document.getElementById('loader-overlay').style.display = 'flex';
-            
-            try {
-                const snap = await get(ref(db));
-                const dbData = snap.val() || {};
-                let allUsers = [];
-                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
-                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+        window.renderTables = function() {
+            const clientTbody = document.getElementById('clients-table');
+            
+            document.getElementById('count-clients').innerText = allData.length;
+            document.getElementById('count-active').innerText = allData.filter(c => (c.status === 'active' || c.Client_Status === 'active')).length;
+            
+            let totalRev = 0;
+            allData.forEach(c => totalRev += Number(c.price || c.Client_Price || 0));
+            document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
 
-                if(target === 'all') {
-                    await update(ref(db, 'alerts/global'), alertData);
-                } else if(target === 'clients_only') {
-                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
-                    const updates = {};
-                    clients.forEach(c => {
-                        const uName = c.Client_User || c.user;
-                        if(uName) updates[`alerts/users/${uName}`] = alertData;
-                    });
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else if(target === 'shops_only') {
-                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
-                    const updates = {};
-                    shops.forEach(s => {
-                        const uName = s.Shop_User || s.user || s.Client_User;
-                        if(uName) updates[`alerts/users/${uName}`] = alertData;
-                    });
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else {
-                    await update(ref(db, `alerts/users/${target}`), alertData);
-                }
-                
-                document.getElementById('loader-overlay').style.display = 'none';
-                document.getElementById('ad_text').value = '';
-                alert("تم إرسال التنبيه الطارئ بنجاح");
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال التنبيه");
-            }
-        }
+            renderRows(clientTbody, allData.reverse());
+        }
 
-        window.clearAnnouncement = async function() {
-            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد")) return;
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await remove(ref(db, 'announcements'));
-            document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تنظيف واجهات الإعلانات");
-        }
+        window.renderRows = function(tbody, data) {
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة حتى الآن</td></tr>'; return; }
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const expiryDate = new Date(item.Client_Expiry || item.expiry);
+                expiryDate.setHours(23, 59, 59, 999);
+                const now = new Date();
+                const diffTime = expiryDate.getTime() - now.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        window.renderTables = function() {
-            const clientTbody = document.getElementById('clients-table');
-            
-            const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client').reverse();
+                let statusBadge = '';
+                let daysText = '';
 
-            document.getElementById('count-clients').innerText = clients.length;
-            document.getElementById('count-active').innerText = clients.filter(c => (c.status === 'active' || c.Client_Status === 'active')).length;
-            
-            let totalRev = 0;
-            clients.forEach(c => totalRev += Number(c.price || c.Client_Price || 0));
-            document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
+                let currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
 
-            renderRows(clientTbody, clients);
-        }
+                if (currentStatus === 'paused') {
+                    statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
+                    daysText = `<span style="color:#fbbf24;">موقف</span>`;
+                } else if (diffDays <= 0) {
+                    statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
+                    daysText = `<span style="color:#f87171; font-weight:bold;">انتهى</span>`;
+                    if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
+                } else {
+                    statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
+                    daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم</span>`;
+                }
+                
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
 
-        window.renderRows = function(tbody, data) {
-            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة حتى الآن</td></tr>'; return; }
-            tbody.innerHTML = '';
-            
-            data.forEach(item => {
-                const expiryDate = new Date(item.Client_Expiry || item.expiry);
-                expiryDate.setHours(23, 59, 59, 999);
-                const now = new Date();
-                const diffTime = expiryDate.getTime() - now.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const toggleBtn = currentStatus === 'active'
+                    ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
+                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
 
-                let statusBadge = '';
-                let daysText = '';
+                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
 
-                let currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
+                const row = `
+                    <tr>
+                        <td style="color: var(--gold-light);"><b>${item.Client_Name || item.name}</b></td>
+                        <td style="font-size:12px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
+                        <td style="font-size:13px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="font-size:13px;">${daysText}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="action-group">
+                                <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
+                                ${toggleBtn}
+                                <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
+                                ${adToggleBtn}
+                                <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
 
-                if (currentStatus === 'paused') {
-                    statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
-                    daysText = `<span style="color:#fbbf24;">موقف</span>`;
-                } else if (diffDays <= 0) {
-                    statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
-                    daysText = `<span style="color:#f87171; font-weight:bold;">انتهى</span>`;
-                    if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
-                } else {
-                    statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
-                    daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم</span>`;
-                }
-                
-                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+        window.addUser = async function() {
+            const role = 'client';
+            const name = document.getElementById('new_name').value;
+            const user = document.getElementById('new_user').value.trim();
+            const pass = document.getElementById('new_pass').value;
+            const days = document.getElementById('sub_duration').value;
+            const price = document.getElementById('sub_price').value;
+            const canSendAds = document.getElementById('can_send_ads').checked;
 
-                const toggleBtn = currentStatus === 'active'
-                    ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
-                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
+            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول"); return; }
 
-                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
+            const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
+            if (exists) {
+                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل يرجى اختيار اسم آخر لضمان عزل البيانات");
+                return;
+            }
 
-                const row = `
-                    <tr>
-                        <td style="color: var(--gold-light);"><b>${item.Client_Name || item.name}</b></td>
-                        <td style="font-size:12px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:13px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
-                        <td style="font-size:13px;">${daysText}</td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <div class="action-group">
-                                <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
-                                ${toggleBtn}
-                                <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
-                                ${adToggleBtn}
-                                <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
+            const expDate = new Date();
+            expDate.setDate(expDate.getDate() + parseInt(days));
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            const newItem = {
+                Client_ID: "CL_" + Date.now(),
+                Client_User: user,
+                Client_Pass: pass,
+                Client_Name: name,
+                Client_Role: role,
+                Client_Type: role,
+                Client_Status: "active",
+                Client_Expiry: expDate.toISOString().split('T')[0],
+                Client_Price: price,
+                Client_PlanDays: days,
+                can_send_ads: canSendAds,
+                id: "CL_" + Date.now(), 
+                user: user, 
+                pass: pass, 
+                name: name, 
+                role: role, 
+                type: role, 
+                status: "active", 
+                expiry: expDate.toISOString().split('T')[0], 
+                price: price, 
+                plan_days: days
+            };
 
-        window.addUser = async function() {
-            const role = 'client';
-            const name = document.getElementById('new_name').value;
-            const user = document.getElementById('new_user').value.trim();
-            const pass = document.getElementById('new_pass').value;
-            const days = document.getElementById('sub_duration').value;
-            const price = document.getElementById('sub_price').value;
-            const canSendAds = document.getElementById('can_send_ads').checked;
+            try {
+                await set(ref(db, 'users/' + user), newItem);
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات");
+                
+                document.getElementById('new_name').value = '';
+                document.getElementById('new_user').value = '';
+                document.getElementById('new_pass').value = '';
+                document.getElementById('sub_price').value = '';
+                document.getElementById('can_send_ads').checked = true;
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ في الربط");
+            }
+        }
 
-            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول"); return; }
+        window.toggleAdPermission = async function(username, currentStatus) {
+            const nextStatus = !currentStatus;
+            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟")) return;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
 
-            const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
-            if (exists) {
-                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل يرجى اختيار اسم آخر لضمان عزل البيانات");
-                return;
-            }
+        window.editUser = async function(username, oldName, oldPass) {
+            const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
+            if (newName === null) return;
+            const newPass = prompt("تعديل كلمة المرور:", oldPass);
+            if (newPass === null) return;
 
-            const expDate = new Date();
-            expDate.setDate(expDate.getDate() + parseInt(days));
-            
-            document.getElementById('loader-overlay').style.display = 'flex';
-            
-            const newItem = {
-                Client_ID: "CL_" + Date.now(),
-                Client_User: user,
-                Client_Pass: pass,
-                Client_Name: name,
-                Client_Role: role,
-                Client_Type: role,
-                Client_Status: "active",
-                Client_Expiry: expDate.toISOString().split('T')[0],
-                Client_Price: price,
-                Client_PlanDays: days,
-                can_send_ads: canSendAds,
-                id: "CL_" + Date.now(), 
-                user: user, 
-                pass: pass, 
-                name: name, 
-                role: role, 
-                type: role, 
-                status: "active", 
-                expiry: expDate.toISOString().split('T')[0], 
-                price: price, 
-                plan_days: days
-            };
+            if (newName === oldName && newPass === oldPass) return;
 
-            try {
-                await set(ref(db, 'users/' + user), newItem);
-                document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات");
-                
-                document.getElementById('new_name').value = '';
-                document.getElementById('new_user').value = '';
-                document.getElementById('new_pass').value = '';
-                document.getElementById('sub_price').value = '';
-                document.getElementById('can_send_ads').checked = true;
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ في الربط");
-            }
-        }
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تحديث البيانات");
+        }
 
-        window.toggleAdPermission = async function(username, currentStatus) {
-            const nextStatus = !currentStatus;
-            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟")) return;
-            
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
-            document.getElementById('loader-overlay').style.display = 'none';
-        }
+        window.setStatus = async function(username, currentStatus) {
+            const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
+            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
 
-        window.editUser = async function(username, oldName, oldPass) {
-            const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
-            if (newName === null) return;
-            const newPass = prompt("تعديل كلمة المرور:", oldPass);
-            if (newPass === null) return;
+        window.setStatusSilent = async function(username, newStatus) {
+            await update(ref(db, 'users/' + username), { status: newStatus, Client_Status: newStatus });
+        }
 
-            if (newName === oldName && newPass === oldPass) return;
+        window.renewUser = async function(username) {
+            const days = prompt("عدد أيام التجديد الإضافية:", "30");
+            if (!days) return;
+            const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
 
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
-            document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تحديث البيانات");
-        }
+            const newDate = new Date();
+            newDate.setDate(newDate.getDate() + parseInt(days));
+            const formattedDate = newDate.toISOString().split('T')[0];
 
-        window.setStatus = async function(username, currentStatus) {
-            const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
-            
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
-            document.getElementById('loader-overlay').style.display = 'none';
-        }
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تجديد الاشتراك بنجاح");
+        }
 
-        window.setStatusSilent = async function(username, newStatus) {
-            await update(ref(db, 'users/' + username), { status: newStatus, Client_Status: newStatus });
-        }
+        window.deleteUser = async function(username) {
+            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد؟")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await remove(ref(db, 'users/' + username));
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم حذف الحساب نهائياً");
+        }
 
-        window.renewUser = async function(username) {
-            const days = prompt("عدد أيام التجديد الإضافية:", "30");
-            if (!days) return;
-            const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
+        window.logout = function() { 
+            localStorage.removeItem('currentUser');
+            window.location.replace('index.html');
+        }
 
-            const newDate = new Date();
-            newDate.setDate(newDate.getDate() + parseInt(days));
-            const formattedDate = newDate.toISOString().split('T')[0];
+        // ================= دوال مفاجأة عيد الميلاد الملكية ================= //
+        window.closeBirthday = function() {
+            document.getElementById('birthday-overlay').style.display = 'none';
+        };
 
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
-            document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تجديد الاشتراك بنجاح");
-        }
+        window.checkRoyalBirthday = function() {
+            const today = new Date();
+            const month = today.getMonth(); 
+            const day = today.getDate();
+            
+            if (month === 2 && (day === 20 || day === 21)) {
+                const shown = localStorage.getItem('bday_shown_' + day);
+                if (!shown) {
+                    document.getElementById('birthday-overlay').style.display = 'flex';
+                    localStorage.setItem('bday_shown_' + day, 'true');
+                }
+            }
+        };
 
-        window.deleteUser = async function(username) {
-            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد؟")) return;
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await remove(ref(db, 'users/' + username));
-            document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الحساب نهائياً");
-        }
-
-        window.logout = function() { 
-            localStorage.removeItem('currentUser');
-            window.location.replace('index.html');
-        }
-
-        // ================= دوال مفاجأة عيد الميلاد الملكية ================= //
-        window.closeBirthday = function() {
-            document.getElementById('birthday-overlay').style.display = 'none';
-        };
-
-        window.checkRoyalBirthday = function() {
-            const today = new Date();
-            const month = today.getMonth(); 
-            const day = today.getDate();
-            
-            if (month === 2 && (day === 20 || day === 21)) {
-                const shown = localStorage.getItem('bday_shown_' + day);
-                if (!shown) {
-                    document.getElementById('birthday-overlay').style.display = 'flex';
-                    localStorage.setItem('bday_shown_' + day, 'true');
-                }
-            }
-        };
-
-        setTimeout(checkRoyalBirthday, 1000);
-    </script>
+        setTimeout(checkRoyalBirthday, 1000);
+    </script>
 
 </body>
 </html>
