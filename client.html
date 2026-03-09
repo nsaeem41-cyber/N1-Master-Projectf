@@ -612,13 +612,14 @@
 
         window.onload = function() {
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                myMasterId = currentUser.Client_User || currentUser.user;
-            } else {
+            
+            if (!savedUser) {
                 window.location.replace('index.html');
-                return;
+                return; 
             }
+
+            currentUser = JSON.parse(savedUser);
+            myMasterId = currentUser.Client_User || currentUser.user;
 
             const dispName = currentUser.Client_Name || currentUser.name || 'الشركة';
             document.getElementById('welcome-msg').innerText = `أهلاً بك يا ${dispName}`;
@@ -628,48 +629,51 @@
             document.getElementById('profile_user').value = myMasterId;
             document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
 
-            checkAdPermission();
-            updateCountdownTimer();
-            setupRealtimeFreezeListener(); 
-            setupSmartAdsListener();
-            setupAlertsListener(); 
-            fetchData();
-            fetchCyberSettings(); 
+            if(typeof window.checkAdPermission === 'function') window.checkAdPermission();
+            if(typeof window.updateCountdownTimer === 'function') window.updateCountdownTimer();
+            if(typeof window.setupRealtimeFreezeListener === 'function') window.setupRealtimeFreezeListener(); 
+            if(typeof window.setupSmartAdsListener === 'function') window.setupSmartAdsListener();
+            if(typeof window.setupAlertsListener === 'function') window.setupAlertsListener(); 
+            
+            window.fetchData();
+            if(typeof window.fetchCyberSettings === 'function') window.fetchCyberSettings(); 
         };
 
-        // فلترة الذاكرة (Memory Optimization) لعدم تحميل المتصفح ببيانات الشركات الأخرى
         window.fetchData = function() {
             window.fetchPricingAreas();
             
-            onValue(ref(db, 'shops'), (snapshot) => {
+            const shopsRef = ref(db, 'shops');
+            onValue(shopsRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const rawShops = Object.values(snapshot.val());
                     allData = rawShops.filter(s => s.Client_Master === myMasterId || s.master === myMasterId);
                 } else {
                     allData = [];
                 }
-                renderShops();
-                updateClientAdTargets(); 
+                if(typeof window.renderShops === 'function') window.renderShops();
+                if(typeof window.updateClientAdTargets === 'function') window.updateClientAdTargets(); 
             });
 
-            onValue(ref(db, 'captains'), (snapshot) => {
+            const captainsRef = ref(db, 'captains');
+            onValue(captainsRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const rawCaps = Object.values(snapshot.val());
                     allCaptains = rawCaps.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
                 } else {
                     allCaptains = [];
                 }
-                updateClientAdTargets();
+                if(typeof window.updateClientAdTargets === 'function') window.updateClientAdTargets();
             });
 
-            onValue(ref(db, 'customers'), (snapshot) => {
+            const customersRef = ref(db, 'customers');
+            onValue(customersRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const rawCusts = Object.values(snapshot.val());
                     allCustomers = rawCusts.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
                 } else {
                     allCustomers = [];
                 }
-                updateClientAdTargets();
+                if(typeof window.updateClientAdTargets === 'function') window.updateClientAdTargets();
             });
         };
 
@@ -686,10 +690,11 @@
                     });
                     availablePricingAreas = Array.from(uniqueSources).sort();
                 }
-                populatePricingDropdowns();
+                if(typeof window.populatePricingDropdowns === 'function') window.populatePricingDropdowns();
             });
         };
-window.populatePricingDropdowns = function() {
+
+        window.populatePricingDropdowns = function() {
             const addSelect = document.getElementById('shop_pricing_area');
             const editSelect = document.getElementById('edit_shop_pricing_area');
             
@@ -725,7 +730,7 @@ window.populatePricingDropdowns = function() {
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(confirm("تم تحديد الموقع الجغرافي بنجاح، هل ترغب باعتماده؟")) {
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$$?q=${encodeURIComponent(shopName)}`;
                     document.getElementById('shop_location_link').value = mapLink;
                     
                     document.getElementById('green_light_status').style.background = 'var(--success)';
@@ -752,7 +757,7 @@ window.populatePricingDropdowns = function() {
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(confirm("تم تحديد الموقع الجغرافي بنجاح، هل ترغب باعتماده؟")) {
-                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$$?q=${encodeURIComponent(shopName)}`;
                     document.getElementById('edit_shop_location_link').value = mapLink;
                     
                     document.getElementById('edit_green_light_status').style.background = 'var(--success)';
@@ -765,7 +770,7 @@ window.populatePricingDropdowns = function() {
             }, 1200);
         };
 
-        function checkAdPermission() {
+        window.checkAdPermission = function() {
             if (!myMasterId) return;
             const userRef = ref(db, `users/${myMasterId}`);
             onValue(userRef, (snapshot) => {
@@ -778,7 +783,7 @@ window.populatePricingDropdowns = function() {
                     }
                 }
             });
-        }
+        };
 
         window.togglePasswordVisibility = function() {
             const passInput = document.getElementById('profile_pass');
@@ -792,7 +797,7 @@ window.populatePricingDropdowns = function() {
             }
         };
 
-        function setupSmartAdsListener() {
+        window.setupSmartAdsListener = function() {
             if(!myMasterId) return;
             const adsRef = ref(db, 'announcements');
             
@@ -826,9 +831,9 @@ window.populatePricingDropdowns = function() {
                     adContainer.style.display = 'none';
                 }
             });
-        }
+        };
 
-        function setupAlertsListener() {
+        window.setupAlertsListener = function() {
             if(!myMasterId) return;
             const alertsRef = ref(db, 'alerts');
             
@@ -851,13 +856,13 @@ window.populatePricingDropdowns = function() {
                     }
                 }
             });
-        }
+        };
 
         window.closeAppPopup = function() {
             document.getElementById('app-popup-overlay').style.display = 'none';
         }
 
-        function updateCountdownTimer() {
+        window.updateCountdownTimer = function() {
             const timerEl = document.getElementById('sub-timer');
             if (!currentUser.Client_Expiry && !currentUser.expiry) {
                 timerEl.innerText = "صلاحية غير محددة";
@@ -883,9 +888,9 @@ window.populatePricingDropdowns = function() {
                 timerEl.innerText = `الاشتراك منتهي`;
                 timerEl.className = "sub-countdown sub-expired";
             }
-        }
+        };
 
-        function setupRealtimeFreezeListener() {
+        window.setupRealtimeFreezeListener = function() {
             if(!myMasterId) return;
             const myRef = ref(db, `users/${myMasterId}`);
             
@@ -901,7 +906,7 @@ window.populatePricingDropdowns = function() {
 
                     if(data.Client_Expiry || data.expiry) {
                         currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
-                        updateCountdownTimer();
+                        window.updateCountdownTimer();
                     }
 
                     if (data.external_reg_enabled) {
@@ -928,7 +933,7 @@ window.populatePricingDropdowns = function() {
                     window.location.replace('index.html');
                 }
             });
-        }
+        };
 
         window.toggleExternalRegInput = function() {
             const isChecked = document.getElementById('toggle_external_reg').checked;
@@ -941,7 +946,7 @@ window.populatePricingDropdowns = function() {
             } else {
                 idInput.style.display = 'none';
                 saveBtn.style.display = 'none';
-                saveExternalRegData(false);
+                window.saveExternalRegData(false);
             }
         };
 
@@ -1078,47 +1083,7 @@ window.populatePricingDropdowns = function() {
             if(filter === 'active') document.getElementById('btn_filter_active').classList.add('active');
             else document.getElementById('btn_filter_pending').classList.add('active');
             
-            renderShops();
-        };
-
-        // 🚀 الفلترة الذكية للذاكرة (Memory Optimization) 
-        window.fetchData = function() {
-            window.fetchPricingAreas();
-            
-            const shopsRef = ref(db, 'shops');
-            onValue(shopsRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const rawShops = Object.values(snapshot.val());
-                    // تفريغ الذاكرة من بيانات المنافسين فوراً
-                    allData = rawShops.filter(s => s.Client_Master === myMasterId || s.master === myMasterId);
-                } else {
-                    allData = [];
-                }
-                renderShops();
-                updateClientAdTargets(); 
-            });
-
-            const captainsRef = ref(db, 'captains');
-            onValue(captainsRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const rawCaps = Object.values(snapshot.val());
-                    allCaptains = rawCaps.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
-                } else {
-                    allCaptains = [];
-                }
-                updateClientAdTargets();
-            });
-
-            const customersRef = ref(db, 'customers');
-            onValue(customersRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const rawCusts = Object.values(snapshot.val());
-                    allCustomers = rawCusts.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
-                } else {
-                    allCustomers = [];
-                }
-                updateClientAdTargets();
-            });
+            window.renderShops();
         };
 
         window.updateClientAdTargets = function() {
