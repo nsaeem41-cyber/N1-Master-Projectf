@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة قيادة الشركات (Compact Edition)</title>
+    <title>N One | غرفة قيادة الشركات (Official Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        /* ================= أساسيات التصميم (Fast & Compact) ================= */
+        /* ================= أساسيات التصميم (Official & Elegant) ================= */
         :root {
             --primary: #0f172a;
             --primary-light: #1e293b;
@@ -25,176 +26,147 @@
             margin: 0; padding: 0; 
             color: #fff; user-select: none; 
             min-height: 100vh;
-            position: relative; /* مهم عشان الخلفية المتحركة */
+            position: relative;
         }
 
-        /* ================= ديكور المربعات المتحركة (Animated Grid) ================= */
-        .animated-grid-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2; /* تحت كل شيء */
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, rgba(212, 175, 55, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
-            animation: gridMove 20s linear infinite;
-        }
-        
-        /* تدرج لوني عشان يعطي عمق للمربعات وما تكون مزعجة */
+        /* ================= ديكور رسمي هادئ وثابت ================= */
         .grid-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
-            background: radial-gradient(circle, transparent 20%, #050814 90%);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(5, 8, 20, 0.98) 100%);
         }
 
-        @keyframes gridMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 40px 40px; }
-        }
-
-        /* ================= الأجسام الطافية (لزيادة الفخامة) ================= */
         .bg-shapes {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
+            z-index: -2; overflow: hidden;
         }
+        
         .shape {
             position: absolute;
-            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(14,165,233,0.08));
-            box-shadow: 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(212,175,55,0.15);
-            animation: float 25s infinite linear;
+            background: radial-gradient(circle, rgba(212,175,55,0.03) 0%, transparent 70%);
+            border-radius: 50%;
         }
-        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
-        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 85%; border-radius: 50%; animation-duration: 30s; animation-direction: reverse; }
-
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
-        }
+        .shape:nth-child(1) { width: 600px; height: 600px; top: -10%; left: -10%; }
+        .shape:nth-child(2) { width: 800px; height: 800px; bottom: -20%; right: -10%; }
 
         /* ================= الشريط العلوي (Navbar) ================= */
         .navbar { 
-            background: rgba(15, 23, 42, 0.95); 
-            height: 55px; 
+            background: rgba(15, 23, 42, 0.98); 
+            height: 60px; 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            padding: 0 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
             border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
         }
-        .brand { font-size: 20px; font-weight: 900; color: white; letter-spacing: 1px; }
+        .brand { font-size: 22px; font-weight: 900; color: white; letter-spacing: 1px; }
         .gold-text { color: var(--gold); }
         
         .welcome-msg {
-            font-weight: bold; color: var(--gold-light); font-size: 13px; 
-            background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 12px;
+            font-weight: bold; color: var(--gold-light); font-size: 14px; 
+            background: rgba(255,255,255,0.05); padding: 6px 15px; border-radius: 8px;
             border: 1px solid rgba(212, 175, 55, 0.3);
+            letter-spacing: 1px;
         }
 
         .btn-logout { 
-            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); 
-            font-size: 12px; font-weight: bold; cursor: pointer; padding: 6px 12px; 
-            border-radius: 8px; color: #fca5a5; transition: 0.2s; 
+            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); 
+            font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; 
+            border-radius: 8px; color: #fca5a5; transition: 0.3s; 
         }
-        .btn-logout:hover { background: var(--danger); color: white; }
+        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
 
-        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; position: relative; z-index: 1; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; position: relative; z-index: 1; }
 
         /* ================= بوابات الوصول السريع ================= */
-        .quick-access-panel { display: flex; gap: 10px; margin-bottom: 15px; }
+        .quick-access-panel { display: flex; gap: 15px; margin-bottom: 20px; }
         
         .btn-gate {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 8px 15px;
-            border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
-            text-decoration: none; display: flex; align-items: center; gap: 6px;
-            transition: 0.2s; backdrop-filter: blur(5px);
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.2); color: #fff; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer;
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
+            transition: 0.3s; backdrop-filter: blur(10px);
         }
-        .btn-gate:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .btn-gate:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.15); transform: translateY(-2px); }
 
         /* ================= الإحصائيات ================= */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { 
-            background: rgba(15, 23, 42, 0.8); padding: 12px; border-radius: 10px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: center; 
-            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.85); padding: 20px; border-radius: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); text-align: center; 
+            border: 1px solid rgba(255,255,255,0.05); border-top: 4px solid var(--gold); 
+            backdrop-filter: blur(10px); transition: 0.3s;
         }
-        .stat-number { font-size: 24px; font-weight: 900; color: #fff; margin: 4px 0; }
-        .stat-label { color: #cbd5e1; font-size: 11px; font-weight: bold; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .stat-number { font-size: 28px; font-weight: 900; color: #fff; margin: 8px 0; }
+        .stat-label { color: #94a3b8; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
 
         /* ================= الكروت ================= */
         .card { 
-            background: rgba(15, 23, 42, 0.8); padding: 15px 20px; border-radius: 12px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-bottom: 15px; 
+            background: rgba(15, 23, 42, 0.85); padding: 20px 25px; border-radius: 12px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); margin-bottom: 20px; 
             border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
             backdrop-filter: blur(10px);
         }
         .card-header { 
-            font-size: 15px; font-weight: 900; color: var(--gold); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 12px; 
+            font-size: 16px; font-weight: 900; color: var(--gold); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 15px; 
             display: flex; justify-content: space-between; align-items: center; 
+            letter-spacing: 0.5px;
         }
 
-        /* ================= الحقول (علاج مشكلة اللون الأبيض) ================= */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; align-items: center; }
+        /* ================= الحقول ================= */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center; }
         
-        /* التعديل الألماسي للألوان هنا */
         input, select, textarea { 
-            width: 100%; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; 
-            outline: none; background: rgba(0,0,0,0.4); box-sizing: border-box; 
-            font-family: inherit; font-size: 13px; font-weight: bold; color: white; transition: 0.2s; 
+            width: 100%; padding: 10px 15px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; 
+            outline: none; background: rgba(5, 8, 20, 0.6); box-sizing: border-box; 
+            font-family: inherit; font-size: 14px; font-weight: bold; color: white; transition: 0.3s; 
         }
         
-        /* ضبط لون الـ Focus ليكون راقي ومش أبيض فاقع */
         input:focus, select:focus, textarea:focus { 
             border-color: var(--gold); 
-            background: rgba(15, 23, 42, 0.9); /* لون كحلي غامق بدل الأبيض */
-            color: var(--gold-light); /* الكلام يصير ذهبي عشان يضل واضح */
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+            background: rgba(15, 23, 42, 0.95); 
+            color: var(--gold-light); 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
         }
 
-        /* تعديل الـ options جوا الـ select عشان ما تكون بيضاء */
-        select option {
-            background-color: var(--primary-light);
-            color: white;
-            font-weight: bold;
-        }
+        select option { background-color: var(--primary-light); color: white; font-weight: bold; padding: 10px; }
         
         .btn-add { 
             background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border: none; 
-            padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; 
-            cursor: pointer; transition: 0.2s; width: 100%;
+            padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 900; 
+            cursor: pointer; transition: 0.3s; width: 100%; text-transform: uppercase;
         }
-        .btn-add:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(212,175,55,0.3); }
+        .btn-add:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212,175,55,0.4); }
 
         /* ================= الجداول ================= */
         .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 850px; }
-        thead { background: rgba(0,0,0,0.6); color: var(--gold); }
-        th { padding: 10px; text-align: right; font-weight: 900; font-size: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-        td { padding: 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; font-weight: bold; color: #e2e8f0; }
-        tr:hover td { background: rgba(212, 175, 55, 0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        thead { background: rgba(5, 8, 20, 0.8); color: var(--gold); }
+        th { padding: 15px 12px; text-align: right; font-weight: 900; font-size: 13px; border-bottom: 2px solid rgba(212, 175, 55, 0.2); letter-spacing: 0.5px; }
+        td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: bold; color: #e2e8f0; vertical-align: middle; }
+        tr:hover td { background: rgba(212, 175, 55, 0.08); }
         
-        .status-badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
-        .status-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-        .status-paused { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-        .status-expired { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; } 
+        .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+        .status-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-paused { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status-expired { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } 
 
-        .action-group { display: flex; gap: 4px; }
+        .action-group { display: flex; gap: 6px; }
         .action-btn { 
-            padding: 6px 10px; border-radius: 6px; border: none; color: white; 
-            cursor: pointer; font-size: 11px; transition: 0.2s; font-weight: bold;
+            padding: 8px 12px; border-radius: 6px; border: none; color: white; 
+            cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
         }
-        .action-btn:hover { filter: brightness(1.2); }
+        .action-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
         .act-freeze { background: #f59e0b; }
         .act-active { background: #10b981; }
         .act-delete { background: #ef4444; }
         .act-renew { background: #0ea5e9; }
         .act-edit { background: #475569; }
 
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: var(--gold); flex-direction: column; backdrop-filter: blur(5px);}
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.95); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: var(--gold); flex-direction: column; backdrop-filter: blur(8px);}
         
         /* ================= الإعلانات ================= */
         .ad-color-normal { color: #fff; background: #1e293b; }
@@ -202,164 +174,167 @@
         .ad-color-warning { color: #f87171; background: #7f1d1d; font-weight: bold; }
         .ad-color-offer { color: #34d399; background: #064e3b; }
         
-        .ad-controls { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 12px; transition: 0.2s;}
-        .btn-broadcast:hover { background: rgba(255,255,255,0.1); border-color: var(--gold);}
-        .btn-popup { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition:0.2s;}
-        .btn-popup:hover { background: #dc2626;}
-        .btn-clear-ad { background: #475569; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition:0.2s;}
+        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 13px; transition: 0.3s;}
+        .btn-broadcast:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+        .btn-popup { background: #ef4444; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s;}
+        .btn-popup:hover { background: #dc2626; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);}
+        .btn-clear-ad { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s;}
         .btn-clear-ad:hover {background: #334155;}
 
-        /* ================= مفاجأة عيد الميلاد الألماسية ================= */
+        /* ================= رسالة التأسيس الرسمية (مموهة) ================= */
         #birthday-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.98); z-index: 9999; justify-content: center; align-items: center;
+            background: rgba(5, 8, 20, 0.98); z-index: 9999; justify-content: center; align-items: center;
             flex-direction: column; text-align: center; color: white;
+            backdrop-filter: blur(10px);
         }
-        .firework { font-size: 40px; animation: pop 1s infinite alternate; margin-bottom: 15px; }
-        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 20px #d4af37; } }
-        .cake-box { font-size: 70px; margin-bottom: 15px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
-        .bday-title { font-size: 30px; font-weight: 900; color: #d4af37; margin-bottom: 10px; }
-        .bday-text { font-size: 18px; font-weight: bold; color: #f8fafc; margin-bottom: 30px; line-height: 1.8; max-width: 500px; }
-        .btn-close-bday { background: #d4af37; color: black; border: none; padding: 10px 30px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; }
+        .royal-emblem { font-size: 50px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
+        .bday-title { font-size: 32px; font-weight: 900; color: var(--gold); margin-bottom: 15px; letter-spacing: 1px; }
+        .bday-text { font-size: 18px; font-weight: bold; color: #cbd5e1; margin-bottom: 35px; line-height: 1.9; max-width: 600px; padding: 0 20px; }
+        .btn-close-bday { background: linear-gradient(135deg, var(--gold), #b48608); color: black; border: none; padding: 12px 35px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-close-bday:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); }
+
+        /* ================= تخصيص إشعارات SweetAlert لتناسب التصميم ================= */
+        .swal2-popup { background: var(--primary-light) !important; color: white !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px !important; }
+        .swal2-title { color: var(--gold) !important; font-family: inherit !important; font-weight: 900 !important; }
+        .swal2-html-container { color: #cbd5e1 !important; font-weight: bold !important; }
+        .swal2-input { background: rgba(5, 8, 20, 0.8) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; font-weight: bold !important; }
+        .swal2-input:focus { border-color: var(--gold) !important; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1) !important; }
+        .swal2-confirm { background: linear-gradient(135deg, var(--gold), #b48608) !important; color: black !important; font-weight: 900 !important; border-radius: 8px !important; }
+        .swal2-cancel { background: #ef4444 !important; color: white !important; font-weight: 900 !important; border-radius: 8px !important; }
     </style>
 </head>
 <body>
 
-    <div class="animated-grid-bg"></div>
     <div class="grid-overlay"></div>
-
     <div class="bg-shapes">
         <div class="shape"></div>
         <div class="shape"></div>
     </div>
 
     <div id="loader-overlay">
-        <div style="font-size:35px; margin-bottom:10px; animation: bounce 1s infinite;">💎</div>
-        <div>جاري معالجة البيانات...</div>
+        <div style="font-size:40px; margin-bottom:15px; filter: drop-shadow(0 0 10px #d4af37);">🛡️</div>
+        <div>جاري معالجة البيانات وتأمين الاتصال...</div>
     </div>
 
     <div id="birthday-overlay">
-        <div class="firework">🎆🎇✨🎇🎆</div>
-        <div class="cake-box">🎂</div>
-        <div class="bday-title">كل عام وإمبراطوريتنا بألف خير 👑</div>
+        <div class="royal-emblem">👑 💎 👑</div>
+        <div class="bday-title">ذكرى تأسيس الإمبراطورية</div>
         <div class="bday-text">
-            يا أحلى حبة سكر وأغلى خالتو ميمي<br>
-            اليوم 20 و 21 مارس يوم ميلاد الإبداع والرقي<br>
-            العمر كله بالنجاح والألماس وجورايد دايماً بالقمة
+            تهانينا لقادة ومؤسسي إمبراطورية N One الرسميين<br>
+            اليوم 20 و 21 مارس يمثل التتويج الملكي وذكرى الانطلاق والإبداع<br>
+            نحو المزيد من السيطرة والنجاح المالي في عالم الأعمال
         </div>
-        <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة 🚀</button>
+        <button class="btn-close-bday" onclick="closeBirthday()">متابعة الإدارة والتحكم 🚀</button>
     </div>
 
     <nav class="navbar">
-        <div class="brand">N <span class="gold-text">One</span> Admin</div>
-        <div class="welcome-msg">N One 👑</div>
-        <button class="btn-logout" onclick="logout()">إغلاق الخزنة 🔒</button>
+        <div class="brand">N <span class="gold-text">One</span> Dashboard</div>
+        <div class="welcome-msg">إدارة العمليات المركزية</div>
+        <button class="btn-logout" onclick="logout()">إغلاق الجلسة الآمنة 🔒</button>
     </nav>
 
     <div class="container">
         
-        <div class="cute-msg" style="text-align: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; color: var(--gold-light);"></div>
-
         <div class="quick-access-panel">
-            <a href="manager.html" class="btn-gate">🩺 فحص النظام</a>
-            <a href="maintenance.html" class="btn-gate">⚙️ الصيانة المركزية</a>
+            <a href="manager.html" class="btn-gate">🩺 فحص كفاءة النظام</a>
+            <a href="maintenance.html" class="btn-gate">⚙️ مركز الصيانة والطوارئ</a>
         </div>
         
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">شركات النقل (العملاء)</div>
+                <div class="stat-label">الشركات المسجلة</div>
                 <div class="stat-number" id="count-clients">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--success);">
-                <div class="stat-label">شركات نشطة</div>
+                <div class="stat-label">الشركات النشطة</div>
                 <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--gold);">
-                <div class="stat-label">المردود المالي</div>
+                <div class="stat-label">إجمالي الجرد المالي</div>
                 <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <span>إضافة شركة نقل جديدة</span>
+                <span>➕ إصدار تصريح شركة جديدة</span>
             </div>
             <div class="form-grid">
                 <input type="text" id="new_name" placeholder="الاسم التجاري للشركة">
-                <input type="text" id="new_user" placeholder="اسم المستخدم (User ID)">
-                <input type="password" id="new_pass" placeholder="كلمة المرور">
+                <input type="text" id="new_user" placeholder="معرف المستخدم (User ID)">
+                <input type="password" id="new_pass" placeholder="كلمة المرور المشفرة">
                 <select id="sub_duration">
-                    <option value="30">30 يوم</option>
-                    <option value="90">3 أشهر</option>
-                    <option value="180">6 أشهر</option>
-                    <option value="365">سنة كاملة</option>
+                    <option value="30">دورة 30 يوم</option>
+                    <option value="90">دورة 3 أشهر</option>
+                    <option value="180">دورة 6 أشهر</option>
+                    <option value="365">دورة سنوية</option>
                 </select>
-                <input type="number" id="sub_price" placeholder="الاشتراك (د.أ)">
+                <input type="number" id="sub_price" placeholder="قيمة العقد (د.أ)">
                 
-                <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px;">
-                    <input type="checkbox" id="can_send_ads" style="width: 15px; height: 15px; cursor: pointer;" checked>
-                    <label for="can_send_ads" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 11px;">تفعيل الإعلانات 📢</label>
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(5,8,20,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <input type="checkbox" id="can_send_ads" style="width: 16px; height: 16px; cursor: pointer;" checked>
+                    <label for="can_send_ads" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 12px;">منح صلاحية الإعلانات 📢</label>
                 </div>
 
-                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور 🚀</button>
+                <button class="btn-add" id="btnAddUser" onclick="addUser()">إدراج واعتماد 🚀</button>
             </div>
         </div>
         
-        <div class="card" style="border-top-color: var(--gold);">
+        <div class="card" style="border-top-color: var(--neon-blue);">
             <div class="card-header">
-                <span>📢 مركز الإعلانات الذكية</span>
+                <span style="color: var(--neon-blue);">📢 مركز البث المباشر والإعلانات</span>
             </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                <div style="flex: 2; min-width: 200px;">
-                    <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان هنا..." style="resize: none;"></textarea>
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 250px;">
+                    <textarea id="ad_text" rows="3" placeholder="أدخل النص الرسمي للإعلان هنا..." style="resize: none;"></textarea>
                 </div>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 200px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 200px;">
                     <select id="ad_target">
-                        <option value="all">إرسال للجميع</option>
+                        <option value="all">التعميم على كافة المشتركين</option>
                     </select>
-                    <div style="display: flex; gap: 6px;">
+                    <div style="display: flex; gap: 8px;">
                         <select id="ad_type" style="flex: 1;">
-                            <option value="normal" class="ad-color-normal">إعلان عادي</option>
-                            <option value="news" class="ad-color-news">أخبار عامة 🔵</option>
-                            <option value="warning" class="ad-color-warning">تحذير طارئ 🔴</option>
-                            <option value="offer" class="ad-color-offer">عروض 🟢</option>
+                            <option value="normal" class="ad-color-normal">إشعار اعتيادي</option>
+                            <option value="news" class="ad-color-news">نشرة أخبار 🔵</option>
+                            <option value="warning" class="ad-color-warning">إنذار إداري 🔴</option>
+                            <option value="offer" class="ad-color-offer">عروض تجارية 🟢</option>
                         </select>
                         <select id="ad_expire" style="flex: 1;">
-                            <option value="1">ساعة</option>
-                            <option value="24" selected>24 ساعة</option>
-                            <option value="168">أسبوع</option>
-                            <option value="permanent">دائم</option>
+                            <option value="1">صلاحية ساعة</option>
+                            <option value="24" selected>صلاحية يوم</option>
+                            <option value="168">صلاحية أسبوع</option>
+                            <option value="permanent">ثابت ودائم</option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="ad-controls">
-                <button class="btn-broadcast" onclick="sendAnnouncement()">بث بالشريط 🚀</button>
-                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ 🚨</button>
-                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح 🧹</button>
+                <button class="btn-broadcast" onclick="sendAnnouncement()">بث عبر الشريط الإخباري 🚀</button>
+                <button class="btn-popup" onclick="sendPopupAlert()">فرض تنبيه طارئ 🚨</button>
+                <button class="btn-clear-ad" onclick="clearAnnouncement()">تنظيف السجلات 🧹</button>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <span>🏢 سجل شركات النقل</span>
+                <span>🏢 قاعدة بيانات تصاريح الشركات</span>
             </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>الشركة</th>
-                            <th>بيانات الدخول (ID)</th>
-                            <th>الخطة / السعر</th>
-                            <th>الصلاحية</th>
-                            <th>الحالة</th>
-                            <th>التحكم الشامل</th>
+                            <th>الكيان التجاري</th>
+                            <th>معرفات الوصول (ID)</th>
+                            <th>العقد المالي والميزات</th>
+                            <th>حالة الصلاحية</th>
+                            <th>حالة النظام</th>
+                            <th>الإجراءات الإدارية</th>
                         </tr>
                     </thead>
                     <tbody id="clients-table">
-                        <tr><td colspan="6" style="text-align:center;">جاري تحميل البيانات...</td></tr>
+                        <tr><td colspan="6" style="text-align:center; padding: 30px; font-size: 14px;">جاري المزامنة مع الخوادم الآمنة...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -386,12 +361,25 @@
 
         let allData = [];
 
+        // دالة الإشعارات الذكية المتكاملة مع التصميم الرسمي
+        window.showNotification = function(msg, iconType = 'success') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: iconType,
+                title: msg,
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: '#0f172a',
+                color: '#fff',
+                iconColor: iconType === 'success' ? '#d4af37' : '#ef4444'
+            });
+        };
+
         window.onload = async function() {
             const sessionData = localStorage.getItem('currentUser');
-            if (!sessionData) {
-                // window.location.replace('index.html');
-                // return;
-            } else {
+            if (sessionData) {
                 const currentUser = JSON.parse(sessionData);
                 if (currentUser.role !== 'admin') {
                     window.location.replace('index.html');
@@ -417,20 +405,20 @@
         window.populateAdTargets = function() {
             const targetSelect = document.getElementById('ad_target');
             
-            targetSelect.innerHTML = '<option value="all">إرسال للجميع (الكل)</option>';
-            targetSelect.innerHTML += '<option value="clients_only">الشركات الصغيرة فقط</option>';
-            targetSelect.innerHTML += '<option value="shops_only">المنشآت التجارية فقط</option>';
+            targetSelect.innerHTML = '<option value="all">التعميم على كافة المشتركين (الكل)</option>';
+            targetSelect.innerHTML += '<option value="clients_only">مخصص لشركات النقل فقط</option>';
+            targetSelect.innerHTML += '<option value="shops_only">مخصص للمنشآت التجارية فقط</option>';
             
             allData.forEach(c => {
                 const username = c.Client_User || c.user;
                 const name = c.Client_Name || c.name;
-                targetSelect.innerHTML += `<option value="${username}">موجه لـ: ${name}</option>`;
+                targetSelect.innerHTML += `<option value="${username}">توجيه حصري لـ: ${name}</option>`;
             });
         }
 
         window.sendAnnouncement = async function() {
             const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
+            if(!text) { showNotification("يرجى إدراج نص الإعلان قبل البث", "error"); return; }
             
             const target = document.getElementById('ad_target').value;
             const type = document.getElementById('ad_type').value;
@@ -473,18 +461,28 @@
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
-                alert("تم بث الإعلان بنجاح");
+                showNotification("تم تفعيل البث بنجاح واعتماده في النظام");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال الإعلان");
+                showNotification("فشل الاتصال بالخادم أثناء معالجة الأمر", "error");
             }
         }
 
         window.sendPopupAlert = async function() {
             const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
+            if(!text) { showNotification("يرجى إدراج نص التنبيه قبل البث", "error"); return; }
             
-            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
+            const confirmResult = await Swal.fire({
+                title: 'تأكيد أمر طارئ',
+                text: "هذا الإجراء سيفرض النفاذ لشاشات المستخدمين المستهدفين فوراً هل أنت متأكد من المضي قدماً",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'نعم فرض التنبيه',
+                cancelButtonText: 'إلغاء الأمر'
+            });
+            if (!confirmResult.isConfirmed) return;
 
             const target = document.getElementById('ad_target').value;
             const alertData = {
@@ -517,19 +515,30 @@
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
-                alert("تم إرسال التنبيه الطارئ بنجاح");
+                showNotification("تم إصدار التنبيه الطارئ لكافة الأهداف المحددة");
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال التنبيه");
+                showNotification("تعذر إرسال التنبيه بسبب عطل فني", "error");
             }
         }
 
         window.clearAnnouncement = async function() {
-            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد")) return;
+            const confirmResult = await Swal.fire({
+                title: 'إخلاء السجلات',
+                text: "سيتم مسح وإلغاء تنشيط كافة الإعلانات والتنبيهات الحالية هل نتابع",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'تنفيذ الإخلاء',
+                cancelButtonText: 'تراجع'
+            });
+            if (!confirmResult.isConfirmed) return;
+
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'announcements'));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تنظيف واجهات الإعلانات");
+            showNotification("تم تطهير الواجهات من كافة السجلات القديمة");
         }
 
         window.renderTables = function() {
@@ -546,7 +555,7 @@
         }
 
         window.renderRows = function(tbody, data) {
-            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة حتى الآن</td></tr>'; return; }
+            if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">سجل قاعدة البيانات فارغ في الوقت الحالي</td></tr>'; return; }
             tbody.innerHTML = '';
             
             data.forEach(item => {
@@ -562,39 +571,39 @@
                 let currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
 
                 if (currentStatus === 'paused') {
-                    statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
-                    daysText = `<span style="color:#fbbf24;">موقف</span>`;
+                    statusBadge = `<span class="status-badge status-paused">حظر مؤقت ❄️</span>`;
+                    daysText = `<span style="color:#fbbf24;">قيد الإيقاف</span>`;
                 } else if (diffDays <= 0) {
-                    statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
-                    daysText = `<span style="color:#f87171; font-weight:bold;">انتهى</span>`;
+                    statusBadge = `<span class="status-badge status-expired">نفاد الصلاحية ⛔</span>`;
+                    daysText = `<span style="color:#f87171; font-weight:bold;">مغلق</span>`;
                     if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
                 } else {
-                    statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
-                    daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم</span>`;
+                    statusBadge = `<span class="status-badge status-active">مفعل ✅</span>`;
+                    daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم متبقي ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم متبقي</span>`;
                 }
                 
-                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 صلاحية الإعلان: معتمدة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 صلاحية الإعلان: محجوبة</span>`;
 
                 const toggleBtn = currentStatus === 'active'
-                    ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
-                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
+                    ? `<button class="action-btn act-freeze" title="تعليق النظام" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
+                    : `<button class="action-btn act-active" title="رفع التعليق" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
 
-                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
+                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="إدارة صلاحية الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
 
                 const row = `
                     <tr>
-                        <td style="color: var(--gold-light);"><b>${item.Client_Name || item.name}</b></td>
-                        <td style="font-size:12px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:13px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="color: var(--gold-light); font-size: 14px;"><b>${item.Client_Name || item.name}</b></td>
+                        <td style="font-size:13px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold; font-family: monospace;">ID: ${item.Client_User || item.user}<br>KEY: ${item.Client_Pass || item.pass}</td>
+                        <td style="font-size:14px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
                         <td style="font-size:13px;">${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <div class="action-group">
-                                <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
+                                <button class="action-btn act-edit" title="تحرير الهوية" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
                                 ${toggleBtn}
-                                <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
+                                <button class="action-btn act-renew" title="تجديد العقد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
                                 ${adToggleBtn}
-                                <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
+                                <button class="action-btn act-delete" title="إلغاء التوثيق" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
                             </div>
                         </td>
                     </tr>
@@ -612,11 +621,11 @@
             const price = document.getElementById('sub_price').value;
             const canSendAds = document.getElementById('can_send_ads').checked;
 
-            if (!name || !user || !pass || !price) { alert("يرجى تعبئة كافة الحقول"); return; }
+            if (!name || !user || !pass || !price) { showNotification("جميع الحقول إلزامية لاستكمال التسجيل", "error"); return; }
 
             const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
             if (exists) {
-                alert("⛔ تنبيه اسم المستخدم هذا موجود بالفعل يرجى اختيار اسم آخر لضمان عزل البيانات");
+                showNotification("معرف المستخدم محجوز مسبقاً يرجى توفير معرف بديل لضمان استقلالية البيانات", "error");
                 return;
             }
 
@@ -652,7 +661,7 @@
             try {
                 await set(ref(db, 'users/' + user), newItem);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة الشركة بنجاح مع قاعدة بيانات");
+                showNotification("تم بنجاح تأمين وإنشاء بيئة العمل المستقلة للعميل الجديد");
                 
                 document.getElementById('new_name').value = '';
                 document.getElementById('new_user').value = '';
@@ -661,40 +670,80 @@
                 document.getElementById('can_send_ads').checked = true;
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ في الربط");
+                showNotification("انقطاع في المسار المباشر نحو قاعدة البيانات", "error");
             }
         }
 
         window.toggleAdPermission = async function(username, currentStatus) {
             const nextStatus = !currentStatus;
-            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟")) return;
+            
+            const confirmResult = await Swal.fire({
+                title: 'تعديل الصلاحيات الإدارية',
+                text: nextStatus ? "هل نعتمد منح هذا الكيان حق استهداف الشبكة بالإعلانات" : "هل نعتمد حجب صلاحية الإعلانات عن هذا الكيان",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'تنفيذ وتأكيد',
+                cancelButtonText: 'إلغاء'
+            });
+            if (!confirmResult.isConfirmed) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
+            showNotification("تم تحديث مستوى الصلاحيات بنجاح");
         }
 
         window.editUser = async function(username, oldName, oldPass) {
-            const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
-            if (newName === null) return;
-            const newPass = prompt("تعديل كلمة المرور:", oldPass);
-            if (newPass === null) return;
+            const { value: formValues } = await Swal.fire({
+                title: 'تحرير هوية الكيان التجاري',
+                html:
+                  `<input id="swal-input1" class="swal2-input" style="width: 80%; margin-bottom: 10px;" value="${oldName}" placeholder="الاسم التجاري المعتمد">` +
+                  `<input id="swal-input2" class="swal2-input" style="width: 80%;" value="${oldPass}" placeholder="مفتاح التشفير (المرور)">`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'اعتماد البيانات الجديدة',
+                cancelButtonText: 'تجاهل',
+                preConfirm: () => {
+                  return [
+                    document.getElementById('swal-input1').value,
+                    document.getElementById('swal-input2').value
+                  ]
+                }
+            });
+
+            if (!formValues) return;
+            const newName = formValues[0];
+            const newPass = formValues[1];
 
             if (newName === oldName && newPass === oldPass) return;
 
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تحديث البيانات");
+            showNotification("تم توثيق التعديلات في السجل الرئيسي");
         }
 
         window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
+            
+            const confirmResult = await Swal.fire({
+                title: 'إدارة مسارات الوصول',
+                text: nextStatus === 'paused' ? "سيؤدي هذا إلى طرد المستخدم فورا وتعليق كافة عملياته هل نعتمده" : "سيتم إعادة دمج هذا الكيان في دورة العمل النشطة نتابع",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: nextStatus === 'paused' ? '#ef4444' : '#10b981',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'موافقة وتنفيذ',
+                cancelButtonText: 'تراجع'
+            });
+            if (!confirmResult.isConfirmed) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
+            showNotification("تم تطبيق بروتوكول مسارات الوصول");
         }
 
         window.setStatusSilent = async function(username, newStatus) {
@@ -702,9 +751,30 @@
         }
 
         window.renewUser = async function(username) {
-            const days = prompt("عدد أيام التجديد الإضافية:", "30");
-            if (!days) return;
-            const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
+            const { value: formValues } = await Swal.fire({
+                title: 'تجديد العقد وتمديد الصلاحية',
+                html:
+                  `<div style="text-align: right; margin-bottom: 5px; font-weight: bold; color: var(--gold); font-size: 14px;">عدد الأيام الإضافية</div>` +
+                  `<input id="swal-input1" type="number" class="swal2-input" style="width: 80%; margin-bottom: 15px;" value="30">` +
+                  `<div style="text-align: right; margin-bottom: 5px; font-weight: bold; color: var(--gold); font-size: 14px;">قيمة العقد للجرد المالي (ضع صفر إن كان إهداء)</div>` +
+                  `<input id="swal-input2" type="number" class="swal2-input" style="width: 80%;" value="0">`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'تنفيذ التمديد',
+                cancelButtonText: 'إلغاء الأمر',
+                preConfirm: () => {
+                  return [
+                    document.getElementById('swal-input1').value,
+                    document.getElementById('swal-input2').value
+                  ]
+                }
+            });
+
+            if (!formValues) return;
+            const days = formValues[0];
+            const newPrice = formValues[1];
+
+            if (!days || isNaN(days)) return;
 
             const newDate = new Date();
             newDate.setDate(newDate.getDate() + parseInt(days));
@@ -713,15 +783,26 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تجديد الاشتراك بنجاح");
+            showNotification("تم تحديث الدورة الزمنية وضبط القيود المالية");
         }
 
         window.deleteUser = async function(username) {
-            if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد؟")) return;
+            const confirmResult = await Swal.fire({
+                title: 'إنذار شطب نهائي',
+                text: "هذا الإجراء سيقوم باجتثاث كافة جذور الكيان وبياناته بلا رجعة هل تفوضني بهذا الأمر",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'تفويض الشطب النهائي',
+                cancelButtonText: 'إغلاق الإنذار'
+            });
+            if (!confirmResult.isConfirmed) return;
+
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'users/' + username));
             document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم حذف الحساب نهائياً");
+            showNotification("تم إنهاء وتدمير القيود المرتبطة بهذا الكيان");
         }
 
         window.logout = function() { 
@@ -729,7 +810,7 @@
             window.location.replace('index.html');
         }
 
-        // ================= دوال مفاجأة عيد الميلاد الملكية ================= //
+        // ================= بروتوكول عرض ذكرى التأسيس (مموه وآمن) ================= //
         window.closeBirthday = function() {
             document.getElementById('birthday-overlay').style.display = 'none';
         };
