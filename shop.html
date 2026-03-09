@@ -100,6 +100,7 @@
         }
         .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
 
+        /* ترتيب الباجات للهاتف وتوحيد الألوان */
         .badges-wrapper {
             display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; width: 100%; padding: 0 10px;
         }
@@ -766,7 +767,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, get, set, child, update, onValue, push, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, set, child, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -790,7 +791,6 @@
         let verifiedCaptain = null;
         let masterName = "الإدارة العامة";
         window.myNode = 'shops'; 
-        let myShopKey = "";
         
         let systemSettings = { show_phone_numbers: false };
 
@@ -805,7 +805,6 @@
             const savedUser = localStorage.getItem('n1_shop_session');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                myShopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
                 initializePortal();
             } else {
                 document.getElementById('auth-section').style.display = 'flex';
@@ -859,7 +858,6 @@
 
                         userData._node = foundNode;
                         currentUser = userData;
-                        myShopKey = user;
                         localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                         initializePortal();
                     } else {
@@ -933,41 +931,46 @@
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
 
-            window.myNode = currentUser._node || 'shops';
-
             const shopNameStr = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "المنشأة";
+            const shopUserStr = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "N/A";
             const shopLocStr = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "البيانات الجغرافية غير متوفرة";
             
             document.getElementById('hdr-shop-name').innerText = shopNameStr;
-            document.getElementById('hdr-shop-user').innerText = myShopKey;
+            document.getElementById('hdr-shop-user').innerText = shopUserStr;
             document.getElementById('hdr-shop-area').innerText = shopLocStr;
 
-            document.getElementById('profile_user').value = myShopKey;
+            document.getElementById('profile_user').value = shopUserStr;
             document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
             
             fetchMasterInfo();
             setupAdsAndAlerts();
             listenToSystemSettings();
+            setupLiveOrders();
             setupLivePrices();
-            setupLiveOrders(); 
+            await fetchAllData(); 
             attachBalanceListener();
         }
 
-        // سحب مستهدف لأسعار الشركة المعتمدة فقط
-        function setupLivePrices() {
-            const pricingArea = currentUser.Client_PricingArea || currentUser.pricing_area || currentUser.Shop_Location;
-            if(!pricingArea) return;
+        function extractPrices(obj) {
+            let arr = [];
+            if(!obj) return arr;
+            Object.values(obj).forEach(val => {
+                if(val && typeof val === 'object') {
+                    if(val.Price_Area) arr.push(val);
+                    else arr = arr.concat(extractPrices(val));
+                }
+            });
+            return arr;
+        }
 
-            const pricesQuery = query(ref(db, 'prices'), orderByChild('Price_Source'), equalTo(pricingArea));
-            
-            onValue(pricesQuery, (snapshot) => {
+        function setupLivePrices() {
+            onValue(ref(db, 'prices'), (snapshot) => {
                 if(snapshot.exists()) {
-                    dbPrices = Object.values(snapshot.val());
-                    loadShopPrices();
-                    calculateFee();
-                } else {
-                    dbPrices = [];
-                    loadShopPrices();
+                    dbPrices = extractPrices(snapshot.val());
+                    if(currentUser) {
+                        loadShopPrices();
+                        calculateFee();
+                    }
                 }
             });
         }
@@ -985,7 +988,8 @@
                 });
             }
             
-            onValue(ref(db, `${window.myNode}/${myShopKey}/hide_phone`), (snap) => {
+            const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+            onValue(ref(db, `${window.myNode}/${shopKey}/hide_phone`), (snap) => {
                 if(snap.exists()) {
                     currentUser.hide_phone = snap.val();
                 }
@@ -1020,9 +1024,9 @@
             }
         };
 
-        // التعديل الألماسي: الاستماع للإعلانات الموجهة للمنشأة فقط لتوفير استهلاك البيانات
         function setupAdsAndAlerts() {
             const master = currentUser.Client_Master || currentUser.master;
+            const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
             
             let activeAds = { admin: null, client: null };
             let activeAlerts = { admin: null, client: null };
@@ -1054,42 +1058,33 @@
                 }
             };
 
+            const extractAd = (adsObj) => {
+                if (!adsObj) return null;
+                if (adsObj.users && adsObj.users[myUser]) return adsObj.users[myUser];
+                if (adsObj.global) return adsObj.global;
+                return null;
+            };
+
             const renderAlert = () => {
                 let displayAlert = activeAlerts.client || activeAlerts.admin;
                 let senderLabel = activeAlerts.client ? (activeAlerts.client.sender || masterName) : (activeAlerts.admin ? (activeAlerts.admin.sender || masterName) : masterName);
 
                 if (displayAlert && displayAlert.message) {
-                    const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myShopKey) || 0;
+                    const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
                     if (displayAlert.timestamp > lastSeen) {
                         document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة رسمية - ${senderLabel}</div>${displayAlert.message}`;
                         document.getElementById('app-popup-overlay').style.display = 'flex';
-                        localStorage.setItem('last_seen_alert_shop_' + myShopKey, displayAlert.timestamp);
+                        localStorage.setItem('last_seen_alert_shop_' + myUser, displayAlert.timestamp);
                     }
                 }
             };
 
-            // استماع مخصص للإعلانات العالمية
-            onValue(ref(db, 'announcements/global'), snap => { activeAds.admin = snap.val(); renderAd(); });
-            onValue(ref(db, 'alerts/global'), snap => { activeAlerts.admin = snap.val(); renderAlert(); });
-
-            // استماع مخصص للإعلانات الموجهة لهاد اليوزر تحديداً
-            onValue(ref(db, `announcements/users/${myShopKey}`), snap => { 
-                if(snap.exists()) { activeAds.admin = snap.val(); renderAd(); } 
-            });
-            onValue(ref(db, `alerts/users/${myShopKey}`), snap => { 
-                if(snap.exists()) { activeAlerts.admin = snap.val(); renderAlert(); } 
-            });
+            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractAd(snap.val()); renderAd(); });
+            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractAd(snap.val()); renderAlert(); });
 
             if(master) {
-                onValue(ref(db, `client_announcements/${master}/shops/global`), snap => { activeAds.client = snap.val(); renderAd(); });
-                onValue(ref(db, `client_alerts/${master}/shops/global`), snap => { activeAlerts.client = snap.val(); renderAlert(); });
-                
-                onValue(ref(db, `client_announcements/${master}/shops/users/${myShopKey}`), snap => { 
-                    if(snap.exists()) { activeAds.client = snap.val(); renderAd(); } 
-                });
-                onValue(ref(db, `client_alerts/${master}/shops/users/${myShopKey}`), snap => { 
-                    if(snap.exists()) { activeAlerts.client = snap.val(); renderAlert(); } 
-                });
+                onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); });
+                onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); });
             }
         }
 
@@ -1107,16 +1102,22 @@
             });
         };
 
-        // التعديل الألماسي الأكبر: سحب طلبات المنشأة فقط (Targeted Orders Query)
+        function isMyOrder(ord) {
+            const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
+            const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase();
+            return (myUser !== "" && myUser === ordUser);
+        }
+
         function setupLiveOrders() {
-            const myOrdersQuery = query(ref(db, 'orders'), orderByChild('Shop_User'), equalTo(myShopKey), limitToLast(50));
+            const ordersRef = ref(db, 'orders');
             
-            onValue(myOrdersQuery, (snapshot) => {
+            onValue(ordersRef, (snapshot) => {
                 const list = document.getElementById('history-list');
                 let listHtml = ''; 
                 
                 if(snapshot.exists()) {
-                    const myOrders = Object.values(snapshot.val());
+                    const allOrders = Object.values(snapshot.val());
+                    const myOrders = allOrders.filter(o => isMyOrder(o));
                     
                     const todayStr = new Date().toDateString();
                     const todayCount = myOrders.filter(o => new Date(o.Shop_Date || Date.now()).toDateString() === todayStr).length;
@@ -1124,7 +1125,7 @@
                     document.getElementById('orders-today').innerText = todayCount;
                     document.getElementById('orders-total').innerText = myOrders.length;
 
-                    const recentOrders = myOrders.reverse();
+                    const recentOrders = myOrders.reverse().slice(0, 20);
                     
                     if(recentOrders.length === 0) {
                         listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا يوجد سجل للمرحلة الحالية</div>';
@@ -1243,9 +1244,10 @@
             }
             
             try {
+                const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
                 const newRatingRef = push(ref(db, `ratings/captains/${capId}`));
                 await set(newRatingRef, {
-                    shopId: myShopKey,
+                    shopId: shopKey,
                     rating: val,
                     reason: selectedTag,
                     notes: notes,
@@ -1260,9 +1262,51 @@
             }
         };
 
-        // استماع مخصص فقط لرصيد المنشأة بدون سحب بيانات أخرى
+        window.fetchAllData = async function() {
+            try {
+                const snapshot = await get(ref(db));
+                if(snapshot.exists()) {
+                    const data = snapshot.val();
+                    let flatData = [];
+                    
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
+                    };
+                    
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
+                    
+                    dbPrices = extractPrices(data.prices);
+
+                    const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
+                    
+                    const me = flatData.find(u => 
+                        String(u.Shop_User || "").trim() === shopKey || 
+                        String(u.Client_User || "").trim() === shopKey || 
+                        String(u.user || "").trim() === shopKey || 
+                        String(u.Shop_Phone || "").trim() === shopKey || 
+                        String(u.Client_Phone || "").trim() === shopKey || 
+                        String(u.phone || "").trim() === shopKey
+                    );
+                    
+                    if (me) {
+                        window.myNode = me._node || 'shops'; 
+                        myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
+                        document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                        
+                        loadShopPrices();
+                    }
+                }
+            } catch (e) {
+                console.error("خطأ في المزامنة", e);
+            }
+        }
+
         window.attachBalanceListener = function() {
-            onValue(ref(db, `${window.myNode}/${myShopKey}`), (snap) => {
+            const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
+            
+            onValue(ref(db, `${window.myNode}/${shopKey}`), (snap) => {
                 if(snap.exists()){
                     const me = snap.val();
                     myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0);
@@ -1287,7 +1331,12 @@
             const datalist = document.getElementById('areas-list');
             datalist.innerHTML = '';
             
-            dbPrices.forEach(p => {
+            const myArea = currentUser.Client_PricingArea || currentUser.pricing_area || currentUser.Shop_Location;
+            if (!myArea) return;
+
+            const myPrices = dbPrices.filter(p => String(p.Price_Source).trim() === String(myArea).trim());
+            
+            myPrices.forEach(p => {
                 const currentPrice = parseFloat(p.Price_Current || p.Price_Base || 0);
                 const areaName = String(p.Price_Area).trim();
                 
@@ -1434,7 +1483,6 @@
             }
         }
 
-        // التعديل الألماسي: تحقق مباشر من الكابتن بدون سحب كل اليوزرز
         window.verifyCaptain = async function() {
             const capId = String(document.getElementById('cap_id').value).trim();
             const amount = parseFloat(document.getElementById('charge_amount').value);
@@ -1450,46 +1498,44 @@
             setLoading('btn-check', true);
 
             try {
-                // فحص ذكي في مسار الكباتن أولاً
-                const capsQuery = query(ref(db, 'captains'), orderByChild('user'), equalTo(capId));
-                let snap = await get(capsQuery);
-                let capData = null;
-                let capNode = 'captains';
-                let capKeyToUpdate = capId;
+                const snapshot = await get(ref(db));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    let flatData = [];
+                    
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
+                    };
+                    
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
 
-                if(snap.exists()){
-                     capData = Object.values(snap.val())[0];
-                     capKeyToUpdate = Object.keys(snap.val())[0];
-                } else {
-                    // إذا لم يوجد، نفحص مسار اليوزرز باحتمالية إنه مسجل كـ client
-                    const usersQuery = query(ref(db, 'users'), orderByChild('user'), equalTo(capId));
-                    snap = await get(usersQuery);
-                    if(snap.exists()){
-                        capData = Object.values(snap.val())[0];
-                        capNode = 'users';
-                        capKeyToUpdate = Object.keys(snap.val())[0];
+                    const cap = flatData.find(c => 
+                        (String(c.Cap_User || "").trim() === capId || 
+                        String(c.user || "").trim() === capId || 
+                        String(c.Cap_Phone || "").trim() === capId || 
+                        String(c.Client_Phone || "").trim() === capId || 
+                        String(c.phone || "").trim() === capId)
+                    );
+                    
+                    if (!cap) {
+                        showCustomAlert("لا توجد قيود للمستلم يرجى مراجعة المعرف المدخل");
+                        verifiedCaptain = null;
+                        document.getElementById('cap-check-result').style.display = 'none';
+                        document.getElementById('btn-charge').style.display = 'none';
+                    } else {
+                        verifiedCaptain = cap;
+                        const capName = cap.Cap_Name || cap.name || "سائق معتمد";
+                        const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0);
+
+                        document.getElementById('found-cap-name').innerText = capName;
+                        document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
+                        document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
+                        
+                        document.getElementById('cap-check-result').style.display = 'block';
+                        document.getElementById('btn-charge').style.display = 'block';
                     }
-                }
-
-                if (!capData) {
-                    showCustomAlert("لا توجد قيود للمستلم يرجى مراجعة المعرف المدخل");
-                    verifiedCaptain = null;
-                    document.getElementById('cap-check-result').style.display = 'none';
-                    document.getElementById('btn-charge').style.display = 'none';
-                } else {
-                    capData._node = capNode;
-                    capData._updateKey = capKeyToUpdate;
-                    verifiedCaptain = capData;
-                    
-                    const capName = capData.Cap_Name || capData.name || "سائق معتمد";
-                    const capBal = parseFloat(capData.Cap_Balance || capData.balance || 0);
-
-                    document.getElementById('found-cap-name').innerText = capName;
-                    document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
-                    document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
-                    
-                    document.getElementById('cap-check-result').style.display = 'block';
-                    document.getElementById('btn-charge').style.display = 'block';
                 }
             } catch (e) {
                 showToast("تعذر إتمام التحقق");
@@ -1511,25 +1557,27 @@
                     const newCapBal = currentCapBal + amount;
                     const newShopBal = myBalance - amount;
 
-                    const capKey = verifiedCaptain._updateKey;
-                    const capNode = verifiedCaptain._node;
+                    const capKey = String(verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone || verifiedCaptain.phone).trim();
+                    const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
                     
+                    const capNode = verifiedCaptain._node || 'users';
+
                     const updates = {};
                     
                     updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal;
                     updates[`${capNode}/${capKey}/balance`] = newCapBal;
                     
-                    updates[`${window.myNode}/${myShopKey}/Shop_Balance`] = newShopBal;
-                    updates[`${window.myNode}/${myShopKey}/Client_Balance`] = newShopBal;
-                    updates[`${window.myNode}/${myShopKey}/balance`] = newShopBal;
+                    updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
+                    updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
+                    updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
 
                     const txId = "TX_" + Date.now() + Math.floor(Math.random() * 1000);
-                    updates[`financial_logs/${myShopKey}/${txId}`] = {
+                    updates[`financial_logs/${shopKey}/${txId}`] = {
                         type: 'deposit_to_captain',
                         amount: amount,
-                        captain_phone: String(verifiedCaptain.Cap_Phone || verifiedCaptain.phone || capKey),
+                        captain_phone: capKey,
                         captain_name: verifiedCaptain.Cap_Name || verifiedCaptain.name || "كابتن",
-                        shop_user: myShopKey,
+                        shop_user: shopKey,
                         shop_name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "منشأة",
                         description: `شحن رصيد من المنشأة للكابتن المعتمد`,
                         timestamp: Date.now(),
@@ -1558,6 +1606,7 @@
         }
 
         window.updateShopProfile = async function() {
+            const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
             const newPass = document.getElementById('profile_pass').value;
 
             if(!newPass) { showCustomAlert("يتطلب إدخال بيانات التحديث لتنفيذ العملية"); return; }
@@ -1566,9 +1615,9 @@
 
             try {
                 const updates = {
-                    [`${window.myNode}/${myShopKey}/Shop_Pass`]: newPass,
-                    [`${window.myNode}/${myShopKey}/pass`]: newPass,
-                    [`${window.myNode}/${myShopKey}/Client_Pass`]: newPass
+                    [`${window.myNode}/${oldUser}/Shop_Pass`]: newPass,
+                    [`${window.myNode}/${oldUser}/pass`]: newPass,
+                    [`${window.myNode}/${oldUser}/Client_Pass`]: newPass
                 };
                 await update(ref(db), updates);
                 
