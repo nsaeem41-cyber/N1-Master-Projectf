@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | مصفوفة الأسعار الماسية (Royal Edition)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         /* ================= تصميم Diamond Royal ================= */
@@ -81,7 +82,7 @@
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; border: 1px solid #475569; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: var(--night); border-color: var(--night); }
         input:checked + .slider:before { transform: translateX(22px); }
 
@@ -275,7 +276,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -290,9 +291,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let sourcesList = []; // مصفوفة لأسماء القوائم لتفادي أخطاء النصوص
+        let sourcesList = []; 
         let pricingData = {}; 
-        let deletedDbIds = []; // سلة مهملات لتفادي الحذف الفوري الخطير
+        let deletedDbIds = []; 
         let isNightActive = false; 
         let currentUser = null;
         let myMaster = "";
@@ -335,7 +336,7 @@
             });
         }
 
-        // تم تعديل الدالة لتقوم بفلترة أسعار الشركة في المتصفح بأمان تام (Client-side) لتعمل مع قواعدك
+        // التعديل الألماسي: سحب جراحي ومستهدف لأسعار هذه الشركة فقط لضمان السرعة والأمان
         async function fetchPricesFromCloud() {
             showLoader();
             pricingData = {};
@@ -343,28 +344,27 @@
             deletedDbIds = [];
             
             try {
+                // استخدام Query لسحب فقط الأسعار المرتبطة بـ myMaster
                 const pricesRef = ref(db, 'prices');
-                const snapshot = await get(pricesRef);
+                const pricesQuery = query(pricesRef, orderByChild('Client_Master'), equalTo(myMaster));
+                const snapshot = await get(pricesQuery);
 
                 if (snapshot.exists()) {
                     const data = Object.values(snapshot.val());
                     data.forEach(r => {
-                        // فلترة لأسعار الماستر الحالي فقط
-                        if (r.Client_Master === myMaster) {
-                            if (!pricingData[r.Price_Source]) {
-                                pricingData[r.Price_Source] = [];
-                                sourcesList.push(r.Price_Source);
-                            }
-                            pricingData[r.Price_Source].push({
-                                id: r.Price_ID,
-                                area: r.Price_Area,
-                                price: parseFloat(r.Price_Base || 0),
-                                isOffer: r.Price_Offer === 'true',
-                                originalPrice: r.Price_Original ? parseFloat(r.Price_Original) : null,
-                                offerEndTime: r.Offer_End_Time ? parseInt(r.Offer_End_Time) : null,
-                                lastMod: r.Price_Date ? new Date(r.Price_Date).getTime() : Date.now()
-                            });
+                        if (!pricingData[r.Price_Source]) {
+                            pricingData[r.Price_Source] = [];
+                            sourcesList.push(r.Price_Source);
                         }
+                        pricingData[r.Price_Source].push({
+                            id: r.Price_ID,
+                            area: r.Price_Area,
+                            price: parseFloat(r.Price_Base || 0),
+                            isOffer: r.Price_Offer === 'true',
+                            originalPrice: r.Price_Original ? parseFloat(r.Price_Original) : null,
+                            offerEndTime: r.Offer_End_Time ? parseInt(r.Offer_End_Time) : null,
+                            lastMod: r.Price_Date ? new Date(r.Price_Date).getTime() : Date.now()
+                        });
                     });
                 } 
                 
@@ -375,11 +375,10 @@
                 
                 populateSources();
                 renderMatrix();
-                
                 autoRevertExpiredOffers(true); 
                 
             } catch(e) {
-                console.error(e);
+                console.error("Error fetching targeted data:", e);
             }
             hideLoader();
         }
@@ -417,7 +416,7 @@
             select.innerHTML = '';
             sourcesList.forEach((source, index) => {
                 const option = document.createElement('option');
-                option.value = index; // استخدام Index
+                option.value = index; 
                 option.innerText = source;
                 select.appendChild(option);
             });
@@ -435,7 +434,6 @@
             }
         }
 
-        // الحذف المؤقت الآمن (سلة المهملات)
         window.deleteSource = function() {
             const index = document.getElementById('source-select').value;
             if(index === "") return;
@@ -530,7 +528,6 @@
             }
         }
 
-        // المزامنة التلقائية مع السيرفر عند انتهاء العرض
         function autoRevertExpiredOffers(syncWithServer = false) {
             let needsRender = false;
             let needsSave = false;
@@ -588,8 +585,6 @@
 
             const areas = pricingData[sourceName] || [];
             const now = Date.now();
-
-            // قفل الإدخال الحقيقي
             const inputState = isNightActive ? 'disabled title="قم بإيقاف الحارس الليلي لتتمكن من التعديل"' : '';
 
             areas.forEach((item, i) => {
@@ -637,7 +632,6 @@
                     `;
                 }
 
-                // الحماية باستخدام Index
                 container.innerHTML += `
                     <div class="price-card ${offerClass}">
                         <div class="color-indicator ${colorClass}"></div>
@@ -704,11 +698,10 @@
         window.openMap = function(sourceIndex, index) {
             const sourceName = sourcesList[sourceIndex];
             const area = pricingData[sourceName][index].area;
-            const query = encodeURIComponent(`${area} ${sourceName} Jordan`);
-            window.open(`http://googleusercontent.com/maps.google.com/search?q=${query}`, '_blank');
+            const queryMap = encodeURIComponent(`${area} ${sourceName} Jordan`);
+            window.open(`http://googleusercontent.com/maps.google.com/search?q=${queryMap}`, '_blank');
         }
 
-        // حفظ آمن لا يمسح بيانات الشركات الأخرى
         window.saveData = async function(isSilent = false) {
             const btn = document.getElementById('save-btn');
             if(!isSilent) {
@@ -719,7 +712,6 @@
             try {
                 let promises = [];
                 
-                // 1. إضافة وتحديث الموجود بالشاشة
                 for (const source in pricingData) {
                     pricingData[source].forEach(item => {
                         const payload = {
@@ -737,7 +729,6 @@
                     });
                 }
                 
-                // 2. حذف ما تم حذفه من هذه الشاشة فقط 
                 deletedDbIds.forEach(id => {
                     promises.push(remove(ref(db, `prices/${id}`)));
                 });
