@@ -323,7 +323,7 @@
         .btn-install-app:active { transform: scale(0.95); }
         .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
-        /* نظام الإشعارات المنسدلة */
+        /* نظام الإشعارات المنسدلة الذكي */
         #toast-container { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; align-items: center; }
         .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid var(--gold); padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(-120%); animation: slideDownToast 0.4s forwards, fadeOutToast 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; max-width: 90%; text-align: right; }
         @keyframes slideDownToast { to { transform: translateY(0); } }
@@ -830,24 +830,22 @@
             if(mode === 'register') document.getElementById('register-card').style.display = 'block';
         };
 
-        // التحديث الألماسي: جلب أسماء الشركات للقائمة المنسدلة عند فتح صفحة التسجيل
+        // التحديث الألماسي: جلب أسماء الشركات (بدون الأدمن) للقائمة المنسدلة عند فتح صفحة التسجيل
         window.openRegisterPage = async function() {
             toggleAuth('register');
             const masterSelect = document.getElementById('reg-master');
             masterSelect.innerHTML = '<option value="loading">جاري سحب بيانات الشركات المرجعية...</option>';
             
             try {
-                // جلب جميع الحسابات من جدول users
                 const usersSnap = await get(child(ref(db), 'users'));
                 let optionsHtml = '<option value="">-- يرجى اختيار الشركة المرجعية --</option>';
                 
                 if (usersSnap.exists()) {
                     const usersData = usersSnap.val();
                     Object.values(usersData).forEach(u => {
-                        // السماح للإدارة العليا والشركات المفعلة بالظهور في القائمة
-                        if (u.role === 'admin' || (u.external_reg_enabled && u.external_reg_id) || u.role === 'client' || u.type === 'client') {
+                        // فلترة صارمة: السماح فقط للشركات الصغيرة (client) ولا نسمح بظهور الإدارة (admin)
+                        if ((u.role === 'client' || u.type === 'client') || (u.external_reg_enabled && u.external_reg_id && u.role !== 'admin')) {
                             const dispName = u.name || u.Client_Name || u.user;
-                            // الاعتماد على الـ User ID الحقيقي كمعرف للربط
                             const valId = u.user || u.Client_User || u.external_reg_id;
                             if (valId) {
                                 optionsHtml += `<option value="${valId}">${dispName}</option>`;
@@ -921,7 +919,7 @@
             const user = document.getElementById('reg-user').value.trim();
             const pass = document.getElementById('reg-pass').value;
             const phone = document.getElementById('reg-phone').value.trim();
-            const masterId = document.getElementById('reg-master').value; // يأخذ الـ User ID الحقيقي للشركة الأم
+            const masterId = document.getElementById('reg-master').value;
 
             if(!name || !user || !pass || !phone || !masterId) { showAppToast("يجب إكمال كافة الحقول الإلزامية واختيار الشركة المرجعية", true); return; }
 
@@ -937,7 +935,6 @@
                     return;
                 }
 
-                // التحديث الألماسي: تسجيل البيانات بربط دقيق مع الشركة الأم المختارة
                 const newShop = {
                     Client_ID: "REQ_" + Date.now(),
                     Client_User: user, 
@@ -1534,6 +1531,7 @@
             }
         }
 
+        // التحديث الألماسي: محرك البحث القديم القوي اللي بيسحب الكابتن برقم التلفون أو المعرف
         window.verifyCaptain = async function() {
             const capId = String(document.getElementById('cap_id').value).trim();
             const amount = parseFloat(document.getElementById('charge_amount').value);
@@ -1549,37 +1547,45 @@
             setLoading('btn-check', true);
 
             try {
-                let capData = null;
-                let capNode = 'captains';
-                
-                const capSnap1 = await get(child(ref(db), `captains/${capId}`));
-                if (capSnap1.exists()) {
-                    capData = capSnap1.val();
-                } else {
-                    const capSnap2 = await get(child(ref(db), `users/${capId}`));
-                    if (capSnap2.exists()) {
-                        capData = capSnap2.val();
-                        capNode = 'users';
-                    }
-                }
-                
-                if (!capData) {
-                    showAppToast("لم يتم العثور على أي قيود مالية للمستلم", true);
-                    verifiedCaptain = null;
-                    document.getElementById('cap-check-result').style.display = 'none';
-                    document.getElementById('btn-charge').style.display = 'none';
-                } else {
-                    capData._node = capNode;
-                    verifiedCaptain = capData;
-                    const capName = capData.Cap_Name || capData.name || "مستلم معتمد";
-                    const capBal = parseFloat(capData.Cap_Balance || capData.balance || 0);
-
-                    document.getElementById('found-cap-name').innerText = capName;
-                    document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
-                    document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
+                const snapshot = await get(ref(db));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    let flatData = [];
                     
-                    document.getElementById('cap-check-result').style.display = 'block';
-                    document.getElementById('btn-charge').style.display = 'block';
+                    const addWithNode = (obj, nodeName) => {
+                        if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); });
+                    };
+                    
+                    addWithNode(data.users, 'users');
+                    addWithNode(data.shops, 'shops');
+                    addWithNode(data.captains, 'captains');
+
+                    // البحث الشامل والدقيق بكل مسميات الـ IDs القديمة والجديدة
+                    const cap = flatData.find(c => 
+                        (String(c.Cap_User || "").trim() === capId || 
+                        String(c.user || "").trim() === capId || 
+                        String(c.Cap_Phone || "").trim() === capId || 
+                        String(c.Client_Phone || "").trim() === capId || 
+                        String(c.phone || "").trim() === capId)
+                    );
+                    
+                    if (!cap) {
+                        showAppToast("لا توجد قيود للمستلم. يرجى مراجعة المعرف المدخل", true);
+                        verifiedCaptain = null;
+                        document.getElementById('cap-check-result').style.display = 'none';
+                        document.getElementById('btn-charge').style.display = 'none';
+                    } else {
+                        verifiedCaptain = cap;
+                        const capName = cap.Cap_Name || cap.name || "مستلم معتمد";
+                        const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0);
+
+                        document.getElementById('found-cap-name').innerText = capName;
+                        document.getElementById('found-cap-balance').innerText = capBal.toFixed(2);
+                        document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2);
+                        
+                        document.getElementById('cap-check-result').style.display = 'block';
+                        document.getElementById('btn-charge').style.display = 'block';
+                    }
                 }
             } catch (e) {
                 showAppToast("تعذر إتمام طلب التحقق المالي", true);
