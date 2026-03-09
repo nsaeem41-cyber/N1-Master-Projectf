@@ -3,159 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | صيانة النظام الذكية</title>
+    <title>N One | غرفة صيانة النظام المركزية (Maintenance)</title>
     <style>
+        /* ================= أساسيات التصميم (Diamond Royal Theme) ================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0a0a0a; color: #e0e0e0;
-            margin: 0; padding: 0; overflow-x: hidden;
+            background-color: #0f172a; 
+            color: #e2e8f0;
+            margin: 0; padding: 20px; overflow-x: hidden;
             user-select: none;
+            background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent 40%);
         }
 
         .header {
-            background: #111; padding: 20px 30px; display: flex;
-            justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #d4af37; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 3px solid #d4af37; padding-bottom: 20px; margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1px; }
-        .gold { color: #d4af37; }
+        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .gold { color: #d4af37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
 
         .btn-back {
-            background: #222; color: #ddd; border: 1px solid #444;
-            padding: 8px 20px; border-radius: 8px; cursor: pointer; text-decoration: none;
-            font-weight: bold; transition: 0.3s;
+            background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: 1px solid #475569;
+            padding: 12px 25px; border-radius: 12px; cursor: pointer; text-decoration: none;
+            transition: 0.3s; font-weight: bold; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .btn-back:hover { background: #333; color: white; }
+        .btn-back:hover { background: #334155; border-color: #d4af37; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 175, 55, 0.2); }
 
-        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
         .health-dashboard {
-            background: #151515; padding: 30px; border-radius: 15px;
-            border: 1px solid #333; margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #1e293b, #0f172a); padding: 30px; border-radius: 20px;
+            border: 1px solid #334155; margin-bottom: 35px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
-        .health-title { font-size: 20px; font-weight: bold; color: #d4af37; margin-bottom: 20px; }
+        .health-title { font-size: 20px; font-weight: 900; color: #d4af37; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         
-        .progress-wrapper { width: 100%; background: #222; border-radius: 10px; height: 25px; margin-bottom: 10px; overflow: hidden; border: 1px solid #444; }
-        .progress-bar { height: 100%; background: #2e7d32; width: 0%; transition: width 1s ease-in-out, background 0.5s; }
+        .progress-wrapper { width: 100%; background: #0f172a; border-radius: 12px; height: 25px; margin-bottom: 15px; overflow: hidden; border: 1px solid #334155; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); width: 0%; transition: width 1s ease-in-out, background 0.5s; }
         
-        .health-stats { display: flex; justify-content: space-between; font-size: 13px; color: #aaa; }
+        .health-stats { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: #cbd5e1; }
 
         .tools-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;
         }
 
         .tool-card {
-            background: #151515; padding: 25px; border-radius: 15px;
-            border: 1px solid #222; text-align: center; transition: 0.3s;
-            position: relative; overflow: hidden;
+            background: linear-gradient(145deg, #1e293b, #0f172a); padding: 30px; border-radius: 20px;
+            border: 1px solid #334155; text-align: center; transition: 0.3s;
+            position: relative; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; justify-content: space-between;
         }
-        .tool-card:hover { border-color: #d4af37; transform: translateY(-5px); }
+        .tool-card:hover { border-color: #d4af37; transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
         
-        .tool-icon { font-size: 40px; margin-bottom: 15px; }
-        .tool-title { font-size: 18px; font-weight: bold; color: white; margin-bottom: 10px; }
-        .tool-desc { font-size: 13px; color: #888; margin-bottom: 25px; line-height: 1.5; }
+        .tool-icon { font-size: 40px; margin-bottom: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .tool-title { font-size: 18px; font-weight: 900; color: white; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .tool-desc { font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.6; font-weight: bold; flex-grow: 1; }
 
         .btn-action {
-            width: 100%; padding: 12px; border: none; border-radius: 8px;
-            font-size: 15px; font-weight: bold; cursor: pointer; color: white;
-            transition: 0.3s;
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 900; cursor: pointer; color: white;
+            transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
-        .btn-backup { background: #1a237e; }
-        .btn-backup:hover { background: #283593; }
         
-        .btn-archive { background: #e65100; }
-        .btn-archive:hover { background: #ef6c00; }
+        .btn-backup { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .btn-backup:hover { background: linear-gradient(135deg, #2563eb, #1e40af); transform: scale(1.02); }
         
-        .btn-clean { background: #2e7d32; }
-        .btn-clean:hover { background: #388e3c; }
+        .btn-archive { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-archive:hover { background: linear-gradient(135deg, #d97706, #b45309); transform: scale(1.02); }
+        
+        .btn-clean { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-clean:hover { background: linear-gradient(135deg, #059669, #047857); transform: scale(1.02); }
 
-        .btn-doctor { background: #0277bd; }
-        .btn-doctor:hover { background: #01579b; }
+        .btn-doctor { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .btn-doctor:hover { background: linear-gradient(135deg, #0284c7, #0369a1); transform: scale(1.02); }
 
-        .btn-alert { background: #d32f2f; }
-        .btn-alert:hover { background: #c62828; }
+        .btn-alert { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .btn-alert:hover { background: linear-gradient(135deg, #dc2626, #991b1b); transform: scale(1.02); }
 
-        .btn-analytics { background: #6a1b9a; }
-        .btn-analytics:hover { background: #4a148c; }
+        .btn-analytics { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .btn-analytics:hover { background: linear-gradient(135deg, #7c3aed, #5b21b6); transform: scale(1.02); }
 
-        /* ستايل المكنسة الألماسية */
-        .btn-purge { background: #00838f; }
-        .btn-purge:hover { background: #006064; }
+        .btn-purge { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+        .btn-purge:hover { background: linear-gradient(135deg, #0891b2, #155e75); transform: scale(1.02); }
 
         #loader-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center;
-            flex-direction: column;
+            background: rgba(15, 23, 42, 0.9); z-index: 3000; justify-content: center; align-items: center;
+            flex-direction: column; backdrop-filter: blur(5px);
         }
-        .loader-text { color: #d4af37; font-size: 20px; font-weight: bold; margin-top: 20px; }
+        .loader-text { color: #d4af37; font-size: 20px; font-weight: 900; margin-top: 20px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         
-        .status-msg { margin-top: 15px; font-size: 13px; font-weight: bold; display: none; }
-
         /* ستايل المودال (النافذة المنبثقة) للتحليلات والإنذارات */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 4000; justify-content: center; align-items: center;
+            background: rgba(15, 23, 42, 0.85); z-index: 4000; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
         }
         .modal-content {
-            background: #151515; padding: 30px; border-radius: 15px; border: 1px solid #d4af37;
-            max-width: 500px; width: 90%; color: white; text-align: right; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            max-height: 80vh; overflow-y: auto;
+            background: linear-gradient(145deg, #1e293b, #0f172a); padding: 35px; border-radius: 20px; 
+            border: 1px solid #d4af37; max-width: 550px; width: 90%; color: white; text-align: right; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-height: 80vh; overflow-y: auto;
         }
-        .modal-header { font-size: 20px; font-weight: bold; color: #d4af37; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; }
-        .close-modal { cursor: pointer; color: #aaa; font-size: 20px; }
-        .close-modal:hover { color: white; }
-        .analytics-item { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333; }
-        .analytics-label { font-size: 12px; color: #888; margin-bottom: 5px; }
-        .analytics-value { font-size: 18px; font-weight: bold; color: #d4af37; }
-        .alert-item { background: rgba(211, 47, 47, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(211, 47, 47, 0.5); }
+        .modal-header { font-size: 22px; font-weight: 900; color: #d4af37; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .close-modal { cursor: pointer; color: #94a3b8; font-size: 24px; transition: 0.3s; font-weight: bold; }
+        .close-modal:hover { color: #ef4444; transform: scale(1.1); }
+        
+        .analytics-item { background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
+        .analytics-label { font-size: 13px; color: #94a3b8; margin-bottom: 8px; font-weight: bold; }
+        .analytics-value { font-size: 20px; font-weight: 900; color: #d4af37; }
+        
+        .alert-item { background: rgba(239, 68, 68, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(239, 68, 68, 0.4); border-right: 4px solid #ef4444; }
+
+        /* نظام الإشعارات الذكي المنسدل */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid #d4af37; padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateX(120%); animation: slideIn 0.4s forwards, fadeOut 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
+        @keyframes slideIn { to { transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <div id="loader-overlay">
         <div style="font-size: 50px;">⚙️</div>
-        <div class="loader-text" id="loader-msg">جاري فحص السيرفر...</div>
+        <div class="loader-text" id="loader-msg">جاري فحص السيرفر المركزي...</div>
     </div>
 
     <div id="analytics-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <span>📈 محلل الأداء اليومي</span>
+                <span>📈 محلل الأداء اليومي (Performance)</span>
                 <span class="close-modal" onclick="closeModal('analytics-modal')">✕</span>
             </div>
-            <div id="analytics-results">جاري التحليل...</div>
+            <div id="analytics-results">جاري التحليل السحابي...</div>
         </div>
     </div>
 
     <div id="alerts-modal" class="modal-overlay">
-        <div class="modal-content" style="border-color: #d32f2f;">
-            <div class="modal-header" style="color: #d32f2f;">
-                <span>🚨 نظام الإنذار المبكر</span>
+        <div class="modal-content" style="border-color: #ef4444;">
+            <div class="modal-header" style="color: #ef4444;">
+                <span>🚨 نظام الإنذار المبكر (Radar Alerts)</span>
                 <span class="close-modal" onclick="closeModal('alerts-modal')">✕</span>
             </div>
-            <div id="alerts-results">جاري الفحص...</div>
+            <div id="alerts-results">جاري فحص الرادارات...</div>
         </div>
     </div>
 
     <div class="header">
-        <div class="brand">N <span class="gold">One</span> Maintenance</div>
-        <a href="admin.html" class="btn-back">العودة للإدارة ⬅️</a>
+        <div class="brand">N <span class="gold">One</span> Ops M-Center 💎</div>
+        <a href="admin.html" class="btn-back">⬅️ إغلاق غرفة الصيانة</a>
     </div>
 
     <div class="container">
         
         <div class="health-dashboard">
-            <div class="health-title">📊 مؤشر صحة السيرفر المركزي</div>
+            <div class="health-title">📊 مؤشر صحة واستقرار السيرفر المركزي</div>
             <div class="progress-wrapper">
                 <div class="progress-bar" id="server-load-bar"></div>
             </div>
             <div class="health-stats">
-                <span id="load-text">استهلاك قاعدة البيانات 0%</span>
-                <span id="rows-count">الأسطر المستخدمة 0 / 10000</span>
+                <span id="load-text">استهلاك قاعدة البيانات: 0%</span>
+                <span id="rows-count">الأسطر المستخدمة: 0 / 10,000</span>
             </div>
-            <div style="margin-top:15px; font-size:12px; color:#666;">
-                النظام يعمل بكفاءة عالية طالما المؤشر باللون الأخضر ☺️
+            <div style="margin-top:15px; font-size:13px; color:#94a3b8; font-weight:bold;">
+                حالة النظام: <span id="system-status" style="color:#10b981;">مستقر وآمن</span>
             </div>
         </div>
 
@@ -163,56 +177,51 @@
             
             <div class="tool-card">
                 <div class="tool-icon">👨‍⚕️</div>
-                <div class="tool-title">طبيب النظام الشامل (Data Doctor)</div>
-                <div class="tool-desc">إصلاح عدادات الأيام المصلبة وتحديث مسميات الشركات وتفعيل الطرد اللحظي للحسابات المجمدة وعزلها</div>
+                <div class="tool-title">الطبيب الشامل (Data Doctor)</div>
+                <div class="tool-desc">إصلاح الجداول، مزامنة الصلاحيات، وتحديث مسميات المنشآت وتفعيل الإيقاف اللحظي للحسابات المعلقة بأمان تام.</div>
                 <button class="btn-action btn-doctor" onclick="runDataDoctor()">بدء الفحص والإصلاح 🚀</button>
-                <div id="doctor-msg" class="status-msg" style="color:#29b6f6;"></div>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">🚨</div>
                 <div class="tool-title">نظام الإنذار المبكر (Smart Alert)</div>
-                <div class="tool-desc">فحص فوري للطلبات المعلقة في الرادار واكتشاف التأخيرات لتدخل الإدارة السريع بكل رقي</div>
-                <button class="btn-action btn-alert" onclick="runSmartAlerts()">فحص الرادار الآن 🚀</button>
+                <div class="tool-desc">فحص فوري للطلبات المعلقة في الرادار واكتشاف التأخيرات التشغيلية لتدخل الإدارة السريع.</div>
+                <button class="btn-action btn-alert" onclick="runSmartAlerts()">فحص الرادارات الآن 🚀</button>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">📈</div>
-                <div class="tool-title">محلل الأداء اليومي (Performance Analytics)</div>
-                <div class="tool-desc">تقرير فوري عن أبطال اليوم من الكباتن وأكثر المنشآت نشاطاً لدعمهم بالحوافز المجنونة</div>
+                <div class="tool-title">محلل الأداء اليومي (Analytics)</div>
+                <div class="tool-desc">توليد تقرير فوري عن كفاءة التشغيل، الكباتن الأنشط، والمنشآت ذات الحجم الأعلى لدعم اتخاذ القرار.</div>
                 <button class="btn-action btn-analytics" onclick="runPerformanceAnalytics()">توليد تقرير الأداء 🚀</button>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">💾</div>
-                <div class="tool-title">النسخ الاحتياطي الشامل</div>
-                <div class="tool-desc">تنزيل نسخة آمنة ومفرغة من جميع بيانات الإمبراطورية والشركات والطلبات كملف JSON مشفر</div>
+                <div class="tool-title">النسخ الاحتياطي (Full Backup)</div>
+                <div class="tool-desc">تنزيل نسخة آمنة ومفرغة من جميع بيانات الإمبراطورية والشركات والطلبات كملف JSON مشفر.</div>
                 <button class="btn-action btn-backup" onclick="backupData()">سحب نسخة احتياطية 🚀</button>
-                <div id="backup-msg" class="status-msg" style="color:#64b5f6;"></div>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">📦</div>
-                <div class="tool-title">الأرشفة التلقائية الذكية</div>
-                <div class="tool-desc">تنزيل الطلبات المكتملة وحذفها من السيرفر المركزي لتخفيف الضغط وتسريع استجابة النظام</div>
+                <div class="tool-title">الأرشفة الذكية (Auto Archive)</div>
+                <div class="tool-desc">تنزيل الطلبات المكتملة وحذفها من السيرفر المركزي لتخفيف الضغط وتسريع استجابة النظام.</div>
                 <button class="btn-action btn-archive" onclick="autoArchive()">بدء الأرشفة والتفريغ 🚀</button>
-                <div id="archive-msg" class="status-msg" style="color:#ffb74d;"></div>
             </div>
 
             <div class="tool-card">
                 <div class="tool-icon">🧹</div>
-                <div class="tool-title">تنظيف الذاكرة الميتة</div>
-                <div class="tool-desc">مسح الجلسات المنتهية والشوائب البرمجية من الذاكرة المحلية لضمان عمل المتصفح بأقصى سرعة</div>
+                <div class="tool-title">تنظيف الذاكرة الميتة (Cache Clean)</div>
+                <div class="tool-desc">مسح الجلسات المنتهية والشوائب البرمجية من الذاكرة المحلية لضمان عمل واجهة النظام بأقصى سرعة.</div>
                 <button class="btn-action btn-clean" onclick="cleanMemory()">تنظيف الذاكرة الآن 🚀</button>
-                <div id="clean-msg" class="status-msg" style="color:#81c784;"></div>
             </div>
 
-            <div class="tool-card" style="border-top: 4px solid #00e5ff;">
+            <div class="tool-card" style="border-top: 4px solid #06b6d4;">
                 <div class="tool-icon">💎</div>
                 <div class="tool-title">المكنسة الألماسية (Smart Purge)</div>
-                <div class="tool-desc">فلترة ذكية لضربات الجرس وتنبيهات الرادار المنتهية لتخفيف الأسطر وإبقاء السيرفر مستعداً للضغط العالي</div>
-                <button class="btn-action btn-purge" onclick="runDiamondPurge()">تشغيل المكنسة 🚀</button>
-                <div id="purge-msg" class="status-msg" style="color:#00e5ff;"></div>
+                <div class="tool-desc">فلترة ذكية لتنبيهات الرادار المنتهية لتخفيف الأسطر وإبقاء السيرفر مستعداً للضغط العالي بكفاءة.</div>
+                <button class="btn-action btn-purge" onclick="runDiamondPurge()">تشغيل التطهير 🚀</button>
             </div>
 
         </div>
@@ -220,7 +229,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, remove, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -237,6 +246,17 @@
         
         let systemData = {};
         let myMaster = null;
+
+        // نظام الإشعارات الذكي (بديل Alert)
+        window.showAppToast = function(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'app-toast';
+            if(isError) toast.style.borderLeftColor = '#ef4444';
+            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
+        };
 
         window.onload = async function() {
             window.history.pushState(null, "", window.location.href);
@@ -267,17 +287,20 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.status === 'paused' || data.Client_Status === 'paused') {
-                        alert("تم تجميد حسابك مؤقتاً يرجى مراجعة الإدارة");
-                        localStorage.clear();
-                        window.location.replace('index.html');
+                        showAppToast("تم إيقاف صلاحية الدخول. يرجى مراجعة الإدارة العليا.", true);
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.replace('index.html');
+                        }, 3000);
                     }
                 }
             });
         }
 
         window.fetchHealthStatus = async function() {
-            showLoader("جاري فحص نبض السيرفر ⏳");
+            showLoader("جاري فحص حالة السيرفر المركزي ⏳");
             try {
+                // فلترة ذكية: سحب البيانات الضرورية فقط للمؤشر
                 const snapshot = await get(ref(db));
                 if (snapshot.exists()) {
                     systemData = snapshot.val();
@@ -285,11 +308,11 @@
                     let totalRows = 0;
                     if(systemData.users) totalRows += Object.keys(systemData.users).length;
                     if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
-                    if(systemData.captains) totalRows += Object.keys(systemData.captains).length; // تمت إضافة الكباتن
+                    if(systemData.captains) totalRows += Object.keys(systemData.captains).length;
                     if(systemData.orders) totalRows += Object.keys(systemData.orders).length;
                     if(systemData.prices) totalRows += Object.keys(systemData.prices).length;
                     if(systemData.radar_history) totalRows += Object.keys(systemData.radar_history).length;
-                    if(systemData.assigned_orders) totalRows += Object.keys(systemData.assigned_orders).length; // تمت الإضافة
+                    if(systemData.assigned_orders) totalRows += Object.keys(systemData.assigned_orders).length;
 
                     const maxRows = 10000; 
                     let percentage = (totalRows / maxRows) * 100;
@@ -298,24 +321,33 @@
                     const bar = document.getElementById('server-load-bar');
                     bar.style.width = percentage + '%';
                     
-                    if(percentage < 50) bar.style.background = "#2e7d32"; 
-                    else if(percentage < 80) bar.style.background = "#f57f17"; 
-                    else bar.style.background = "#c62828"; 
+                    const statusText = document.getElementById('system-status');
+                    if(percentage < 50) { 
+                        bar.style.background = "linear-gradient(90deg, #10b981, #34d399)"; 
+                        statusText.innerText = "مستقر وآمن"; statusText.style.color = "#10b981";
+                    } else if(percentage < 80) { 
+                        bar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)"; 
+                        statusText.innerText = "حمل متوسط - ينصح بالأرشفة قريباً"; statusText.style.color = "#f59e0b";
+                    } else { 
+                        bar.style.background = "linear-gradient(90deg, #ef4444, #f87171)"; 
+                        statusText.innerText = "تحذير: ضغط عالي - يرجى الأرشفة فوراً"; statusText.style.color = "#ef4444";
+                    }
 
-                    document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
-                    document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
+                    document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات: ${percentage.toFixed(1)}%`;
+                    document.getElementById('rows-count').innerText = `الأسطر: ${totalRows.toLocaleString()} / ${maxRows.toLocaleString()}`;
                 }
             } catch (e) {
                 console.error(e);
+                showAppToast("حدث خطأ أثناء قراءة المؤشرات", true);
             } finally {
                 hideLoader();
             }
         }
 
         window.runDataDoctor = async function() {
-            if(!confirm("سيقوم الطبيب بفحص وصيانة البيانات بالكامل ومزامنة الأيام المصلبة هل تريد الاستمرار ☺️")) return;
+            if(!confirm("تأكيد العملية الجراحية: سيتم فحص وصيانة البيانات ومزامنة الصلاحيات. الاستمرار؟")) return;
             
-            showLoader("جاري إجراء جراحة للبيانات لإصلاح التواريخ والأسماء ⏳");
+            showLoader("جاري إجراء الصيانة الذكية للبيانات ⏳");
             
             try {
                 if(systemData.users) {
@@ -348,15 +380,11 @@
                     await update(ref(db), updates);
                 }
 
-                const msg = document.getElementById('doctor-msg');
-                msg.innerText = "تمت الصيانة بنجاح العدادات والأسماء أصبحت دقيقة ☺️✅";
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 4000);
-                
+                showAppToast("تمت الصيانة بنجاح. تمت مزامنة العدادات والصلاحيات.");
                 await fetchHealthStatus(); 
 
             } catch (error) {
-                alert("حدث خطأ أثناء الفحص والصيانة ☺️");
+                showAppToast("حدث خطأ أثناء الفحص والصيانة", true);
                 console.error(error);
             } finally {
                 hideLoader();
@@ -366,8 +394,8 @@
         // ================= الأفكار المجنونة: الإنذار المبكر والتحليلات ================= //
 
         window.runSmartAlerts = async function() {
-            showLoader("جاري فحص رادارات الإمبراطورية ⏳");
-            await fetchHealthStatus(); // تحديث البيانات
+            showLoader("جاري فحص الرادارات التشغيلية ⏳");
+            await fetchHealthStatus(); 
             
             const alertsContainer = document.getElementById('alerts-results');
             alertsContainer.innerHTML = '';
@@ -379,12 +407,10 @@
             if (systemData.orders) {
                 Object.values(systemData.orders).forEach(ord => {
                     if (ord.Shop_Type === 'shop_order') {
-                        // التحقق من أن الطلب يخص الشركة الحالية (أو الإدارة العامة)
                         let isMyOrder = false;
                         if (myMaster === 'admin' || myMaster === 'naseem') {
                             isMyOrder = true;
                         } else {
-                             // فحص ما إذا كان المستخدم (المنشأة) تابع للماستر الحالي
                              let shopBelongsToMe = false;
                              if(systemData.shops) {
                                  const shopArr = Object.values(systemData.shops);
@@ -401,7 +427,6 @@
                             const ordTime = new Date(ord.Shop_Date).getTime();
                             const diff = now - ordTime;
                             
-                            // التحقق إذا كان الطلب ما زال معلق ولم يقبل
                             let isAccepted = false;
                             if(systemData.assigned_orders) {
                                 for(let capKey in systemData.assigned_orders) {
@@ -420,10 +445,10 @@
                                 const minutesDelayed = Math.floor(diff / 60000);
                                 alertsContainer.innerHTML += `
                                     <div class="alert-item">
-                                        <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">⚠️ تأخير في الرادار</div>
-                                        <div style="font-size:13px; color:#ccc;">المنشأة: <span style="color:white;">${ord.Shop_Name}</span></div>
-                                        <div style="font-size:13px; color:#ccc;">الوجهة: <span style="color:white;">${ord.Shop_Pickup}</span></div>
-                                        <div style="font-size:13px; color:#ccc;">وقت التأخير: <span style="color:#ffb74d; font-weight:bold;">${minutesDelayed} دقيقة</span></div>
+                                        <div style="font-weight:900; font-size:16px; margin-bottom:8px; color:#ef4444;">⚠️ تحذير: تأخير في الرادار</div>
+                                        <div style="font-size:14px; color:#cbd5e1; margin-bottom:4px;">المنشأة: <span style="color:white; font-weight:bold;">${ord.Shop_Name}</span></div>
+                                        <div style="font-size:14px; color:#cbd5e1; margin-bottom:4px;">الوجهة: <span style="color:white; font-weight:bold;">${ord.Shop_Pickup}</span></div>
+                                        <div style="font-size:14px; color:#cbd5e1;">وقت التأخير: <span style="color:#f59e0b; font-weight:900;">${minutesDelayed} دقيقة</span></div>
                                     </div>
                                 `;
                             }
@@ -433,7 +458,7 @@
             }
 
             if (issuesFound === 0) {
-                alertsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#81c784; font-weight:bold;">الرادار يعمل بكفاءة ولا توجد أي طلبات متأخرة ✅</div>';
+                alertsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#10b981; font-weight:bold; font-size:16px;">الرادار يعمل بكفاءة ولا توجد أي طلبات متأخرة ✅</div>';
             }
 
             hideLoader();
@@ -441,8 +466,7 @@
         };
 
         window.runPerformanceAnalytics = async function() {
-            showLoader("جاري تحليل أداء الإمبراطورية ⏳");
-            // استخدام البيانات التراكمية من localStorage لتكون أكثر دقة للأداء اليومي
+            showLoader("جاري تحليل الأداء السحابي ⏳");
             let completedOrders = JSON.parse(localStorage.getItem('n1_completed_orders') || '[]');
             
             const today = new Date().toDateString();
@@ -452,55 +476,49 @@
             analyticsContainer.innerHTML = '';
 
             if (todayOrders.length === 0) {
-                analyticsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا توجد بيانات كافية لتحليل أداء اليوم ☺️</div>';
+                analyticsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-weight:bold;">البيانات غير كافية لتحليل أداء اليوم.</div>';
                 hideLoader();
                 document.getElementById('analytics-modal').style.display = 'flex';
                 return;
             }
 
-            // تحليل الكباتن
             let captainsCount = {};
-            // تحليل المنشآت
             let shopsCount = {};
 
             todayOrders.forEach(ord => {
-                // الكباتن
                 if(ord.cap) {
                     captainsCount[ord.cap] = (captainsCount[ord.cap] || 0) + 1;
                 }
-                // المنشآت
                 if(ord.rest) {
-                    let restName = ord.rest.split(' - ')[0]; // أخذ اسم المنشأة فقط بدون المنطقة إن وجد
+                    let restName = ord.rest.split(' - ')[0]; 
                     shopsCount[restName] = (shopsCount[restName] || 0) + 1;
                 }
             });
 
-            // إيجاد البطل
-            let topCap = "لا يوجد";
+            let topCap = "لا يوجد بيانات";
             let topCapCount = 0;
             for (const [cap, count] of Object.entries(captainsCount)) {
                 if (count > topCapCount) { topCapCount = count; topCap = cap; }
             }
 
-            // إيجاد أنشط منشأة
-            let topShop = "لا يوجد";
+            let topShop = "لا يوجد بيانات";
             let topShopCount = 0;
             for (const [shop, count] of Object.entries(shopsCount)) {
                 if (count > topShopCount) { topShopCount = count; topShop = shop; }
             }
 
             analyticsContainer.innerHTML = `
-                <div class="analytics-item" style="border-color: var(--success);">
-                    <div class="analytics-label">🏆 بطل اليوم (أكثر كابتن إنجازاً)</div>
-                    <div class="analytics-value" style="color: var(--success);">🦸‍♂️ ${topCap} <span style="font-size:14px; color:#888; font-weight:normal;">(${topCapCount} طلبات)</span></div>
+                <div class="analytics-item" style="border-color: #10b981;">
+                    <div class="analytics-label">🏆 بطل اليوم (الأعلى كفاءة)</div>
+                    <div class="analytics-value" style="color: #10b981;">🦸‍♂️ ${topCap} <span style="font-size:14px; color:#94a3b8; font-weight:bold;">(${topCapCount} عملية)</span></div>
                 </div>
-                <div class="analytics-item" style="border-color: #0288d1;">
-                    <div class="analytics-label">🏪 المنشأة الأنشط</div>
-                    <div class="analytics-value" style="color: #0288d1;">${topShop} <span style="font-size:14px; color:#888; font-weight:normal;">(${topShopCount} طلبات)</span></div>
+                <div class="analytics-item" style="border-color: #3b82f6;">
+                    <div class="analytics-label">🏪 المنشأة الأنشط تشغيلياً</div>
+                    <div class="analytics-value" style="color: #3b82f6;">${topShop} <span style="font-size:14px; color:#94a3b8; font-weight:bold;">(${topShopCount} طلب)</span></div>
                 </div>
-                <div class="analytics-item">
-                    <div class="analytics-label">📊 إجمالي الطلبات المكتملة لليوم</div>
-                    <div class="analytics-value">${todayOrders.length} طلب</div>
+                <div class="analytics-item" style="border-color: #d4af37;">
+                    <div class="analytics-label">📊 إجمالي العمليات المنجزة</div>
+                    <div class="analytics-value">${todayOrders.length} طلب ناجح</div>
                 </div>
             `;
 
@@ -515,27 +533,24 @@
         // ============================================================================== //
 
         window.backupData = function() {
-            if(!systemData || Object.keys(systemData).length === 0) return alert("لا توجد بيانات للسحب ☺️");
+            if(!systemData || Object.keys(systemData).length === 0) return showAppToast("لا توجد بيانات متوفرة للسحب.", true);
             
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(systemData, null, 2));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
+            downloadAnchorNode.setAttribute("download", "N_One_Secure_Backup_" + new Date().toISOString().split('T')[0] + ".json");
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
 
-            const msg = document.getElementById('backup-msg');
-            msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ☺️✅";
-            msg.style.display = "block";
-            setTimeout(() => msg.style.display = "none", 4000);
+            showAppToast("تم حفظ النسخة الاحتياطية المشفرة بنجاح.");
         }
 
         window.autoArchive = async function() {
-            if(!confirm("هل أنت متأكد من بدء عملية الأرشفة سيتم تفريغ الطلبات لتخفيف السيرفر ☺️")) return;
+            if(!confirm("تأكيد الأرشفة: سيتم تفريغ الطلبات من السيرفر المركزي وحفظ نسخة محلية. الاستمرار؟")) return;
             
             if(!systemData.orders || Object.keys(systemData.orders).length === 0) {
-                alert("السيرفر نظيف ولا يوجد طلبات للأرشفة ☺️");
+                showAppToast("السيرفر نظيف حالياً. لا توجد طلبات للأرشفة.");
                 return;
             }
 
@@ -543,25 +558,20 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ordersToArchive, null, 2));
             const dlNode = document.createElement('a');
             dlNode.setAttribute("href", dataStr);
-            dlNode.setAttribute("download", "Archive_Orders_" + new Date().toISOString().split('T')[0] + ".json");
+            dlNode.setAttribute("download", "N_One_Archive_" + new Date().toISOString().split('T')[0] + ".json");
             document.body.appendChild(dlNode);
             dlNode.click();
             dlNode.remove();
 
-            showLoader("جاري تنظيف السيرفر من الطلبات المؤرشفة الرجاء عدم إغلاق الصفحة ⏳");
+            showLoader("جاري تنظيف السيرفر المركزي... يرجى الانتظار ⏳");
 
             try {
                 await remove(ref(db, 'orders'));
-                
-                const msg = document.getElementById('archive-msg');
-                msg.innerText = "تمت الأرشفة وتفريغ السيرفر بنجاح ☺️✅";
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 4000);
-                
+                showAppToast("تمت الأرشفة وتفريغ مساحة السيرفر بنجاح.");
                 await fetchHealthStatus(); 
 
             } catch (error) {
-                alert("حدث خطأ أثناء التفريغ ☺️");
+                showAppToast("حدث خطأ أثناء عملية التفريغ.", true);
             } finally {
                 hideLoader();
             }
@@ -569,7 +579,6 @@
 
         window.cleanMemory = function() {
             const current = localStorage.getItem('currentUser');
-            // الحفاظ على بيانات الكباتن والأرشيف لتطبيق الأفكار المجنونة
             const completedOrders = localStorage.getItem('n1_completed_orders');
             const processedOrders = localStorage.getItem('n1_processed_app_orders');
             const captainMem = localStorage.getItem('n1_captains');
@@ -584,20 +593,16 @@
             if(captainMem) localStorage.setItem('n1_captains', captainMem);
             if(commissionRatio) localStorage.setItem('n1_commission_ratio', commissionRatio);
 
-            const msg = document.getElementById('clean-msg');
-            msg.innerText = "تم تنظيف الشوائب والذاكرة الميتة ☺️✅";
-            msg.style.display = "block";
-            setTimeout(() => msg.style.display = "none", 4000);
+            showAppToast("تم تنظيف الذاكرة المؤقتة. النظام يعمل بأقصى كفاءة.");
         }
 
         // =================== دالة المكنسة الألماسية الجديدة (Smart Purge) =================== //
         window.runDiamondPurge = async function(isAuto = false) {
-            if(!isAuto) showLoader("جاري تشغيل المكنسة الألماسية لتطهير السيرفر ⏳");
+            if(!isAuto) showLoader("جاري تطبيق خوارزمية التطهير المركزي ⏳");
             try {
                 const now = Date.now();
                 const sixHoursAgo = now - (6 * 60 * 60 * 1000);
 
-                // 1. تنظيف ضربات الجرس والتنبيهات القديمة
                 const alertsRef = ref(db, 'alerts');
                 const alertsSnap = await get(alertsRef);
                 if (alertsSnap.exists()) {
@@ -607,7 +612,6 @@
                     }
                 }
 
-                // 2. تنظيف الإعلانات المنتهية الصلاحية
                 const adsRef = ref(db, 'announcements');
                 const adsSnap = await get(adsRef);
                 if(adsSnap.exists()) {
@@ -624,7 +628,6 @@
                     }
                 }
 
-                // 3. تنظيف ضجيج الرادار القديم إذا كان مخزن
                 if(systemData.radar_history) {
                     for(let key in systemData.radar_history) {
                         if(systemData.radar_history[key].timestamp && systemData.radar_history[key].timestamp < sixHoursAgo) {
@@ -634,14 +637,11 @@
                 }
 
                 if(!isAuto) {
-                    const msg = document.getElementById('purge-msg');
-                    msg.innerText = "تمت الفلترة الألماسية بنجاح ☺️✅";
-                    msg.style.display = "block";
-                    setTimeout(() => msg.style.display = "none", 4000);
+                    showAppToast("اكتملت عملية التطهير الألماسي بنجاح.");
                     await fetchHealthStatus();
                 }
             } catch(e) {
-                if(!isAuto) alert("حدث خطأ أثناء الفلترة الألماسية ☺️");
+                if(!isAuto) showAppToast("حدث خطأ أثناء تنفيذ الفلترة.", true);
             } finally {
                 if(!isAuto) hideLoader();
             }
