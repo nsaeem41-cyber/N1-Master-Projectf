@@ -428,29 +428,31 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
-                const snap = await get(ref(db));
-                const dbData = snap.val() || {};
-                let allUsers = [];
-                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
-                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
-
                 if(target === 'all') {
                     await update(ref(db, 'announcements/global'), adData);
                 } else if(target === 'clients_only') {
-                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const snap = await get(ref(db, 'users'));
                     const updates = {};
-                    clients.forEach(c => {
-                        const uName = c.Client_User || c.user;
-                        if(uName) updates[`announcements/users/${uName}`] = adData;
-                    });
+                    if(snap.exists()) {
+                        Object.values(snap.val()).forEach(c => {
+                            if(c.role === 'client' || c.type === 'client' || c.Client_Role === 'client') {
+                                const uName = c.Client_User || c.user;
+                                if(uName) updates[`announcements/users/${uName}`] = adData;
+                            }
+                        });
+                    }
                     if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 } else if(target === 'shops_only') {
-                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const snap = await get(ref(db, 'shops'));
                     const updates = {};
-                    shops.forEach(s => {
-                        const uName = s.Shop_User || s.user || s.Client_User;
-                        if(uName) updates[`announcements/users/${uName}`] = adData;
-                    });
+                    if(snap.exists()) {
+                        Object.values(snap.val()).forEach(s => {
+                            if(s.role === 'shop' || s.type === 'shop' || s.Shop_Role === 'shop' || s.Shop_User) {
+                                const uName = s.Shop_User || s.user || s.Client_User;
+                                if(uName) updates[`announcements/users/${uName}`] = adData;
+                            }
+                        });
+                    }
                     if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 } else {
                     await update(ref(db, `announcements/users/${target}`), adData);
@@ -480,29 +482,31 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             
             try {
-                const snap = await get(ref(db));
-                const dbData = snap.val() || {};
-                let allUsers = [];
-                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
-                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
-
                 if(target === 'all') {
                     await update(ref(db, 'alerts/global'), alertData);
                 } else if(target === 'clients_only') {
-                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const snap = await get(ref(db, 'users'));
                     const updates = {};
-                    clients.forEach(c => {
-                        const uName = c.Client_User || c.user;
-                        if(uName) updates[`alerts/users/${uName}`] = alertData;
-                    });
+                    if(snap.exists()) {
+                        Object.values(snap.val()).forEach(c => {
+                            if(c.role === 'client' || c.type === 'client' || c.Client_Role === 'client') {
+                                const uName = c.Client_User || c.user;
+                                if(uName) updates[`alerts/users/${uName}`] = alertData;
+                            }
+                        });
+                    }
                     if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 } else if(target === 'shops_only') {
-                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const snap = await get(ref(db, 'shops'));
                     const updates = {};
-                    shops.forEach(s => {
-                        const uName = s.Shop_User || s.user || s.Client_User;
-                        if(uName) updates[`alerts/users/${uName}`] = alertData;
-                    });
+                    if(snap.exists()) {
+                        Object.values(snap.val()).forEach(s => {
+                            if(s.role === 'shop' || s.type === 'shop' || s.Shop_Role === 'shop' || s.Shop_User) {
+                                const uName = s.Shop_User || s.user || s.Client_User;
+                                if(uName) updates[`alerts/users/${uName}`] = alertData;
+                            }
+                        });
+                    }
                     if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 } else {
                     await update(ref(db, `alerts/users/${target}`), alertData);
