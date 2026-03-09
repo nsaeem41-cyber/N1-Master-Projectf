@@ -276,7 +276,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        let systemData = {};
         let myMaster = null;
 
         window.onload = async function() {
@@ -300,7 +299,6 @@
             setInterval(() => runDiamondPurge(true), 3600000);
         };
 
-        // دالة ربط الأزرار تم الحفاظ عليها لأنك كتبتها في السكربت 
         function setupEvents() {
             document.getElementById('btn-doctor').addEventListener('click', runDataDoctor);
             document.getElementById('btn-alert').addEventListener('click', runSmartAlerts);
@@ -314,7 +312,6 @@
             document.getElementById('close-alerts').addEventListener('click', () => { document.getElementById('alerts-modal').style.display = 'none'; });
         }
         
-        // استدعاء دالة الربط
         setTimeout(setupEvents, 500);
 
         function setupRealtimeFreezeListener() {
@@ -333,36 +330,32 @@
             });
         }
 
+        // التعديل الألماسي: سحب أعداد الأسطر بدون تحميل محتوى الداتا بيس لتسريع الفحص
         window.fetchHealthStatus = async function() {
             showLoader("جاري فحص نبض السيرفر ⏳");
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    systemData = snapshot.val();
-                    
-                    let totalRows = 0;
-                    if(systemData.users) totalRows += Object.keys(systemData.users).length;
-                    if(systemData.shops) totalRows += Object.keys(systemData.shops).length;
-                    if(systemData.captains) totalRows += Object.keys(systemData.captains).length;
-                    if(systemData.orders) totalRows += Object.keys(systemData.orders).length;
-                    if(systemData.prices) totalRows += Object.keys(systemData.prices).length;
-                    if(systemData.radar_history) totalRows += Object.keys(systemData.radar_history).length;
-                    if(systemData.assigned_orders) totalRows += Object.keys(systemData.assigned_orders).length;
+                let totalRows = 0;
+                const nodes = ['users', 'shops', 'captains', 'orders', 'prices', 'radar_history', 'assigned_orders'];
+                
+                await Promise.all(nodes.map(async (node) => {
+                    const snap = await get(ref(db, node));
+                    if(snap.exists()) totalRows += Object.keys(snap.val()).length;
+                }));
 
-                    const maxRows = 10000; 
-                    let percentage = (totalRows / maxRows) * 100;
-                    if(percentage > 100) percentage = 100;
+                const maxRows = 10000; 
+                let percentage = (totalRows / maxRows) * 100;
+                if(percentage > 100) percentage = 100;
 
-                    const bar = document.getElementById('server-load-bar');
-                    bar.style.width = percentage + '%';
-                    
-                    if(percentage < 50) bar.style.background = "linear-gradient(90deg, #10b981, #34d399)"; 
-                    else if(percentage < 80) bar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)"; 
-                    else bar.style.background = "linear-gradient(90deg, #ef4444, #f87171)"; 
+                const bar = document.getElementById('server-load-bar');
+                bar.style.width = percentage + '%';
+                
+                if(percentage < 50) bar.style.background = "linear-gradient(90deg, #10b981, #34d399)"; 
+                else if(percentage < 80) bar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)"; 
+                else bar.style.background = "linear-gradient(90deg, #ef4444, #f87171)"; 
 
-                    document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
-                    document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
-                }
+                document.getElementById('load-text').innerText = `استهلاك قاعدة البيانات ${percentage.toFixed(1)}%`;
+                document.getElementById('rows-count').innerText = `الأسطر المستخدمة ${totalRows} / ${maxRows}`;
+                
             } catch (e) {
                 console.error(e);
             } finally {
@@ -375,10 +368,12 @@
             showLoader("جاري إجراء جراحة للبيانات لإصلاح التواريخ والأسماء ⏳");
             
             try {
-                if(systemData.users) {
+                const usersSnap = await get(ref(db, 'users'));
+                if(usersSnap.exists()) {
+                    const usersData = usersSnap.val();
                     const updates = {};
-                    Object.keys(systemData.users).forEach(key => {
-                        const u = systemData.users[key];
+                    Object.keys(usersData).forEach(key => {
+                        const u = usersData[key];
                         const nameToSync = u.name || u.Client_Name || 'بدون اسم';
                         let finalExpiry = u.expiry || u.Client_Expiry;
                         
@@ -402,7 +397,7 @@
                         }
                     });
                     
-                    await update(ref(db), updates);
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
                 }
 
                 const msg = document.getElementById('doctor-msg');
@@ -422,7 +417,6 @@
 
         window.runSmartAlerts = async function() {
             showLoader("جاري فحص رادارات الإمبراطورية ⏳");
-            await fetchHealthStatus(); 
             
             const alertsContainer = document.getElementById('alerts-results');
             alertsContainer.innerHTML = '';
@@ -431,65 +425,55 @@
             const now = Date.now();
             const delayThreshold = 5 * 60 * 1000;
 
-            if (systemData.orders) {
-                Object.values(systemData.orders).forEach(ord => {
-                    if (ord.Shop_Type === 'shop_order') {
-                        let isMyOrder = false;
-                        if (myMaster === 'admin' || myMaster === 'naseem') {
-                            isMyOrder = true;
-                        } else {
-                             let shopBelongsToMe = false;
-                             if(systemData.shops) {
-                                 const shopArr = Object.values(systemData.shops);
-                                 shopBelongsToMe = shopArr.some(s => (s.Shop_User === ord.Shop_User || s.user === ord.Shop_User) && (s.Client_Master === myMaster || s.company === myMaster));
-                             }
-                             if(systemData.users) {
-                                 const userArr = Object.values(systemData.users);
-                                 if(!shopBelongsToMe) shopBelongsToMe = userArr.some(s => (s.Client_User === ord.Shop_User || s.user === ord.Shop_User) && (s.Client_Master === myMaster || s.master === myMaster));
-                             }
-                             if(ord.Shop_User === myMaster || shopBelongsToMe) isMyOrder = true;
-                        }
+            try {
+                const [ordersSnap, assignedSnap] = await Promise.all([
+                    get(ref(db, 'orders')), get(ref(db, 'assigned_orders'))
+                ]);
 
-                        if (isMyOrder) {
-                            const ordTime = new Date(ord.Shop_Date).getTime();
-                            const diff = now - ordTime;
-                            
-                            let isAccepted = false;
-                            if(systemData.assigned_orders) {
-                                for(let capKey in systemData.assigned_orders) {
-                                    for(let appOrdKey in systemData.assigned_orders[capKey]) {
-                                        if(systemData.assigned_orders[capKey][appOrdKey].linkedRadarId === ord.Shop_Ord_ID) {
-                                             if(systemData.assigned_orders[capKey][appOrdKey].status === 'accepted' || systemData.assigned_orders[capKey][appOrdKey].status === 'completed') {
-                                                 isAccepted = true;
-                                             }
-                                        }
-                                    }
+                const ordersData = ordersSnap.exists() ? ordersSnap.val() : {};
+                const assignedData = assignedSnap.exists() ? assignedSnap.val() : {};
+
+                Object.values(ordersData).forEach(ord => {
+                    if (ord.Shop_Type === 'shop_order') {
+                        const ordTime = new Date(ord.Shop_Date).getTime();
+                        const diff = now - ordTime;
+                        
+                        let isAccepted = false;
+                        for(let capKey in assignedData) {
+                            for(let appOrdKey in assignedData[capKey]) {
+                                if(assignedData[capKey][appOrdKey].linkedRadarId === ord.Shop_Ord_ID) {
+                                     if(assignedData[capKey][appOrdKey].status === 'accepted' || assignedData[capKey][appOrdKey].status === 'completed') {
+                                         isAccepted = true;
+                                     }
                                 }
                             }
+                        }
 
-                            if (!isAccepted && diff > delayThreshold) {
-                                issuesFound++;
-                                const minutesDelayed = Math.floor(diff / 60000);
-                                alertsContainer.innerHTML += `
-                                    <div class="alert-item">
-                                        <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">⚠️ تأخير في الرادار</div>
-                                        <div style="font-size:13px; color:#ccc;">المنشأة: <span style="color:white;">${ord.Shop_Name}</span></div>
-                                        <div style="font-size:13px; color:#ccc;">الوجهة: <span style="color:white;">${ord.Shop_Pickup}</span></div>
-                                        <div style="font-size:13px; color:#ccc;">وقت التأخير: <span style="color:#ffb74d; font-weight:bold;">${minutesDelayed} دقيقة</span></div>
-                                    </div>
-                                `;
-                            }
+                        if (!isAccepted && diff > delayThreshold) {
+                            issuesFound++;
+                            const minutesDelayed = Math.floor(diff / 60000);
+                            alertsContainer.innerHTML += `
+                                <div class="alert-item">
+                                    <div style="font-weight:bold; font-size:15px; margin-bottom:5px;">⚠️ تأخير في الرادار</div>
+                                    <div style="font-size:13px; color:#ccc;">المنشأة: <span style="color:white;">${ord.Shop_Name}</span></div>
+                                    <div style="font-size:13px; color:#ccc;">الوجهة: <span style="color:white;">${ord.Shop_Pickup}</span></div>
+                                    <div style="font-size:13px; color:#ccc;">وقت التأخير: <span style="color:#ffb74d; font-weight:bold;">${minutesDelayed} دقيقة</span></div>
+                                </div>
+                            `;
                         }
                     }
                 });
-            }
 
-            if (issuesFound === 0) {
-                alertsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#10b981; font-weight:bold;">الرادار يعمل بكفاءة ولا توجد أي طلبات متأخرة ✅</div>';
-            }
+                if (issuesFound === 0) {
+                    alertsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#10b981; font-weight:bold;">الرادار يعمل بكفاءة ولا توجد أي طلبات متأخرة ✅</div>';
+                }
 
-            hideLoader();
-            document.getElementById('alerts-modal').style.display = 'flex';
+                document.getElementById('alerts-modal').style.display = 'flex';
+            } catch(e) {
+                alert("حدث خطأ أثناء فحص الرادارات");
+            } finally {
+                hideLoader();
+            }
         };
 
         window.runPerformanceAnalytics = async function() {
@@ -553,52 +537,61 @@
             document.getElementById(modalId).style.display = 'none';
         };
 
-        window.backupData = function() {
-            if(!systemData || Object.keys(systemData).length === 0) return alert("لا توجد بيانات للسحب ☺️");
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(systemData, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+        window.backupData = async function() {
+            showLoader("جاري تجهيز النسخة الاحتياطية ⏳");
+            try {
+                const snapshot = await get(ref(db));
+                if(snapshot.exists()) {
+                    const fullData = snapshot.val();
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "N_One_Full_Backup_" + new Date().toISOString().split('T')[0] + ".json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
 
-            const msg = document.getElementById('backup-msg');
-            msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ☺️✅";
-            msg.style.display = "block";
-            setTimeout(() => msg.style.display = "none", 4000);
+                    const msg = document.getElementById('backup-msg');
+                    msg.innerText = "تم حفظ النسخة الاحتياطية بنجاح ☺️✅";
+                    msg.style.display = "block";
+                    setTimeout(() => msg.style.display = "none", 4000);
+                } else {
+                    alert("لا توجد بيانات للسحب ☺️");
+                }
+            } catch(e) {
+                alert("حدث خطأ أثناء تحميل النسخة الاحتياطية");
+            } finally {
+                hideLoader();
+            }
         }
 
         window.autoArchive = async function() {
             if(!confirm("هل أنت متأكد من بدء عملية الأرشفة سيتم تفريغ الطلبات لتخفيف السيرفر ☺️")) return;
-            
-            if(!systemData.orders || Object.keys(systemData.orders).length === 0) {
-                alert("السيرفر نظيف ولا يوجد طلبات للأرشفة ☺️");
-                return;
-            }
-
-            const ordersToArchive = systemData.orders;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ordersToArchive, null, 2));
-            const dlNode = document.createElement('a');
-            dlNode.setAttribute("href", dataStr);
-            dlNode.setAttribute("download", "Archive_Orders_" + new Date().toISOString().split('T')[0] + ".json");
-            document.body.appendChild(dlNode);
-            dlNode.click();
-            dlNode.remove();
-
             showLoader("جاري تنظيف السيرفر من الطلبات المؤرشفة الرجاء عدم إغلاق الصفحة ⏳");
 
             try {
-                await remove(ref(db, 'orders'));
-                
-                const msg = document.getElementById('archive-msg');
-                msg.innerText = "تمت الأرشفة وتفريغ السيرفر بنجاح ☺️✅";
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 4000);
-                
-                await fetchHealthStatus(); 
+                const ordersSnap = await get(ref(db, 'orders'));
+                if(ordersSnap.exists()) {
+                    const ordersToArchive = ordersSnap.val();
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ordersToArchive, null, 2));
+                    const dlNode = document.createElement('a');
+                    dlNode.setAttribute("href", dataStr);
+                    dlNode.setAttribute("download", "Archive_Orders_" + new Date().toISOString().split('T')[0] + ".json");
+                    document.body.appendChild(dlNode);
+                    dlNode.click();
+                    dlNode.remove();
 
+                    await remove(ref(db, 'orders'));
+                    
+                    const msg = document.getElementById('archive-msg');
+                    msg.innerText = "تمت الأرشفة وتفريغ السيرفر بنجاح ☺️✅";
+                    msg.style.display = "block";
+                    setTimeout(() => msg.style.display = "none", 4000);
+                    
+                    await fetchHealthStatus(); 
+                } else {
+                    alert("السيرفر نظيف ولا يوجد طلبات للأرشفة ☺️");
+                }
             } catch (error) {
                 alert("حدث خطأ أثناء التفريغ ☺️");
             } finally {
@@ -628,8 +621,7 @@
                 const now = Date.now();
                 const sixHoursAgo = now - (6 * 60 * 60 * 1000);
 
-                const alertsRef = ref(db, 'alerts');
-                const alertsSnap = await get(alertsRef);
+                const alertsSnap = await get(ref(db, 'alerts'));
                 if (alertsSnap.exists()) {
                     const alertsData = alertsSnap.val();
                     if(alertsData.global && alertsData.global.timestamp && alertsData.global.timestamp < sixHoursAgo) {
@@ -637,8 +629,7 @@
                     }
                 }
 
-                const adsRef = ref(db, 'announcements');
-                const adsSnap = await get(adsRef);
+                const adsSnap = await get(ref(db, 'announcements'));
                 if(adsSnap.exists()) {
                     const adsData = adsSnap.val();
                     if(adsData.global && adsData.global.expireAt && adsData.global.expireAt < now) {
@@ -653,9 +644,11 @@
                     }
                 }
 
-                if(systemData.radar_history) {
-                    for(let key in systemData.radar_history) {
-                        if(systemData.radar_history[key].timestamp && systemData.radar_history[key].timestamp < sixHoursAgo) {
+                const radarSnap = await get(ref(db, 'radar_history'));
+                if(radarSnap.exists()) {
+                    const radarData = radarSnap.val();
+                    for(let key in radarData) {
+                        if(radarData[key].timestamp && radarData[key].timestamp < sixHoursAgo) {
                             await remove(ref(db, `radar_history/${key}`));
                         }
                     }
