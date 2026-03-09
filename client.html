@@ -51,7 +51,7 @@
 
         /* ================= الهيدر الملكي (مضغوط) ================= */
         .navbar { 
-            background: var(--glass); height: 60px; /* تقليل الارتفاع */
+            background: var(--glass); height: 60px; 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 0 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
             border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000;
@@ -63,7 +63,7 @@
         .btn-logout { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 11px; }
         .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); transform: translateY(-2px); }
 
-        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; } /* تقليل الهوامش */
+        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; }
 
         /* ================= التبويبات (مضغوطة) ================= */
         .tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; overflow-x: auto; }
@@ -689,8 +689,7 @@
                 populatePricingDropdowns();
             });
         };
-
-        window.populatePricingDropdowns = function() {
+window.populatePricingDropdowns = function() {
             const addSelect = document.getElementById('shop_pricing_area');
             const editSelect = document.getElementById('edit_shop_pricing_area');
             
@@ -704,6 +703,7 @@
                 addSelect.innerHTML = optionsHtml;
                 if(addVal && availablePricingAreas.includes(addVal)) addSelect.value = addVal;
             }
+            
             if(editSelect) {
                 const editVal = editSelect.value;
                 editSelect.innerHTML = optionsHtml;
@@ -712,45 +712,70 @@
         };
 
         window.smartMapSearch = function() {
-            let shopName = document.getElementById('smart_search_input').value.trim() || document.getElementById('shop_name').value.trim();
-            if (!shopName) { alert("اكتب اسم المنشأة أولا لحتى أبحث لك عن موقعها"); return; }
+            let shopName = document.getElementById('smart_search_input').value.trim();
+            if (!shopName) shopName = document.getElementById('shop_name').value.trim();
+            
+            if (!shopName) {
+                alert("اكتب اسم المنشأة أولا للبحث عن موقعها");
+                return;
+            }
+            
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
-                if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده")) {
-                    document.getElementById('shop_location_link').value = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
+                if(confirm("تم تحديد الموقع الجغرافي بنجاح، هل ترغب باعتماده؟")) {
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
+                    document.getElementById('shop_location_link').value = mapLink;
+                    
                     document.getElementById('green_light_status').style.background = 'var(--success)';
                     document.getElementById('green_light_status').style.boxShadow = '0 0 10px var(--success)';
                     document.getElementById('green_light_text').innerText = 'تم التأكيد ✅';
                     document.getElementById('green_light_text').style.color = 'var(--success)';
+                    
                     alert("تم ربط الموقع وتأكيده بنجاح 🚀💎");
                 }
             }, 1200);
         };
 
         window.smartMapSearchEdit = function() {
-            let shopName = document.getElementById('edit_smart_search_input').value.trim() || document.getElementById('edit_shop_name').value.trim();
-            if (!shopName) { alert("اكتب اسم المنشأة أولا"); return; }
+            let shopName = document.getElementById('edit_smart_search_input').value.trim();
+            if (!shopName) shopName = document.getElementById('edit_shop_name').value.trim();
+            
+            if (!shopName) {
+                alert("اكتب اسم المنشأة أولا");
+                return;
+            }
+            
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
-                if(confirm("تم تحديد الموقع الجغرافي بنجاح هل ترغب باعتماده")) {
-                    document.getElementById('edit_shop_location_link').value = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
+                if(confirm("تم تحديد الموقع الجغرافي بنجاح، هل ترغب باعتماده؟")) {
+                    const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(shopName)}`;
+                    document.getElementById('edit_shop_location_link').value = mapLink;
+                    
                     document.getElementById('edit_green_light_status').style.background = 'var(--success)';
                     document.getElementById('edit_green_light_status').style.boxShadow = '0 0 10px var(--success)';
                     document.getElementById('edit_green_light_text').innerText = 'تم التأكيد ✅';
                     document.getElementById('edit_green_light_text').style.color = 'var(--success)';
+                    
                     alert("تم تحديث رابط الموقع بنجاح 🚀💎");
                 }
             }, 1200);
         };
 
         function checkAdPermission() {
-            onValue(ref(db, `users/${myMasterId}`), (snapshot) => {
-                if (snapshot.exists() && (snapshot.val().can_send_ads === true || snapshot.val().can_send_ads === "true")) {
-                    document.getElementById('integrated-ad-center').style.display = 'block';
-                } else {
-                    document.getElementById('integrated-ad-center').style.display = 'none';
+            if (!myMasterId) return;
+            const userRef = ref(db, `users/${myMasterId}`);
+            onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.can_send_ads === true || data.can_send_ads === "true") {
+                        document.getElementById('integrated-ad-center').style.display = 'block';
+                    } else {
+                        document.getElementById('integrated-ad-center').style.display = 'none';
+                    }
                 }
             });
         }
@@ -758,25 +783,43 @@
         window.togglePasswordVisibility = function() {
             const passInput = document.getElementById('profile_pass');
             const passIcon = document.getElementById('toggle_pass_icon');
-            if (passInput.type === 'password') { passInput.type = 'text'; passIcon.innerText = '🙈'; } 
-            else { passInput.type = 'password'; passIcon.innerText = '👁️'; }
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                passIcon.innerText = '🙈';
+            } else {
+                passInput.type = 'password';
+                passIcon.innerText = '👁️';
+            }
         };
 
         function setupSmartAdsListener() {
             if(!myMasterId) return;
-            onValue(ref(db, 'announcements'), (snapshot) => {
+            const adsRef = ref(db, 'announcements');
+            
+            onValue(adsRef, (snapshot) => {
                 const ads = snapshot.val() || {};
                 const now = Date.now();
                 let activeAd = null;
+                
                 if (ads.users && ads.users[myMasterId]) {
-                    if (!ads.users[myMasterId].expireAt || ads.users[myMasterId].expireAt > now) activeAd = ads.users[myMasterId];
+                    const specificAd = ads.users[myMasterId];
+                    if (!specificAd.expireAt || specificAd.expireAt > now) {
+                        activeAd = specificAd;
+                    }
                 }
+                
                 if (!activeAd && ads.global) {
-                    if (!ads.global.expireAt || ads.global.expireAt > now) activeAd = ads.global;
+                    const globalAd = ads.global;
+                    if (!globalAd.expireAt || globalAd.expireAt > now) {
+                        activeAd = globalAd;
+                    }
                 }
+                
                 const adContainer = document.getElementById('smart-ad-container');
+                const adMarquee = document.getElementById('smart-ad-text');
+                
                 if (activeAd && activeAd.text) {
-                    document.getElementById('smart-ad-text').innerText = activeAd.text;
+                    adMarquee.innerText = activeAd.text;
                     adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal');
                     adContainer.style.display = 'flex';
                 } else {
@@ -787,9 +830,18 @@
 
         function setupAlertsListener() {
             if(!myMasterId) return;
-            onValue(ref(db, 'alerts'), (snapshot) => {
+            const alertsRef = ref(db, 'alerts');
+            
+            onValue(alertsRef, (snapshot) => {
                 const alerts = snapshot.val() || {};
-                let activeAlert = alerts.users?.[myMasterId] || alerts.global;
+                let activeAlert = null;
+                
+                if (alerts.users && alerts.users[myMasterId]) {
+                    activeAlert = alerts.users[myMasterId];
+                } else if (alerts.global) {
+                    activeAlert = alerts.global;
+                }
+                
                 if (activeAlert && activeAlert.message) {
                     const lastSeen = localStorage.getItem('last_seen_alert_' + myMasterId) || 0;
                     if (activeAlert.timestamp > lastSeen) {
@@ -801,38 +853,57 @@
             });
         }
 
-        window.closeAppPopup = function() { document.getElementById('app-popup-overlay').style.display = 'none'; }
+        window.closeAppPopup = function() {
+            document.getElementById('app-popup-overlay').style.display = 'none';
+        }
 
         function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
             if (!currentUser.Client_Expiry && !currentUser.expiry) {
-                timerEl.innerText = "صلاحية غير محددة"; timerEl.className = "sub-countdown sub-active"; return;
+                timerEl.innerText = "صلاحية غير محددة";
+                timerEl.className = "sub-countdown sub-active";
+                return;
             }
-            const exp = new Date(currentUser.Client_Expiry || currentUser.expiry);
-            exp.setHours(23, 59, 59, 999);
-            const diffDays = Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+            const expiryDate = new Date(currentUser.Client_Expiry || currentUser.expiry);
+            expiryDate.setHours(23, 59, 59, 999);
+            const now = new Date();
+            const diffTime = expiryDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
             if (diffDays > 0) {
-                timerEl.innerText = diffDays <= 3 ? `⚠️ متبقي ${diffDays} يوم` : `متبقي: ${diffDays} يوم`;
-                timerEl.className = diffDays <= 3 ? "sub-countdown sub-warning" : "sub-countdown sub-active";
+                if (diffDays <= 3) {
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-warning";
+                } else {
+                    timerEl.innerText = `متبقي: ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-active";
+                }
             } else {
-                timerEl.innerText = `الاشتراك منتهي`; timerEl.className = "sub-countdown sub-expired";
+                timerEl.innerText = `الاشتراك منتهي`;
+                timerEl.className = "sub-countdown sub-expired";
             }
         }
 
         function setupRealtimeFreezeListener() {
             if(!myMasterId) return;
-            onValue(ref(db, `users/${myMasterId}`), (snapshot) => {
+            const myRef = ref(db, `users/${myMasterId}`);
+            
+            onValue(myRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
+                    
                     if(data.Client_Name || data.name) {
                         currentUser.Client_Name = data.Client_Name || data.name;
                         document.getElementById('welcome-msg').innerText = `أهلاً بك يا ${currentUser.Client_Name}`;
                         document.getElementById('display_company_name').innerText = currentUser.Client_Name;
                     }
+
                     if(data.Client_Expiry || data.expiry) {
                         currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
                         updateCountdownTimer();
                     }
+
                     if (data.external_reg_enabled) {
                         document.getElementById('toggle_external_reg').checked = true;
                         document.getElementById('external_reg_id').style.display = 'inline-block';
@@ -843,206 +914,380 @@
                         document.getElementById('external_reg_id').style.display = 'none';
                         document.getElementById('btn_save_ext_id').style.display = 'none';
                     }
+
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
                         alert("تم إيقاف الحساب يرجى مراجعة الإدارة المركزية");
-                        localStorage.clear(); window.location.replace('index.html');
+                        localStorage.removeItem('current_company_user');
+                        localStorage.removeItem('currentUser');
+                        window.location.replace('index.html');
                     }
                 } else {
-                    alert("تم حذف الحساب نهائيا سيتم تسجيل الخروج");
-                    localStorage.clear(); window.location.replace('index.html');
+                    alert("تم حذف الحساب نهائيا من قبل الإدارة المركزية سيتم تسجيل الخروج فورا");
+                    localStorage.removeItem('current_company_user');
+                    localStorage.removeItem('currentUser');
+                    window.location.replace('index.html');
                 }
             });
         }
 
         window.toggleExternalRegInput = function() {
             const isChecked = document.getElementById('toggle_external_reg').checked;
-            document.getElementById('external_reg_id').style.display = isChecked ? 'inline-block' : 'none';
-            document.getElementById('btn_save_ext_id').style.display = isChecked ? 'inline-block' : 'none';
-            if(!isChecked) saveExternalRegData(false);
+            const idInput = document.getElementById('external_reg_id');
+            const saveBtn = document.getElementById('btn_save_ext_id');
+            
+            if (isChecked) {
+                idInput.style.display = 'inline-block';
+                saveBtn.style.display = 'inline-block';
+            } else {
+                idInput.style.display = 'none';
+                saveBtn.style.display = 'none';
+                saveExternalRegData(false);
+            }
         };
 
         window.saveExternalRegData = async function(isEnabled = null) {
             const toggleState = isEnabled !== null ? isEnabled : document.getElementById('toggle_external_reg').checked;
             const extId = document.getElementById('external_reg_id').value.trim();
-            if (toggleState && !extId) { alert("يرجى إدخال معرف الاستقبال أولا"); return; }
+
+            if (toggleState && !extId) {
+                alert("يرجى إدخال معرف الاستقبال أولا");
+                return;
+            }
+
             document.getElementById('loader-overlay').style.display = 'flex';
             try {
-                await update(ref(db, `users/${myMasterId}`), { external_reg_enabled: toggleState, external_reg_id: toggleState ? extId : null });
+                await update(ref(db, `users/${myMasterId}`), {
+                    external_reg_enabled: toggleState,
+                    external_reg_id: toggleState ? extId : null
+                });
                 document.getElementById('loader-overlay').style.display = 'none';
-                if (toggleState) alert("تم تفعيل الاستقبال الخارجي 🚀"); else alert("تم تعطيل الميزة");
+                if (toggleState) alert("تم تفعيل الاستقبال الخارجي بنجاح 🚀");
+                else alert("تم تعطيل ميزة الاستقبال الخارجي");
             } catch (error) {
-                document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ");
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء حفظ الإعدادات");
             }
         };
 
         window.updateProfileData = async function() {
+            const oldUser = myMasterId;
             const newName = document.getElementById('profile_name').value.trim();
             const newUser = document.getElementById('profile_user').value.trim();
             const newPass = document.getElementById('profile_pass').value;
 
-            if (!newName || !newUser || !newPass) { alert("يرجى تعبئة كافة الحقول المطلوبة"); return; }
+            if (!newName || !newUser || !newPass) {
+                alert("يرجى تعبئة كافة الحقول المطلوبة");
+                return;
+            }
+
             document.getElementById('loader-overlay').style.display = 'flex';
 
             try {
-                if (newUser !== myMasterId) {
-                    const check1 = await get(child(ref(db), `users/${newUser}`));
-                    const check2 = await get(child(ref(db), `shops/${newUser}`));
-                    if (check1.exists() || check2.exists()) {
-                        alert("عذرا اسم المستخدم الجديد محجوز لجهة أخرى");
-                        document.getElementById('loader-overlay').style.display = 'none'; return;
+                if (newUser !== oldUser) {
+                    const checkSnap1 = await get(child(ref(db), `users/${newUser}`));
+                    const checkSnap2 = await get(child(ref(db), `shops/${newUser}`));
+                    if (checkSnap1.exists() || checkSnap2.exists()) {
+                        alert("عذرا اسم المستخدم الجديد محجوز لجهة أخرى يرجى اختيار اسم مختلف");
+                        document.getElementById('loader-overlay').style.display = 'none';
+                        return;
                     }
-                    const oldDataSnap = await get(child(ref(db), `users/${myMasterId}`));
+
+                    const oldDataSnap = await get(child(ref(db), `users/${oldUser}`));
                     if (oldDataSnap.exists()) {
                         const userData = oldDataSnap.val();
-                        userData.Client_Name = newName; userData.name = newName;
-                        userData.Client_User = newUser; userData.user = newUser;
-                        userData.Client_Pass = newPass; userData.pass = newPass;
-                        const updates = { [`users/${newUser}`]: userData, [`users/${myMasterId}`]: null };
                         
+                        userData.Client_Name = newName;
+                        userData.name = newName;
+                        userData.Client_User = newUser;
+                        userData.user = newUser;
+                        userData.Client_Pass = newPass;
+                        userData.pass = newPass;
+
+                        const updates = {};
+                        updates[`users/${newUser}`] = userData;
+                        updates[`users/${oldUser}`] = null; 
+
                         const shopsSnap = await get(child(ref(db), 'shops'));
                         if (shopsSnap.exists()) {
-                            Object.values(shopsSnap.val()).forEach(s => {
-                                if (s.Client_Master === myMasterId || s.master === myMasterId) updates[`shops/${s.Client_User || s.user}/Client_Master`] = newUser;
+                            const allShops = shopsSnap.val();
+                            Object.keys(allShops).forEach(shopKey => {
+                                if (allShops[shopKey].Client_Master === oldUser || allShops[shopKey].master === oldUser) {
+                                    updates[`shops/${shopKey}/Client_Master`] = newUser;
+                                }
                             });
                         }
+
                         await update(ref(db), updates);
-                        localStorage.setItem('current_company_user', JSON.stringify(userData));
-                        localStorage.setItem('currentUser', JSON.stringify(userData));
-                        alert("تم تحديث بياناتك الألماسية بنجاح سيتم إعادة التحميل");
+                        
+                        currentUser = userData;
+                        localStorage.setItem('current_company_user', JSON.stringify(currentUser));
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        
+                        alert("تم تحديث بياناتك بنجاح وتغيير هويتك سيتم إعادة تحميل الصفحة");
                         window.location.reload();
                     }
                 } else {
                     const updates = {
-                        [`users/${myMasterId}/Client_Name`]: newName, [`users/${myMasterId}/name`]: newName,
-                        [`users/${myMasterId}/Client_Pass`]: newPass, [`users/${myMasterId}/pass`]: newPass
+                        [`users/${oldUser}/Client_Name`]: newName,
+                        [`users/${oldUser}/name`]: newName,
+                        [`users/${oldUser}/Client_Pass`]: newPass,
+                        [`users/${oldUser}/pass`]: newPass
                     };
                     await update(ref(db), updates);
-                    currentUser.Client_Name = newName; currentUser.name = newName;
-                    currentUser.Client_Pass = newPass; currentUser.pass = newPass;
+                    
+                    currentUser.Client_Name = newName;
+                    currentUser.name = newName;
+                    currentUser.Client_Pass = newPass;
+                    currentUser.pass = newPass;
                     localStorage.setItem('current_company_user', JSON.stringify(currentUser));
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
                     document.getElementById('welcome-msg').innerText = `أهلاً بك يا ${newName}`;
                     document.getElementById('display_company_name').innerText = newName;
-                    alert("تم حفظ التعديلات بنجاح");
+                    alert("تم حفظ التعديلات الألماسية بنجاح");
                     document.getElementById('loader-overlay').style.display = 'none';
                 }
             } catch (error) {
-                alert("حدث خطأ أثناء التحديث"); document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء التحديث يرجى المحاولة لاحقا");
+                document.getElementById('loader-overlay').style.display = 'none';
             }
         };
 
-        window.logout = function() { localStorage.clear(); window.location.replace('index.html'); };
+        window.logout = function() {
+            localStorage.removeItem('current_company_user');
+            localStorage.removeItem('currentUser');
+            window.location.replace('index.html'); 
+        };
 
         window.switchTab = function(tabId, event) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => { if(!el.classList.contains('tab-link')) el.classList.remove('active'); });
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                if(!el.classList.contains('tab-link')) el.classList.remove('active');
+            });
             document.getElementById(tabId).classList.add('active');
-            if(event && event.target && event.target.classList.contains('tab-btn')) event.target.classList.add('active');
+            if(event && event.target && event.target.classList.contains('tab-btn')) {
+                event.target.classList.add('active');
+            }
         };
 
         window.setShopFilter = function(filter) {
             currentShopFilter = filter;
             document.getElementById('btn_filter_active').classList.remove('active');
             document.getElementById('btn_filter_pending').classList.remove('active');
+            
             if(filter === 'active') document.getElementById('btn_filter_active').classList.add('active');
             else document.getElementById('btn_filter_pending').classList.add('active');
+            
             renderShops();
+        };
+
+        // 🚀 الفلترة الذكية للذاكرة (Memory Optimization) 
+        window.fetchData = function() {
+            window.fetchPricingAreas();
+            
+            const shopsRef = ref(db, 'shops');
+            onValue(shopsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const rawShops = Object.values(snapshot.val());
+                    // تفريغ الذاكرة من بيانات المنافسين فوراً
+                    allData = rawShops.filter(s => s.Client_Master === myMasterId || s.master === myMasterId);
+                } else {
+                    allData = [];
+                }
+                renderShops();
+                updateClientAdTargets(); 
+            });
+
+            const captainsRef = ref(db, 'captains');
+            onValue(captainsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const rawCaps = Object.values(snapshot.val());
+                    allCaptains = rawCaps.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
+                } else {
+                    allCaptains = [];
+                }
+                updateClientAdTargets();
+            });
+
+            const customersRef = ref(db, 'customers');
+            onValue(customersRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const rawCusts = Object.values(snapshot.val());
+                    allCustomers = rawCusts.filter(c => c.Client_Master === myMasterId || c.company === myMasterId);
+                } else {
+                    allCustomers = [];
+                }
+                updateClientAdTargets();
+            });
         };
 
         window.updateClientAdTargets = function() {
             const group = document.getElementById('client_ad_group').value;
             const targetSelect = document.getElementById('client_ad_target');
-            if (!targetSelect) return;
             
+            if (!targetSelect) return;
             targetSelect.innerHTML = '<option value="all" style="color:black;">إرسال للجميع</option>';
+            
+            if (!myMasterId) return;
+            
             if (group === 'shops') {
-                allData.forEach(s => { targetSelect.innerHTML += `<option value="${s.Client_User || s.user}" style="color:black;">${s.Client_Name || s.name}</option>`; });
+                allData.forEach(s => {
+                    targetSelect.innerHTML += `<option value="${s.Client_User || s.user}" style="color:black;">${s.Client_Name || s.name}</option>`;
+                });
             } else if (group === 'captains') {
-                allCaptains.forEach(c => { targetSelect.innerHTML += `<option value="${c.Cap_User || c.user || c.Cap_Phone}" style="color:black;">${c.Cap_Name || c.name}</option>`; });
+                allCaptains.forEach(c => {
+                    targetSelect.innerHTML += `<option value="${c.Cap_User || c.user || c.Cap_Phone}" style="color:black;">${c.Cap_Name || c.name}</option>`;
+                });
             } else if (group === 'customers') {
-                allCustomers.forEach(c => { targetSelect.innerHTML += `<option value="${c.cust_user || c.user}" style="color:black;">${c.cust_name || c.name}</option>`; });
+                allCustomers.forEach(c => {
+                    targetSelect.innerHTML += `<option value="${c.cust_user || c.user}" style="color:black;">${c.cust_name || c.name}</option>`;
+                });
             }
         };
 
         window.sendClientAd = async function() {
             const text = document.getElementById('client_ad_text').value.trim();
-            if(!text) return alert("اكتب نص الإعلان أولا");
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولا"); return; }
+            
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
             const type = document.getElementById('client_ad_type').value;
             const expireHours = document.getElementById('client_ad_expire').value;
-            let expireTimestamp = expireHours !== 'permanent' ? Date.now() + (parseInt(expireHours) * 60 * 60 * 1000) : null;
             
-            const adData = { text, type, expireAt: expireTimestamp, timestamp: Date.now(), sender: currentUser.Client_Name || currentUser.name, senderId: myMasterId };
+            let expireTimestamp = null;
+            if(expireHours !== 'permanent') {
+                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
+            }
+            
+            const senderName = currentUser.Client_Name || currentUser.name || 'الشركة';
+
+            const adData = {
+                text: text,
+                type: type,
+                expireAt: expireTimestamp,
+                timestamp: Date.now(),
+                sender: senderName,
+                senderId: myMasterId
+            };
+
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             try {
                 const basePath = `client_announcements/${myMasterId}/${group}`;
                 let targetNode = group === 'captains' ? 'captains' : 'users';
-                if(target === 'all') await update(ref(db, `${basePath}/global`), adData);
-                else await update(ref(db, `${basePath}/${targetNode}/${target}`), adData);
+
+                if(target === 'all') {
+                    await update(ref(db, `${basePath}/global`), adData);
+                } else {
+                    await update(ref(db, `${basePath}/${targetNode}/${target}`), adData);
+                }
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('client_ad_text').value = '';
                 alert("تم بث الإعلان بنجاح 🚀");
-            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ"); }
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال الإعلان");
+            }
         };
 
         window.sendClientPopup = async function() {
             const text = document.getElementById('client_ad_text').value.trim();
-            if(!text) return alert("اكتب نص التنبيه أولا");
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولا"); return; }
+            
             if(!confirm("سيظهر هذا التنبيه فورا في منتصف الشاشة هل أنت متأكد")) return;
+
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
-            const alertData = { message: text, timestamp: Date.now(), sender: currentUser.Client_Name || currentUser.name };
+            const senderName = currentUser.Client_Name || currentUser.name || 'الشركة';
+
+            const alertData = {
+                message: text,
+                timestamp: Date.now(),
+                sender: senderName
+            };
+
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             try {
                 const basePath = `client_alerts/${myMasterId}/${group}`;
                 let targetNode = group === 'captains' ? 'captains' : 'users';
-                if(target === 'all') await update(ref(db, `${basePath}/global`), alertData);
-                else await update(ref(db, `${basePath}/${targetNode}/${target}`), alertData);
+
+                if(target === 'all') {
+                    await update(ref(db, `${basePath}/global`), alertData);
+                } else {
+                    await update(ref(db, `${basePath}/${targetNode}/${target}`), alertData);
+                }
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('client_ad_text').value = '';
                 alert("تم إرسال التنبيه الطارئ بنجاح 🚨");
-            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ"); }
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال التنبيه");
+            }
         };
 
         window.clearClientAds = async function() {
-            if(!confirm("مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين؟")) return;
+            if(!confirm("هل أنت متأكد من مسح الإعلان أو التنبيه الحالي من أجهزة المستخدمين؟")) return;
+            
             const group = document.getElementById('client_ad_group').value;
             const target = document.getElementById('client_ad_target').value;
+
             document.getElementById('loader-overlay').style.display = 'flex';
+
             try {
+                const basePathAd = `client_announcements/${myMasterId}/${group}`;
+                const basePathAlert = `client_alerts/${myMasterId}/${group}`;
                 let targetNode = group === 'captains' ? 'captains' : 'users';
+                
                 if(target === 'all') {
-                    await remove(ref(db, `client_announcements/${myMasterId}/${group}/global`));
-                    await remove(ref(db, `client_alerts/${myMasterId}/${group}/global`));
+                    await remove(ref(db, `${basePathAd}/global`));
+                    await remove(ref(db, `${basePathAlert}/global`));
                 } else {
-                    await remove(ref(db, `client_announcements/${myMasterId}/${group}/${targetNode}/${target}`));
-                    await remove(ref(db, `client_alerts/${myMasterId}/${group}/${targetNode}/${target}`));
+                    await remove(ref(db, `${basePathAd}/${targetNode}/${target}`));
+                    await remove(ref(db, `${basePathAlert}/${targetNode}/${target}`));
                 }
-                document.getElementById('loader-overlay').style.display = 'none'; alert("تم المسح بنجاح 🗑️");
-            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ"); }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم مسح الإعلان والتنبيه بنجاح 🗑️");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء مسح الإعلان");
+            }
         };
 
         window.toggleCommissionField = function() {
             const type = document.getElementById('sub_type').value;
-            document.getElementById('commission-field').style.display = (type === 'paid' || type === 'commission') ? 'block' : 'none';
+            const field = document.getElementById('commission-field');
+            if (type === 'paid' || type === 'commission') field.style.display = 'block';
+            else field.style.display = 'none';
         };
 
         window.toggleEditCommissionField = function() {
             const type = document.getElementById('edit_sub_type').value;
-            document.getElementById('edit-commission-field').style.display = (type === 'paid' || type === 'commission') ? 'block' : 'none';
+            const field = document.getElementById('edit-commission-field');
+            if (type === 'paid' || type === 'commission') field.style.display = 'block';
+            else field.style.display = 'none';
         };
 
         window.checkAvailability = async function() {
             const user = document.getElementById('shop_user').value.trim();
             if (!user) return;
-            const btn = document.querySelector('.btn-check'); btn.innerText = "جاري الفحص...";
+            const btn = document.querySelector('.btn-check');
+            btn.innerText = "جاري الفحص...";
+            
             try {
                 const checkShop = await get(child(ref(db), `shops/${user}`));
                 const checkUser = await get(child(ref(db), `users/${user}`));
-                if (checkShop.exists() || checkUser.exists()) alert("هذا الاسم محجوز يرجى اختيار اسم آخر");
-                else alert("الاسم متاح ويمكن استخدامه بكل تأكيد");
-            } catch (error) {} finally { btn.innerText = "فحص 🔍"; }
+                
+                if (checkShop.exists() || checkUser.exists()) {
+                    alert("هذا الاسم محجوز يرجى اختيار اسم آخر");
+                } else {
+                    alert("الاسم متاح ويمكن استخدامه بكل تأكيد");
+                }
+            } catch (error) {
+            } finally {
+                btn.innerText = "فحص 🔍";
+            }
         };
 
         window.addShop = async function() {
@@ -1059,103 +1304,151 @@
             let commission = "0";
             if (subType === 'paid' || subType === 'commission') {
                 commission = document.getElementById('fixed_commission').value;
-                if (!commission) return alert("يرجى تحديد قيمة العمولة للاشتراك المختار");
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المختار"); return; }
             }
 
-            if (!name || !user || !pass || !phone) return alert("يرجى تعبئة الحقول الأساسية");
-            if (!pricingArea) return alert("يرجى تحديد منطقة التسعير المعتمدة من القائمة");
+            if (!name || !user || !pass || !phone) { alert("يرجى تعبئة الحقول الأساسية"); return; }
+            if (!pricingArea) { alert("يرجى تحديد منطقة التسعير المعتمدة من القائمة 🌸😊"); return; }
 
             const checkShop = await get(child(ref(db), `shops/${user}`));
             const checkUser = await get(child(ref(db), `users/${user}`));
-            if (checkShop.exists() || checkUser.exists()) return alert("عذرا اسم المستخدم محجوز يرجى تغيير الاسم");
+            if (checkShop.exists() || checkUser.exists()) {
+                alert("عذرا اسم المستخدم محجوز يرجى تغيير الاسم");
+                return;
+            }
 
-            const expDate = new Date(); expDate.setDate(expDate.getDate() + parseInt(days));
+            const expDate = new Date();
+            expDate.setDate(expDate.getDate() + parseInt(days));
+
             document.getElementById('loader-overlay').style.display = 'flex';
             
             const newShop = {
-                Client_ID: "SH_" + Date.now(), Client_User: user, Client_Pass: pass, Client_Name: name,
-                Client_Role: "shop", Client_Type: "shop", Client_Master: myMasterId, Client_Status: "active",
-                Client_Phone: phone, Client_PricingArea: pricingArea, pricing_area: pricingArea,
-                Client_Location: locLink, Client_Comm: commission, Client_Expiry: expDate.toISOString().split('T')[0], 
-                Client_PlanDays: days, Client_Balance: balance, Shop_Balance: balance,
-                name: name, user: user, pass: pass, role: "shop", type: "shop", status: "active"
+                Client_ID: "SH_" + Date.now(),
+                Client_User: user, 
+                Client_Pass: pass, 
+                Client_Name: name,
+                Client_Role: "shop", 
+                Client_Type: "shop", 
+                Client_Master: myMasterId, 
+                Client_Status: "active",
+                Client_Phone: phone, 
+                Client_PricingArea: pricingArea,
+                pricing_area: pricingArea,
+                Client_Location: locLink,  
+                Client_Comm: commission, 
+                Client_Expiry: expDate.toISOString().split('T')[0], 
+                Client_PlanDays: days,
+                Client_Balance: balance,
+                Shop_Balance: balance,
+                name: name,
+                user: user,
+                pass: pass,
+                role: "shop",
+                type: "shop",
+                status: "active"
             };
 
             try {
                 await set(ref(db, 'shops/' + user), newShop);
                 document.getElementById('loader-overlay').style.display = 'none';
-                alert("تم إضافة المنشأة بنجاح للشبكة 🚀💎");
-                document.getElementById('shop_name').value = ''; document.getElementById('shop_user').value = '';
-                document.getElementById('shop_pass').value = ''; document.getElementById('shop_phone').value = '';
-                document.getElementById('shop_pricing_area').value = ''; document.getElementById('shop_location_link').value = '';
-                document.getElementById('shop_balance').value = ''; document.getElementById('smart_search_input').value = '';
+                alert("تم إضافة المنشأة بنجاح 🚀");
+                
+                document.getElementById('shop_name').value = '';
+                document.getElementById('shop_user').value = '';
+                document.getElementById('shop_pass').value = '';
+                document.getElementById('shop_phone').value = '';
+                document.getElementById('shop_pricing_area').value = '';
+                document.getElementById('shop_location_link').value = '';
+                document.getElementById('shop_balance').value = '';
+                document.getElementById('smart_search_input').value = '';
+                
                 document.getElementById('green_light_status').style.background = '#475569';
+                document.getElementById('green_light_status').style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.1)';
                 document.getElementById('green_light_text').innerText = 'بانتظار التأكيد';
                 document.getElementById('green_light_text').style.color = '#cbd5e1';
-            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ"); }
+
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء الاتصال بالنظام");
+            }
         };
 
         window.renderShops = function() {
             const tbody = document.getElementById('shops-table-body');
             
             const myShops = allData.filter(i => {
-                const isPending = (i.Client_Status || i.status) === 'pending';
-                return currentShopFilter === 'active' ? !isPending : isPending;
-            });
+                const stat = i.Client_Status || i.status;
+                const isPending = stat === 'pending';
+                if (currentShopFilter === 'active') return !isPending; 
+                else return isPending; 
+            }).reverse();
             
-            let totalBalance = 0; let totalComm = 0;
-            allData.filter(i => (i.Client_Status !== 'pending' && i.status !== 'pending')).forEach(s => {
+            let totalBalance = 0;
+            let totalComm = 0;
+            
+            const allMyActiveShops = allData.filter(i => (i.Client_Status !== 'pending' && i.status !== 'pending'));
+            
+            allMyActiveShops.forEach(s => {
                 totalBalance += Number(s.Client_Balance || s.Shop_Balance || 0);
                 totalComm += Number(s.Client_Comm || s.company_share || 0);
             });
 
-            document.getElementById('total-shops').innerText = allData.filter(i => (i.Client_Status !== 'pending' && i.status !== 'pending')).length;
-            document.getElementById('count-paid').innerText = allData.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0 && s.Client_Status !== 'pending').length;
-            document.getElementById('count-free').innerText = allData.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0 && s.Client_Status !== 'pending').length;
+            document.getElementById('total-shops').innerText = allMyActiveShops.length;
+            document.getElementById('count-paid').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
+            document.getElementById('count-free').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
             document.getElementById('total-balance').innerText = totalBalance.toFixed(2) + " د.أ";
             document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
 
             if (myShops.length === 0) { 
-                const emptyMsg = currentShopFilter === 'active' ? 'لا توجد منشآت مفعّلة حاليا' : 'لا توجد طلبات معلقة حاليا';
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#94a3b8;">${emptyMsg}</td></tr>`; return; 
+                const emptyMsg = currentShopFilter === 'active' ? 'لا توجد منشآت تابعة مفعّلة حاليا' : 'لا توجد طلبات معلقة حاليا';
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold; color:#94a3b8;">${emptyMsg}</td></tr>`; 
+                return; 
             }
+            tbody.innerHTML = '';
             
-            tbody.innerHTML = myShops.map(shop => {
+            myShops.forEach(shop => {
                 const commVal = Number(shop.Client_Comm || shop.company_share || 0);
                 const subBadge = commVal > 0 
                     ? `<span class="badge" style="background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.3);">مدفوع (${commVal})</span>` 
                     : `<span class="badge" style="background:rgba(255,255,255,0.1); color:#cbd5e1; border:1px solid rgba(255,255,255,0.2);">مجاني</span>`;
 
                 const stat = shop.Client_Status || shop.status;
-                let statusBadge = '', toggleBtn = '';
+                let statusBadge = '';
+                let toggleBtn = '';
+                
                 if (stat === 'pending') {
                     statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">بانتظار التفعيل</span>';
-                    toggleBtn = `<button class="btn-active" title="تفعيل" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل</button>`;
+                    toggleBtn = `<button class="btn-active" title="تفعيل وقبول المنشأة" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل</button>`;
                 } else if (stat === 'paused') {
                     statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">مجمد ❄️</span>';
                     toggleBtn = `<button class="btn-active" title="إعادة تفعيل" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>`;
                 } else {
                     statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.3);">نشط ✅</span>';
-                    toggleBtn = `<button class="btn-freeze" title="تجميد" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">❄️</button>`;
+                    toggleBtn = `<button class="btn-freeze" title="تجميد مؤقت" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">❄️</button>`;
                 }
                 
                 let daysLeft = "غير محدد";
                 if (shop.Client_Expiry || shop.expiry) {
-                    const exp = new Date(shop.Client_Expiry || shop.expiry); exp.setHours(23, 59, 59, 999);
-                    const d = Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    const exp = new Date(shop.Client_Expiry || shop.expiry);
+                    exp.setHours(23, 59, 59, 999);
+                    const diff = exp.getTime() - new Date().getTime();
+                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
                     daysLeft = d > 0 ? `<span style="color:var(--success);">${d} يوم</span>` : `<span style="color:var(--danger);">منتهي</span>`;
                 }
                 
-                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:10px; color:var(--neon-blue); text-decoration:none;">📍 الموقع</a>` : '';
-                let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:9px; background:rgba(212,175,55,0.1); color:var(--gold); padding:2px 4px; border-radius:4px; border:1px solid rgba(212,175,55,0.3); display:inline-block; margin-top:2px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
+                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:10px; font-weight:bold; color:var(--neon-blue); text-decoration:none;">📍 الموقع</a>` : '';
+                let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:9px; background:rgba(212,175,55,0.1); color:var(--gold); padding:2px 4px; border-radius:4px; border:1px solid rgba(212,175,55,0.3); display:inline-block; margin-top:3px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
 
-                return `
+                const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
+                const shopPassDisplay = shop.Client_Pass || shop.pass || 'غير متوفرة';
+
+                tbody.innerHTML += `
                     <tr>
                         <td><b style="color:var(--gold-light);">${shop.Client_Name || shop.name}</b></td>
-                        <td style="font-size:10px; direction:ltr; text-align:right; color:#cbd5e1;">U: <b>${shop.Client_User || shop.user}</b><br>P: <b style="color:white;">${shop.Client_Pass || shop.pass || '-'}</b></td>
+                        <td style="font-size:10px; direction:ltr; text-align:right; color:#cbd5e1;">U: <b>${shop.Client_User || shop.user}</b><br>P: <b style="color:white;">${shopPassDisplay}</b></td>
                         <td style="font-size:11px; direction:ltr; text-align:right;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}${pricingBadge}</td>
                         <td>${subBadge}</td>
-                        <td style="font-weight:900; color:var(--gold); font-size:13px;">${Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2)}</td>
+                        <td style="font-weight:900; color:var(--gold); font-size:13px;">${currentBalance} د.أ</td>
                         <td style="font-size:11px; font-weight:bold;">${daysLeft}</td>
                         <td>${statusBadge}</td>
                         <td class="controls">
@@ -1165,20 +1458,37 @@
                         </td>
                     </tr>
                 `;
-            }).join('');
+            });
         };
 
         window.filterTable = function() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            document.querySelectorAll('#shops-table-body tr').forEach(row => {
-                if (row.cells.length > 1) row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            const rows = document.querySelectorAll('#shops-table-body tr');
+            rows.forEach(row => {
+                if (row.cells.length > 1) {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                }
             });
         };
 
         window.toggleStatus = async function(u, currentStatus) {
-            let nextStatus = currentStatus === 'active' ? 'paused' : 'active';
-            let confirmMsg = currentStatus === 'pending' ? "تأكيد تفعيل المنشأة؟" : (currentStatus === 'active' ? "تجميد الحساب؟" : "إعادة تفعيل؟");
+            let nextStatus = 'active';
+            let confirmMsg = '';
+            
+            if (currentStatus === 'pending') {
+                confirmMsg = "تأكيد تفعيل وقبول المنشأة بالشبكة الألماسية";
+                nextStatus = 'active';
+            } else if (currentStatus === 'active') {
+                confirmMsg = "تأكيد تجميد حساب المنشأة";
+                nextStatus = 'paused';
+            } else {
+                confirmMsg = "تأكيد إعادة تفعيل حساب المنشأة";
+                nextStatus = 'active';
+            }
+            
             if(!confirm(confirmMsg)) return;
+            
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'shops/' + u), { Client_Status: nextStatus, status: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
@@ -1190,7 +1500,6 @@
 
             document.getElementById('edit_original_user').value = userKey;
             document.getElementById('edit_shop_name').value = shop.Client_Name || shop.name || '';
-            // بناء على طلبك: إبقاء الـ User ID مفتوحاً للتجربة
             document.getElementById('edit_shop_user').value = shop.Client_User || shop.user || '';
             document.getElementById('edit_shop_pass').value = shop.Client_Pass || shop.pass || '';
             document.getElementById('edit_shop_phone').value = shop.Client_Phone || shop.cap_phone || '';
@@ -1206,7 +1515,7 @@
                 document.getElementById('edit_green_light_text').style.color = 'var(--success)';
             } else {
                 document.getElementById('edit_green_light_status').style.background = '#475569';
-                document.getElementById('edit_green_light_status').style.boxShadow = 'none';
+                document.getElementById('edit_green_light_status').style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.1)';
                 document.getElementById('edit_green_light_text').innerText = 'بانتظار التأكيد';
                 document.getElementById('edit_green_light_text').style.color = '#cbd5e1';
             }
@@ -1221,10 +1530,13 @@
                 document.getElementById('edit_fixed_commission').value = '';
                 document.getElementById('edit-commission-field').style.display = 'none';
             }
+
             document.getElementById('edit-shop-modal').style.display = 'flex';
         };
 
-        window.closeEditModal = function() { document.getElementById('edit-shop-modal').style.display = 'none'; };
+        window.closeEditModal = function() {
+            document.getElementById('edit-shop-modal').style.display = 'none';
+        };
 
         window.saveShopEdit = async function() {
             const originalUser = document.getElementById('edit_original_user').value;
@@ -1243,10 +1555,18 @@
             let commission = "0";
             if (subType === 'paid' || subType === 'commission') {
                 commission = document.getElementById('edit_fixed_commission').value;
-                if (!commission) return alert("يرجى تحديد العمولة");
+                if (!commission) { alert("يرجى تحديد قيمة العمولة للاشتراك المختار"); return; }
             }
-            if (!newName || !newUser || !newPass || !newPhone) return alert("يرجى تعبئة الحقول");
-            if (!newPricingArea) return alert("يرجى تحديد منطقة التسعير");
+
+            if (!newName || !newUser || !newPass || !newPhone) { 
+                alert("يرجى تعبئة الحقول الأساسية"); 
+                return; 
+            }
+            
+            if (!newPricingArea) {
+                alert("يرجى تحديد منطقة التسعير المعتمدة");
+                return;
+            }
 
             document.getElementById('loader-overlay').style.display = 'flex';
 
@@ -1254,72 +1574,123 @@
                 if (newUser !== originalUser) {
                     const checkShop = await get(child(ref(db), `shops/${newUser}`));
                     const checkUser = await get(child(ref(db), `users/${newUser}`));
+                    
                     if (checkShop.exists() || checkUser.exists()) {
-                        alert("اسم المستخدم الجديد محجوز لجهة أخرى");
-                        document.getElementById('loader-overlay').style.display = 'none'; return;
+                        alert("عذرا اسم المستخدم الجديد محجوز لجهة أخرى");
+                        document.getElementById('loader-overlay').style.display = 'none';
+                        return;
                     }
+
                     const updatedShop = {
-                        ...shop, Client_Name: newName, name: newName, Client_User: newUser, user: newUser,
-                        Client_Pass: newPass, pass: newPass, Client_Phone: newPhone, cap_phone: newPhone,
-                        Client_PricingArea: newPricingArea, pricing_area: newPricingArea, Client_Location: newLoc, pickup: newLoc,
-                        Client_Balance: newBal, Shop_Balance: newBal, Client_Comm: commission, company_share: commission
+                        ...shop,
+                        Client_Name: newName, name: newName,
+                        Client_User: newUser, user: newUser,
+                        Client_Pass: newPass, pass: newPass,
+                        Client_Phone: newPhone, cap_phone: newPhone,
+                        Client_PricingArea: newPricingArea, pricing_area: newPricingArea,
+                        Client_Location: newLoc, pickup: newLoc,
+                        Client_Balance: newBal, Shop_Balance: newBal,
+                        Client_Comm: commission, company_share: commission
                     };
-                    const updates = {}; updates[`shops/${newUser}`] = updatedShop; updates[`shops/${originalUser}`] = null;
+
+                    const updates = {};
+                    updates[`shops/${newUser}`] = updatedShop;
+                    updates[`shops/${originalUser}`] = null;
                     await update(ref(db), updates);
                 } else {
                     const updates = {
-                        [`shops/${originalUser}/Client_Name`]: newName, [`shops/${originalUser}/name`]: newName,
-                        [`shops/${originalUser}/Client_Pass`]: newPass, [`shops/${originalUser}/pass`]: newPass,
-                        [`shops/${originalUser}/Client_Phone`]: newPhone, [`shops/${originalUser}/cap_phone`]: newPhone,
-                        [`shops/${originalUser}/Client_PricingArea`]: newPricingArea, [`shops/${originalUser}/pricing_area`]: newPricingArea,
-                        [`shops/${originalUser}/Client_Location`]: newLoc, [`shops/${originalUser}/pickup`]: newLoc,
-                        [`shops/${originalUser}/Client_Balance`]: newBal, [`shops/${originalUser}/Shop_Balance`]: newBal,
-                        [`shops/${originalUser}/Client_Comm`]: commission, [`shops/${originalUser}/company_share`]: commission
+                        [`shops/${originalUser}/Client_Name`]: newName,
+                        [`shops/${originalUser}/name`]: newName,
+                        [`shops/${originalUser}/Client_Pass`]: newPass,
+                        [`shops/${originalUser}/pass`]: newPass,
+                        [`shops/${originalUser}/Client_Phone`]: newPhone,
+                        [`shops/${originalUser}/cap_phone`]: newPhone,
+                        [`shops/${originalUser}/Client_PricingArea`]: newPricingArea,
+                        [`shops/${originalUser}/pricing_area`]: newPricingArea,
+                        [`shops/${originalUser}/Client_Location`]: newLoc,
+                        [`shops/${originalUser}/pickup`]: newLoc,
+                        [`shops/${originalUser}/Client_Balance`]: newBal,
+                        [`shops/${originalUser}/Shop_Balance`]: newBal,
+                        [`shops/${originalUser}/Client_Comm`]: commission,
+                        [`shops/${originalUser}/company_share`]: commission
                     };
                     await update(ref(db), updates);
                 }
-                document.getElementById('loader-overlay').style.display = 'none'; closeEditModal(); alert("تم حفظ التعديلات بنجاح 💎");
-            } catch (error) { document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ"); }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                closeEditModal();
+                alert("تم حفظ التعديلات الألماسية بنجاح 💎");
+            } catch (error) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء حفظ التعديلات");
+            }
         };
 
         window.deleteShop = async function(u) {
-            if(!confirm("تحذير هل أنت متأكد من الحذف النهائي لهذه المنشأة؟")) return;
+            if(!confirm("تحذير هل أنت متأكد من الحذف النهائي لهذه المنشأة لا يمكن التراجع وسيتم تحرير المعرف")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             try {
                 await remove(ref(db, 'shops/' + u));
-                document.getElementById('loader-overlay').style.display = 'none'; alert("تم حذف المنشأة 🗑️");
-            } catch (error) { document.getElementById('loader-overlay').style.display = 'none'; alert("حدث خطأ"); }
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("تم حذف المنشأة نهائيا والاسم متاح الآن 🗑️");
+            } catch (error) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء عملية الحذف");
+            }
         };
 
         window.fetchCyberSettings = function() {
             if(!myMasterId) return;
-            onValue(ref(db, `settings/${myMasterId}/order_timer`), (snap) => { if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val(); });
-            onValue(ref(db, `settings/${myMasterId}/anti_vpn`), (snap) => { document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false; });
-            onValue(ref(db, `settings/${myMasterId}/hotspots_active`), (snap) => { document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false; });
+
+            onValue(ref(db, `settings/${myMasterId}/order_timer`), (snap) => {
+                if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
+            });
+            
+            onValue(ref(db, `settings/${myMasterId}/anti_vpn`), (snap) => {
+                document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
+            });
+            
+            onValue(ref(db, `settings/${myMasterId}/hotspots_active`), (snap) => {
+                document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
+            });
         };
 
         window.updateRemoteTimer = async function() {
             const timeVal = document.getElementById('remote_timer_val').value;
-            if(!timeVal || timeVal < 5) return alert("وقت غير صحيح (الأدنى 5 ثواني)");
+            if(!timeVal || timeVal < 5) { alert("يرجى إدخال وقت صحيح لا يقل عن 5 ثواني"); return; }
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             try {
-                await set(ref(db, `settings/${myMasterId}/order_timer`), parseInt(timeVal));
-                alert("تم تحديث وقت قبول الطلب ⏱️");
-            } catch(e) { alert("حدث خطأ"); } finally { document.getElementById('loader-overlay').style.display = 'none'; }
+                if(myMasterId) {
+                    await set(ref(db, `settings/${myMasterId}/order_timer`), parseInt(timeVal));
+                    alert("تم تحديث وقت قبول الطلب الخاص بشركتك بنجاح ⏱️🚀");
+                }
+                document.getElementById('loader-overlay').style.display = 'none';
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء التحديث");
+            }
         };
 
         window.toggleRemoteVPN = async function(isActive) {
             try {
-                await set(ref(db, `settings/${myMasterId}/anti_vpn`), isActive);
-                if(isActive) alert("تم تفعيل حظر الـ VPN 🔒"); else alert("تم إيقاف حظر الـ VPN 🔓");
-            } catch(e) { alert("خطأ"); }
+                if(myMasterId) {
+                    await set(ref(db, `settings/${myMasterId}/anti_vpn`), isActive);
+                    if(isActive) alert("تم تفعيل كاشف الـ VPN وحظر المتلاعبين بنجاح 🔒💎");
+                    else alert("تم إيقاف كاشف الـ VPN 🔓");
+                }
+            } catch(e) { alert("حدث خطأ أثناء التعديل"); }
         };
 
         window.toggleRemoteHotspots = async function(isActive) {
             try {
-                await set(ref(db, `settings/${myMasterId}/hotspots_active`), isActive);
-                if(isActive) alert("تم تفعيل النقاط الساخنة 🔥"); else alert("تم إيقاف النقاط الساخنة ❌");
-            } catch(e) { alert("خطأ"); }
+                if(myMasterId) {
+                    await set(ref(db, `settings/${myMasterId}/hotspots_active`), isActive);
+                    if(isActive) alert("تم تفعيل مؤشر النقاط الساخنة لكباتن شركتك 🔥🚀");
+                    else alert("تم إيقاف مؤشر النقاط الساخنة ❌");
+                }
+            } catch(e) { alert("حدث خطأ أثناء التعديل"); }
         };
 
     </script>
