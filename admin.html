@@ -3,181 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N One | غرفة قيادة الشركات (Diamond Royal Edition)</title>
+    <title>N One | غرفة قيادة الشركات (Diamond Radar Edition)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* ================= أساسيات التصميم (Diamond Glass Theme) ================= */
+        /* ================= أساسيات التصميم (Diamond Radar Theme) ================= */
         :root {
-            --primary: #0f172a;
-            --gold: #d4af37;
+            --primary: #0f172a;      /* نيفي بلو ملكي عميق */
+            --primary-light: #1e293b; 
+            --gold: #d4af37;         /* ذهبي ألماسي */
             --gold-light: #fef08a;
-            --neon-blue: #0ea5e9;
+            --bg: #f0f4f8;           /* خلفية هادئة ملمومة */
+            --text: #334155;
             --success: #10b981; 
             --danger: #ef4444; 
             --warning: #f59e0b; 
+            --info: #0ea5e9;
+            --diamond-glow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #050814; 
-            margin: 0; padding: 0; 
-            color: #fff; user-select: none; 
-            overflow-x: hidden;
-            min-height: 100vh;
+            background-color: var(--bg); margin: 0; padding: 0; 
+            color: var(--text); user-select: none; 
+            background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.03), transparent 30%);
         }
 
-        /* ================= الأجسام الطافية في الخلفية (الهادئة) ================= */
-        .bg-shapes {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
-        }
-
-        .shape {
-            position: absolute;
-            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(14,165,233,0.1));
-            box-shadow: 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(212,175,55,0.2);
-            animation: float 20s infinite linear;
-        }
-
-        .shape:nth-child(1) { width: 100px; height: 100px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
-        .shape:nth-child(2) { width: 150px; height: 150px; top: 60%; left: 85%; border-radius: 50%; animation-duration: 25s; animation-direction: reverse; }
-        .shape:nth-child(3) { width: 70px; height: 70px; top: 40%; left: 50%; border-radius: 30%; animation-duration: 18s; }
-        .shape:nth-child(4) { width: 200px; height: 200px; top: -10%; left: 60%; border-radius: 40%; animation-duration: 30s; }
-
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
-        }
-
-        /* ================= الشريط العلوي (Navbar) ================= */
+        /* N One */
         .navbar { 
-            background: rgba(15, 23, 42, 0.8); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: linear-gradient(to left, var(--primary), var(--primary-light)); 
             height: 65px; display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-bottom: 2px solid rgba(212, 175, 55, 0.4); position: sticky; top: 0; z-index: 1000; 
+            padding: 0 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
         }
-        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-        .gold-text { color: var(--gold); text-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .gold-text { color: var(--gold); }
         
         .welcome-msg {
             font-weight: bold; color: var(--gold-light); font-size: 14px; 
-            background: rgba(255,255,255,0.05); padding: 6px 15px; border-radius: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.3); letter-spacing: 0.5px;
+            background: rgba(255,255,255,0.08); padding: 6px 15px; border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.2); letter-spacing: 0.5px;
         }
 
         .btn-logout { 
-            background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); 
+            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); 
             font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 18px; 
             border-radius: 10px; color: #fca5a5; transition: 0.3s; 
         }
-        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+        .btn-logout:hover { background: var(--danger); color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
 
         .container { max-width: 1350px; margin: 20px auto; padding: 0 15px; }
 
-        /* ================= بوابات الوصول السريع ================= */
-        .quick-access-panel { display: flex; gap: 15px; margin-bottom: 25px; justify-content: flex-start; }
+        /* بوابات */
+        .cute-msg {
+            text-align: center; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: var(--primary);
+        }
+
+        /* بوابات الوصول السريع (كبسات) */
+        .quick-access-panel {
+            display: flex; gap: 15px; margin-bottom: 20px; justify-content: center;
+        }
         
-        .btn-gate {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 12px 20px;
-            border-radius: 12px; font-size: 14px; font-weight: 900; cursor: pointer;
-            transition: all 0.3s ease; backdrop-filter: blur(10px);
+        .btn-gold-gate {
+            background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+            border: 1px solid var(--gold); color: #854d0e; padding: 10px 20px;
+            border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: var(--diamond-glow);
             display: flex; align-items: center; gap: 8px; text-decoration: none;
         }
-        .btn-gate:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .btn-gold-gate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4); background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); color: #713f12; }
 
-        /* ================= الإحصائيات (Compact Stats) ================= */
+        .btn-silver-gate {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e1; color: var(--primary); padding: 10px 20px;
+            border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-silver-gate:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); border-color: #94a3b8; }
+
+        /* الإحصائيات المدمجة */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card { 
-            background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; 
-            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(15px); transition: 0.3s;
+            background: white; padding: 20px; border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center; 
+            border-top: 4px solid var(--primary); transition: 0.3s;
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-color: rgba(212, 175, 55, 0.3); }
-        .stat-number { font-size: 32px; font-weight: 900; color: #fff; margin: 8px 0 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .stat-label { color: #cbd5e1; font-size: 13px; font-weight: bold; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+        .stat-number { font-size: 32px; font-weight: 900; color: var(--primary); margin: 8px 0 2px; }
+        .stat-label { color: #64748b; font-size: 13px; font-weight: bold; }
 
-        /* ================= الكروت الزجاجية (Glass Cards) ================= */
+        /* الكروت ونموذج الإضافة المدمج */
         .card { 
-            background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 20px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4); margin-bottom: 25px; 
-            border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
-            backdrop-filter: blur(20px);
+            background: white; padding: 20px 25px; border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); margin-bottom: 20px; 
+            border-top: 4px solid var(--primary); 
         }
         .card-header { 
-            font-size: 18px; font-weight: 900; color: var(--gold); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 18px; 
-            display: flex; justify-content: space-between; align-items: center; text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            font-size: 18px; font-weight: 900; color: var(--primary); 
+            border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
         }
-
-        /* ================= الحقول (Inputs) ================= */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center; }
         
         input, select, textarea { 
-            width: 100%; padding: 12px 15px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; 
-            outline: none; background: rgba(0,0,0,0.3); box-sizing: border-box; 
-            font-family: inherit; font-size: 14px; font-weight: bold; color: white; transition: 0.3s; 
+            width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 10px; 
+            outline: none; background: #f8fafc; box-sizing: border-box; 
+            font-family: inherit; font-size: 14px; font-weight: bold; color: var(--primary); transition: 0.3s; 
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
         
         .btn-add { 
-            background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border: none; 
-            padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 900; 
-            cursor: pointer; height: 100%; width: 100%; transition: 0.3s; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+            background: linear-gradient(135deg, var(--success), #059669); color: white; border: none; 
+            padding: 10px 20px; border-radius: 10px; font-size: 15px; font-weight: 900; 
+            cursor: pointer; height: 100%; width: 100%; transition: 0.3s; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
         }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); }
+        .btn-add:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-1px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
 
-        /* ================= الجداول الملكية ================= */
-        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        /* الجداول */
+        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
-        thead { background: rgba(0,0,0,0.4); color: var(--gold); }
-        th { padding: 15px 12px; text-align: right; font-weight: 900; font-size: 13px; letter-spacing: 0.5px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-        td { padding: 15px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: bold; color: #e2e8f0; }
-        tr:hover td { background: rgba(212, 175, 55, 0.05); }
+        thead { background: var(--primary); color: white; }
+        th { padding: 12px 10px; text-align: right; font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
+        td { padding: 12px 10px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: bold; color: var(--text); }
+        tr:hover { background: #f8fafc; }
         
-        .status-badge { padding: 5px 12px; border-radius: 15px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        .status-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-        .status-paused { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
-        .status-expired { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; } 
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; }
+        .status-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-paused { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .status-expired { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; } 
 
-        /* ================= أزرار التحكم في الجدول ================= */
+        /* أزرار التحكم */
         .action-group { display: flex; gap: 6px; }
         .action-btn { 
-            padding: 8px 12px; border-radius: 8px; border: none; color: white; 
-            cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 6px 10px; border-radius: 6px; border: none; color: white; 
+            cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .action-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
-        .act-freeze { background: linear-gradient(135deg, #f59e0b, #b45309); }
-        .act-active { background: linear-gradient(135deg, #10b981, #047857); }
-        .act-delete { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-        .act-renew { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
-        .act-edit { background: linear-gradient(135deg, #475569, #1e293b); }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
+        .act-freeze { background: var(--warning); }
+        .act-active { background: var(--success); }
+        .act-delete { background: var(--danger); }
+        .act-renew { background: var(--info); }
+        .act-edit { background: var(--primary); }
 
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: var(--gold); flex-direction: column; backdrop-filter: blur(10px); }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: var(--primary); flex-direction: column; }
         
-        /* ================= ألوان الإعلانات ================= */
-        .ad-color-normal { color: #fff; background: #1e293b; }
-        .ad-color-news { color: #38bdf8; background: #0c4a6e; }
-        .ad-color-warning { color: #f87171; background: #7f1d1d; font-weight: bold; }
-        .ad-color-offer { color: #34d399; background: #064e3b; }
+        /* ألوان الإعلانات */
+        .ad-color-normal { color: var(--text); }
+        .ad-color-news { color: var(--info); }
+        .ad-color-warning { color: var(--danger); font-weight: bold; }
+        .ad-color-offer { color: var(--success); }
         
         .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-broadcast { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px 15px; border-radius: 12px; font-weight: 900; cursor: pointer; flex: 1; transition: 0.3s; font-size: 14px; }
-        .btn-broadcast:hover { border-color: var(--gold); box-shadow: 0 5px 15px rgba(212,175,55,0.2); }
+        .btn-broadcast { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; flex: 1; transition: 0.3s; font-size: 14px; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2); }
+        .btn-broadcast:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(15, 23, 42, 0.3); }
         
-        .btn-popup { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
-        .btn-popup:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5); }
+        .btn-popup { background: linear-gradient(135deg, var(--danger), #b91c1c); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2); }
+        .btn-popup:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
         
-        .btn-clear-ad { background: linear-gradient(135deg, #64748b, #334155); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; }
-        .btn-clear-ad:hover { transform: translateY(-2px); }
+        .btn-clear-ad { background: linear-gradient(135deg, #64748b, #475569); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 14px; box-shadow: 0 3px 10px rgba(100, 116, 139, 0.2); }
+        .btn-clear-ad:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(100, 116, 139, 0.3); }
 
         /* ================= مفاجأة عيد الميلاد الألماسية ================= */
         #birthday-overlay {
@@ -186,7 +172,9 @@
             flex-direction: column; text-align: center; color: white;
             backdrop-filter: blur(10px);
         }
-        .firework { font-size: 50px; animation: pop 1s infinite alternate; margin-bottom: 20px; }
+        .firework {
+            font-size: 50px; animation: pop 1s infinite alternate; margin-bottom: 20px;
+        }
         @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1.2); text-shadow: 0 0 30px #d4af37; } }
         .cake-box { font-size: 80px; margin-bottom: 15px; animation: bounce 2s infinite; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
@@ -199,7 +187,7 @@
 <body>
 
     <div id="loader-overlay">
-        <div style="font-size:45px; margin-bottom:15px; text-shadow: 0 0 20px #d4af37; animation: bounce 1s infinite;">💎</div>
+        <div style="font-size:35px; margin-bottom:10px; text-shadow: var(--diamond-glow);">💎</div>
         <div>جاري الاتصال بالنواة المركزية المباشرة يا بطة...</div>
     </div>
 
@@ -215,29 +203,22 @@
         <button class="btn-close-bday" onclick="closeBirthday()">بدء القيادة  🚀</button>
     </div>
 
-    <div class="bg-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-
     <nav class="navbar">
         <div class="brand">N <span class="gold-text">One</span> Admin</div>
         <div class="welcome-msg">N One 👑</div>
-        <button class="btn-logout" onclick="logout()">إغلاق الخزنة 🔒</button>
+        <button class="btn-logout" id="btnLogout">إغلاق الخزنة 🔒</button>
     </nav>
 
     <div class="container">
         
-        <div class="cute-msg" style="text-align: center; margin-bottom: 15px; font-size: 15px; font-weight: bold; color: var(--gold-light);"></div>
+        <div class="cute-msg"></div>
 
         <div class="quick-access-panel">
-            <a href="manager.html" class="btn-gate" title="الدخول المباشر لفحص السيستم">
-                <span style="font-size: 20px;">🩺</span> غرفة الطبيب
+            <a href="manager.html" class="btn-gold-gate" title="الدخول المباشر لفحص السيستم">
+                <span style="font-size: 20px;">🩺</span> غرفة الطبيب (فحص النظام)
             </a>
-            <a href="maintenance.html" class="btn-gate" title="غرفة المراقبة والصيانة">
-                <span style="font-size: 20px;">⚙️</span> الصيانة المركزية
+            <a href="maintenance.html" class="btn-silver-gate" title="غرفة المراقبة والصيانة">
+                <span style="font-size: 20px;">⚙️</span> بوابة الصيانة المركزية
             </a>
         </div>
         
@@ -251,7 +232,7 @@
                 <div class="stat-number" id="count-active" style="color: var(--success);">0</div>
             </div>
             <div class="stat-card" style="border-top-color: var(--gold);">
-                <div class="stat-label">المردود المالي</div>
+                <div class="stat-label">المردود المالي الكلي</div>
                 <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
             </div>
         </div>
@@ -272,12 +253,12 @@
                 </select>
                 <input type="number" id="sub_price" placeholder="الاشتراك (د.أ)">
                 
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; align-items: center; gap: 8px; background: #e0f2fe; padding: 10px 12px; border-radius: 10px; border: 1px solid #bae6fd;">
                     <input type="checkbox" id="can_send_ads" style="width: 18px; height: 18px; cursor: pointer;" checked>
-                    <label for="can_send_ads" style="font-weight: 900; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 13px;">تفعيل الإعلانات 📢</label>
+                    <label for="can_send_ads" style="font-weight: 900; color: var(--info); cursor: pointer; margin: 0; font-size: 13px;">تفعيل الإعلانات 📢</label>
                 </div>
 
-                <button class="btn-add" id="btnAddUser" onclick="addUser()">+ زرع الجذور المستقلة 🚀</button>
+                <button class="btn-add" id="btnAddUser">+ زرع الجذور المستقلة 🚀</button>
             </div>
         </div>
         
@@ -285,14 +266,14 @@
             <div class="card-header">
                 <span>📢 مركز الإعلانات الذكية (Smart Announcements)</span>
             </div>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
-                <div style="flex: 2; min-width: 250px;">
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div style="flex: 2;">
                     <textarea id="ad_text" rows="2" placeholder="اكتب الإعلان أو التنبيه هنا يا بطة..." style="resize: none;"></textarea>
                 </div>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 250px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
                     <select id="ad_target" title="الاستهداف">
                         <option value="all">إرسال للجميع (الكل)</option>
-                    </select>
+                        </select>
                     <div style="display: flex; gap: 10px;">
                         <select id="ad_type" title="نوع الإعلان" style="flex: 1;">
                             <option value="normal" class="ad-color-normal">إعلان عادي</option>
@@ -301,25 +282,25 @@
                             <option value="offer" class="ad-color-offer">عروض / هدايا 🟢</option>
                         </select>
                         <select id="ad_expire" title="مدة العرض" style="flex: 1;">
-                            <option value="1">ساعة</option>
-                            <option value="24" selected>24 ساعة</option>
-                            <option value="168">أسبوع</option>
-                            <option value="permanent">دائم</option>
+                            <option value="1">لمدة ساعة</option>
+                            <option value="24" selected>لمدة 24 ساعة</option>
+                            <option value="168">لمدة أسبوع</option>
+                            <option value="permanent">دائم (حتى الحذف)</option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="ad-controls">
-                <button class="btn-broadcast" onclick="sendAnnouncement()">بث الإعلان بالشريط 🚀</button>
-                <button class="btn-popup" onclick="sendPopupAlert()">تنبيه طارئ (Pop-up) 🚨</button>
-                <button class="btn-clear-ad" onclick="clearAnnouncement()">مسح الإعلانات 🧹</button>
+                <button class="btn-broadcast" id="btnBroadcast">بث الإعلان بالشريط 🚀</button>
+                <button class="btn-popup" id="btnPopupAlert">تنبيه طارئ (Pop-up) 🚨</button>
+                <button class="btn-clear-ad" id="btnClearAd">مسح الإعلانات 🧹</button>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
                 <span>🏢 سجل شركات النقل (Companies Log)</span>
-                <span style="font-size:13px; color:var(--gold-light); font-weight: bold; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 10px;">White Label Clients</span>
+                <span style="font-size:13px; color:var(--primary); font-weight: bold;">White Label Clients</span>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -360,13 +341,13 @@
         const db = getDatabase(app);
 
         let allData = [];
-        let activeClients = [];
 
-        window.onload = async function() {
+        window.addEventListener('DOMContentLoaded', () => {
+            // [تم إصلاح الثغرة الأمنية هنا: تفعيل التحقق من تسجيل الدخول]
             const sessionData = localStorage.getItem('currentUser');
             if (!sessionData) {
-                // window.location.replace('index.html');
-                // return;
+                window.location.replace('index.html');
+                return;
             } else {
                 const currentUser = JSON.parse(sessionData);
                 if (currentUser.role !== 'admin') {
@@ -374,10 +355,23 @@
                     return;
                 }
             }
-            fetchData();
-        };
 
-        window.fetchData = function() {
+            setupEvents();
+            fetchData();
+        });
+
+        function setupEvents() {
+            document.getElementById('btnAddUser').addEventListener('click', addUser);
+            document.getElementById('btnBroadcast').addEventListener('click', sendAnnouncement);
+            document.getElementById('btnPopupAlert').addEventListener('click', sendPopupAlert);
+            document.getElementById('btnClearAd').addEventListener('click', clearAnnouncement);
+            document.getElementById('btnLogout').addEventListener('click', logout);
+
+            // استخدام Event Delegation لجدول العملاء (ممارسة احترافية لتنظيف الكود)
+            document.getElementById('clients-table').addEventListener('click', handleTableActions);
+        }
+
+        function fetchData() {
             const usersRef = ref(db, 'users');
             onValue(usersRef, (snapshot) => {
                 if (snapshot.exists()) {
@@ -390,7 +384,7 @@
             });
         }
         
-        window.populateAdTargets = function() {
+        function populateAdTargets() {
             const targetSelect = document.getElementById('ad_target');
             const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
             
@@ -405,195 +399,77 @@
             });
         }
 
-        window.sendAnnouncement = async function() {
-            const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
-            
-            const target = document.getElementById('ad_target').value;
-            const type = document.getElementById('ad_type').value;
-            const expireHours = document.getElementById('ad_expire').value;
-            
-            let expireTimestamp = null;
-            if(expireHours !== 'permanent') {
-                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
-            }
-            
-            const adData = {
-                text: text,
-                type: type,
-                expireAt: expireTimestamp,
-                timestamp: Date.now()
-            };
-
-            document.getElementById('loader-overlay').style.display = 'flex';
-            
-            try {
-                if(target === 'all') {
-                    await update(ref(db, 'announcements/global'), adData);
-                } else if(target === 'clients_only') {
-                    const snap = await get(ref(db, 'users'));
-                    const updates = {};
-                    if(snap.exists()) {
-                        Object.values(snap.val()).forEach(c => {
-                            if(c.role === 'client' || c.type === 'client' || c.Client_Role === 'client') {
-                                const uName = c.Client_User || c.user;
-                                if(uName) updates[`announcements/users/${uName}`] = adData;
-                            }
-                        });
-                    }
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else if(target === 'shops_only') {
-                    const snap = await get(ref(db, 'shops'));
-                    const updates = {};
-                    if(snap.exists()) {
-                        Object.values(snap.val()).forEach(s => {
-                            if(s.role === 'shop' || s.type === 'shop' || s.Shop_Role === 'shop' || s.Shop_User) {
-                                const uName = s.Shop_User || s.user || s.Client_User;
-                                if(uName) updates[`announcements/users/${uName}`] = adData;
-                            }
-                        });
-                    }
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else {
-                    await update(ref(db, `announcements/users/${target}`), adData);
-                }
-                
-                document.getElementById('loader-overlay').style.display = 'none';
-                document.getElementById('ad_text').value = '';
-                alert("تم بث الإعلان بنجاح");
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال الإعلان");
-            }
-        }
-
-        window.sendPopupAlert = async function() {
-            const text = document.getElementById('ad_text').value.trim();
-            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
-            
-            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
-
-            const target = document.getElementById('ad_target').value;
-            const alertData = {
-                message: text,
-                timestamp: Date.now()
-            };
-
-            document.getElementById('loader-overlay').style.display = 'flex';
-            
-            try {
-                if(target === 'all') {
-                    await update(ref(db, 'alerts/global'), alertData);
-                } else if(target === 'clients_only') {
-                    const snap = await get(ref(db, 'users'));
-                    const updates = {};
-                    if(snap.exists()) {
-                        Object.values(snap.val()).forEach(c => {
-                            if(c.role === 'client' || c.type === 'client' || c.Client_Role === 'client') {
-                                const uName = c.Client_User || c.user;
-                                if(uName) updates[`alerts/users/${uName}`] = alertData;
-                            }
-                        });
-                    }
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else if(target === 'shops_only') {
-                    const snap = await get(ref(db, 'shops'));
-                    const updates = {};
-                    if(snap.exists()) {
-                        Object.values(snap.val()).forEach(s => {
-                            if(s.role === 'shop' || s.type === 'shop' || s.Shop_Role === 'shop' || s.Shop_User) {
-                                const uName = s.Shop_User || s.user || s.Client_User;
-                                if(uName) updates[`alerts/users/${uName}`] = alertData;
-                            }
-                        });
-                    }
-                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
-                } else {
-                    await update(ref(db, `alerts/users/${target}`), alertData);
-                }
-                
-                document.getElementById('loader-overlay').style.display = 'none';
-                document.getElementById('ad_text').value = '';
-                alert("تم إرسال التنبيه الطارئ بنجاح");
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                alert("حدث خطأ أثناء إرسال التنبيه");
-            }
-        }
-
-        window.clearAnnouncement = async function() {
-            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد")) return;
-            document.getElementById('loader-overlay').style.display = 'flex';
-            await remove(ref(db, 'announcements'));
-            document.getElementById('loader-overlay').style.display = 'none';
-            alert("تم تنظيف واجهات الإعلانات");
-        }
-
-        window.renderTables = function() {
+        function renderTables() {
             const clientTbody = document.getElementById('clients-table');
-            
             const clients = allData.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client').reverse();
 
             document.getElementById('count-clients').innerText = clients.length;
             document.getElementById('count-active').innerText = clients.filter(c => (c.status === 'active' || c.Client_Status === 'active')).length;
             
+            // [تم التعديل: حساب إجمالي المردود المالي بشكل أدق لتجنب ضياع المدفوعات القديمة]
             let totalRev = 0;
-            clients.forEach(c => totalRev += Number(c.price || c.Client_Price || 0));
+            clients.forEach(c => {
+                totalRev += Number(c.total_paid || c.Client_Price || c.price || 0);
+            });
             document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
 
             renderRows(clientTbody, clients);
         }
 
-        window.renderRows = function(tbody, data) {
+        function renderRows(tbody, data) {
             if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شركات مسجلة حتى الآن</td></tr>'; return; }
             tbody.innerHTML = '';
             
             data.forEach(item => {
+                const username = item.Client_User || item.user;
+                const currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
+                const canSendAds = item.can_send_ads === true;
+                
                 const expiryDate = new Date(item.Client_Expiry || item.expiry);
                 expiryDate.setHours(23, 59, 59, 999);
                 const now = new Date();
                 const diffTime = expiryDate.getTime() - now.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 let statusBadge = '';
                 let daysText = '';
 
-                let currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
-
+                // [تم التعديل: المنطق الجديد لحساب الأيام عند التجميد]
                 if (currentStatus === 'paused') {
                     statusBadge = `<span class="status-badge status-paused">مجمد ❄️</span>`;
-                    daysText = `<span style="color:#fbbf24;">موقف</span>`;
+                    const frozenDays = item.frozen_days || 0;
+                    daysText = `<span style="color:#b45309;">موقف (متبقي ${frozenDays} يوم)</span>`;
                 } else if (diffDays <= 0) {
                     statusBadge = `<span class="status-badge status-expired">منتهي ⛔</span>`;
-                    daysText = `<span style="color:#f87171; font-weight:bold;">انتهى</span>`;
-                    if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
+                    daysText = `<span style="color:#b91c1c; font-weight:bold;">انتهى</span>`;
+                    if(currentStatus === 'active') setStatusSilent(username, 'paused');
                 } else {
                     statusBadge = `<span class="status-badge status-active">نشط ✅</span>`;
-                    daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم</span>`;
+                    daysText = diffDays <= 3 ? `<span style="color:#b91c1c;">${diffDays} يوم ⚠️</span>` : `<span style="color:#15803d;">${diffDays} يوم</span>`;
                 }
                 
-                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
+                const adStatusText = canSendAds ? `<br><span style="font-size:11px; color:#0ea5e9; font-weight:bold;">📢 إعلانات مفعلة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 إعلانات معطلة</span>`;
 
                 const toggleBtn = currentStatus === 'active'
-                    ? `<button class="action-btn act-freeze" title="تجميد فوري" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
-                    : `<button class="action-btn act-active" title="تفعيل" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
+                    ? `<button class="action-btn act-freeze" data-action="toggle-status" data-username="${username}" title="تجميد فوري">❄️</button>`
+                    : `<button class="action-btn act-active" data-action="toggle-status" data-username="${username}" title="تفعيل">▶️</button>`;
 
-                const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="تفعيل/تعطيل الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
+                const adToggleBtn = `<button class="action-btn" style="background: ${canSendAds ? '#94a3b8' : '#0ea5e9'}" data-action="toggle-ads" data-username="${username}" data-ads="${canSendAds}" title="تفعيل/تعطيل الإعلانات">📢</button>`;
 
                 const row = `
                     <tr>
-                        <td style="color: var(--gold-light);"><b>${item.Client_Name || item.name}</b></td>
-                        <td style="font-size:12px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold;">${item.Client_User || item.user}<br>Pwd: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:13px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="color: var(--primary);"><b>${item.Client_Name || item.name}</b></td>
+                        <td style="font-size:12px; color:#64748b; direction:ltr; text-align:right; font-weight: bold;">${username}<br>Pwd: ${item.Client_Pass || item.pass}</td>
+                        <td style="font-size:13px; font-weight: 900; color: var(--text);">${item.total_paid || item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
                         <td style="font-size:13px;">${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <div class="action-group">
-                                <button class="action-btn act-edit" title="تعديل البيانات" onclick="editUser('${item.Client_User || item.user}', '${item.Client_Name || item.name}', '${item.Client_Pass || item.pass}')">✏️</button>
+                                <button class="action-btn act-edit" data-action="edit" data-username="${username}" title="تعديل البيانات">✏️</button>
                                 ${toggleBtn}
-                                <button class="action-btn act-renew" title="تجديد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
+                                <button class="action-btn act-renew" data-action="renew" data-username="${username}" title="تجديد">🔄</button>
                                 ${adToggleBtn}
-                                <button class="action-btn act-delete" title="حذف" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
+                                <button class="action-btn act-delete" data-action="delete" data-username="${username}" title="حذف">❌</button>
                             </div>
                         </td>
                     </tr>
@@ -602,7 +478,37 @@
             });
         }
 
-        window.addUser = async function() {
+        // معالج أحداث الجدول الموحد (نظيف واحترافي)
+        function handleTableActions(e) {
+            const btn = e.target.closest('.action-btn');
+            if (!btn) return;
+            
+            const action = btn.dataset.action;
+            const username = btn.dataset.username;
+            const userObj = allData.find(u => (u.Client_User || u.user) === username);
+            if (!userObj) return;
+
+            switch(action) {
+                case 'edit':
+                    editUser(username, userObj.Client_Name || userObj.name, userObj.Client_Pass || userObj.pass);
+                    break;
+                case 'toggle-status':
+                    setStatus(username, userObj.Client_Status || userObj.status || 'active', userObj);
+                    break;
+                case 'renew':
+                    renewUser(username, userObj);
+                    break;
+                case 'toggle-ads':
+                    const isAdsCurrentlyEnabled = btn.dataset.ads === 'true';
+                    toggleAdPermission(username, isAdsCurrentlyEnabled);
+                    break;
+                case 'delete':
+                    deleteUser(username);
+                    break;
+            }
+        }
+
+        async function addUser() {
             const role = 'client';
             const name = document.getElementById('new_name').value;
             const user = document.getElementById('new_user').value.trim();
@@ -634,6 +540,7 @@
                 Client_Status: "active",
                 Client_Expiry: expDate.toISOString().split('T')[0],
                 Client_Price: price,
+                total_paid: Number(price), // حقل جديد لحفظ إجمالي المدفوعات
                 Client_PlanDays: days,
                 can_send_ads: canSendAds,
                 id: "CL_" + Date.now(), 
@@ -664,16 +571,18 @@
             }
         }
 
-        window.toggleAdPermission = async function(username, currentStatus) {
-            const nextStatus = !currentStatus;
-            if (!confirm(nextStatus ? "تأكيد تفعيل ميزة الإعلانات لهذه الشركة؟" : "تأكيد تعطيل ميزة الإعلانات لهذه الشركة؟")) return;
+        // [تم التعديل: إصلاح رسالة التأكيد لتعكس الحدث الحقيقي]
+        async function toggleAdPermission(username, isCurrentlyEnabled) {
+            const nextStatus = !isCurrentlyEnabled;
+            const confirmMsg = nextStatus ? "هل أنت متأكد من تفعيل ميزة الإعلانات لهذه الشركة؟" : "هل أنت متأكد من تعطيل ومنع الإعلانات عن هذه الشركة؟";
+            if (!confirm(confirmMsg)) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
-        window.editUser = async function(username, oldName, oldPass) {
+        async function editUser(username, oldName, oldPass) {
             const newName = prompt("تعديل الاسم التجاري يا بطة:", oldName);
             if (newName === null) return;
             const newPass = prompt("تعديل كلمة المرور:", oldPass);
@@ -687,35 +596,77 @@
             alert("تم تحديث البيانات");
         }
 
-        window.setStatus = async function(username, currentStatus) {
-            const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب فوراً سيتم طرد المستخدم مباشرة" : "إعادة التفعيل")) return;
+        // [تم التعديل: حفظ الأيام المتبقية عند التجميد واسترجاعها عند التفعيل]
+        async function setStatus(username, currentStatus, userObj) {
+            const isCurrentlyActive = (currentStatus === 'active');
+            const nextStatus = isCurrentlyActive ? 'paused' : 'active';
+            
+            if (!confirm(nextStatus === 'paused' ? "تأكيد تجميد الحساب؟ سيتم حفظ الأيام المتبقية له وطرد المستخدم فوراً." : "تأكيد إعادة تفعيل الحساب؟ سيتم إرجاع أيامه المجمدة.")) return;
             
             document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
+            
+            let updates = { status: nextStatus, Client_Status: nextStatus };
+
+            if (isCurrentlyActive) {
+                // عملية التجميد: حساب الأيام المتبقية وحفظها
+                const expiry = new Date(userObj.expiry || userObj.Client_Expiry);
+                const now = new Date();
+                const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                updates.frozen_days = diffDays > 0 ? diffDays : 0;
+            } else {
+                // عملية التفعيل: إضافة الأيام المجمدة إلى تاريخ اليوم
+                if (userObj.frozen_days && userObj.frozen_days > 0) {
+                    const newExp = new Date();
+                    newExp.setDate(newExp.getDate() + userObj.frozen_days);
+                    const formattedDate = newExp.toISOString().split('T')[0];
+                    updates.expiry = formattedDate;
+                    updates.Client_Expiry = formattedDate;
+                }
+                updates.frozen_days = null; // تفريغ العداد
+            }
+
+            await update(ref(db, 'users/' + username), updates);
             document.getElementById('loader-overlay').style.display = 'none';
         }
 
-        window.setStatusSilent = async function(username, newStatus) {
+        async function setStatusSilent(username, newStatus) {
             await update(ref(db, 'users/' + username), { status: newStatus, Client_Status: newStatus });
         }
 
-        window.renewUser = async function(username) {
+        // [تم التعديل: تجديد الاشتراك يضيف على المبالغ السابقة ولا يحذفها]
+        async function renewUser(username, userObj) {
             const days = prompt("عدد أيام التجديد الإضافية:", "30");
             if (!days) return;
             const newPrice = prompt("قيمة التجديد للجرد المالي (0 إذا مجاني):", "0");
+            if (newPrice === null) return;
 
-            const newDate = new Date();
-            newDate.setDate(newDate.getDate() + parseInt(days));
-            const formattedDate = newDate.toISOString().split('T')[0];
+            // حساب التاريخ الجديد بناءً على إذا كان لديه رصيد أيام حالي أو منتهي
+            const currentExp = new Date(userObj.expiry || userObj.Client_Expiry);
+            const now = new Date();
+            const baseDate = currentExp > now ? currentExp : now;
+            baseDate.setDate(baseDate.getDate() + parseInt(days));
+            const formattedDate = baseDate.toISOString().split('T')[0];
+
+            // حساب التراكم المالي الجديد
+            const oldTotal = Number(userObj.total_paid || userObj.price || userObj.Client_Price || 0);
+            const newTotal = oldTotal + Number(newPrice);
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
+            await update(ref(db, 'users/' + username), { 
+                expiry: formattedDate, 
+                Client_Expiry: formattedDate, 
+                status: 'active', 
+                Client_Status: 'active', 
+                price: newPrice, // الدفعة الأخيرة
+                Client_Price: newPrice, 
+                total_paid: newTotal, // إجمالي المدفوعات التاريخية للشركة
+                frozen_days: null
+            });
             document.getElementById('loader-overlay').style.display = 'none';
             alert("تم تجديد الاشتراك بنجاح");
         }
 
-        window.deleteUser = async function(username) {
+        async function deleteUser(username) {
             if (!confirm("تحذير حذف نهائي لا يمكن التراجع عنه هل أنت متأكد؟")) return;
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'users/' + username));
@@ -723,7 +674,127 @@
             alert("تم حذف الحساب نهائياً");
         }
 
-        window.logout = function() { 
+        async function sendAnnouncement() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
+            
+            const target = document.getElementById('ad_target').value;
+            const type = document.getElementById('ad_type').value;
+            const expireHours = document.getElementById('ad_expire').value;
+            
+            let expireTimestamp = null;
+            if(expireHours !== 'permanent') {
+                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
+            }
+            
+            const adData = {
+                text: text,
+                type: type,
+                expireAt: expireTimestamp,
+                timestamp: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                const snap = await get(ref(db));
+                const dbData = snap.val() || {};
+                let allUsers = [];
+                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
+                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+
+                if(target === 'all') {
+                    await update(ref(db, 'announcements/global'), adData);
+                } else if(target === 'clients_only') {
+                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const updates = {};
+                    clients.forEach(c => {
+                        const uName = c.Client_User || c.user;
+                        if(uName) updates[`announcements/users/${uName}`] = adData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else if(target === 'shops_only') {
+                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const updates = {};
+                    shops.forEach(s => {
+                        const uName = s.Shop_User || s.user || s.Client_User;
+                        if(uName) updates[`announcements/users/${uName}`] = adData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else {
+                    await update(ref(db, `announcements/users/${target}`), adData);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم بث الإعلان بنجاح");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال الإعلان");
+            }
+        }
+
+        async function sendPopupAlert() {
+            const text = document.getElementById('ad_text').value.trim();
+            if(!text) { alert("الرجاء كتابة نص التنبيه أولاً"); return; }
+            
+            if(!confirm("سيظهر هذا التنبيه في منتصف الشاشة فوراً عند المستهدفين هل أنت متأكد؟")) return;
+
+            const target = document.getElementById('ad_target').value;
+            const alertData = {
+                message: text,
+                timestamp: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                const snap = await get(ref(db));
+                const dbData = snap.val() || {};
+                let allUsers = [];
+                if(dbData.users) allUsers = allUsers.concat(Object.values(dbData.users));
+                if(dbData.shops) allUsers = allUsers.concat(Object.values(dbData.shops));
+
+                if(target === 'all') {
+                    await update(ref(db, 'alerts/global'), alertData);
+                } else if(target === 'clients_only') {
+                    const clients = allUsers.filter(u => u.role === 'client' || u.type === 'client' || u.Client_Role === 'client');
+                    const updates = {};
+                    clients.forEach(c => {
+                        const uName = c.Client_User || c.user;
+                        if(uName) updates[`alerts/users/${uName}`] = alertData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else if(target === 'shops_only') {
+                    const shops = allUsers.filter(u => u.role === 'shop' || u.type === 'shop' || u.Shop_Role === 'shop' || u.Shop_User);
+                    const updates = {};
+                    shops.forEach(s => {
+                        const uName = s.Shop_User || s.user || s.Client_User;
+                        if(uName) updates[`alerts/users/${uName}`] = alertData;
+                    });
+                    if(Object.keys(updates).length > 0) await update(ref(db), updates);
+                } else {
+                    await update(ref(db, `alerts/users/${target}`), alertData);
+                }
+                
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('ad_text').value = '';
+                alert("تم إرسال التنبيه الطارئ بنجاح");
+            } catch(e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                alert("حدث خطأ أثناء إرسال التنبيه");
+            }
+        }
+
+        async function clearAnnouncement() {
+            if(!confirm("سيتم مسح جميع الإعلانات الحالية من الواجهات هل أنت متأكد")) return;
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await remove(ref(db, 'announcements'));
+            document.getElementById('loader-overlay').style.display = 'none';
+            alert("تم تنظيف واجهات الإعلانات");
+        }
+
+        function logout() { 
             localStorage.removeItem('currentUser');
             window.location.replace('index.html');
         }
