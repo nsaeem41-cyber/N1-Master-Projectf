@@ -10,7 +10,7 @@
         /* ================= تصميم Ops Diamond (Royal Navy & Diamond White) ================= */
         :root {
             --primary: #0f172a;    
-            --accent: #1e293b;     
+            --accent: #1e293b;      
             --gold: #d4af37;       
             --bg: #f8fafc;         
             --panel: #ffffff;      
@@ -120,6 +120,13 @@
         .bg-phone { background: #f1f5f9; color: var(--primary); border: 1px solid #cbd5e1; font-family: monospace; }
         .bg-rating { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
 
+        /* تجهيزات المعادلة المالية الثلاثية */
+        .fin-container { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+        .fin-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; }
+        .fin-orig { color: #64748b; text-decoration: line-through; }
+        .fin-disc { color: var(--danger); background: #fef2f2; padding: 2px 6px; border-radius: 4px; }
+        .fin-net { color: var(--success); font-size: 14px; font-weight: 900; background: #ecfdf5; padding: 4px 8px; border-radius: 6px; border: 1px solid #a7f3d0; margin-top: 2px; }
+
         /* فورم الإدخال المنسق والمدمج */
         .manual-form { padding: 20px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
@@ -226,7 +233,7 @@
 
     <div id="n-one-toast">
         <div class="toast-content">
-            <div class="toast-title">إشعار إداري</div>
+            <div class="toast-title">إشعار الرادار 📡</div>
             <div id="toast-msg" class="toast-message">رسالة النظام</div>
         </div>
     </div>
@@ -309,7 +316,7 @@
                                     <th style="width: 25%;">المصدر</th>
                                     <th style="width: 15%;">منطقة التوصيل</th>
                                     <th style="width: 15%;">الهاتف</th>
-                                    <th style="width: 15%;">المالية</th>
+                                    <th style="width: 15%;">المالية الذكية 💰</th>
                                     <th style="width: 15%;">التحكم</th>
                                 </tr>
                             </thead>
@@ -366,8 +373,12 @@
                                     <input type="tel" id="new_cap_phone" placeholder="رقم الهاتف">
                                 </div>
                                 <div class="form-group">
-                                    <label>رقم السيارة والنوع</label>
-                                    <input type="text" id="new_cap_car" placeholder="المركبة">
+                                    <label>نوع السيارة</label>
+                                    <input type="text" id="new_cap_car_type" placeholder="مثال: هيونداي بريوس">
+                                </div>
+                                <div class="form-group">
+                                    <label>ترميز اللوحة</label>
+                                    <input type="text" id="new_cap_car_code" placeholder="رقم اللوحة">
                                 </div>
                                 <div class="form-group full-width">
                                     <label>المصدر المعتمد</label>
@@ -487,11 +498,11 @@
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="form-group">
-                                <label>السعر</label>
+                                <label>قيمة الفاتورة</label>
                                 <input type="number" id="man_val" placeholder="0.00">
                             </div>
                             <div class="form-group">
-                                <label>التوصيل</label>
+                                <label>سعر التوصيل</label>
                                 <input type="number" id="man_fee" placeholder="0.00">
                             </div>
                         </div>
@@ -534,8 +545,12 @@
                     <input type="tel" id="edit_cap_phone">
                 </div>
                 <div class="form-group">
-                    <label>المركبة</label>
-                    <input type="text" id="edit_cap_car">
+                    <label>نوع السيارة</label>
+                    <input type="text" id="edit_cap_car_type">
+                </div>
+                <div class="form-group">
+                    <label>ترميز اللوحة</label>
+                    <input type="text" id="edit_cap_car_code">
                 </div>
                 <div class="form-group full-width">
                     <label>المنطقة</label>
@@ -568,7 +583,8 @@
             <button class="btn-royal" style="background:var(--success); margin-top: 20px;" onclick="saveGlobalEdit()">💾 حفظ التعديلات</button>
         </div>
     </div>
-<script type="module">
+    
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, get, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -621,43 +637,7 @@
             }
         });
 
-        // ================= الترحيل السحابي المباشر (Cloud Financials) =================
-        function loadCloudArchive() {
-            const compId = activeCompanyName || 'default';
-            onValue(ref(db, `company_archives/${compId}/orders`), (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    completedOrders = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
-                } else {
-                    completedOrders = [];
-                }
-                renderCompletedOrders();
-                renderRadar(); 
-            });
-            // جلب الذاكرة المحلية للكباتن المضافين يدويا فقط
-            captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
-        }
-
-        async function saveOrderToCloud(entry) {
-            const compId = activeCompanyName || 'default';
-            await set(ref(db, `company_archives/${compId}/orders/${entry.orderId}`), entry);
-        }
-
-        function checkCompanyMatch(u, compName) {
-            const activeName = String(compName).toLowerCase().trim();
-            const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
-            if(!activeName && !activeUser) return false;
-            const vals = [
-                String(u.Client_Master || '').toLowerCase().trim(),
-                String(u.master || '').toLowerCase().trim(),
-                String(u.company || '').toLowerCase().trim(),
-                String(u.Company_ID || '').toLowerCase().trim(),
-                String(u.Shop_Master || '').toLowerCase().trim(),
-                String(u.Client_Name || '').toLowerCase().trim()
-            ];
-            return (activeName && vals.includes(activeName)) || (activeUser && vals.includes(activeUser));
-        }
-
+        // ================= نظام الإشعارات الذكي (بديل للأنظمة القديمة) =================
         window.showAppNotification = function(msg, type = 'success') {
             const toast = document.getElementById('n-one-toast');
             const msgEl = document.getElementById('toast-msg');
@@ -712,6 +692,110 @@
             
             setInterval(refreshDynamicElements, 1000);
         };
+
+        // ================= الترحيل السحابي المباشر (Cloud Financials) =================
+        function loadCloudArchive() {
+            const compId = activeCompanyName || 'default';
+            onValue(ref(db, `company_archives/${compId}/orders`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    completedOrders = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else {
+                    completedOrders = [];
+                }
+                renderCompletedOrders();
+                renderRadar(); 
+            });
+            captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
+        }
+
+        async function saveOrderToCloud(entry) {
+            const compId = activeCompanyName || 'default';
+            await set(ref(db, `company_archives/${compId}/orders/${entry.orderId}`), entry);
+        }
+
+        function checkCompanyMatch(u, compName) {
+            const activeName = String(compName).toLowerCase().trim();
+            const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
+            if(!activeName && !activeUser) return false;
+            const vals = [
+                String(u.Client_Master || '').toLowerCase().trim(),
+                String(u.master || '').toLowerCase().trim(),
+                String(u.company || '').toLowerCase().trim(),
+                String(u.Company_ID || '').toLowerCase().trim(),
+                String(u.Shop_Master || '').toLowerCase().trim(),
+                String(u.Client_Name || '').toLowerCase().trim()
+            ];
+            return (activeName && vals.includes(activeName)) || (activeUser && vals.includes(activeUser));
+        }
+
+        function setupRealtimeFreezeListener() {
+            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const myRef = ref(db, `users/${username}`);
+            
+            onValue(myRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.Client_Status === 'paused' || data.status === 'paused') {
+                        showAppNotification("تم تقييد الوصول للوحة التحكم. يرجى مراجعة الإدارة.", "error");
+                        setTimeout(() => {
+                            localStorage.removeItem('current_company_user');
+                            localStorage.removeItem('currentUser');
+                            window.location.replace('index.html');
+                        }, 2000);
+                    }
+                } else {
+                    showAppNotification("تم حذف الحساب. سيتم تسجيل الخروج.", "error");
+                    setTimeout(() => {
+                        localStorage.removeItem('current_company_user');
+                        localStorage.removeItem('currentUser');
+                        window.location.replace('index.html');
+                    }, 2000);
+                }
+            });
+        }
+
+        function fetchLiveOrders() {
+            onValue(ref(db, 'orders'), (snapshot) => {
+                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                renderRadar();
+                if(isAutoRadarActive) {
+                    triggerAutoRadarMaster(true);
+                }
+            });
+        }
+
+        function fetchGlobalUsers() {
+            onValue(ref(db), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    globalUsers = [];
+                    
+                    if(data.users) Object.values(data.users).forEach(u => { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'users'; 
+                            globalUsers.push(u); 
+                        }
+                    });
+                    if(data.shops) Object.values(data.shops).forEach(u => { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'shops'; 
+                            globalUsers.push(u); 
+                        }
+                    });
+                    if(data.captains) Object.values(data.captains).forEach(u => { 
+                        if(checkCompanyMatch(u, activeCompanyName)) { 
+                            u._node = 'captains'; 
+                            globalUsers.push(u); 
+                        }
+                    });
+                    
+                    renderRadar();
+                    renderCaptainsList();
+                }
+            });
+        }
 
         function fetchRadarMemory() {
             onValue(ref(db, 'radar_memory'), (snapshot) => {
@@ -787,7 +871,7 @@
             });
         }
 
-        // ================= التوثيق المالي الشامل (تأجيل الخصم حتى الوصول للمنشأة) =================
+        // ================= التوثيق المالي الشامل للرادار =================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -826,7 +910,6 @@
                         }
                     }
 
-                    // في حال القبول (accepted) لا نخصم ولا نرحل، فقط نربط الكابتن بالطلب
                     if (ord.status === 'accepted' && !ord.is_accepted_marked) {
                         const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         if(capData && ord.linkedRadarId) {
@@ -840,7 +923,6 @@
                         hasUpdates = true;
                     }
                     
-                    // الخصم المالي الحقيقي والترحيل للأرشيف يبدأ من لحظة وصول المنشأة
                     if (['arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered'].includes(ord.status)) {
                         const isAlreadySaved = completedOrders.some(o => o.appOrdId === appOrdId);
                         
@@ -915,136 +997,7 @@
             }
         }
 
-        function fetchRegionsFromPrices() {
-            if(!currentUser) return;
-            const myMaster = currentUser.Client_User || currentUser.user;
-            
-            onValue(ref(db, 'prices'), (snapshot) => {
-                const selectNew = document.getElementById('new_cap_region');
-                const selectEdit = document.getElementById('edit_cap_region');
-                const optionsHtml = ['<option value="">اختر المصدر المعتمد</option>'];
-                let sourcesAdded = new Set();
-                
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    Object.values(data).forEach(priceObj => {
-                        const priceMaster = String(priceObj.Client_Master || '').toLowerCase().trim();
-                        const myMasterStr = String(myMaster).toLowerCase().trim();
-                        if (priceMaster === myMasterStr || checkCompanyMatch(priceObj, activeCompanyName)) {
-                            const sourceName = priceObj.Price_Source;
-                            if (sourceName && !sourcesAdded.has(sourceName)) {
-                                sourcesAdded.add(sourceName);
-                                optionsHtml.push(`<option value="${sourceName}">${sourceName}</option>`);
-                            }
-                        }
-                    });
-                }
-                if (sourcesAdded.size === 0) {
-                     optionsHtml.push('<option value="عام">عام</option>');
-                }
-                
-                selectNew.innerHTML = optionsHtml.join('');
-                selectEdit.innerHTML = optionsHtml.join('');
-            });
-        }
-
-        window.toggleAutoRadar = function() {
-            const myMaster = currentUser.Client_User || currentUser.user;
-            const newState = !isAutoRadarActive;
-            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
-        };
-
-        window.saveRatio = function() {
-            localStorage.setItem('n1_commission_ratio', document.getElementById('man_ratio').value);
-        };
-
-        window.goBackToCustomer = function() {
-            if (document.referrer) {
-                window.history.back();
-            } else {
-                window.location.replace('index.html'); 
-            }
-        };
-
-        window.enableSound = function() {
-            if (!soundEnabled) {
-                document.getElementById('notif-sound').play().then(() => { document.getElementById('notif-sound').pause(); }).catch(() => {});
-                document.getElementById('sound-picked').play().then(() => { document.getElementById('sound-picked').pause(); }).catch(() => {});
-                document.getElementById('sound-onway').play().then(() => { document.getElementById('sound-onway').pause(); }).catch(() => {});
-                if(document.getElementById('sound-arrived')) document.getElementById('sound-arrived').play().then(() => { document.getElementById('sound-arrived').pause(); }).catch(() => {});
-                document.getElementById('sound-delivered').play().then(() => { document.getElementById('sound-delivered').pause(); }).catch(() => {});
-                soundEnabled = true;
-            }
-        };
-
-        function setupRealtimeFreezeListener() {
-            if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
-            const username = currentUser.Client_User || currentUser.user;
-            const myRef = ref(db, `users/${username}`);
-            
-            onValue(myRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        showAppNotification("عذرا تم إيقاف النظام يرجى مراجعة الإدارة", "error");
-                        setTimeout(() => {
-                            localStorage.removeItem('current_company_user');
-                            localStorage.removeItem('currentUser');
-                            window.location.replace('index.html');
-                        }, 2000);
-                    }
-                } else {
-                    showAppNotification("تم حذف الحساب سيتم تسجيل الخروج", "error");
-                    setTimeout(() => {
-                        localStorage.removeItem('current_company_user');
-                        localStorage.removeItem('currentUser');
-                        window.location.replace('index.html');
-                    }, 2000);
-                }
-            });
-        }
-
-        function fetchLiveOrders() {
-            onValue(ref(db, 'orders'), (snapshot) => {
-                allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
-                renderRadar();
-                if(isAutoRadarActive) {
-                    triggerAutoRadarMaster(true);
-                }
-            });
-        }
-
-        function fetchGlobalUsers() {
-            onValue(ref(db), (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    globalUsers = [];
-                    
-                    if(data.users) Object.values(data.users).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { 
-                            u._node = 'users'; 
-                            globalUsers.push(u); 
-                        }
-                    });
-                    if(data.shops) Object.values(data.shops).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { 
-                            u._node = 'shops'; 
-                            globalUsers.push(u); 
-                        }
-                    });
-                    if(data.captains) Object.values(data.captains).forEach(u => { 
-                        if(checkCompanyMatch(u, activeCompanyName)) { 
-                            u._node = 'captains'; 
-                            globalUsers.push(u); 
-                        }
-                    });
-                    
-                    renderRadar();
-                    renderCaptainsList();
-                }
-            });
-        }
-
+        // ================= رسم الرادار وإظهار المالية الذكية (المعادلة الثلاثية) =================
         window.renderRadar = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('live-table-body');
@@ -1055,12 +1008,13 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                if (o.OrderStatus === 'accepted' || o.OrderStatus === 'picked_up' || o.OrderStatus === 'on_way' || o.OrderStatus === 'arrived' || o.OrderStatus === 'delivered' || o.FinancialStatus === 'confirmed') return false;
+                if (['accepted', 'picked_up', 'on_way', 'arrived', 'delivered'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 const activeName = activeCompanyName.toLowerCase();
                 const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
 
+                // العزل الألماسي للمصادر
                 if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
                 
                 const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
@@ -1079,7 +1033,7 @@
             }
 
             if (pendingOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">الرادار هادئ حاليا 📡</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8; font-weight:bold;">الرادار هادئ حاليا 📡</td></tr>';
                 return;
             }
 
@@ -1132,6 +1086,43 @@
                 let cleanShopName = ord.Shop_Name || ord.restaurant || '';
                 cleanShopName = cleanShopName.replace(urlRegex, badgeHtml);
 
+                // حسابات المعادلة المالية الذكية
+                let invoiceVal = parseFloat(ord.Shop_Val || ord.value || 0).toFixed(2);
+                let finalFee = parseFloat(ord.Shop_Fee || ord.fee || 0);
+                
+                // سحب قيم الخصم إذا تم إرسالها من المنشأة
+                let originalFee = parseFloat(ord.Shop_Fee_Original || ord.original_fee || finalFee);
+                let discountAmount = parseFloat(ord.Shop_Discount || ord.discount || 0);
+
+                let financialsHtml = '';
+                
+                if (discountAmount > 0 && originalFee > finalFee) {
+                    // عرض المعادلة الثلاثية: السعر الأصلي مشطوب، الخصم بالأحمر، والصافي بالأخضر العريض
+                    financialsHtml = `
+                        <div class="fin-container">
+                            <div class="fin-row">
+                                <span class="fin-orig">${originalFee.toFixed(2)} د.أ</span>
+                                <span class="fin-disc">-${discountAmount.toFixed(2)} خصم</span>
+                            </div>
+                            <div class="fin-row" style="margin-top:2px;">
+                                <span style="font-size:10px; color:#94a3b8;">صافي التوصيل:</span>
+                                <span class="fin-net">${finalFee.toFixed(2)} د.أ</span>
+                            </div>
+                            <div style="border-top: 1px dashed #e2e8f0; margin-top:4px; padding-top:4px;">
+                                <span class="badge bg-money">فاتورة: ${invoiceVal}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // العرض الطبيعي إذا لم يكن هناك خصم
+                    financialsHtml = `
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            <span class="badge bg-fee" style="justify-content:center;">توصيل: ${finalFee.toFixed(2)} د.أ</span>
+                            <span class="badge bg-money" style="justify-content:center;">فاتورة: ${invoiceVal}</span>
+                        </div>
+                    `;
+                }
+
                 tbody.innerHTML += `
                     <tr class="${rowStatusClass}" id="row-${ordId}">
                         <td>
@@ -1144,12 +1135,7 @@
                         </td>
                         <td><span class="area-badge">${destinationArea}</span></td>
                         <td><span class="badge bg-phone">${phone}</span></td>
-                        <td>
-                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                                <span class="badge bg-money">${ord.Shop_Val || ord.value || '0'}</span>
-                                <span class="badge bg-fee">+${ord.Shop_Fee || ord.fee || '0'}</span>
-                            </div>
-                        </td>
+                        <td>${financialsHtml}</td>
                         <td>${actionHtml}</td>
                     </tr>
                 `;
@@ -1278,6 +1264,57 @@
                     await update(ref(db), updates);
                     if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب للكباتن المتاحين`);
                 } catch(e) {}
+            }
+        };
+
+        function fetchRegionsFromPrices() {
+            if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            
+            onValue(ref(db, 'prices'), (snapshot) => {
+                const selectNew = document.getElementById('new_cap_region');
+                const selectEdit = document.getElementById('edit_cap_region');
+                const optionsHtml = ['<option value="">اختر المصدر المعتمد</option>'];
+                let sourcesAdded = new Set();
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    Object.values(data).forEach(priceObj => {
+                        const priceMaster = String(priceObj.Client_Master || '').toLowerCase().trim();
+                        const myMasterStr = String(myMaster).toLowerCase().trim();
+                        if (priceMaster === myMasterStr || checkCompanyMatch(priceObj, activeCompanyName)) {
+                            const sourceName = priceObj.Price_Source;
+                            if (sourceName && !sourcesAdded.has(sourceName)) {
+                                sourcesAdded.add(sourceName);
+                                optionsHtml.push(`<option value="${sourceName}">${sourceName}</option>`);
+                            }
+                        }
+                    });
+                }
+                if (sourcesAdded.size === 0) {
+                     optionsHtml.push('<option value="عام">عام</option>');
+                }
+                
+                selectNew.innerHTML = optionsHtml.join('');
+                selectEdit.innerHTML = optionsHtml.join('');
+            });
+        }
+
+        window.toggleAutoRadar = function() {
+            const myMaster = currentUser.Client_User || currentUser.user;
+            const newState = !isAutoRadarActive;
+            set(ref(db, `settings/${myMaster}/autoRadar`), newState);
+        };
+
+        window.saveRatio = function() {
+            localStorage.setItem('n1_commission_ratio', document.getElementById('man_ratio').value);
+        };
+
+        window.goBackToCustomer = function() {
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.replace('index.html'); 
             }
         };
 
@@ -1644,10 +1681,12 @@
             btn.classList.add('active');
         };
 
+        // ================= إضافة وتعديل الكابتن (مفصولة نوع السيارة عن الرمز) =================
         window.addNewCaptain = async function() {
             const name = document.getElementById('new_cap_name').value.trim();
             const phone = document.getElementById('new_cap_phone').value.trim();
-            const car = document.getElementById('new_cap_car').value.trim();
+            const carType = document.getElementById('new_cap_car_type').value.trim();
+            const carCode = document.getElementById('new_cap_car_code').value.trim();
             const region = document.getElementById('new_cap_region').value.trim();
             const user = document.getElementById('new_cap_user').value.trim();
             const pass = document.getElementById('new_cap_pass').value.trim();
@@ -1670,7 +1709,8 @@
                 Cap_Phone: phone,
                 Cap_User: user,
                 Cap_Pass: pass,
-                Cap_Car: car,
+                Cap_CarType: carType,
+                Cap_CarCode: carCode,
                 Cap_Region: region,
                 Cap_Status: "active",
                 Cap_Balance: bal,
@@ -1689,7 +1729,8 @@
             
             document.getElementById('new_cap_name').value = '';
             document.getElementById('new_cap_phone').value = '';
-            document.getElementById('new_cap_car').value = '';
+            document.getElementById('new_cap_car_type').value = '';
+            document.getElementById('new_cap_car_code').value = '';
             document.getElementById('new_cap_region').value = '';
             document.getElementById('new_cap_user').value = '';
             document.getElementById('new_cap_pass').value = '';
@@ -1710,7 +1751,7 @@
             
             if (cap) {
                 document.getElementById('s_cap_name').innerText = cap.Cap_Name || cap.name;
-                document.getElementById('s_cap_car').innerText = cap.Cap_Car || 'غير محدد';
+                document.getElementById('s_cap_car').innerText = (cap.Cap_CarType || cap.Cap_Car || 'غير محدد') + " - " + (cap.Cap_CarCode || '');
                 document.getElementById('s_cap_bal').innerText = parseFloat(cap.Cap_Balance || cap.balance || 0).toFixed(2) + " د.أ";
                 card.style.display = 'block';
                 activeSmartCaptain = cap;
@@ -1812,7 +1853,7 @@
                                 <div style="font-size:11px; color:var(--danger); font-weight:bold;">P ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div>
                             </td>
                             <td><span class="area-badge" style="background:#f1f5f9; color:#64748b; border:none;">${cap.Cap_Region || cap.Cap_Location || 'عام'}</span></td>
-                            <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
+                            <td style="font-size:12px; color:#64748b;">${cap.Cap_CarType || cap.Cap_Car || '---'}<br>${cap.Cap_CarCode || ''}</td>
                             <td style="font-weight:bold; color:${bal < 0 ? 'var(--danger)' : 'var(--success)'};">${bal} د.أ</td>
                             <td>${statusBadge}</td>
                             <td>
@@ -1836,7 +1877,7 @@
                                 <div style="font-size:11px; color:var(--danger); font-weight:bold;">P ${cap.Cap_Pass || cap.password || cap.pass || '---'}</div>
                             </td>
                             <td><span class="area-badge" style="background:#fef3c7; color:#d97706; border:none;">${cap.Cap_Region || cap.Cap_Location || 'غير محدد'}</span></td>
-                            <td style="font-size:12px; color:#64748b;">${cap.Cap_Car || '---'}</td>
+                            <td style="font-size:12px; color:#64748b;">${cap.Cap_CarType || cap.Cap_Car || '---'}<br>${cap.Cap_CarCode || ''}</td>
                             <td style="font-size:12px; color:#64748b; font-weight:bold;">${reqDate}</td>
                             <td><span class="badge" style="background:#e0e7ff; color:#4338ca;">بانتظار المراجعة</span></td>
                             <td>
@@ -1891,7 +1932,8 @@
                 document.getElementById('edit_cap_key').value = userKey;
                 document.getElementById('edit_cap_name').value = cap.Cap_Name || cap.name || '';
                 document.getElementById('edit_cap_phone').value = cap.Cap_Phone || cap.phone || '';
-                document.getElementById('edit_cap_car').value = cap.Cap_Car || '';
+                document.getElementById('edit_cap_car_type').value = cap.Cap_CarType || cap.Cap_Car || '';
+                document.getElementById('edit_cap_car_code').value = cap.Cap_CarCode || '';
                 document.getElementById('edit_cap_region').value = cap.Cap_Region || cap.Cap_Location || '';
                 document.getElementById('edit_cap_user').value = userKey;
                 document.getElementById('edit_cap_pass').value = cap.Cap_Pass || cap.password || cap.pass || '';
@@ -1910,7 +1952,8 @@
             const userKey = document.getElementById('edit_cap_key').value;
             const name = document.getElementById('edit_cap_name').value.trim();
             const phone = document.getElementById('edit_cap_phone').value.trim();
-            const car = document.getElementById('edit_cap_car').value.trim();
+            const carType = document.getElementById('edit_cap_car_type').value.trim();
+            const carCode = document.getElementById('edit_cap_car_code').value.trim();
             const region = document.getElementById('edit_cap_region').value;
             const pass = document.getElementById('edit_cap_pass').value.trim();
             const company = document.getElementById('edit_cap_company').value.trim();
@@ -1932,7 +1975,9 @@
                 updates[`${nodeFound}/${userKey}/name`] = name;
                 updates[`${nodeFound}/${userKey}/Cap_Phone`] = phone;
                 updates[`${nodeFound}/${userKey}/phone`] = phone;
-                updates[`${nodeFound}/${userKey}/Cap_Car`] = car;
+                updates[`${nodeFound}/${userKey}/Cap_CarType`] = carType;
+                updates[`${nodeFound}/${userKey}/Cap_CarCode`] = carCode;
+                updates[`${nodeFound}/${userKey}/Cap_Car`] = carType; 
                 updates[`${nodeFound}/${userKey}/Cap_Region`] = region;
                 updates[`${nodeFound}/${userKey}/Cap_Location`] = region;
                 updates[`${nodeFound}/${userKey}/Cap_Pass`] = pass;
