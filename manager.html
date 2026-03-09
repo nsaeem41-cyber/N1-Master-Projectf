@@ -214,7 +214,6 @@
                     <div class="feasibility-stat"><span>متوسط تكلفة التوصيل</span><span class="feasibility-val" id="avg-fee">0 د.أ</span></div>
                     <div class="feasibility-stat"><span>المنطقة الأكثر نشاطاً</span><span class="feasibility-val" id="top-area" style="color:var(--gold-light);">...</span></div>
                     <div class="feasibility-stat"><span>كفاءة إنجاز القطاع</span><span class="feasibility-val" id="completion-rate" style="color:var(--success);">0%</span></div>
-                    <div class="feasibility-stat"><span>إنتاجية الكباتن</span><span class="feasibility-val" id="top-efficiency">تحليل سحابي..</span></div>
                 </div>
             </div>
         </div>
@@ -245,9 +244,8 @@
     </div>
 
     <script type="module">
-        // [نفس منطق الجافاسكربت الأصلي الخاص بك بدون أي تغيير في الوظائف]
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, query, limitToLast, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -265,7 +263,8 @@
         let currentUser = null;
         let isSuperAdmin = false;
         let myMasterId = "";
-        let globalDataState = { orders: {}, shops: {}, users: {}, assigned_orders: {} };
+        let globalDataState = { orders: {}, assigned_orders: {} };
+        let activeListenerRef = null;
 
         function initApp() {
             window.history.pushState(null, "", window.location.href);
@@ -286,7 +285,6 @@
             setupUI();
             setupEvents();
             loadData();
-            attachRealtimeListeners();
             setupRealtimeFreezeListener();
         }
 
@@ -331,53 +329,50 @@
             });
         }
 
+        // التعديل الألماسي: سحب موجه فقط لطلبات الشركة (Targeted Query) لمنع نزيف البيانات
         async function loadData() {
             document.getElementById('loader').style.display = 'block';
             document.getElementById('feed-table').style.display = 'none';
             try {
-                const recentOrdersQuery = query(ref(db, 'orders'), limitToLast(100));
-                const [ordersSnap, shopsSnap, usersSnap, assignedSnap] = await Promise.all([
-                    get(recentOrdersQuery), get(ref(db, 'shops')), get(ref(db, 'users')), get(ref(db, 'assigned_orders'))
+                let ordersQuery;
+                if(isSuperAdmin) {
+                    ordersQuery = query(ref(db, 'orders'), limitToLast(100));
+                } else {
+                    ordersQuery = query(ref(db, 'orders'), orderByChild('Client_Master'), equalTo(myMasterId), limitToLast(100));
+                }
+
+                // سحب الطلبات وحالة التوصيل فقط، بدون سحب جدول المستخدمين أو المنشآت كاملاً
+                const [ordersSnap, assignedSnap] = await Promise.all([
+                    get(ordersQuery), get(ref(db, 'assigned_orders'))
                 ]);
+                
                 globalDataState.orders = ordersSnap.val() || {};
-                globalDataState.shops = shopsSnap.val() || {};
-                globalDataState.users = usersSnap.val() || {};
                 globalDataState.assigned_orders = assignedSnap.val() || {};
                 processData(globalDataState);
+                
+                // تفعيل المراقبة الحية على نفس المسار
+                if(activeListenerRef) { /* Optional: Detach old listener if needed */ }
+                activeListenerRef = onValue(ordersQuery, (snapshot) => {
+                    globalDataState.orders = snapshot.val() || {};
+                    processData(globalDataState);
+                });
+
             } catch (e) {
                 document.getElementById('loader').innerText = "خطأ في الاتصال ❌";
             }
         }
 
-        function attachRealtimeListeners() {
-            const recentOrdersQuery = query(ref(db, 'orders'), limitToLast(100));
-            onValue(recentOrdersQuery, (snapshot) => {
-                globalDataState.orders = snapshot.val() || {};
-                processData(globalDataState);
-            });
-        }
-
         function processData(data) {
-            let rawOrders = Object.values(data.orders || {});
-            let myOrders = [];
-            let myShopsIdentifiers = new Set();
-            let allShops = Object.values(data.shops || {});
-
-            if(isSuperAdmin) {
-                myOrders = rawOrders;
-                allShops.forEach(s => myShopsIdentifiers.add(s.Shop_User || s.user));
-            } else {
-                allShops.forEach(s => {
-                    if(s.Client_Master === myMasterId || s.master === myMasterId || s.Shop_User === myMasterId) myShopsIdentifiers.add(s.Shop_User || s.user);
-                });
-                rawOrders.forEach(o => {
-                    if(o.Shop_User === myMasterId || myShopsIdentifiers.has(o.Shop_User) || o.Client_Master === myMasterId) myOrders.push(o);
-                });
-            }
-
+            let myOrders = Object.values(data.orders || {});
+            
             myOrders.reverse();
+            
+            // حساب المنشآت الفريدة المتواجدة في هذه الطلبات
+            let uniqueShops = new Set();
+            myOrders.forEach(o => { if(o.Shop_User) uniqueShops.add(o.Shop_User); });
+            
             document.getElementById('total-orders').innerText = myOrders.length;
-            document.getElementById('total-merchants').innerText = myShopsIdentifiers.size;
+            document.getElementById('total-merchants').innerText = uniqueShops.size;
             
             let totalOrderValue = 0, totalDeliveryFees = 0, completedCount = 0;
             let auditIssues = [], areaStats = {};
