@@ -21,17 +21,64 @@
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            /* خلفية ثابتة وسريعة جداً بدون أنيميشن ثقيل */
             background: radial-gradient(circle at top right, #1e293b, #050814);
             margin: 0; padding: 0; 
             color: #fff; user-select: none; 
             min-height: 100vh;
+            position: relative; /* مهم عشان الخلفية المتحركة */
         }
 
-        /* ================= الشريط العلوي (Navbar) مضغوط ================= */
+        /* ================= ديكور المربعات المتحركة (Animated Grid) ================= */
+        .animated-grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2; /* تحت كل شيء */
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(212, 175, 55, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
+            animation: gridMove 20s linear infinite;
+        }
+        
+        /* تدرج لوني عشان يعطي عمق للمربعات وما تكون مزعجة */
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle, transparent 20%, #050814 90%);
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        /* ================= الأجسام الطافية (لزيادة الفخامة) ================= */
+        .bg-shapes {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; overflow: hidden;
+        }
+        .shape {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(14,165,233,0.08));
+            box-shadow: 0 0 20px rgba(212,175,55,0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(212,175,55,0.15);
+            animation: float 25s infinite linear;
+        }
+        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
+        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 85%; border-radius: 50%; animation-duration: 30s; animation-direction: reverse; }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
+            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
+        }
+
+        /* ================= الشريط العلوي (Navbar) ================= */
         .navbar { 
             background: rgba(15, 23, 42, 0.95); 
-            height: 55px; /* تقليل الارتفاع */
+            height: 55px; 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
             border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000; 
@@ -52,9 +99,9 @@
         }
         .btn-logout:hover { background: var(--danger); color: white; }
 
-        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; }
+        .container { max-width: 1350px; margin: 15px auto; padding: 0 15px; position: relative; z-index: 1; }
 
-        /* ================= بوابات الوصول السريع (أصغر وملمومة) ================= */
+        /* ================= بوابات الوصول السريع ================= */
         .quick-access-panel { display: flex; gap: 10px; margin-bottom: 15px; }
         
         .btn-gate {
@@ -62,25 +109,27 @@
             border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 8px 15px;
             border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
             text-decoration: none; display: flex; align-items: center; gap: 6px;
-            transition: 0.2s;
+            transition: 0.2s; backdrop-filter: blur(5px);
         }
         .btn-gate:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
 
-        /* ================= الإحصائيات (أصغر وأكثر ترتيباً) ================= */
+        /* ================= الإحصائيات ================= */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .stat-card { 
             background: rgba(15, 23, 42, 0.8); padding: 12px; border-radius: 10px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: center; 
             border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
+            backdrop-filter: blur(10px);
         }
         .stat-number { font-size: 24px; font-weight: 900; color: #fff; margin: 4px 0; }
         .stat-label { color: #cbd5e1; font-size: 11px; font-weight: bold; }
 
-        /* ================= الكروت (مضغوطة) ================= */
+        /* ================= الكروت ================= */
         .card { 
             background: rgba(15, 23, 42, 0.8); padding: 15px 20px; border-radius: 12px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); margin-bottom: 15px; 
             border: 1px solid rgba(255,255,255,0.05); border-top: 3px solid var(--gold); 
+            backdrop-filter: blur(10px);
         }
         .card-header { 
             font-size: 15px; font-weight: 900; color: var(--gold); 
@@ -88,27 +137,42 @@
             display: flex; justify-content: space-between; align-items: center; 
         }
 
-        /* ================= الحقول (أصغر وأرتب) ================= */
+        /* ================= الحقول (علاج مشكلة اللون الأبيض) ================= */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; align-items: center; }
         
+        /* التعديل الألماسي للألوان هنا */
         input, select, textarea { 
             width: 100%; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; 
-            outline: none; background: rgba(0,0,0,0.3); box-sizing: border-box; 
+            outline: none; background: rgba(0,0,0,0.4); box-sizing: border-box; 
             font-family: inherit; font-size: 13px; font-weight: bold; color: white; transition: 0.2s; 
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        
+        /* ضبط لون الـ Focus ليكون راقي ومش أبيض فاقع */
+        input:focus, select:focus, textarea:focus { 
+            border-color: var(--gold); 
+            background: rgba(15, 23, 42, 0.9); /* لون كحلي غامق بدل الأبيض */
+            color: var(--gold-light); /* الكلام يصير ذهبي عشان يضل واضح */
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+        }
+
+        /* تعديل الـ options جوا الـ select عشان ما تكون بيضاء */
+        select option {
+            background-color: var(--primary-light);
+            color: white;
+            font-weight: bold;
+        }
         
         .btn-add { 
             background: linear-gradient(135deg, var(--gold), #b48608); color: #000; border: none; 
             padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 900; 
             cursor: pointer; transition: 0.2s; width: 100%;
         }
-        .btn-add:hover { filter: brightness(1.1); }
+        .btn-add:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(212,175,55,0.3); }
 
         /* ================= الجداول ================= */
         .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
         table { width: 100%; border-collapse: collapse; min-width: 850px; }
-        thead { background: rgba(0,0,0,0.4); color: var(--gold); }
+        thead { background: rgba(0,0,0,0.6); color: var(--gold); }
         th { padding: 10px; text-align: right; font-weight: 900; font-size: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
         td { padding: 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; font-weight: bold; color: #e2e8f0; }
         tr:hover td { background: rgba(212, 175, 55, 0.05); }
@@ -130,7 +194,7 @@
         .act-renew { background: #0ea5e9; }
         .act-edit { background: #475569; }
 
-        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: var(--gold); flex-direction: column; }
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; font-size: 16px; font-weight: 900; color: var(--gold); flex-direction: column; backdrop-filter: blur(5px);}
         
         /* ================= الإعلانات ================= */
         .ad-color-normal { color: #fff; background: #1e293b; }
@@ -139,9 +203,12 @@
         .ad-color-offer { color: #34d399; background: #064e3b; }
         
         .ad-controls { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 12px; }
-        .btn-popup { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .btn-clear-ad { background: #475569; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 12px; transition: 0.2s;}
+        .btn-broadcast:hover { background: rgba(255,255,255,0.1); border-color: var(--gold);}
+        .btn-popup { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition:0.2s;}
+        .btn-popup:hover { background: #dc2626;}
+        .btn-clear-ad { background: #475569; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition:0.2s;}
+        .btn-clear-ad:hover {background: #334155;}
 
         /* ================= مفاجأة عيد الميلاد الألماسية ================= */
         #birthday-overlay {
@@ -160,8 +227,16 @@
 </head>
 <body>
 
+    <div class="animated-grid-bg"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="bg-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
     <div id="loader-overlay">
-        <div style="font-size:35px; margin-bottom:10px;">💎</div>
+        <div style="font-size:35px; margin-bottom:10px; animation: bounce 1s infinite;">💎</div>
         <div>جاري معالجة البيانات...</div>
     </div>
 
@@ -326,7 +401,6 @@
             fetchData();
         };
 
-        // التعديل الألماسي: سحب "الشركات" فقط، بدون ما يسحب المنشآت والكباتن ويخنق السيرفر
         window.fetchData = function() {
             const usersQuery = query(ref(db, 'users'), orderByChild('role'), equalTo('client'));
             onValue(usersQuery, (snapshot) => {
@@ -354,7 +428,6 @@
             });
         }
 
-        // التعديل الألماسي: الإرسال المباشر بدون سحب داتا للفلترة
         window.sendAnnouncement = async function() {
             const text = document.getElementById('ad_text').value.trim();
             if(!text) { alert("الرجاء كتابة نص الإعلان أولاً"); return; }
@@ -381,10 +454,9 @@
                 if(target === 'all') {
                     await update(ref(db, 'announcements/global'), adData);
                 } else if(target === 'clients_only' || target === 'shops_only') {
-                    // هون بيبعث إشارة للمسار بدون ما يحمل كل اليوزرز
                     const roleTarget = target === 'clients_only' ? 'client' : 'shop';
                     const usersRef = ref(db, 'users');
-                    const snap = await get(usersRef); // هاد ممكن نلغيه لقدام لو بنينا مسار للإعلانات مستقل
+                    const snap = await get(usersRef); 
                     if(snap.exists()) {
                         const updates = {};
                         Object.values(snap.val()).forEach(u => {
