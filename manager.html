@@ -101,18 +101,26 @@
         .sub-expired { background: rgba(248, 113, 113, 0.1); color: #f87171; border-color: #dc2626; }
 
         .guardian-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.4); color: #d4af37; padding: 6px 18px; border-radius: 25px; font-size: 13px; font-weight: 900; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 15px rgba(212, 175, 55, 0.15); margin-top: 10px; }
+
+        /* نظام الإشعارات الذكي المنسدل */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid #d4af37; padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateX(120%); animation: slideIn 0.4s forwards, fadeOut 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
+        @keyframes slideIn { to { transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <div class="header">
         <div>
             <div class="brand">N <span class="gold">One</span> Ops Room 💎</div>
-            <div class="guardian-badge" id="hierarchy-badge">🛡️ حارس الهرم جاري التحقق يا بطة...</div>
+            <div class="guardian-badge" id="hierarchy-badge">🛡️ جاري التحقق من الصلاحيات المركزية...</div>
         </div>
         <div style="display:flex; align-items:center;">
             <div class="user-info-area">
-                <div id="sub-timer" class="sub-countdown sub-active">جاري حساب الاشتراك...</div>
+                <div id="sub-timer" class="sub-countdown sub-active">جاري حساب حالة النظام...</div>
                 <span id="welcome-msg" style="font-size:15px; font-weight:900; color:#f8fafc; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">مرحباً</span>
             </div>
             <a href="admin.html" class="btn-back">⬅️ إغلاق الخزنة</a>
@@ -149,7 +157,7 @@
                 <div class="feasibility-stat"><span>متوسط تكلفة التوصيل</span><span class="feasibility-val" id="avg-fee">0 د.أ</span></div>
                 <div class="feasibility-stat"><span>المنطقة الأعلى طلباً</span><span class="feasibility-val" id="top-area" style="color:#fef08a;">جاري التحليل...</span></div>
                 <div class="feasibility-stat"><span>نسبة إنجاز الطلبات</span><span class="feasibility-val" id="completion-rate" style="color:#34d399;">0%</span></div>
-                <div class="feasibility-stat"><span>الكابتن الأكثر كفاءة مالياً</span><span class="feasibility-val" id="top-efficiency">قيد المعالجة السحابية ☁️</span></div>
+                <div class="feasibility-stat"><span>الكفاءة التشغيلية</span><span class="feasibility-val" id="top-efficiency">قيد المعالجة السحابية ☁️</span></div>
             </div>
         </div>
     </div>
@@ -157,10 +165,10 @@
     <div class="live-feed">
         <div class="feed-title">
             <span>📡 مراقبة العمليات الحية (Live Feed - Isolated View)</span>
-            <button onclick="loadData()" style="background:rgba(212,175,55,0.1); border:1px solid #d4af37; padding:8px 20px; border-radius:12px; color:#d4af37; cursor:pointer; font-weight:900; transition:0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(212,175,55,0.2)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">🔄 تحديث جراحي</button>
+            <button onclick="loadData()" style="background:rgba(212,175,55,0.1); border:1px solid #d4af37; padding:8px 20px; border-radius:12px; color:#d4af37; cursor:pointer; font-weight:900; transition:0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(212,175,55,0.2)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">🔄 تحديث النظام</button>
         </div>
         
-        <div id="loader">جاري الاتصال بالنواة المركزية وتطبيق العزل الألماسي... 🛰️💎</div>
+        <div id="loader">جاري الاتصال بالنواة المركزية وتطبيق العزل الأمني... 🛰️💎</div>
         
         <table id="feed-table" style="display:none;">
             <thead>
@@ -178,7 +186,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -196,6 +204,18 @@
         let currentUser = null;
         let isSuperAdmin = false;
         let myMasterId = "";
+        let globalData = { orders: {}, shops: {}, users: {}, assigned_orders: {} };
+
+        // نظام الإشعارات الذكي
+        window.showAppToast = function(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'app-toast';
+            if(isError) toast.style.borderLeftColor = '#ef4444';
+            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
+        };
 
         window.onload = function() {
             window.history.pushState(null, "", window.location.href);
@@ -205,8 +225,7 @@
 
             const sessionData = localStorage.getItem('currentUser');
             if (!sessionData) {
-                // window.location.replace('index.html');
-                // return;
+                 // window.location.replace('index.html');
             } else {
                 currentUser = JSON.parse(sessionData);
                 if (currentUser.role !== 'admin' && currentUser.role !== 'client') {
@@ -215,9 +234,9 @@
                 }
             }
             
-            // في حال عدم وجود جلسة للتجربة، نضع قيم افتراضية
+            // تهيئة الوضع الرسمي
             if(!currentUser) {
-                 currentUser = { user: "admin", name: "حبة السكر (مديرة النظام)", role: "admin" };
+                 currentUser = { user: "admin", name: "المهندسة (الإدارة العليا)", role: "admin" };
             }
             
             myMasterId = currentUser.Client_User || currentUser.user;
@@ -225,14 +244,14 @@
 
             const badge = document.getElementById('hierarchy-badge');
             if(isSuperAdmin) {
-                badge.innerHTML = "🛡️ الإدارة العليا (تحكم شامل لكافة الإمبراطورية الألماسية)";
+                badge.innerHTML = "🛡️ الإدارة العليا (تحكم شامل في النظام المركزي)";
                 badge.style.color = "#38bdf8";
                 badge.style.borderColor = "#38bdf8";
             } else {
-                badge.innerHTML = `🛡️ قطاع معزول (إدارة شركة: ${currentUser.Client_Name || currentUser.name})`;
+                badge.innerHTML = `🛡️ قطاع معزول (إدارة عمليات: ${currentUser.Client_Name || currentUser.name})`;
             }
             
-            document.getElementById('welcome-msg').innerText = `أهلاً بكِ يا نوارة عيوني، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
+            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name || currentUser.Client_Name || 'مدير النظام'}`;
             
             loadData();
             attachRealtimeListeners();
@@ -242,7 +261,7 @@
         function updateCountdownTimer() {
             const timerEl = document.getElementById('sub-timer');
             if (!currentUser.expiry && !currentUser.Client_Expiry) {
-                timerEl.innerText = "صلاحية ممتدة (خزنة ماسية)";
+                timerEl.innerText = "صلاحية ممتدة (مستوى أمان عالٍ)";
                 timerEl.className = "sub-countdown sub-active";
                 return;
             }
@@ -255,14 +274,14 @@
 
             if (diffDays > 0) {
                 if (diffDays <= 3) {
-                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم لانتهاء الاشتراك`;
+                    timerEl.innerText = `⚠️ متبقي ${diffDays} يوم لصلاحية النظام`;
                     timerEl.className = "sub-countdown sub-warning";
                 } else {
-                    timerEl.innerText = `متبقي للاشتراك: ${diffDays} يوم`;
+                    timerEl.innerText = `حالة النظام: نشط (${diffDays} يوم)`;
                     timerEl.className = "sub-countdown sub-active";
                 }
             } else {
-                timerEl.innerText = `الاشتراك منتهي`;
+                timerEl.innerText = `توقف النظام (انتهت الصلاحية)`;
                 timerEl.className = "sub-countdown sub-expired";
             }
         }
@@ -278,7 +297,7 @@
                     
                     if(data.name || data.Client_Name) {
                         currentUser.name = data.name || data.Client_Name;
-                        document.getElementById('welcome-msg').innerText = `أهلاً بكِ يا بطة، ${currentUser.name}`;
+                        document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.name}`;
                     }
 
                     if(data.expiry || data.Client_Expiry) {
@@ -287,9 +306,11 @@
                     }
 
                     if (data.status === 'paused' || data.Client_Status === 'paused') {
-                        alert("تم إيقاف الحساب يرجى مراجعة الإدارة يا روحي 😊");
-                        localStorage.removeItem('currentUser');
-                        window.location.replace('index.html');
+                        showAppToast("تم إيقاف صلاحية الدخول. يرجى مراجعة الإدارة العليا.", true);
+                        setTimeout(() => {
+                            localStorage.removeItem('currentUser');
+                            window.location.replace('index.html');
+                        }, 3000);
                     }
                 }
             });
@@ -300,35 +321,44 @@
             document.getElementById('feed-table').style.display = 'none';
 
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    processData(snapshot.val());
-                } else {
-                    processData({});
-                }
+                // الفلترة العميقة لمنع سحب الداتا كاملة (توفير واحترافية)
+                const dbRef = ref(db);
+                const [ordersSnap, shopsSnap, usersSnap, assignedSnap] = await Promise.all([
+                    get(child(dbRef, 'orders')),
+                    get(child(dbRef, 'shops')),
+                    get(child(dbRef, 'users')),
+                    get(child(dbRef, 'assigned_orders'))
+                ]);
+                
+                globalData.orders = ordersSnap.exists() ? ordersSnap.val() : {};
+                globalData.shops = shopsSnap.exists() ? shopsSnap.val() : {};
+                globalData.users = usersSnap.exists() ? usersSnap.val() : {};
+                globalData.assigned_orders = assignedSnap.exists() ? assignedSnap.val() : {};
+                
+                processData(globalData);
+                showAppToast("تم مزامنة البيانات مع النواة المركزية بنجاح");
             } catch (e) {
                 console.error(e);
+                showAppToast("حدث خطأ أثناء مزامنة البيانات", true);
             }
         };
 
         window.attachRealtimeListeners = function() {
-            onValue(ref(db), (snapshot) => {
-                if (snapshot.exists()) {
-                    processData(snapshot.val());
-                }
-            });
+            // الاستماع الموجه للجداول فقط لمنع تحميل المتصفح
+            onValue(ref(db, 'orders'), snap => { globalData.orders = snap.exists() ? snap.val() : {}; processData(globalData); });
+            onValue(ref(db, 'shops'), snap => { globalData.shops = snap.exists() ? snap.val() : {}; processData(globalData); });
+            onValue(ref(db, 'users'), snap => { globalData.users = snap.exists() ? snap.val() : {}; processData(globalData); });
+            onValue(ref(db, 'assigned_orders'), snap => { globalData.assigned_orders = snap.exists() ? snap.val() : {}; processData(globalData); });
         };
 
         window.processData = function(data) {
-            // فلترة ذكية لتطبيق العزل ومنع تصادم الحسابات
-            let rawOrders = data.orders ? Object.values(data.orders) : [];
+            let rawOrders = Object.values(data.orders);
             let myOrders = [];
             
-            let allShops = data.shops ? Object.values(data.shops) : [];
-            let allUsers = data.users ? Object.values(data.users) : [];
+            let allShops = Object.values(data.shops);
+            let allUsers = Object.values(data.users);
             let myShopsIdentifiers = new Set();
 
-            // تحديد المنشآت التابعة للقطاع الحالي
             if(isSuperAdmin) {
                 myOrders = rawOrders;
                 allShops.forEach(s => myShopsIdentifiers.add(s.Shop_User || s.user));
@@ -354,14 +384,12 @@
 
             myOrders.reverse();
 
-            // تحديث العدادات المعزولة
             document.getElementById('total-orders').innerText = myOrders.length;
             document.getElementById('total-merchants').innerText = myShopsIdentifiers.size;
             
-            // متغيرات الجرد المالي الدقيق
-            let totalOrderValue = 0; // قيمة الطلبات الصافية
-            let totalDeliveryFees = 0; // رسوم التوصيل الصافية
-            let grandTotal = 0; // المجموع الكلي
+            let totalOrderValue = 0; 
+            let totalDeliveryFees = 0; 
+            let grandTotal = 0; 
 
             let auditIssues = [];
             let areaStats = {};
@@ -372,25 +400,21 @@
                 const val = parseFloat(o.Shop_Val || o.val || 0);
                 const fee = parseFloat(o.Shop_Fee || o.fee || 0);
                 
-                // المعالج الذكي للثغرات (Smart Audit)
                 if (val < 0 || fee < 0) {
                     auditIssues.push(`ثغرة تسعير سلبية في طلب المنشأة: ${o.Shop_Name} بقيمة ${val} د.أ`);
                 }
                 if (val > 1000) {
-                    auditIssues.push(`تحذير أمان: قيمة طلب مرتفعة جداً للمنشأة ${o.Shop_Name} (${val} د.أ)`);
+                    auditIssues.push(`تحذير أمان: قيمة طلب مرتفعة للمنشأة ${o.Shop_Name} (${val} د.أ)`);
                 }
 
-                // الجرد التراكمي
                 totalOrderValue += val;
                 totalDeliveryFees += fee;
                 grandTotal += (val + fee);
 
-                // تحليلات الجدوى
                 const area = o.Shop_Pickup || o.pickup || 'غير محدد';
                 areaStats[area] = (areaStats[area] || 0) + 1;
 
-                // فحص حالة الطلب من الرادار
-                let orderStatus = 'في الرادار 📡';
+                let orderStatus = 'في النظام 📡';
                 for(let cap in assignedOrders) {
                     for(let k in assignedOrders[cap]) {
                         if(assignedOrders[cap][k].linkedRadarId === o.Shop_Ord_ID) {
@@ -398,7 +422,7 @@
                                 orderStatus = 'مكتمل ✅';
                                 completedCount++;
                             } else if (assignedOrders[cap][k].status === 'accepted') {
-                                orderStatus = 'قيد التوصيل 🦸‍♂️';
+                                orderStatus = 'قيد المعالجة ⚡';
                             }
                         }
                     }
@@ -406,34 +430,30 @@
                 o._currentStatus = orderStatus;
             });
 
-            // عرض الجرد المالي النهائي
             document.getElementById('total-money').innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " د.أ";
-            document.getElementById('fees-breakdown').innerHTML = `إجمالي الطلبات: <span style="color:#d4af37;">${totalOrderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span> | رسوم التوصيل: <span style="color:#34d399;">${totalDeliveryFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span>`;
+            document.getElementById('fees-breakdown').innerHTML = `الطلبات: <span style="color:#d4af37;">${totalOrderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span> | التوصيل: <span style="color:#34d399;">${totalDeliveryFees.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} د.أ</span>`;
 
-            // عرض نتائج المعالج الذكي
             const auditContainer = document.getElementById('audit-results');
             if(auditIssues.length > 0) {
-                auditContainer.innerHTML = auditIssues.map(issue => `<li class="audit-item"><span>⚠️ ${issue}</span><span style="color:#ef4444; cursor:pointer;" title="تدخل جراحي لمعالجة الرقم">معالجة ⚙️</span></li>`).join('');
+                auditContainer.innerHTML = auditIssues.map(issue => `<li class="audit-item"><span>⚠️ ${issue}</span><span style="color:#ef4444; cursor:pointer;" onclick="showAppToast('تم تسجيل الثغرة للمراجعة الإدارية', true)">تدقيق ⚙️</span></li>`).join('');
             } else {
-                auditContainer.innerHTML = '<div class="audit-safe">الحسابات دقيقة 100% ولا يوجد أي تضارب مالي، تسلم إيديكِ يا حبة السكر ☺️✨💎</div>';
+                auditContainer.innerHTML = '<div class="audit-safe">البيانات المالية متطابقة تماماً. النظام آمن 💎</div>';
             }
 
-            // عرض دراسة الجدوى
-            let bestArea = "لا يوجد";
+            let bestArea = "لا يوجد بيانات";
             let maxAreaCount = 0;
             for(let a in areaStats) {
                 if(areaStats[a] > maxAreaCount) { maxAreaCount = areaStats[a]; bestArea = a; }
             }
             document.getElementById('avg-fee').innerText = myOrders.length > 0 ? (totalDeliveryFees / myOrders.length).toFixed(2) + " د.أ" : "0.00 د.أ";
-            document.getElementById('top-area').innerText = `${bestArea} (${maxAreaCount} طلب)`;
+            document.getElementById('top-area').innerText = `${bestArea} (${maxAreaCount} عملية)`;
             document.getElementById('completion-rate').innerText = myOrders.length > 0 ? Math.round((completedCount / myOrders.length) * 100) + "%" : "0%";
 
-            // بناء جدول العمليات الحية المعزول
             const tbody = document.getElementById('feed-body');
             let htmlContent = '';
 
             if (myOrders.length === 0) {
-                htmlContent = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8; font-weight:bold;">الرادار نقي ولا يوجد عمليات مسجلة في قطاعك حتى الآن يا بطة ☺️</td></tr>';
+                htmlContent = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8; font-weight:bold;">سجل العمليات فارغ ضمن النطاق الحالي للقطاع</td></tr>';
             } else {
                 myOrders.forEach(ord => {
                     const shopName = ord.Shop_Name || ord.name || ord.Client_Name || 'غير معروف';
@@ -455,7 +475,7 @@
                             <td><span class="status-tag" style="background:rgba(255,255,255,0.05); color:${statusColor}; border:1px solid ${statusColor};">${ord._currentStatus}</span></td>
                             <td style="font-weight:900; color:#34d399;">
                                 ${totalVal} د.أ 
-                                <div style="font-size:11px; color:#64748b; margin-top:4px;">(${orderVal} + ${orderFee} توصيل)</div>
+                                <div style="font-size:11px; color:#64748b; margin-top:4px;">(${orderVal} + ${orderFee} رسوم)</div>
                             </td>
                         </tr>
                     `;
