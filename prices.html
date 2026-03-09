@@ -12,12 +12,12 @@
             --gold: #d4af37;
             --gold-light: #fef08a;
             --neon-blue: #0ea5e9;
-            --glass: rgba(15, 23, 42, 0.75);
+            --glass: rgba(15, 23, 42, 0.85); /* تغميق خفيف لزيادة الوضوح */
             --glass-border: rgba(212, 175, 55, 0.3);
             --success: #10b981;
             --danger: #ef4444;
             --info: #3b82f6;
-            --night: #6366f1; /* لون ليلي نيون */
+            --night: #6366f1;
         }
 
         body { 
@@ -25,28 +25,31 @@
             background-color: #050814; margin: 0; padding: 0; 
             color: #fff; user-select: none; overflow-x: hidden; 
             min-height: 100vh;
+            position: relative; /* ضروري لعمل z-index للخلفية */
         }
 
-        /* ================= الأجسام الطافية في الخلفية ================= */
-        .bg-shapes {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden;
+        /* ================= ديكور المربعات المتحركة (Animated Grid) ================= */
+        .animated-grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2; /* تحت كل شيء */
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(212, 175, 55, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
+            animation: gridMove 20s linear infinite;
         }
-        .shape {
-            position: absolute;
-            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(14,165,233,0.08));
-            box-shadow: 0 0 20px rgba(212,175,55,0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(212,175,55,0.15);
-            animation: float 25s infinite linear;
+        
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; /* فوق المربعات بس تحت المحتوى */
+            background: radial-gradient(circle at top right, transparent 20%, #050814 90%);
         }
-        .shape:nth-child(1) { width: 150px; height: 150px; top: 10%; left: 5%; border-radius: 20%; transform: rotate(45deg); }
-        .shape:nth-child(2) { width: 200px; height: 200px; top: 70%; left: 85%; border-radius: 50%; animation-duration: 30s; animation-direction: reverse; }
 
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-40px) rotate(180deg); opacity: 0.6; }
-            100% { transform: translateY(0) rotate(360deg); opacity: 0.3; }
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
         }
 
         /* ================= الهيدر الملكي ================= */
@@ -54,7 +57,8 @@
             background: var(--glass); height: 70px; 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 0 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000;
+            border-bottom: 2px solid var(--gold); position: sticky; top: 0; 
+            z-index: 1000; /* لازم يكون عالي عشان ما يتغطى */
             backdrop-filter: blur(20px); transition: 0.5s;
         }
         .navbar.night-mode { border-bottom-color: var(--night); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2); }
@@ -66,7 +70,11 @@
         .btn-back { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); padding: 8px 20px; border-radius: 12px; cursor: pointer; text-decoration: none; font-size: 13px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .btn-back:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--gold); transform: translateY(-2px); }
 
-        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        /* رفع المحتوى فوق الخلفية */
+        .container { 
+            max-width: 1400px; margin: 30px auto; padding: 0 20px; 
+            position: relative; z-index: 10; 
+        }
 
         /* ================= الحارس الليلي (زجاجي) ================= */
         .night-control-bar {
@@ -96,8 +104,8 @@
         .controls-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
         
         .source-group { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 300px; }
-        .source-select { padding: 12px 15px; border: 1px solid var(--glass-border); border-radius: 12px; font-weight: bold; color: white; outline: none; flex: 1; font-size: 14px; background: rgba(0,0,0,0.5); transition: 0.3s; }
-        .source-select:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .source-select { padding: 12px 15px; border: 1px solid var(--glass-border); border-radius: 12px; font-weight: bold; color: white; outline: none; flex: 1; font-size: 14px; background: rgba(0,0,0,0.5); transition: 0.3s; cursor: pointer; }
+        .source-select:focus { border-color: var(--gold); background: #0f172a; color: var(--gold-light); }
         .source-select option { background: var(--primary); color: white; }
         
         .btn-royal {
@@ -108,59 +116,65 @@
         .btn-royal:hover { transform: translateY(-2px); border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
         .btn-save { background: linear-gradient(135deg, var(--success), #047857); border: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
         .btn-save:hover { filter: brightness(1.1); border: none; }
+        .btn-save:active { transform: scale(0.95); }
 
         .action-btns { display: flex; gap: 8px; }
         .mini-circle-btn { 
             width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border); 
             display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-            font-size: 16px; background: rgba(0,0,0,0.3); color: white;
+            font-size: 16px; background: rgba(0,0,0,0.3); color: white; z-index: 20; position: relative;
         }
         .mini-circle-btn:hover { transform: translateY(-2px); border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
         
         .search-box { flex: 2; position: relative; min-width: 250px; }
         .search-input { width: 100%; padding: 14px 45px 14px 15px; border: 1px solid var(--glass-border); border-radius: 12px; outline: none; background: rgba(0,0,0,0.5); font-size: 14px; font-weight: bold; color: white; box-sizing: border-box; transition: 0.3s; }
-        .search-input:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .search-input:focus { border-color: var(--gold); background: #0f172a; color: var(--gold-light); }
         .search-icon { position: absolute; right: 15px; top: 14px; font-size: 16px; color: #94a3b8; }
 
         /* صندوق الخصم الزجاجي */
         .discount-box { display: flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.05); padding: 8px 15px; border-radius: 12px; border: 1px solid var(--glass-border); flex-wrap: wrap; }
         .discount-input { width: 70px; padding: 10px; border: 1px solid rgba(212,175,55,0.4); border-radius: 8px; outline: none; text-align: center; font-weight: 900; color: white; font-size: 14px; background: rgba(0,0,0,0.5); transition: 0.3s; }
-        .discount-input:focus { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .discount-input:focus { border-color: var(--gold); background: #0f172a; color: var(--gold-light); }
         .btn-discount { background: linear-gradient(135deg, var(--gold), #b48608); border: none; color: #000; font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; }
         .btn-discount:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .btn-revert { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: #fca5a5; font-weight: 900; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; }
         .btn-revert:hover { background: var(--danger); color: white; }
 
-        /* ================= كروت المصفوفة (زجاجية) ================= */
-        .matrix-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 20px; }
+        /* ================= كروت المصفوفة (زجاجية وتعديل المسافات) ================= */
+        .matrix-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* تصغير عرض الكرت ليرتب أفضل */
+            gap: 25px; /* زيادة المسافة بين الكروت للتنفس */
+            padding-bottom: 50px;
+        }
 
         .price-card {
-            background: rgba(15, 23, 42, 0.6); border-radius: 15px; padding: 18px 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(15, 23, 42, 0.85); border-radius: 15px; padding: 20px 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
             display: flex; align-items: center; gap: 15px; transition: 0.3s;
             position: relative; overflow: hidden; backdrop-filter: blur(10px);
         }
-        .price-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.5); box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .price-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.6); box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
 
-        .price-card.gold-offer { background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(15, 23, 42, 0.8)); border: 1px solid var(--gold); }
+        .price-card.gold-offer { background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(15, 23, 42, 0.9)); border: 1px solid var(--gold); }
         .price-card.gold-offer .area-name-input { color: var(--gold-light); }
 
         .trend-icon { font-size: 11px; position: absolute; top: 5px; left: 15px; font-weight: bold; color: var(--success); }
         .offer-timer { font-size: 11px; font-weight: 900; color: var(--gold-light); position: absolute; bottom: 5px; right: 25px; background: rgba(212, 175, 55, 0.15); padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); }
 
-        .color-indicator { width: 4px; height: 100%; position: absolute; right: 0; top: 0; }
+        .color-indicator { width: 5px; height: 100%; position: absolute; right: 0; top: 0; }
         .low-price { background: var(--success); box-shadow: 0 0 10px var(--success); } 
         .med-price { background: var(--warning); box-shadow: 0 0 10px var(--warning); } 
         .high-price { background: var(--danger); box-shadow: 0 0 10px var(--danger); } 
 
-        .area-name-input { border: none; font-weight: 900; font-size: 15px; color: white; flex: 1; outline: none; background: transparent; padding: 8px; border-radius: 8px; transition: 0.3s; }
-        .area-name-input:focus { background: rgba(255,255,255,0.05); }
+        /* تعديل حقول الكرت لمنع اللون الأبيض */
+        .area-name-input { border: 1px solid transparent; font-weight: 900; font-size: 15px; color: white; flex: 1; outline: none; background: transparent; padding: 10px; border-radius: 8px; transition: 0.3s; }
+        .area-name-input:focus { background: #0f172a; border-color: var(--gold); color: var(--gold-light); }
 
         .price-wrapper { position: relative; display: flex; align-items: center; justify-content: center;}
-        .price-val-input { width: 80px; padding: 10px; border: 1px solid var(--glass-border); border-radius: 10px; text-align: center; font-weight: 900; color: white; outline: none; font-size: 15px; background: rgba(0,0,0,0.5); transition: 0.3s; }
-        .price-val-input:focus { border-color: var(--gold); }
+        .price-val-input { width: 90px; padding: 12px; border: 1px solid var(--glass-border); border-radius: 10px; text-align: center; font-weight: 900; color: white; outline: none; font-size: 15px; background: rgba(0,0,0,0.5); transition: 0.3s; }
+        .price-val-input:focus { border-color: var(--gold); background: #0f172a; color: var(--gold-light); }
         
-        /* تأثير الحقل المقفل */
         .price-val-input:disabled { background: rgba(0,0,0,0.8); color: #64748b; cursor: not-allowed; border-color: var(--danger); opacity: 0.7; }
         
         .night-badge { 
@@ -175,10 +189,9 @@
 
         #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,20,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(10px); }
 
-        /* ================= تصميم الطباعة ================= */
         @media print {
             body { background: white; color: black; -webkit-print-color-adjust: exact; }
-            .bg-shapes, .navbar, .controls-panel, .night-control-bar, .card-tools, .btn-royal, .night-badge, .discount-box, .offer-timer { display: none !important; }
+            .animated-grid-bg, .grid-overlay, .bg-shapes, .navbar, .controls-panel, .night-control-bar, .card-tools, .btn-royal, .night-badge, .discount-box, .offer-timer { display: none !important; }
             .container { margin: 0; padding: 0; max-width: 100%; }
             .print-header { display: block; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
             .matrix-container { display: block; column-count: 2; column-gap: 20px; }
@@ -190,6 +203,9 @@
     </style>
 </head>
 <body>
+
+    <div class="animated-grid-bg"></div>
+    <div class="grid-overlay"></div>
 
     <div class="bg-shapes">
         <div class="shape"></div>
@@ -335,7 +351,6 @@
             });
         }
 
-        // التعديل الألماسي: سحب جراحي ومستهدف لأسعار هذه الشركة فقط لضمان السرعة والأمان
         async function fetchPricesFromCloud() {
             showLoader();
             pricingData = {};
@@ -343,7 +358,6 @@
             deletedDbIds = [];
             
             try {
-                // استخدام Query لسحب فقط الأسعار المرتبطة بـ myMaster
                 const pricesRef = ref(db, 'prices');
                 const pricesQuery = query(pricesRef, orderByChild('Client_Master'), equalTo(myMaster));
                 const snapshot = await get(pricesQuery);
