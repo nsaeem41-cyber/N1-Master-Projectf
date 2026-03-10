@@ -79,7 +79,7 @@
         /* ================= الهيدر الداخلي ================= */
         .app-header { background: var(--primary); padding: 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 100; }
         .header-brand { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
-        .header-company { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+        .header-company { font-size: 11px; color: var(--gold); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .header-actions { display: flex; gap: 8px; }
         .btn-action-top { background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
@@ -164,8 +164,8 @@
         
         .order-details { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
         .detail-box { text-align: center; flex: 1; }
-        .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
-        .detail-val { font-size: 13px; font-weight: bold; color: var(--primary); }
+        .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; font-weight: bold; }
+        .detail-val { font-size: 14px; font-weight: 900; color: var(--primary); }
         
         /* العداد التنازلي الألماسي */
         .order-timer-text { font-size: 14px; color: var(--danger); font-weight: 900; text-align: center; margin-bottom: 10px; animation: pulseAlert 1s infinite; }
@@ -174,14 +174,13 @@
         .action-buttons { display: flex; gap: 10px; }
         .btn-action { flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; border: none; color: white; transition: 0.3s; }
         
-        /* استعادة الألوان الزاهية للأزرار */
         .btn-accept { background: var(--success); }
         .btn-reject { background: var(--danger); }
-        .btn-status-arrived-shop { background: #0ea5e9; } /* أزرق زاهي */
-        .btn-status-picked { background: #f97316; } /* برتقالي ناري */
-        .btn-status-onway { background: #8b5cf6; } /* بنفسجي ملكي */
-        .btn-status-arrived { background: #06b6d4; } /* سماوي طلقة */
-        .btn-status-completed { background: var(--gold); color: var(--primary); } /* ذهبي ألماسي */
+        .btn-status-arrived-shop { background: #0ea5e9; } 
+        .btn-status-picked { background: #f97316; } 
+        .btn-status-onway { background: #8b5cf6; } 
+        .btn-status-arrived { background: #06b6d4; } 
+        .btn-status-completed { background: var(--gold); color: var(--primary); } 
 
         .hotspot-tag { display: inline-block; background: #fff0f2; color: var(--danger); border: 1px solid #ffccd5; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 4px; }
         
@@ -642,7 +641,7 @@
             window.location.reload(); 
         };
 
-        // ================== الدخول والتزامن ==================
+        // ================== الدخول والتزامن والحماية من التكرار ==================
         window.onload = () => { checkSession(); };
 
         function checkSession() {
@@ -670,7 +669,7 @@
                 if (snap.exists() && (snap.val().Cap_Pass === p || snap.val().pass === p)) {
                     if(snap.val().Cap_Status === 'pending' || snap.val().Cap_Status === 'paused') { window.showToast("حسابك مقفل من الإدارة", true); return; }
                     
-                    // توليد وتحديث السيشن توكن للأمان
+                    // توليد وتحديث السيشن توكن للأمان العالي
                     const sessionToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
                     const updates = {};
                     updates[`captains/${u}/session_token`] = sessionToken;
@@ -685,7 +684,7 @@
             } catch(e) { window.showToast("خطأ بالاتصال", true); }
         };
 
-        // ================== العداد التنازلي الألماسي (تم إصلاحه الجذري) ==================
+        // ================== العداد التنازلي الألماسي ==================
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
 
@@ -730,7 +729,7 @@
                 }
             });
 
-            // جلب التقييم المباشر للكابتن من السيرفر
+            // جلب التقييم
             const myPhone = currentCaptain.Cap_Phone || currentCaptain.phone;
             onValue(ref(db, `ratings/captains/${myPhone}`), (snap) => {
                 if(snap.exists()) {
@@ -744,7 +743,6 @@
             onValue(ref(db, `captains/${capNodeKey}`), (snap) => {
                 if(snap.exists()) { 
                     const data = snap.val();
-                    // نظام الحماية: إذا السيشن توكن تغير، اطرد الكابتن فورا
                     if (currentCaptain && data.session_token && currentCaptain.session_token && data.session_token !== currentCaptain.session_token) {
                         window.showToast("تم تسجيل الدخول من جهاز آخر 🔒", true);
                         setTimeout(() => { logout(); }, 2000);
@@ -757,14 +755,17 @@
                 }
             });
 
-            // الطلبات النشطة (عزل الأوفلاين 100%)
+            // الطلبات النشطة (الرادار القاطع)
             onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                 const cont = document.getElementById('active-orders-container');
                 let html = '', hasActive = false, ring = false;
                 
-                if(currentCaptain.app_status !== 'online') {
+                // عزل كامل لو هو أوفلاين
+                if(!currentCaptain || currentCaptain.app_status !== 'online') {
                     cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
                     document.getElementById('hotspots-section').style.display = 'none';
+                    const aud = document.getElementById('order-ringtone');
+                    if(aud) { aud.pause(); aud.currentTime=0; }
                     return;
                 }
 
@@ -785,7 +786,6 @@
                         const valSafe = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
                         const feeSafe = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
                         const commSafe = parseFloat(ord.commission_amount || 0).toFixed(2);
-                        const netSafe = (feeSafe - commSafe).toFixed(2);
                         
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                         rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
@@ -797,10 +797,10 @@
                             locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
                         }
 
-                        // فك حجب رقم العميل
-                        let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب للخصوصية 🛡️</span></div>`;
-                        const isGlobalShow = (systemSettings.show_phone_numbers === true || String(systemSettings.show_phone_numbers) === "true");
-                        const isCapHidden = (currentCaptain.hide_phone === true || String(currentCaptain.hide_phone) === "true");
+                        // فك حجب رقم العميل حسب إعدادات الإدارة
+                        let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
+                        let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
+                        let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
 
                         if (ord.shop_phone && isGlobalShow && !isCapHidden) {
                             phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900; text-decoration:none;">${ord.shop_phone}</a></div>`;
@@ -808,6 +808,14 @@
 
                         let btnAction = '';
                         let timerHtml = '';
+                        let discountHtml = '';
+
+                        // عرض الخصم إذا وجد فقط كمعلومة
+                        let discAmt = parseFloat(ord.discount || ord.Shop_Discount || 0);
+                        if(discAmt > 0) {
+                            discountHtml = `<div style="text-align:center; font-size:11px; color:var(--danger); background:#fef2f2; padding:3px; border-radius:5px; margin-top:5px;">يوجد خصم: ${discAmt} د.أ</div>`;
+                        }
+
                         if(ord.status === 'assigned') {
                             timerHtml = `
                                 <div class="order-timer-text" id="text_timer_${id}">${timeLeft} ثانية للاختفاء ⏳</div>
@@ -826,6 +834,7 @@
                             btnAction = `<button class="btn-action btn-status-completed" style="width:100%;" onclick="finishOrd('${id}','${ord.linkedRadarId}',${valSafe},${feeSafe},${commSafe},'${rName}')">تم التسليم بنجاح 💎</button>`;
                         }
 
+                        // إظهار قيمة الطلب والتوصيل فقط، بدون الصافي
                         html += `
                             <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -834,15 +843,16 @@
                                 </div>
                                 ${phoneHtml}
                                 <div class="order-details">
+                                    <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                        <div class="detail-lbl">قيمة الطلب</div>
+                                        <div class="detail-val" style="color:var(--primary);">${valSafe} د.أ</div>
+                                    </div>
                                     <div class="detail-box">
                                         <div class="detail-lbl">رسوم التوصيل</div>
                                         <div class="detail-val" style="color:var(--info);">${feeSafe} د.أ</div>
                                     </div>
-                                    <div class="detail-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
-                                        <div class="detail-lbl" style="color:#166534;">الصافي لك 💰</div>
-                                        <div class="detail-val" style="color:#166534; font-size:15px;">${netSafe} د.أ</div>
-                                    </div>
                                 </div>
+                                ${discountHtml}
                                 ${timerHtml}
                                 ${btnAction}
                             </div>
@@ -862,7 +872,7 @@
                 document.getElementById('hotspots-section').style.display = (!hasActive && systemSettings.hotspots_active) ? 'block' : 'none';
             });
 
-            // الإنجازات السريعة (تعديل الألماس: بدون الصافي، فقط عدد، قيمة توصيل، وقيمة أوردر)
+            // الإنجازات السريعة Shallow
             const archQuery = query(ref(db, `company_archives/${master}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
             onValue(archQuery, (snap) => {
                 if(snap.exists()) {
@@ -905,10 +915,11 @@
 
         function updateUIProfile(data) {
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
-            const cType = data.Cap_CarType || (data.Cap_Car ? data.Cap_Car.split('|')[0] : 'السيارة');
-            const cPlate = data.Cap_CarPlate || (data.Cap_Car && data.Cap_Car.includes('|') ? data.Cap_Car.split('|')[1] : '');
             
-            // إظهار السيارة والترميز برقي ووضوح
+            // جلب السيارة والترميز بطريقة مضمونة
+            const cType = data.Cap_CarType || data.car_type || (data.Cap_Car ? data.Cap_Car.split('|')[0].trim() : 'مركبة');
+            const cPlate = data.Cap_CarCode || data.Cap_CarPlate || data.car_code || (data.Cap_Car && data.Cap_Car.includes('|') ? data.Cap_Car.split('|')[1].trim() : '');
+            
             document.getElementById('ui_cap_car').innerHTML = `
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <span>🚗 ${cType}</span>
@@ -926,7 +937,7 @@
                     }
                 });
             } else {
-                document.getElementById('ui_company_name').innerText = "الإدارة العامة";
+                document.getElementById('ui_company_name').innerText = "الإدارة المباشرة";
             }
 
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
@@ -966,7 +977,6 @@
                 toggleBtn.checked = false; return;
             }
 
-            // تحديث الواجهة فوراً للرقي والسرعة
             const ind = document.getElementById('ui_status_indicator');
             const txt = document.getElementById('ui_status_text');
             if(isOnline) {
@@ -981,11 +991,12 @@
         };
 
         window.acceptOrd = async (id, rId) => {
-            // تثبيت التايمر بمجرد القبول وتعديل الواجهة فورا
+            // توقيف التايمر بمجرد الموافقة
             if(orderTimers[id]) {
                 clearInterval(orderTimers[id]);
                 delete orderTimers[id];
             }
+            
             const card = document.getElementById('card_' + id);
             if(card) card.classList.remove('ringing');
             
@@ -1009,18 +1020,18 @@
             window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
-        // الأرشيف الشامل النظيف (استخدام الـ ID لمنع تكرار التسجيل)
+        // الأرشيف الشامل النظيف (حل جذري للطلب المكرر باستخدام الـ ID)
+        window.isFinishingOrder = window.isFinishingOrder || {};
+        
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
-            if(window.isFinishing) return;
-            window.isFinishing = true;
-            setTimeout(()=> window.isFinishing = false, 3000); // منع الكبس المزدوج
+            // قفل حديدي لمنع التكرار نهائياً
+            if(window.isFinishingOrder[id]) return;
+            window.isFinishingOrder[id] = true;
 
             const up = {}; const master = currentCaptain.company || currentCaptain.Client_Master || 'default';
             
-            // تغيير الحالة فقط للمنع من الظهور
             up[`assigned_orders/${capNodeKey}/${id}/status`] = 'completed';
             
-            // سحب معلومات إضافية للتوثيق الشامل
             let discountAmount = 0;
             let promoCode = "---";
             let fullRestName = rName;
@@ -1035,7 +1046,7 @@
                 }
             }
 
-            // استخدام رقم الطلب نفسه كمفتاح لمنع التكرار (Overwriting)
+            // التوثيق باستخدام نفس ID الطلب لمنع تكرار السجل
             up[`company_archives/${master}/orders/${id}`] = { 
                 capKey: capNodeKey, 
                 date: new Date().toISOString(), 
@@ -1059,9 +1070,11 @@
             await update(ref(db), up);
             window.showToast("تم التسليم بوقار 💎", false);
             
-            // فتح نافذة التقييم وإزالة الطلب
             if(shopId) { setTimeout(() => { openRatingModal(shopId); }, 1500); }
-            setTimeout(()=> { update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); }, 3000);
+            setTimeout(()=> { 
+                update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); 
+                delete window.isFinishingOrder[id];
+            }, 3000);
         };
 
         window.openSettingsModal = () => {
