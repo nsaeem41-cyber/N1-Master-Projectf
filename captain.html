@@ -700,7 +700,7 @@
                 let sources = [];
                 if(snap.exists()) {
                     const prices = Object.values(snap.val());
-                    // سحب النطاقات الأصلية (Price_Source) لمنع الأسماء الفرعية
+                    // سحب النطاقات الأصلية (Price_Source)
                     sources = [...new Set(prices.filter(p => p.Client_Master === compId || p.Price_Source === compId).map(p => (p.Price_Source || '').trim()))].filter(Boolean);
                 }
                 if(sources.length > 0) { 
@@ -765,7 +765,6 @@
                 document.getElementById('login-screen').classList.remove('active'); 
                 document.getElementById('main-screen').classList.add('active');
                 
-                // تفعيل اليقظة غصب من اللوكال ستوريج
                 const isSavedOnline = currentCaptain.app_status === 'online';
                 const tgl = document.getElementById('toggle_status');
                 if(tgl) tgl.checked = isSavedOnline;
@@ -789,7 +788,6 @@
                 if (snap.exists() && (snap.val().Cap_Pass === p || snap.val().pass === p)) {
                     if(snap.val().Cap_Status === 'pending' || snap.val().Cap_Status === 'paused') { window.showToast("حسابك مقفل من الإدارة", true); return; }
                     
-                    // توليد وتحديث السيشن توكن للأمان العالي
                     const sessionToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
                     const updates = {};
                     updates[`captains/${u}/session_token`] = sessionToken;
@@ -804,7 +802,7 @@
             } catch(e) { window.showToast("خطأ بالاتصال", true); }
         };
 
-        // ================== العداد التنازلي الألماسي ==================
+        // ================== العداد التنازلي الألماسي الحقيقي ==================
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
 
@@ -838,53 +836,70 @@
         let hotspotUnsubscribe = null;
 
         function initListeners() {
-            let master = 'default';
-            if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) master = currentCaptain.company || currentCaptain.Client_Master;
+            let masterRaw = 'default';
+            if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) masterRaw = currentCaptain.company || currentCaptain.Client_Master;
             
-            // فلترة وحماية اسم الماستر لمنع انهيار الفايربيز
-            master = master.replace(/[.#$\[\]]/g, '_');
+            // تجاوز آمن للأسماء في الفايربيز
+            const masterSafe = masterRaw.replace(/[.#$\[\]]/g, '_');
 
-            // جلب إعدادات الريموت
+            // فحص انقطاع سيرفر الفايربيز
+            const connectedRef = ref(db, ".info/connected");
+            onValue(connectedRef, (snap) => {
+                if (snap.val() === true) {
+                    document.getElementById('offline-guard').style.display = 'none';
+                } else {
+                    document.getElementById('offline-guard').style.display = 'flex';
+                }
+            });
+
             try {
-                onValue(ref(db, `settings/${master}`), (snap) => {
-                    if(snap.exists()) {
-                        const s = snap.val();
-                        systemSettings.order_timer = parseInt(s.order_timer || 10);
-                        systemSettings.show_phone_numbers = s.show_phone_numbers || false;
-                        systemSettings.hotspots_active = s.hotspots_active !== false;
-                        systemSettings.anti_vpn = s.anti_vpn || false;
-
-                        // التطهير من الاستهلاك للخرائط الحرارية
-                        const hsCont = document.getElementById('ui_hotspots');
-                        if(systemSettings.hotspots_active) {
-                            if(!hotspotUnsubscribe) {
-                                const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
-                                hotspotUnsubscribe = onValue(q, (hSnap) => {
-                                    if(hSnap.exists()) {
-                                        const counts = {};
-                                        Object.values(hSnap.val()).forEach(o => {
-                                            let rn = o.Shop_Name || o.restaurant || ''; rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
-                                            if(rn) counts[rn] = (counts[rn] || 0) + 1;
-                                        });
-                                        const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
-                                        if(sorted.length > 0) {
-                                            hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
-                                        } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
-                                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
-                                });
-                            }
-                        } else {
-                            if(hotspotUnsubscribe) {
-                                hotspotUnsubscribe();
-                                hotspotUnsubscribe = null;
-                            }
-                            hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
-                        }
+                // جلب إعدادات الريموت من الشركة الأم
+                onValue(ref(db, `users/${masterRaw}`), (masterSnap) => {
+                    let actualMaster = masterRaw;
+                    if (masterSnap.exists() && masterSnap.val().Client_User) {
+                        actualMaster = masterSnap.val().Client_User;
                     }
+                    
+                    onValue(ref(db, `settings/${actualMaster}`), (snap) => {
+                        if(snap.exists()) {
+                            const s = snap.val();
+                            // قراءة الرقم الحقيقي للتايمر
+                            systemSettings.order_timer = parseInt(s.order_timer) || 10;
+                            systemSettings.show_phone_numbers = s.show_phone_numbers || false;
+                            systemSettings.hotspots_active = s.hotspots_active !== false;
+                            systemSettings.anti_vpn = s.anti_vpn || false;
+
+                            // الخرائط الحرارية النظيفة
+                            const hsCont = document.getElementById('ui_hotspots');
+                            if(systemSettings.hotspots_active) {
+                                if(!hotspotUnsubscribe) {
+                                    const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
+                                    hotspotUnsubscribe = onValue(q, (hSnap) => {
+                                        if(hSnap.exists()) {
+                                            const counts = {};
+                                            Object.values(hSnap.val()).forEach(o => {
+                                                let rn = o.Shop_Name || o.restaurant || ''; rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
+                                                if(rn) counts[rn] = (counts[rn] || 0) + 1;
+                                            });
+                                            const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+                                            if(sorted.length > 0) {
+                                                hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
+                                            } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
+                                        } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
+                                    });
+                                }
+                            } else {
+                                if(hotspotUnsubscribe) {
+                                    hotspotUnsubscribe();
+                                    hotspotUnsubscribe = null;
+                                }
+                                hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
+                            }
+                        }
+                    });
                 });
             } catch(e) {}
 
-            // جلب التقييم المباشر
             try {
                 const myPhone = currentCaptain.Cap_Phone || currentCaptain.phone;
                 if(myPhone) {
@@ -898,7 +913,6 @@
                 }
             } catch(e) {}
 
-            // تحديث البروفايل ونظام السيشن الذكي
             try {
                 onValue(ref(db, `captains/${capNodeKey}`), (snap) => {
                     if(snap.exists()) { 
@@ -917,7 +931,6 @@
                 });
             } catch(e) {}
 
-            // الطلبات النشطة (عزل تام للأوفلاين)
             try {
                 onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                     const cont = document.getElementById('active-orders-container');
@@ -944,6 +957,7 @@
                                 ring = true;
                                 if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
                                 const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
+                                // التايمر الحقيقي يسحب من المتغير
                                 timeLeft = systemSettings.order_timer - elapsed;
                                 if(timeLeft <= 0) { rejectOrderAuto(id); return; }
                             }
@@ -1030,7 +1044,6 @@
                     
                     if(toggleSection) toggleSection.style.display = hasActive ? 'none' : 'flex';
 
-                    // الإشعارات الصاروخية مع اهتزاز مريخي
                     const aud = document.getElementById('order-ringtone');
                     if(ring && currentCaptain.app_status === 'online') { 
                         if(aud && aud.paused) aud.play().catch(e=>{}); 
@@ -1047,9 +1060,8 @@
                 });
             } catch(e) {}
 
-            // الإنجازات السريعة (بدون الصافي)
             try {
-                const archQuery = query(ref(db, `company_archives/${master}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
+                const archQuery = query(ref(db, `company_archives/${masterRaw}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
                 onValue(archQuery, (snap) => {
                     if(snap.exists()) {
                         let cnt=0, totalFee=0, totalOrderVal=0;
@@ -1086,22 +1098,15 @@
                 </div>
             `;
             
-            // حماية الجذور من التعليق
             let mName = data.company || data.Client_Master || "N One";
-            mName = mName.replace(/[.#$\[\]]/g, '_'); 
-
-            if(mName !== "N_One" && mName !== "N One") {
+            if(mName !== "N One") {
                 try {
                     get(ref(db, `users/${mName}`)).then(s => { 
                         if(s.exists()) {
                             const compTrueName = s.val().Client_Name || s.val().name || mName;
                             document.getElementById('ui_company_name').innerText = compTrueName; 
-                        } else {
-                            get(ref(db, `shops/${mName}`)).then(s2 => {
-                                if(s2.exists()) document.getElementById('ui_company_name').innerText = s2.val().Client_Name || s2.val().name || mName;
-                            });
                         }
-                    }).catch(e => console.log("Root fetch safe bypass"));
+                    });
                 } catch(e) {}
             } else {
                 document.getElementById('ui_company_name').innerText = "N One";
@@ -1210,7 +1215,6 @@
             window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
-        // الأرشيف الشامل (الضربة القاضية لمنع التكرار)
         window.isFinishingOrder = window.isFinishingOrder || {};
         
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
@@ -1219,7 +1223,6 @@
 
             const up = {}; 
             let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
-            master = master.replace(/[.#$\[\]]/g, '_'); // حماية إضافية
             
             up[`assigned_orders/${capNodeKey}/${id}/status`] = 'completed';
             
@@ -1291,12 +1294,10 @@
             window.showToast("تم الحفظ ✅"); document.getElementById('settings-modal').style.display='none';
         };
 
-        // عرض الأرشيف
         window.openHistoryModal = async () => {
             const cont = document.getElementById('history-list-container'); cont.innerHTML = "جاري التحميل...";
             document.getElementById('history-modal').style.display = 'flex';
             let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
-            master = master.replace(/[.#$\[\]]/g, '_');
 
             try {
                 const q = query(ref(db, `company_archives/${master}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
