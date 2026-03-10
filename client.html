@@ -553,57 +553,110 @@
         };
 
         window.onload = function() {
-            const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
-            
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
+            try {
+                const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
                 
-                // تثبيت المعرفات الجذرية
-                COMPANY_ROOT_ID = currentUser.Client_User || currentUser.user;
-                COMPANY_ROOT_NAME = currentUser.Client_Name || currentUser.name || 'مؤسسة غير معرفة';
-                
-                if(!COMPANY_ROOT_ID) {
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    
+                    // تثبيت المعرفات الجذرية مع الحماية
+                    COMPANY_ROOT_ID = String(currentUser.Client_User || currentUser.user || '').trim();
+                    COMPANY_ROOT_NAME = currentUser.Client_Name || currentUser.name || 'مؤسسة غير معرفة';
+                    
+                    if(!COMPANY_ROOT_ID) {
+                        window.location.replace('index.html');
+                        return;
+                    }
+                } else {
                     window.location.replace('index.html');
                     return;
                 }
-            } else {
-                window.location.replace('index.html');
-                return;
+
+                document.getElementById('welcome-msg').innerText = `أهلاً بك، ${COMPANY_ROOT_NAME}`;
+                document.getElementById('display_company_name').innerText = COMPANY_ROOT_NAME;
+                document.getElementById('display_company_name_settings').innerText = COMPANY_ROOT_NAME;
+                document.getElementById('display_company_id_settings').innerText = COMPANY_ROOT_ID;
+                
+                document.getElementById('profile_name').value = COMPANY_ROOT_NAME;
+                document.getElementById('profile_user').value = COMPANY_ROOT_ID;
+                document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
+
+                // تشغيل الوظائف داخل دروع حماية
+                try { checkAdPermission(); } catch(e) { console.error(e); }
+                try { updateCountdownTimer(); } catch(e) { console.error(e); }
+                try { setupRealtimeFreezeListener(); } catch(e) { console.error(e); }
+                try { setupSmartAdsListener(); } catch(e) { console.error(e); }
+                try { setupAlertsListener(); } catch(e) { console.error(e); }
+                try { fetchData(); } catch(e) { console.error(e); }
+                try { fetchCyberSettings(); } catch(e) { console.error(e); }
+
+            } catch(e) {
+                console.error("Critical Boot Error:", e);
             }
-
-            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${COMPANY_ROOT_NAME}`;
-            document.getElementById('display_company_name').innerText = COMPANY_ROOT_NAME;
-            document.getElementById('display_company_name_settings').innerText = COMPANY_ROOT_NAME;
-            document.getElementById('display_company_id_settings').innerText = COMPANY_ROOT_ID;
-            
-            document.getElementById('profile_name').value = COMPANY_ROOT_NAME;
-            document.getElementById('profile_user').value = COMPANY_ROOT_ID;
-            document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
-
-            checkAdPermission();
-            updateCountdownTimer();
-            setupRealtimeFreezeListener(); 
-            setupSmartAdsListener();
-            setupAlertsListener(); 
-            fetchData();
-            fetchCyberSettings(); 
         };
+
+        // ================= حماية العداد من الانهيار =================
+        function updateCountdownTimer() {
+            const timerEl = document.getElementById('sub-timer');
+            try {
+                const expVal = currentUser.Client_Expiry || currentUser.expiry;
+                
+                if (!expVal) {
+                    timerEl.innerText = "مستوى صلاحية ممتد";
+                    timerEl.className = "sub-countdown sub-active";
+                    return;
+                }
+
+                // محاولة تحويل القيمة لتاريخ
+                let expiryDate = new Date(expVal);
+                
+                // إذا كانت القيمة مجرد رقم (مثلا 365) وليس تاريخ حقيقي
+                if (isNaN(expiryDate.getTime())) {
+                    timerEl.innerText = "صلاحية غير مقيدة بتاريخ";
+                    timerEl.className = "sub-countdown sub-active";
+                    return;
+                }
+
+                expiryDate.setHours(23, 59, 59, 999);
+                const now = new Date();
+                const diffTime = expiryDate.getTime() - now.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 0) {
+                    if (diffDays <= 3) {
+                        timerEl.innerText = `⚠️ انتباه: النظام سينتهي خلال ${diffDays} يوم`;
+                        timerEl.className = "sub-countdown sub-warning";
+                    } else {
+                        timerEl.innerText = `حالة النظام: نشط (${diffDays} يوم)`;
+                        timerEl.className = "sub-countdown sub-active";
+                    }
+                } else {
+                    timerEl.innerText = `توقف النظام الإداري`;
+                    timerEl.className = "sub-countdown sub-expired";
+                }
+            } catch (e) {
+                timerEl.innerText = "النظام يعمل";
+                timerEl.className = "sub-countdown sub-active";
+            }
+        }
 
         // ================= دوال التحكم السيبراني (مربوطة بالجذر) =================
         window.fetchCyberSettings = function() {
             if(!COMPANY_ROOT_ID) return;
 
-            onValue(ref(db, `settings/${COMPANY_ROOT_ID}/order_timer`), (snap) => {
-                if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
-            });
-            
-            onValue(ref(db, `settings/${COMPANY_ROOT_ID}/anti_vpn`), (snap) => {
-                document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
-            });
-            
-            onValue(ref(db, `settings/${COMPANY_ROOT_ID}/hotspots_active`), (snap) => {
-                document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
-            });
+            try {
+                onValue(ref(db, `settings/${COMPANY_ROOT_ID}/order_timer`), (snap) => {
+                    if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
+                });
+                
+                onValue(ref(db, `settings/${COMPANY_ROOT_ID}/anti_vpn`), (snap) => {
+                    document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
+                });
+                
+                onValue(ref(db, `settings/${COMPANY_ROOT_ID}/hotspots_active`), (snap) => {
+                    document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
+                });
+            } catch(e) { console.error("Settings fetch error:", e); }
         };
 
         window.updateRemoteTimer = async function() {
@@ -637,26 +690,166 @@
             } catch(e) { showAppToast("حدث خطأ أثناء الاتصال بالخادم المركزي.", true); }
         };
 
-        // ================= باقي الدوال المربوطة بالجذر =================
-        window.fetchPricingAreas = function() {
-            const pricesRef = ref(db, 'prices');
-            onValue(pricesRef, (snapshot) => {
-                availablePricingAreas = [];
-                if (snapshot.exists()) {
-                    const data = Object.values(snapshot.val());
-                    const uniqueSources = new Set();
-                    data.forEach(r => {
-                        if (r.Client_Master === COMPANY_ROOT_ID || r.company === COMPANY_ROOT_ID) {
-                            const sourceName = r.Price_Source;
-                            if (sourceName) {
-                                uniqueSources.add(sourceName);
-                            }
-                        }
-                    });
-                    availablePricingAreas = Array.from(uniqueSources).sort();
+        // ================= جلب الداتا وعرض المنشآت =================
+        window.fetchData = function() {
+            try { window.fetchPricingAreas(); } catch(e){}
+            
+            try {
+                const shopsRef = ref(db, 'shops');
+                onValue(shopsRef, (snapshot) => {
+                    try {
+                        allData = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                        renderShops();
+                        updateClientAdTargets(); 
+                    } catch(e) { console.error("Error processing shops data:", e); }
+                });
+            } catch(e){}
+
+            try {
+                const captainsRef = ref(db, 'captains');
+                onValue(captainsRef, (snapshot) => {
+                    try {
+                        allCaptains = snapshot.exists() ? Object.values(snapshot.val()) : [];
+                        updateClientAdTargets();
+                    } catch(e) {}
+                });
+            } catch(e){}
+        };
+
+        window.renderShops = function() {
+            try {
+                const tbody = document.getElementById('shops-table-body');
+                if(!COMPANY_ROOT_ID) return;
+                
+                const rootIdStr = String(COMPANY_ROOT_ID).trim();
+                
+                const myShops = allData.filter(i => {
+                    if (!i || typeof i !== 'object') return false;
+                    const shopMaster = String(i.Client_Master || i.company || '').trim();
+                    const isMyShop = (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (shopMaster === rootIdStr);
+                    const stat = i.Client_Status || i.status;
+                    const isPending = stat === 'pending';
+                    
+                    if (!isMyShop) return false;
+                    
+                    if (currentShopFilter === 'active') {
+                        return !isPending; 
+                    } else {
+                        return isPending; 
+                    }
+                }).reverse();
+                
+                let totalBalance = 0;
+                let totalComm = 0;
+                
+                const allMyActiveShops = allData.filter(i => {
+                    if (!i || typeof i !== 'object') return false;
+                    const shopMaster = String(i.Client_Master || i.company || '').trim();
+                    return (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') 
+                        && (shopMaster === rootIdStr) 
+                        && (i.Client_Status !== 'pending' && i.status !== 'pending');
+                });
+                
+                allMyActiveShops.forEach(s => {
+                    totalBalance += Number(s.Client_Balance || s.Shop_Balance || 0);
+                    totalComm += Number(s.Client_Comm || s.company_share || 0);
+                });
+
+                document.getElementById('total-shops').innerText = allMyActiveShops.length;
+                document.getElementById('count-paid').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
+                document.getElementById('count-free').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
+                document.getElementById('total-balance').innerText = totalBalance.toFixed(2) + " د.أ";
+                document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
+
+                if (myShops.length === 0) { 
+                    const emptyMsg = currentShopFilter === 'active' ? 'قاعدة البيانات فارغة ضمن النطاق النشط.' : 'لا توجد سجلات معلقة.';
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold; color:#94a3b8;">${emptyMsg}</td></tr>`; 
+                    return; 
                 }
-                populatePricingDropdowns();
-            });
+                tbody.innerHTML = '';
+                
+                myShops.forEach(shop => {
+                    const commVal = Number(shop.Client_Comm || shop.company_share || 0);
+                    const subBadge = commVal > 0 
+                        ? `<span class="badge" style="background:#ecfdf5; color:var(--money); border:1px solid #a7f3d0;">شاملة (${commVal} د.أ)</span>` 
+                        : `<span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">قياسية</span>`;
+
+                    const stat = shop.Client_Status || shop.status;
+                    let statusBadge = '';
+                    let toggleBtn = '';
+                    
+                    if (stat === 'pending') {
+                        statusBadge = '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">يتطلب مصادقة ⏳</span>';
+                        toggleBtn = `<button class="btn-active" title="مصادقة" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل</button>`;
+                    } else if (stat === 'paused') {
+                        statusBadge = '<span class="badge" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;">حساب مقيد 🚫</span>';
+                        toggleBtn = `<button class="btn-active" title="رفع التقييد" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>`;
+                    } else {
+                        statusBadge = '<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">معتمد ✅</span>';
+                        toggleBtn = `<button class="btn-freeze" title="تقييد الوصول" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">🚫</button>`;
+                    }
+                    
+                    let daysLeft = "مفتوح";
+                    if (shop.Client_Expiry || shop.expiry) {
+                        let exp = new Date(shop.Client_Expiry || shop.expiry);
+                        if(!isNaN(exp.getTime())) {
+                            exp.setHours(23, 59, 59, 999);
+                            const diff = exp.getTime() - new Date().getTime();
+                            const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                            daysLeft = d > 0 ? d + " يوم" : "انتهت المهلة";
+                        }
+                    }
+                    
+                    let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 التوجيه الجغرافي</a>` : '';
+                    let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:10px; background:#fefce8; color:#b45309; padding:2px 6px; border-radius:4px; border:1px solid #fde68a; display:inline-block; margin-top:4px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
+
+                    const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
+                    const shopPassDisplay = shop.Client_Pass || shop.pass || '***';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b style="color:var(--primary);">${shop.Client_Name || shop.name}</b></td>
+                            <td style="font-size:12px; direction:ltr; text-align:right; color:#475569;">ID: <b>${shop.Client_User || shop.user}</b><br>Key: <b>${shopPassDisplay}</b></td>
+                            <td style="font-size:12px; direction:ltr; text-align:right; font-family:monospace; font-weight:bold;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}${pricingBadge}</td>
+                            <td>${subBadge}</td>
+                            <td style="font-weight:900; color:var(--money); font-size:14px;">${currentBalance} د.أ</td>
+                            <td style="font-size:12px; font-weight:bold; color:#64748b;">${daysLeft}</td>
+                            <td>${statusBadge}</td>
+                            <td class="controls">
+                                <button class="btn-edit" onclick="openEditModal('${shop.Client_User || shop.user}')">✏️</button>
+                                ${toggleBtn}
+                                <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                console.error("Render Error:", e);
+                document.getElementById('shops-table-body').innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:var(--danger);">حدث خطأ في تحميل البيانات. يرجى التحديث.</td></tr>`;
+            }
+        };
+
+        window.fetchPricingAreas = function() {
+            try {
+                const pricesRef = ref(db, 'prices');
+                onValue(pricesRef, (snapshot) => {
+                    availablePricingAreas = [];
+                    if (snapshot.exists()) {
+                        const data = Object.values(snapshot.val());
+                        const uniqueSources = new Set();
+                        data.forEach(r => {
+                            if (r.Client_Master === COMPANY_ROOT_ID || r.company === COMPANY_ROOT_ID) {
+                                const sourceName = r.Price_Source;
+                                if (sourceName) {
+                                    uniqueSources.add(sourceName);
+                                }
+                            }
+                        });
+                        availablePricingAreas = Array.from(uniqueSources).sort();
+                    }
+                    populatePricingDropdowns();
+                });
+            } catch(e) {}
         };
 
         window.populatePricingDropdowns = function() {
@@ -736,17 +929,19 @@
         };
 
         function checkAdPermission() {
-            const userRef = ref(db, `users/${COMPANY_ROOT_ID}`);
-            onValue(userRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (data.can_send_ads === true || data.can_send_ads === "true") {
-                        document.getElementById('integrated-ad-center').style.display = 'block';
-                    } else {
-                        document.getElementById('integrated-ad-center').style.display = 'none';
+            try {
+                const userRef = ref(db, `users/${COMPANY_ROOT_ID}`);
+                onValue(userRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        if (data.can_send_ads === true || data.can_send_ads === "true") {
+                            document.getElementById('integrated-ad-center').style.display = 'block';
+                        } else {
+                            document.getElementById('integrated-ad-center').style.display = 'none';
+                        }
                     }
-                }
-            });
+                });
+            } catch(e){}
         }
 
         window.togglePasswordVisibility = function() {
@@ -763,135 +958,110 @@
 
         function setupSmartAdsListener() {
             if(!COMPANY_ROOT_ID) return;
-            const adsRef = ref(db, 'announcements');
-            
-            onValue(adsRef, (snapshot) => {
-                const ads = snapshot.val() || {};
-                const now = Date.now();
-                let activeAd = null;
-                
-                if (ads.users && ads.users[COMPANY_ROOT_ID]) {
-                    const specificAd = ads.users[COMPANY_ROOT_ID];
-                    if (!specificAd.expireAt || specificAd.expireAt > now) {
-                        activeAd = specificAd;
+            try {
+                const adsRef = ref(db, 'announcements');
+                onValue(adsRef, (snapshot) => {
+                    const ads = snapshot.val() || {};
+                    const now = Date.now();
+                    let activeAd = null;
+                    
+                    if (ads.users && ads.users[COMPANY_ROOT_ID]) {
+                        const specificAd = ads.users[COMPANY_ROOT_ID];
+                        if (!specificAd.expireAt || specificAd.expireAt > now) {
+                            activeAd = specificAd;
+                        }
                     }
-                }
-                
-                if (!activeAd && ads.global) {
-                    const globalAd = ads.global;
-                    if (!globalAd.expireAt || globalAd.expireAt > now) {
-                        activeAd = globalAd;
+                    
+                    if (!activeAd && ads.global) {
+                        const globalAd = ads.global;
+                        if (!globalAd.expireAt || globalAd.expireAt > now) {
+                            activeAd = globalAd;
+                        }
                     }
-                }
-                
-                const adContainer = document.getElementById('smart-ad-container');
-                const adMarquee = document.getElementById('smart-ad-text');
-                
-                if (activeAd && activeAd.text) {
-                    adMarquee.innerText = activeAd.text;
-                    adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal');
-                    adContainer.style.display = 'flex';
-                } else {
-                    adContainer.style.display = 'none';
-                }
-            });
+                    
+                    const adContainer = document.getElementById('smart-ad-container');
+                    const adMarquee = document.getElementById('smart-ad-text');
+                    
+                    if (activeAd && activeAd.text) {
+                        adMarquee.innerText = activeAd.text;
+                        adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal');
+                        adContainer.style.display = 'flex';
+                    } else {
+                        adContainer.style.display = 'none';
+                    }
+                });
+            } catch(e){}
         }
 
         function setupAlertsListener() {
             if(!COMPANY_ROOT_ID) return;
-            const alertsRef = ref(db, 'alerts');
-            
-            onValue(alertsRef, (snapshot) => {
-                const alerts = snapshot.val() || {};
-                let activeAlert = null;
-                
-                if (alerts.users && alerts.users[COMPANY_ROOT_ID]) {
-                    activeAlert = alerts.users[COMPANY_ROOT_ID];
-                } else if (alerts.global) {
-                    activeAlert = alerts.global;
-                }
-                
-                if (activeAlert && activeAlert.message) {
-                    const lastSeen = localStorage.getItem('last_seen_alert_' + COMPANY_ROOT_ID) || 0;
-                    if (activeAlert.timestamp > lastSeen) {
-                        document.getElementById('app-popup-msg').innerText = activeAlert.message;
-                        document.getElementById('app-popup-overlay').style.display = 'flex';
-                        localStorage.setItem('last_seen_alert_' + COMPANY_ROOT_ID, activeAlert.timestamp);
+            try {
+                const alertsRef = ref(db, 'alerts');
+                onValue(alertsRef, (snapshot) => {
+                    const alerts = snapshot.val() || {};
+                    let activeAlert = null;
+                    
+                    if (alerts.users && alerts.users[COMPANY_ROOT_ID]) {
+                        activeAlert = alerts.users[COMPANY_ROOT_ID];
+                    } else if (alerts.global) {
+                        activeAlert = alerts.global;
                     }
-                }
-            });
+                    
+                    if (activeAlert && activeAlert.message) {
+                        const lastSeen = localStorage.getItem('last_seen_alert_' + COMPANY_ROOT_ID) || 0;
+                        if (activeAlert.timestamp > lastSeen) {
+                            document.getElementById('app-popup-msg').innerText = activeAlert.message;
+                            document.getElementById('app-popup-overlay').style.display = 'flex';
+                            localStorage.setItem('last_seen_alert_' + COMPANY_ROOT_ID, activeAlert.timestamp);
+                        }
+                    }
+                });
+            } catch(e){}
         }
 
         window.closeAppPopup = function() {
             document.getElementById('app-popup-overlay').style.display = 'none';
         }
 
-        function updateCountdownTimer() {
-            const timerEl = document.getElementById('sub-timer');
-            if (!currentUser.Client_Expiry && !currentUser.expiry) {
-                timerEl.innerText = "مستوى صلاحية ممتد";
-                timerEl.className = "sub-countdown sub-active";
-                return;
-            }
-
-            const expiryDate = new Date(currentUser.Client_Expiry || currentUser.expiry);
-            expiryDate.setHours(23, 59, 59, 999);
-            const now = new Date();
-            const diffTime = expiryDate.getTime() - now.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays > 0) {
-                if (diffDays <= 3) {
-                    timerEl.innerText = `⚠️ انتباه: النظام سينتهي خلال ${diffDays} يوم`;
-                    timerEl.className = "sub-countdown sub-warning";
-                } else {
-                    timerEl.innerText = `حالة النظام: نشط (${diffDays} يوم)`;
-                    timerEl.className = "sub-countdown sub-active";
-                }
-            } else {
-                timerEl.innerText = `توقف النظام الإداري`;
-                timerEl.className = "sub-countdown sub-expired";
-            }
-        }
-
         function setupRealtimeFreezeListener() {
             if(!COMPANY_ROOT_ID) return;
-            const myRef = ref(db, `users/${COMPANY_ROOT_ID}`);
-            
-            onValue(myRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    
-                    if(data.Client_Name || data.name) {
-                        COMPANY_ROOT_NAME = data.Client_Name || data.name;
-                        currentUser.Client_Name = COMPANY_ROOT_NAME;
-                        document.getElementById('welcome-msg').innerText = `أهلاً بك، ${COMPANY_ROOT_NAME}`;
-                        document.getElementById('display_company_name').innerText = COMPANY_ROOT_NAME;
-                        document.getElementById('display_company_name_settings').innerText = COMPANY_ROOT_NAME;
-                    }
+            try {
+                const myRef = ref(db, `users/${COMPANY_ROOT_ID}`);
+                onValue(myRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        
+                        if(data.Client_Name || data.name) {
+                            COMPANY_ROOT_NAME = data.Client_Name || data.name;
+                            currentUser.Client_Name = COMPANY_ROOT_NAME;
+                            document.getElementById('welcome-msg').innerText = `أهلاً بك، ${COMPANY_ROOT_NAME}`;
+                            document.getElementById('display_company_name').innerText = COMPANY_ROOT_NAME;
+                            document.getElementById('display_company_name_settings').innerText = COMPANY_ROOT_NAME;
+                        }
 
-                    if(data.Client_Expiry || data.expiry) {
-                        currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
-                        updateCountdownTimer();
-                    }
+                        if(data.Client_Expiry || data.expiry) {
+                            currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
+                            updateCountdownTimer();
+                        }
 
-                    if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        showAppToast("تم تقييد الوصول للوحة الإدارة. يرجى الاتصال بالمركز الرئيسي.", true);
+                        if (data.Client_Status === 'paused' || data.status === 'paused') {
+                            showAppToast("تم تقييد الوصول للوحة الإدارة. يرجى الاتصال بالمركز الرئيسي.", true);
+                            setTimeout(() => {
+                                localStorage.removeItem('current_company_user');
+                                localStorage.removeItem('currentUser');
+                                window.location.replace('index.html');
+                            }, 3000);
+                        }
+                    } else {
+                        showAppToast("تم إلغاء ارتباط الحساب بقاعدة البيانات. سيتم إغلاق الجلسة.", true);
                         setTimeout(() => {
                             localStorage.removeItem('current_company_user');
                             localStorage.removeItem('currentUser');
                             window.location.replace('index.html');
                         }, 3000);
                     }
-                } else {
-                    showAppToast("تم إلغاء ارتباط الحساب بقاعدة البيانات. سيتم إغلاق الجلسة.", true);
-                    setTimeout(() => {
-                        localStorage.removeItem('current_company_user');
-                        localStorage.removeItem('currentUser');
-                        window.location.replace('index.html');
-                    }, 3000);
-                }
-            });
+                });
+            } catch(e){}
         }
 
         window.updateProfileData = async function() {
@@ -964,23 +1134,6 @@
             renderShops();
         };
 
-        window.fetchData = function() {
-            window.fetchPricingAreas();
-            
-            const shopsRef = ref(db, 'shops');
-            onValue(shopsRef, (snapshot) => {
-                allData = snapshot.exists() ? Object.values(snapshot.val()) : [];
-                renderShops();
-                updateClientAdTargets(); 
-            });
-
-            const captainsRef = ref(db, 'captains');
-            onValue(captainsRef, (snapshot) => {
-                allCaptains = snapshot.exists() ? Object.values(snapshot.val()) : [];
-                updateClientAdTargets();
-            });
-        };
-
         window.updateClientAdTargets = function() {
             const group = document.getElementById('client_ad_group').value;
             const targetSelect = document.getElementById('client_ad_target');
@@ -991,12 +1144,14 @@
             if (!COMPANY_ROOT_ID) return;
             
             if (group === 'shops') {
-                const myShops = allData.filter(i => (i.Client_Master === COMPANY_ROOT_ID));
+                const rootIdStr = String(COMPANY_ROOT_ID).trim();
+                const myShops = allData.filter(i => (String(i.Client_Master || i.company || '').trim() === rootIdStr));
                 myShops.forEach(s => {
                     targetSelect.innerHTML += `<option value="${s.Client_User || s.user}">${s.Client_Name || s.name}</option>`;
                 });
             } else if (group === 'captains') {
-                const myCaps = allCaptains.filter(i => (i.Client_Master === COMPANY_ROOT_ID || i.company === COMPANY_ROOT_ID));
+                const rootIdStr = String(COMPANY_ROOT_ID).trim();
+                const myCaps = allCaptains.filter(i => (String(i.Client_Master || i.company || '').trim() === rootIdStr));
                 myCaps.forEach(c => {
                     targetSelect.innerHTML += `<option value="${c.Cap_User || c.user || c.Cap_Phone}">${c.Cap_Name || c.name}</option>`;
                 });
@@ -1229,101 +1384,6 @@
                 document.getElementById('loader-overlay').style.display = 'none';
                 showAppToast("فشل الاتصال بالخوادم المركزية.", true);
             }
-        };
-
-        window.renderShops = function() {
-            const tbody = document.getElementById('shops-table-body');
-            
-            const myShops = allData.filter(i => {
-                const isMyShop = (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === COMPANY_ROOT_ID);
-                const stat = i.Client_Status || i.status;
-                const isPending = stat === 'pending';
-                
-                if (!isMyShop) return false;
-                
-                if (currentShopFilter === 'active') {
-                    return !isPending; 
-                } else {
-                    return isPending; 
-                }
-            }).reverse();
-            
-            let totalBalance = 0;
-            let totalComm = 0;
-            
-            const allMyActiveShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === COMPANY_ROOT_ID) && (i.Client_Status !== 'pending' && i.status !== 'pending'));
-            
-            allMyActiveShops.forEach(s => {
-                totalBalance += Number(s.Client_Balance || s.Shop_Balance || 0);
-                totalComm += Number(s.Client_Comm || s.company_share || 0);
-            });
-
-            document.getElementById('total-shops').innerText = allMyActiveShops.length;
-            document.getElementById('count-paid').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) > 0).length;
-            document.getElementById('count-free').innerText = allMyActiveShops.filter(s => Number(s.Client_Comm || s.company_share || 0) <= 0).length;
-            document.getElementById('total-balance').innerText = totalBalance.toFixed(2) + " د.أ";
-            document.getElementById('total-comm').innerText = totalComm.toFixed(2) + " د.أ";
-
-            if (myShops.length === 0) { 
-                const emptyMsg = currentShopFilter === 'active' ? 'قاعدة البيانات فارغة ضمن النطاق النشط.' : 'لا توجد سجلات معلقة.';
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; font-weight:bold; color:#94a3b8;">${emptyMsg}</td></tr>`; 
-                return; 
-            }
-            tbody.innerHTML = '';
-            
-            myShops.forEach(shop => {
-                const commVal = Number(shop.Client_Comm || shop.company_share || 0);
-                const subBadge = commVal > 0 
-                    ? `<span class="badge" style="background:#ecfdf5; color:var(--money); border:1px solid #a7f3d0;">شاملة (${commVal} د.أ)</span>` 
-                    : `<span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">قياسية</span>`;
-
-                const stat = shop.Client_Status || shop.status;
-                let statusBadge = '';
-                let toggleBtn = '';
-                
-                if (stat === 'pending') {
-                    statusBadge = '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">يتطلب مصادقة ⏳</span>';
-                    toggleBtn = `<button class="btn-active" title="مصادقة" onclick="toggleStatus('${shop.Client_User || shop.user}', 'pending')">تفعيل</button>`;
-                } else if (stat === 'paused') {
-                    statusBadge = '<span class="badge" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;">حساب مقيد 🚫</span>';
-                    toggleBtn = `<button class="btn-active" title="رفع التقييد" onclick="toggleStatus('${shop.Client_User || shop.user}', 'paused')">▶️</button>`;
-                } else {
-                    statusBadge = '<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">معتمد ✅</span>';
-                    toggleBtn = `<button class="btn-freeze" title="تقييد الوصول" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">🚫</button>`;
-                }
-                
-                let daysLeft = "مفتوح";
-                if (shop.Client_Expiry || shop.expiry) {
-                    const exp = new Date(shop.Client_Expiry || shop.expiry);
-                    exp.setHours(23, 59, 59, 999);
-                    const diff = exp.getTime() - new Date().getTime();
-                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    daysLeft = d > 0 ? d + " يوم" : "انتهت المهلة";
-                }
-                
-                let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 التوجيه الجغرافي</a>` : '';
-                let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:10px; background:#fefce8; color:#b45309; padding:2px 6px; border-radius:4px; border:1px solid #fde68a; display:inline-block; margin-top:4px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
-
-                const currentBalance = Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2);
-                const shopPassDisplay = shop.Client_Pass || shop.pass || '***';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b style="color:var(--primary);">${shop.Client_Name || shop.name}</b></td>
-                        <td style="font-size:12px; direction:ltr; text-align:right; color:#475569;">ID: <b>${shop.Client_User || shop.user}</b><br>Key: <b>${shopPassDisplay}</b></td>
-                        <td style="font-size:12px; direction:ltr; text-align:right; font-family:monospace; font-weight:bold;">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}${pricingBadge}</td>
-                        <td>${subBadge}</td>
-                        <td style="font-weight:900; color:var(--money); font-size:14px;">${currentBalance} د.أ</td>
-                        <td style="font-size:12px; font-weight:bold; color:#64748b;">${daysLeft}</td>
-                        <td>${statusBadge}</td>
-                        <td class="controls">
-                            <button class="btn-edit" onclick="openEditModal('${shop.Client_User || shop.user}')">✏️</button>
-                            ${toggleBtn}
-                            <button class="btn-delete" onclick="deleteShop('${shop.Client_User || shop.user}')">🗑️</button>
-                        </td>
-                    </tr>
-                `;
-            });
         };
 
         window.filterTable = function() {
