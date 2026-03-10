@@ -84,7 +84,7 @@
         .btn-action-top { background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
 
-        /* ================= النوافذ المنبثقة ================= */
+        /* ================= النوافذ المنبثقة (Modals) ================= */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: flex-end; z-index: 5000; }
         .modal-content { background: white; width: 100%; max-width: 480px; height: 80vh; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; animation: slideUpModal 0.4s ease-out; }
         @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -113,10 +113,14 @@
         input:checked + .slider { background-color: var(--success); }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* ================= نافذة التقييم الألماسية ================= */
+        /* ================= النوافذ التحذيرية والتقييم ================= */
         .custom-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 60000; }
         .rating-modal-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-top: 6px solid var(--info); animation: popIn 0.3s ease-out; }
+        
+        .alert-modal-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-top: 6px solid var(--danger); animation: popIn 0.3s ease-out; }
+        
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
         .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
         .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
         .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
@@ -130,9 +134,6 @@
         /* ================= المحتوى الداخلي للكابتن ================= */
         .app-content { padding: 20px; flex: 1; overflow-y: auto; background: var(--bg); }
         
-        .vpn-warning-banner { background: #fffbeb; border: 1px solid #fde68a; border-right: 4px solid var(--gold); color: #b45309; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none; font-size: 13px; font-weight: bold; align-items: center; gap: 10px; }
-        .offline-banner { position: fixed; top: 0; left: 0; width: 100%; background: var(--danger); color: white; text-align: center; padding: 12px; font-weight: bold; font-size: 13px; z-index: 999999; display: none; }
-
         /* البطاقة الشخصية */
         .cap-profile-card { background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 20px; padding: 20px; color: white; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15); }
         .cap-name { font-size: 20px; font-weight: 900; margin-bottom: 5px; }
@@ -187,6 +188,9 @@
         @keyframes pulseAlert { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .ringing { border-right: 4px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); animation: pulseAlert 1.5s infinite; }
 
+        /* نظام الإشعارات الذكي المنسدل */
+        #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
+
     </style>
 </head>
 <body id="app-body">
@@ -194,8 +198,7 @@
     <audio id="keep-alive-audio" loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
     <audio id="order-ringtone" loop preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>
 
-    <div id="offline-banner" class="offline-banner">📡 لا يوجد اتصال بالإنترنت، يرجى الاتصال لتلقي الطلبات</div>
-    <div id="toast-container" style="position:fixed; top:40px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width:90%; max-width:400px;"></div>
+    <div id="toast-container"></div>
 
     <div id="pwa-splash" class="pwa-splash">
         <div class="pwa-content">
@@ -204,6 +207,33 @@
             <p class="pwa-text">للحصول على تجربة أسرع ولضمان وصول الطلبات فوراً، حمّل تطبيق الكابتن الرسمي الآن</p>
             <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق الآن 🚀</button>
             <button id="btn-continue-app" class="btn-continue-app" onclick="document.getElementById('pwa-splash').style.display='none'">المتابعة من المتصفح</button>
+        </div>
+    </div>
+
+    <div id="offline-guard" class="custom-dialog-overlay" style="z-index: 999999;">
+        <div class="alert-modal-box" style="border-top-color: #f59e0b;">
+            <div style="font-size: 50px; margin-bottom: 10px;">📡</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">انقطع الاتصال بالشبكة</div>
+            <div style="font-size: 14px; color: #64748b; font-weight: bold;">عذراً كابتن، يرجى التحقق من اتصال الإنترنت لتستمر في استقبال الطلبات بوقار.</div>
+        </div>
+    </div>
+
+    <div id="vpn-guard" class="custom-dialog-overlay" style="z-index: 999998;">
+        <div class="alert-modal-box">
+            <div style="font-size: 50px; margin-bottom: 10px;">🛡️</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--danger); margin-bottom: 10px;">رصد بروتوكول محظور</div>
+            <div style="font-size: 14px; color: #64748b; font-weight: bold;">🚨 نظام الأمان رصد تفعيل بروتوكول VPN، يرجى إطفاؤه فوراً لمتابعة العمل بوقار.</div>
+        </div>
+    </div>
+
+    <div id="balance-guard" class="custom-dialog-overlay" style="z-index: 999997;">
+        <div class="alert-modal-box" style="border-top-color: var(--gold);">
+            <div style="font-size: 50px; margin-bottom: 10px;">💎</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">يرجى شحن الرصيد</div>
+            <div style="font-size: 14px; color: #64748b; font-weight: bold; line-height: 1.6; margin-bottom: 20px;">
+                عزيزي الكابتن، لقد استنفدت الحد المسموح به للرصيد.. يرجى التوجه لأقرب نقطة شحن أو التواصل مع الوكيل المعتمد لتبقى في القمة 💎
+            </div>
+            <button class="btn-action" style="background: var(--gold); color: var(--primary); width: 100%;" onclick="document.getElementById('balance-guard').style.display='none'">حسناً، فهمت</button>
         </div>
     </div>
 
@@ -442,7 +472,7 @@
 
         let currentCaptain = null;
         let capNodeKey = null;
-        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true };
+        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false };
         let orderTimers = {};
         
         // ================== تهيئة نظام الإشعارات الأصلية (Native Push) ==================
@@ -468,63 +498,46 @@
             }
         }
 
-        window.showToast = function(msg, isError = false) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
-            toast.style.color = 'white';
-            toast.style.padding = '15px 20px';
-            toast.style.borderRadius = '15px';
-            toast.style.fontWeight = 'bold';
-            toast.style.fontSize = '14px';
-            toast.style.textAlign = 'center';
-            toast.style.transition = 'all 0.4s ease';
-            toast.style.transform = 'translateY(-50px)';
-            toast.style.opacity = '0';
-            toast.innerText = msg;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
-            setTimeout(() => { toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
-        };
-
-        // ================== اليقظة الدائمة القوية (Keep Online) ==================
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try { 
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen'); 
-                }
-            } catch (err) { }
-        }
-        document.addEventListener('visibilitychange', () => { 
-            if (document.visibilityState === 'visible') requestWakeLock(); 
+        // ================== الدرع المغناطيسي للإنترنت (Offline Guard) ==================
+        window.addEventListener('offline', () => {
+            document.getElementById('offline-guard').style.display = 'flex';
         });
-        
-        const bgAudio = document.getElementById('keep-alive-audio');
-        document.body.addEventListener('click', () => {
-            bgAudio.play().catch(e=>{});
-        }, { once: true });
-
-        // ================== PWA إعدادات ==================
-        let deferredPrompt;
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches || navigator.standalone;
-        
-        if (isStandalone) { document.getElementById('pwa-splash').style.display = 'none'; }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if(isStandalone) document.getElementById('pwa-splash').style.display = 'none';
+        window.addEventListener('online', () => {
+            document.getElementById('offline-guard').style.display = 'none';
         });
 
-        document.getElementById('btn-install-app').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') { document.getElementById('pwa-splash').style.display = 'none'; }
-                deferredPrompt = null;
+        // ================== جدار الحماية (Anti-VPN Check) ==================
+        async function checkVPNStatus() {
+            if (!systemSettings.anti_vpn) {
+                document.getElementById('vpn-guard').style.display = 'none';
+                return;
             }
-        });
+            try {
+                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                const data = await response.json();
+                if (data.country !== 'JO') { 
+                    document.getElementById('vpn-guard').style.display = 'flex';
+                    if (currentCaptain && currentCaptain.app_status === 'online') {
+                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                        document.getElementById('toggle_status').checked = false;
+                        document.getElementById('ui_status_indicator').className='status-indicator offline'; 
+                        document.getElementById('ui_status_text').innerHTML='غير متاح 🔴'; 
+                        document.getElementById('ui_status_text').style.color = "var(--danger)";
+                    }
+                } else {
+                    document.getElementById('vpn-guard').style.display = 'none';
+                }
+            } catch (e) {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (tz && !tz.includes('Amman')) {
+                    document.getElementById('vpn-guard').style.display = 'flex';
+                    if (currentCaptain && currentCaptain.app_status === 'online') {
+                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                    }
+                }
+            }
+        }
+        setInterval(checkVPNStatus, 15000); // فحص كل 15 ثانية
 
         // ================== التقييم الألماسي ==================
         window.openRatingModal = function(shopId) {
@@ -600,7 +613,7 @@
             }
         };
 
-        // ================== التسجيل الذكي و صيد الجذور الأصلية للمناطق ==================
+        // ================== التسجيل الذكي ==================
         window.openRegisterScreen = async function() {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('register-screen').classList.add('active');
@@ -630,7 +643,6 @@
                 let sources = [];
                 if(snap.exists()) {
                     const prices = Object.values(snap.val());
-                    // نسحب المصادر المعتمدة (Price_Source) وليس الأسماء الفرعية
                     sources = [...new Set(prices.filter(p => p.Client_Master === compId || p.Price_Source === compId).map(p => (p.Price_Source || '').trim()))].filter(Boolean);
                 }
                 if(sources.length > 0) { 
@@ -679,8 +691,11 @@
             window.location.reload(); 
         };
 
-        // ================== الدخول والتزامن والحماية من التكرار ==================
-        window.onload = () => { checkSession(); };
+        // ================== الدخول والتزامن والحماية ==================
+        window.onload = () => { 
+            if(!navigator.onLine) { document.getElementById('offline-guard').style.display = 'flex'; }
+            checkSession(); 
+        };
 
         function checkSession() {
             const saved = localStorage.getItem('n1_captain_session');
@@ -703,7 +718,7 @@
                     document.getElementById('ui_status_text').style.color = "var(--success)";
                 }
 
-                requestWakeLock(); initListeners();
+                requestWakeLock(); initListeners(); checkVPNStatus();
             }
         }
 
@@ -715,7 +730,6 @@
                 if (snap.exists() && (snap.val().Cap_Pass === p || snap.val().pass === p)) {
                     if(snap.val().Cap_Status === 'pending' || snap.val().Cap_Status === 'paused') { window.showToast("حسابك مقفل من الإدارة", true); return; }
                     
-                    // توليد وتحديث السيشن توكن للأمان العالي
                     const sessionToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
                     const updates = {};
                     updates[`captains/${u}/session_token`] = sessionToken;
@@ -761,7 +775,7 @@
             window.showToast("انتهى الوقت، تم سحب الطلب ⏳", true);
         };
 
-        let hotspotUnsubscribe = null; // للتطهير من الاستهلاك
+        let hotspotUnsubscribe = null;
 
         function initListeners() {
             let master = 'default';
@@ -774,12 +788,13 @@
                     systemSettings.order_timer = parseInt(s.order_timer || 10);
                     systemSettings.show_phone_numbers = s.show_phone_numbers || false;
                     systemSettings.hotspots_active = s.hotspots_active !== false;
+                    systemSettings.anti_vpn = s.anti_vpn || false;
 
-                    // التطهير من الاستهلاك: تشغيل أو إيقاف سحب بيانات الرادار حسب أمر الإدارة
+                    // التطهير من الاستهلاك للخرائط الحرارية
                     const hsCont = document.getElementById('ui_hotspots');
                     if(systemSettings.hotspots_active) {
                         if(!hotspotUnsubscribe) {
-                            const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20)); // سحب خفيف جدا
+                            const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
                             hotspotUnsubscribe = onValue(q, (hSnap) => {
                                 if(hSnap.exists()) {
                                     const counts = {};
@@ -796,7 +811,7 @@
                         }
                     } else {
                         if(hotspotUnsubscribe) {
-                            hotspotUnsubscribe(); // فصل الاتصال فورا وتوفير طاقة
+                            hotspotUnsubscribe();
                             hotspotUnsubscribe = null;
                         }
                         hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
@@ -814,7 +829,7 @@
                 }
             });
 
-            // تحديث البروفايل ونظام السيشن الذكي لمنع الدخول المزدوج
+            // تحديث البروفايل ونظام السيشن الذكي
             onValue(ref(db, `captains/${capNodeKey}`), (snap) => {
                 if(snap.exists()) { 
                     const data = snap.val();
@@ -824,8 +839,6 @@
                         return;
                     }
                     currentCaptain = data; 
-                    
-                    // لحام الحالة بالـ LocalStorage
                     localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
                     updateUIProfile(currentCaptain); 
                 } else {
@@ -833,7 +846,7 @@
                 }
             });
 
-            // الطلبات النشطة واستقبال الصافي من الرادار (عزل تام للأوفلاين)
+            // الطلبات النشطة (عزل تام للأوفلاين)
             onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                 const cont = document.getElementById('active-orders-container');
                 const toggleSection = document.getElementById('status-toggle-section');
@@ -871,14 +884,12 @@
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                         rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
-                        // زر الموقع المريخي السريع
                         let locationHtml = '';
                         if(ord.location_link || ord.Shop_Location_Link) {
                             const link = ord.location_link || ord.Shop_Location_Link;
                             locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
                         }
 
-                        // فك حجب رقم العميل حسب إعدادات الإدارة
                         let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
                         let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
                         let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
@@ -913,7 +924,6 @@
                             btnAction = `<button class="btn-action btn-status-completed" style="width:100%;" onclick="finishOrd('${id}','${ord.linkedRadarId}',${valSafe},${feeSafe},${commSafe},'${rName}')">تم التسليم بنجاح 💎</button>`;
                         }
 
-                        // الشفافية المالية المزدوجة المريحة للعين
                         html += `
                             <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -946,10 +956,10 @@
                 
                 cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
                 
-                // التوسيع الذكي (اختفاء حالة الكابتن عند وجود طلب نشط)
+                // إخفاء المربع لتوسيع المساحة
                 toggleSection.style.display = hasActive ? 'none' : 'flex';
 
-                // الإشعارات الصاروخية (Native & Audio)
+                // الإشعارات الصاروخية
                 const aud = document.getElementById('order-ringtone');
                 if(ring && currentCaptain.app_status === 'online') { 
                     aud.play().catch(e=>console.log("Play blocked by policy")); 
@@ -990,7 +1000,6 @@
         function updateUIProfile(data) {
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
             
-            // صيد الترميز وإظهاره بكل هيبة
             const cType = data.Cap_CarType || data.car_type || (data.Cap_Car ? data.Cap_Car.split('|')[0].trim() : 'مركبة');
             const cPlate = data.Cap_CarCode || data.Cap_CarPlate || data.car_code || (data.Cap_Car && data.Cap_Car.includes('|') ? data.Cap_Car.split('|')[1].trim() : '');
             
@@ -1001,7 +1010,6 @@
                 </div>
             `;
             
-            // صيد مسمى الشركة الألماسي من الجذر
             let mName = data.company || data.Client_Master || "N One";
             if(mName !== "N One") {
                 get(ref(db, `users/${mName}`)).then(s => { 
@@ -1025,14 +1033,17 @@
             const ind = document.getElementById('ui_status_indicator');
             const txt = document.getElementById('ui_status_text');
 
-            if(bal <= -1) {
-                bEl.classList.add('negative'); document.getElementById('balance-warning').style.display='flex';
-                if(data.app_status==='online') update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
-                tgl.checked=false; tgl.disabled=true; ind.className='status-indicator offline'; 
-                txt.innerText='محظور ماليا 🔴'; txt.style.color = "var(--danger)";
+            // قفل السالب 1.00 دينار
+            if(bal <= -1.00) {
+                bEl.classList.add('negative');
+                if(data.app_status==='online') {
+                    update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                    document.getElementById('balance-guard').style.display='flex';
+                }
+                tgl.checked=false; ind.className='status-indicator offline'; 
+                txt.innerText='رصيد غير كافٍ 🔴'; txt.style.color = "var(--danger)";
             } else {
-                bEl.classList.remove('negative'); document.getElementById('balance-warning').style.display='none';
-                tgl.disabled=false;
+                bEl.classList.remove('negative');
                 if(data.app_status==='online') { 
                     tgl.checked=true; ind.className='status-indicator online'; 
                     txt.innerText='متاح وجاهز 🟢'; txt.style.color = "var(--success)";
@@ -1044,7 +1055,6 @@
         }
 
         window.toggleOnlineStatus = async function() {
-            // طلب السماح للإشعارات عند التفعيل
             if ('Notification' in window && Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
@@ -1053,8 +1063,9 @@
             const isOnline = toggleBtn.checked;
             const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
             
-            if (isOnline && bal <= -1) {
-                window.showToast("لا يمكنك التفعيل، يرجى شحن الرصيد", true);
+            // صد الكابتن إذا رصيده سالب دينار أو أكثر
+            if (isOnline && bal <= -1.00) {
+                document.getElementById('balance-guard').style.display = 'flex';
                 toggleBtn.checked = false; return;
             }
 
@@ -1077,7 +1088,6 @@
         };
 
         window.acceptOrd = async (id, rId) => {
-            // توقيف التايمر فوراً وتثبيت الطلب
             if(orderTimers[id]) {
                 clearInterval(orderTimers[id]);
                 delete orderTimers[id];
@@ -1116,11 +1126,10 @@
             window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
-        // الأرشيف الشامل النظيف (حل جذري للطلب المكرر)
+        // الأرشيف الشامل النظيف
         window.isFinishingOrder = window.isFinishingOrder || {};
         
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
-            // قفل حديدي
             if(window.isFinishingOrder[id]) return;
             window.isFinishingOrder[id] = true;
 
@@ -1142,7 +1151,6 @@
                 }
             }
 
-            // استخدام ID الطلب كمفتاح للفايربيز بيمنع أي تكرار مستقبلي (Overwriting)
             up[`company_archives/${master}/orders/${id}`] = { 
                 capKey: capNodeKey, 
                 date: new Date().toISOString(), 
