@@ -174,7 +174,6 @@
         .action-buttons { display: flex; gap: 10px; }
         .btn-action { flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; border: none; color: white; transition: 0.3s; }
         
-        /* استعادة الألوان الزاهية للأزرار */
         .btn-accept { background: var(--success); }
         .btn-reject { background: var(--danger); }
         .btn-status-arrived-shop { background: #0ea5e9; } 
@@ -403,6 +402,13 @@
                         <label>تغيير كلمة المرور</label>
                         <input type="password" id="set_pass">
                     </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; border: 1px solid #bae6fd; padding: 12px 15px; border-radius: 12px; margin-top: 15px;">
+                        <span style="font-size: 13px; font-weight: bold; color: var(--primary);">تفعيل العمل في الخلفية (الاهتزاز) 🛡️</span>
+                        <label class="switch">
+                            <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <button class="btn-save-settings" onclick="saveSettings()">حفظ التعديلات ✅</button>
                 </div>
             </div>
@@ -422,7 +428,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -439,6 +445,29 @@
         let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true };
         let orderTimers = {};
         
+        // ================== تهيئة نظام الإشعارات الأصلية (Native Push) ==================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
+        }
+
+        function sendSystemNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification(title, {
+                            body: body,
+                            icon: 'logo.jpg',
+                            vibrate: [500, 200, 500, 200, 500],
+                            tag: 'new-order',
+                            requireInteraction: true
+                        });
+                    });
+                } else {
+                    new Notification(title, { body: body, icon: 'logo.jpg' });
+                }
+            }
+        }
+
         window.showToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -465,7 +494,6 @@
             if (document.visibilityState === 'visible') requestWakeLock(); 
         });
         
-        // ربط السلك للعمل المستمر
         const bgAudio = document.getElementById('keep-alive-audio');
         document.body.addEventListener('click', () => {
             bgAudio.play().catch(e=>{});
@@ -654,7 +682,7 @@
                 document.getElementById('login-screen').classList.remove('active'); 
                 document.getElementById('main-screen').classList.add('active');
                 
-                // تفعيل اليقظة غصب
+                // تفعيل اليقظة غصب من اللوكال ستوريج
                 const isSavedOnline = currentCaptain.app_status === 'online';
                 const tgl = document.getElementById('toggle_status');
                 tgl.checked = isSavedOnline;
@@ -723,6 +751,8 @@
             window.showToast("انتهى الوقت، تم سحب الطلب ⏳", true);
         };
 
+        let hotspotUnsubscribe = null; // للتطهير من الاستهلاك
+
         function initListeners() {
             let master = 'default';
             if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) master = currentCaptain.company || currentCaptain.Client_Master;
@@ -734,6 +764,33 @@
                     systemSettings.order_timer = parseInt(s.order_timer || 10);
                     systemSettings.show_phone_numbers = s.show_phone_numbers || false;
                     systemSettings.hotspots_active = s.hotspots_active !== false;
+
+                    // التطهير من الاستهلاك: تشغيل أو إيقاف سحب بيانات الرادار حسب أمر الإدارة
+                    const hsCont = document.getElementById('ui_hotspots');
+                    if(systemSettings.hotspots_active) {
+                        if(!hotspotUnsubscribe) {
+                            const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20)); // سحب خفيف جدا
+                            hotspotUnsubscribe = onValue(q, (hSnap) => {
+                                if(hSnap.exists()) {
+                                    const counts = {};
+                                    Object.values(hSnap.val()).forEach(o => {
+                                        let rn = o.Shop_Name || o.restaurant || ''; rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
+                                        if(rn) counts[rn] = (counts[rn] || 0) + 1;
+                                    });
+                                    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+                                    if(sorted.length > 0) {
+                                        hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
+                                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
+                                } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
+                            });
+                        }
+                    } else {
+                        if(hotspotUnsubscribe) {
+                            hotspotUnsubscribe(); // فصل الاتصال فورا وتوفير طاقة
+                            hotspotUnsubscribe = null;
+                        }
+                        hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
+                    }
                 }
             });
 
@@ -758,27 +815,25 @@
                     }
                     currentCaptain = data; 
                     
-                    // تحديث الحالة بالـ LocalStorage للـ Keep Online
+                    // لحام الحالة بالـ LocalStorage
                     localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
-                    
                     updateUIProfile(currentCaptain); 
                 } else {
                     logout();
                 }
             });
 
-            // الطلبات النشطة واستقبال الصافي من الرادار
+            // الطلبات النشطة واستقبال الصافي من الرادار (عزل تام للأوفلاين)
             onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                 const cont = document.getElementById('active-orders-container');
                 const toggleSection = document.getElementById('status-toggle-section');
                 
                 let html = '', hasActive = false, ring = false;
                 
-                // عزل كامل لو هو أوفلاين (الرادار أعمى)
                 if(!currentCaptain || currentCaptain.app_status !== 'online') {
                     cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
                     document.getElementById('hotspots-section').style.display = 'none';
-                    toggleSection.style.display = 'flex'; // يظل الزر ظاهر عشان يقدر يفتحه
+                    toggleSection.style.display = 'flex'; 
                     const aud = document.getElementById('order-ringtone');
                     if(aud) { aud.pause(); aud.currentTime=0; }
                     return;
@@ -806,14 +861,14 @@
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                         rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
-                        // زر الموقع (الخريطة)
+                        // زر الموقع المريخي السريع
                         let locationHtml = '';
                         if(ord.location_link || ord.Shop_Location_Link) {
                             const link = ord.location_link || ord.Shop_Location_Link;
                             locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
                         }
 
-                        // فك حجب رقم العميل حسب إعدادات الإدارة
+                        // فك حجب الرقم (يظهر طالما الإدارة مش عاملة حجب عام أو حجب مخصص)
                         let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
                         let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
                         let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
@@ -826,10 +881,8 @@
                         let timerHtml = '';
                         let discountHtml = '';
 
-                        // عرض الخصم إذا وجد فقط كمعلومة
-                        let discAmt = parseFloat(ord.discount || ord.Shop_Discount || 0);
-                        if(discAmt > 0) {
-                            discountHtml = `<div style="text-align:center; font-size:11px; color:var(--danger); background:#fef2f2; padding:3px; border-radius:5px; margin-top:5px;">يوجد خصم: ${discAmt} د.أ</div>`;
+                        if(parseFloat(ord.discount || ord.Shop_Discount || 0) > 0) {
+                            discountHtml = `<div style="text-align:center; font-size:11px; color:var(--danger); background:#fef2f2; padding:3px; border-radius:5px; margin-top:5px;">يوجد خصم: ${parseFloat(ord.discount || ord.Shop_Discount).toFixed(2)} د.أ</div>`;
                         }
 
                         if(ord.status === 'assigned') {
@@ -850,7 +903,7 @@
                             btnAction = `<button class="btn-action btn-status-completed" style="width:100%;" onclick="finishOrd('${id}','${ord.linkedRadarId}',${valSafe},${feeSafe},${commSafe},'${rName}')">تم التسليم بنجاح 💎</button>`;
                         }
 
-                        // الشفافية المالية المزدوجة (عرض رقيق لسعر التوصيل والصافي تحته بخط صغير)
+                        // الشفافية المالية المزدوجة المريحة للعين
                         html += `
                             <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -883,22 +936,21 @@
                 
                 cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
                 
-                // اختفاء تكتيكي لزر الحالة لتوسيع المساحة
-                if(hasActive) {
-                    toggleSection.style.display = 'none';
-                } else {
-                    toggleSection.style.display = 'flex';
-                }
+                // التوسيع الذكي (اختفاء حالة الكابتن عند وجود طلب نشط)
+                toggleSection.style.display = hasActive ? 'none' : 'flex';
 
-                // رنة اختراق الخلفية
+                // الإشعارات الصاروخية (Native & Audio)
                 const aud = document.getElementById('order-ringtone');
                 if(ring && currentCaptain.app_status === 'online') { 
-                    aud.play().catch(e=>console.log("Play error due to interaction policy.")); 
+                    aud.play().catch(e=>console.log("Play blocked by policy")); 
+                    sendSystemNotification('🚀 أوردر جديد نفاث!', 'اضغط للقبول قبل انتهاء الوقت المخصص 💎');
                 } else { 
                     aud.pause(); aud.currentTime=0; 
                 }
                 
-                document.getElementById('hotspots-section').style.display = (!hasActive && systemSettings.hotspots_active) ? 'block' : 'none';
+                if(systemSettings.hotspots_active) {
+                    document.getElementById('hotspots-section').style.display = hasActive ? 'none' : 'block';
+                }
             });
 
             // الإنجازات السريعة (بدون الصافي)
@@ -923,23 +975,6 @@
                     document.getElementById('ui_today_val').innerText = "0.00";
                 }
             });
-
-            // الخرائط الحرارية النظيفة
-            onValue(query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new')), (snap) => {
-                const hsCont = document.getElementById('ui_hotspots');
-                if(!systemSettings.hotspots_active) { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`; return; }
-                if(snap.exists()) {
-                    const counts = {};
-                    Object.values(snap.val()).forEach(o => {
-                        let rn = o.Shop_Name || o.restaurant || ''; rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
-                        if(rn) counts[rn] = (counts[rn] || 0) + 1;
-                    });
-                    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
-                    if(sorted.length > 0) {
-                        hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
-                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
-                } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
-            });
         }
 
         function updateUIProfile(data) {
@@ -956,7 +991,7 @@
                 </div>
             `;
             
-            // صيد مسمى الشركة الألماسي
+            // صيد مسمى الشركة الألماسي من الجذر
             let mName = data.company || data.Client_Master || "N One";
             if(mName !== "N One") {
                 get(ref(db, `users/${mName}`)).then(s => { 
@@ -976,7 +1011,6 @@
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
             const bEl = document.getElementById('ui_cap_bal'); bEl.innerHTML = `${bal.toFixed(2)} <span style="font-size:14px;">د.أ</span>`;
             
-            // تحديث الزر والألوان فورياً
             const tgl = document.getElementById('toggle_status');
             const ind = document.getElementById('ui_status_indicator');
             const txt = document.getElementById('ui_status_text');
@@ -999,8 +1033,12 @@
             }
         }
 
-        // ================== زر التفعيل الفوري (Keep Online Local Sync) ==================
         window.toggleOnlineStatus = async function() {
+            // طلب السماح للإشعارات عند التفعيل
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+
             const toggleBtn = document.getElementById('toggle_status');
             const isOnline = toggleBtn.checked;
             const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
@@ -1022,7 +1060,6 @@
 
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
             
-            // لحام الحالة بالـ LocalStorage
             if(currentCaptain) {
                 currentCaptain.app_status = isOnline ? 'online' : 'offline';
                 localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
@@ -1030,7 +1067,7 @@
         };
 
         window.acceptOrd = async (id, rId) => {
-            // توقيف التايمر فوراً عند القبول
+            // توقيف التايمر فوراً وتثبيت الطلب
             if(orderTimers[id]) {
                 clearInterval(orderTimers[id]);
                 delete orderTimers[id];
@@ -1069,7 +1106,7 @@
             window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
-        // الأرشيف الشامل النظيف (الضربة القاضية لمنع التكرار)
+        // الأرشيف الشامل النظيف (حل جذري للطلب المكرر)
         window.isFinishingOrder = window.isFinishingOrder || {};
         
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
@@ -1095,7 +1132,7 @@
                 }
             }
 
-            // استخدام رقم الطلب نفسه كمفتاح لمنع التكرار (Overwriting)
+            // استخدام ID الطلب كمفتاح للفايربيز بيمنع أي تكرار مستقبلي (Overwriting)
             up[`company_archives/${master}/orders/${id}`] = { 
                 capKey: capNodeKey, 
                 date: new Date().toISOString(), 
@@ -1123,7 +1160,6 @@
             setTimeout(()=> { 
                 update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); 
                 delete window.isFinishingOrder[id];
-                // إظهار زر التفعيل بعد الانتهاء
                 document.getElementById('status-toggle-section').style.display = 'flex';
             }, 3000);
         };
