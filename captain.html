@@ -131,7 +131,7 @@
         .settings-group { margin-bottom: 20px; }
         .settings-group label { display: block; font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
         .settings-group input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: #f8fafc; outline: none; box-sizing: border-box; }
-        .settings-group input[readonly] { background: #e2e8f0; color: #64748b; cursor: not-allowed; } /* يوزر نيم ثابت */
+        .settings-group input[readonly] { background: #e2e8f0; color: #64748b; cursor: not-allowed; } 
         .btn-save-settings { background: var(--gold); color: var(--primary); border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 20px; }
         .lang-toggle { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
@@ -164,12 +164,16 @@
         .fin-val { font-size: 16px; font-weight: 900; color: var(--primary); }
 
         .status-toggle-card { background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
-        .status-indicator { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
         .status-indicator.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .status-indicator.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
         
         .order-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-right: 4px solid var(--info); position: relative; }
         .order-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #64748b; font-weight: bold; }
         .order-rest { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
+        /* عرض الخانة تبعت رقم المنشأة */
+        .order-rest-phone { font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+        
         .order-details { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
         .detail-box { text-align: center; flex: 1; }
         .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
@@ -179,6 +183,14 @@
         .btn-accept { background: var(--success); }
         .btn-reject { background: var(--danger); }
         .hotspot-tag { display: inline-block; background: #fff0f2; color: var(--danger); border: 1px solid #ffccd5; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 4px; }
+        
+        /* استعادة ألوان الأزرار الأصلية الزاهية للطلبات */
+        .btn-status-arrived-shop { background: var(--info); }
+        .btn-status-picked { background: #f97316; } 
+        .btn-status-onway { background: #8b5cf6; } 
+        .btn-status-arrived { background: #06b6d4; } 
+        .btn-status-completed { background: var(--gold); color: var(--primary); } 
+
     </style>
 </head>
 <body id="app-body">
@@ -279,11 +291,6 @@
             </div>
 
             <div class="app-content">
-                
-                <div id="vpn-warning" class="vpn-warning-banner">
-                    <span style="font-size: 18px;">🛡️</span>
-                    <span id="lang_vpn_warn">يا كابتن يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة</span>
-                </div>
 
                 <div class="cap-profile-card">
                     <div class="cap-name" id="ui_cap_name">---</div>
@@ -321,7 +328,7 @@
                 <div id="status-toggle-section" class="status-toggle-card">
                     <div class="status-text">
                         <div id="ui_status_indicator" class="status-indicator offline"></div>
-                        <span id="ui_status_text">غير متاح للطلبات</span>
+                        <span id="ui_status_text" style="color:var(--danger);">غير متاح 🔴</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle_status" onchange="toggleOnlineStatus()">
@@ -402,8 +409,7 @@
 
         let currentCaptain = null;
         let capNodeKey = null;
-        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false, hotspots_active: true };
-        let isVpnDetected = false;
+        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true };
         let currentLang = 'ar';
         let orderTimers = {};
         
@@ -447,7 +453,7 @@
             else { bgAudio.pause(); window.showToast("تم الإيقاف", true); }
         };
 
-        // ================== نظام الفلترة والتسجيل الذكي ==================
+        // ================== نظام التسجيل الذكي ==================
         window.openRegisterScreen = async function() {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('register-screen').classList.add('active');
@@ -525,35 +531,6 @@
         window.backToLogin = () => { document.getElementById('register-screen').classList.remove('active'); document.getElementById('login-screen').classList.add('active'); };
         window.logout = () => { localStorage.removeItem('n1_captain_session'); window.location.reload(); };
 
-        // ================== نظام الـ VPN المُطهر النفاث ==================
-        async function detectVPN() {
-            if(!systemSettings.anti_vpn) { isVpnDetected = false; return; }
-            const noCache = new Date().getTime();
-            try {
-                const res = await fetch('https://ipwho.is/?_=' + noCache);
-                if(res.ok) { const data = await res.json(); isVpnDetected = (data.country_code && data.country_code !== 'JO'); return; }
-                throw new Error();
-            } catch(e) {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1);
-            }
-        }
-        setInterval(detectVPN, 5000);
-
-        setInterval(() => {
-            if (currentCaptain) {
-                const warn = document.getElementById('vpn-warning');
-                if (systemSettings.anti_vpn && isVpnDetected) {
-                    warn.style.display = 'flex';
-                    if(currentCaptain.app_status === 'online') {
-                        update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' });
-                        document.getElementById('toggle_status').checked = false;
-                        window.showToast("تم اكتشاف VPN! تم إيقاف استقبال الطلبات 🛡️", true);
-                    }
-                } else { warn.style.display = 'none'; }
-            }
-        }, 2000);
-
         // ================== الدخول والتزامن ==================
         window.onload = () => { checkSession(); };
 
@@ -589,22 +566,29 @@
                     const s = snap.val();
                     systemSettings.order_timer = parseInt(s.order_timer || 10);
                     systemSettings.show_phone_numbers = s.show_phone_numbers || false;
-                    systemSettings.anti_vpn = s.anti_vpn || false;
                     systemSettings.hotspots_active = s.hotspots_active !== false;
                 }
             });
 
-            // تحديث البروفايل
+            // تحديث البروفايل وجلب الاسم الصحيح للشركة
             onValue(ref(db, `captains/${capNodeKey}`), (snap) => {
                 if(snap.exists()) {
                     currentCaptain = snap.val(); updateUIProfile(currentCaptain);
                 }
             });
 
-            // الطلبات النشطة
+            // الطلبات النشطة واستقبال الصافي من الرادار
             onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                 const cont = document.getElementById('active-orders-container');
                 let html = '', hasActive = false, ring = false;
+                
+                // قفل ألماسي: إذا الكابتن طافي (أوفلاين)، يعمى وما يشوف أي طلبات
+                if(currentCaptain.app_status !== 'online') {
+                    cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
+                    document.getElementById('hotspots-section').style.display = 'none';
+                    return;
+                }
+
                 if(snap.exists()) {
                     Object.entries(snap.val()).forEach(([id, ord]) => {
                         if(ord.status === 'completed' || ord.status === 'timeout' || ord.status === 'rejected') return;
@@ -613,7 +597,8 @@
 
                         const valSafe = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
                         const feeSafe = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
-                        const commSafe = parseFloat(ord.commission_amount || ord.company_share || 0).toFixed(2);
+                        // أخذ العمولة مباشرة من الرادار لمنع الازدواجية
+                        const commSafe = parseFloat(ord.commission_amount || 0).toFixed(2);
                         const netSafe = (feeSafe - commSafe).toFixed(2);
                         
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
@@ -714,7 +699,12 @@
             document.getElementById('ui_cap_car').innerText = `🚗 ${cType} ${cPlate ? ' | 🔢 ' + cPlate : ''}`;
             
             let mName = data.company || data.Client_Master || "N One";
-            get(ref(db, `users/${mName}`)).then(s => { if(s.exists()) document.getElementById('ui_company_name').innerText = s.val().Client_Name || mName; });
+            get(ref(db, `users/${mName}`)).then(s => { 
+                if(s.exists()) {
+                    const compTrueName = s.val().Client_Name || s.val().name || mName;
+                    document.getElementById('ui_company_name').innerText = compTrueName; 
+                }
+            });
 
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
             const bEl = document.getElementById('ui_cap_bal'); bEl.innerHTML = `${bal.toFixed(2)} <span style="font-size:14px;">د.أ</span>`;
@@ -725,18 +715,24 @@
             if(bal <= -1) {
                 bEl.classList.add('negative'); document.getElementById('balance-warning').style.display='flex';
                 if(data.app_status==='online') update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
-                tgl.checked=false; tgl.disabled=true; ind.className='status-indicator offline'; txt.innerText='محظور ماليا';
+                tgl.checked=false; tgl.disabled=true; ind.className='status-indicator offline'; 
+                txt.innerText='محظور ماليا'; txt.style.color = "var(--danger)";
             } else {
                 bEl.classList.remove('negative'); document.getElementById('balance-warning').style.display='none';
                 tgl.disabled=false;
-                if(data.app_status==='online') { tgl.checked=true; ind.className='status-indicator online'; txt.innerText='متاح 🟢'; }
-                else { tgl.checked=false; ind.className='status-indicator offline'; txt.innerText='غير متاح 🔴'; }
+                if(data.app_status==='online') { 
+                    tgl.checked=true; ind.className='status-indicator online'; 
+                    txt.innerText='متاح 🟢'; txt.style.color = "var(--success)";
+                }
+                else { 
+                    tgl.checked=false; ind.className='status-indicator offline'; 
+                    txt.innerText='غير متاح 🔴'; txt.style.color = "var(--danger)";
+                }
             }
         }
 
         window.toggleOnlineStatus = async function() {
             const isOnline = document.getElementById('toggle_status').checked;
-            if(isOnline && systemSettings.anti_vpn && isVpnDetected) { window.showToast("أغلق الـ VPN للتفعيل", true); document.getElementById('toggle_status').checked=false; return; }
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
         };
 
@@ -751,6 +747,7 @@
             if(stat === 'arrived_at_shop' && comm > 0) {
                 const nb = (parseFloat(currentCaptain.Cap_Balance||0) - comm).toFixed(2);
                 up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb);
+                up[`captains/${capNodeKey}/balance`] = parseFloat(nb);
                 up[`assigned_orders/${capNodeKey}/${id}/is_commission_deducted`] = true;
             }
             if(rId && rId!=='undefined') {
@@ -759,15 +756,32 @@
             await update(ref(db), up);
         };
 
-        // الأرشيف النظيف الشامل لمرة واحدة
+        // الأرشيف النظيف الشامل لمرة واحدة (تم حل لغز الـ NaN والتكرار)
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
             const up = {}; const master = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            
             up[`assigned_orders/${capNodeKey}/${id}/status`] = 'completed';
+            
             const k = push(ref(db, `company_archives/${master}/orders`)).key;
-            up[`company_archives/${master}/orders/${k}`] = { capKey: capNodeKey, date: new Date().toISOString(), value: val, fee: fee, comm: comm, net: (fee-comm), rest: rName };
+            // يتم تخزين العملية بكل شفافية
+            up[`company_archives/${master}/orders/${k}`] = { 
+                capKey: capNodeKey, 
+                date: new Date().toISOString(), 
+                value: parseFloat(val), 
+                fee: parseFloat(fee), 
+                comm: parseFloat(comm), 
+                net: (parseFloat(fee) - parseFloat(comm)), 
+                rest: rName,
+                appOrdId: id
+            };
+            
             if(rId && rId!=='undefined') up[`orders/${rId}/OrderStatus`] = 'delivered';
+            
             await update(ref(db), up);
             window.showToast("تم التسليم بوقار 💎", false);
+            
+            // إزالة الطلب من واجهة الكابتن لضمان عدم التكرار
+            setTimeout(()=> { update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); }, 3000);
         };
 
         // الإعدادات والسجل
