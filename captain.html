@@ -636,7 +636,11 @@
         };
 
         window.backToLogin = () => { document.getElementById('register-screen').classList.remove('active'); document.getElementById('login-screen').classList.add('active'); };
-        window.logout = () => { localStorage.removeItem('n1_captain_session'); window.location.reload(); };
+        
+        window.logout = () => { 
+            localStorage.removeItem('n1_captain_session'); 
+            window.location.reload(); 
+        };
 
         // ================== الدخول والتزامن ==================
         window.onload = () => { checkSession(); };
@@ -647,7 +651,6 @@
                 currentCaptain = JSON.parse(saved); 
                 capNodeKey = currentCaptain.Cap_User || currentCaptain.user;
                 
-                // حل مشكلة التوجيه الفوري
                 document.getElementById('pwa-splash').style.display = 'none';
                 document.getElementById('login-screen').classList.remove('active'); 
                 document.getElementById('main-screen').classList.add('active');
@@ -666,13 +669,23 @@
                 const snap = await get(ref(db, `captains/${u}`));
                 if (snap.exists() && (snap.val().Cap_Pass === p || snap.val().pass === p)) {
                     if(snap.val().Cap_Status === 'pending' || snap.val().Cap_Status === 'paused') { window.showToast("حسابك مقفل من الإدارة", true); return; }
-                    localStorage.setItem('n1_captain_session', JSON.stringify(snap.val()));
+                    
+                    // توليد وتحديث السيشن توكن للأمان
+                    const sessionToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    const updates = {};
+                    updates[`captains/${u}/session_token`] = sessionToken;
+                    await update(ref(db), updates);
+
+                    let capData = snap.val();
+                    capData.session_token = sessionToken;
+                    
+                    localStorage.setItem('n1_captain_session', JSON.stringify(capData));
                     window.location.reload();
                 } else { window.showToast("بيانات خاطئة", true); }
             } catch(e) { window.showToast("خطأ بالاتصال", true); }
         };
 
-        // ================== العداد التنازلي الألماسي ==================
+        // ================== العداد التنازلي الألماسي (تم إصلاحه الجذري) ==================
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
 
@@ -727,9 +740,21 @@
                 }
             });
 
-            // تحديث البروفايل وجلب الاسم الصحيح للشركة
+            // تحديث البروفايل ونظام السيشن الذكي لمنع الدخول المزدوج
             onValue(ref(db, `captains/${capNodeKey}`), (snap) => {
-                if(snap.exists()) { currentCaptain = snap.val(); updateUIProfile(currentCaptain); }
+                if(snap.exists()) { 
+                    const data = snap.val();
+                    // نظام الحماية: إذا السيشن توكن تغير، اطرد الكابتن فورا
+                    if (currentCaptain && data.session_token && currentCaptain.session_token && data.session_token !== currentCaptain.session_token) {
+                        window.showToast("تم تسجيل الدخول من جهاز آخر 🔒", true);
+                        setTimeout(() => { logout(); }, 2000);
+                        return;
+                    }
+                    currentCaptain = data; 
+                    updateUIProfile(currentCaptain); 
+                } else {
+                    logout();
+                }
             });
 
             // الطلبات النشطة (عزل الأوفلاين 100%)
@@ -765,16 +790,20 @@
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                         rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
-                        // زر الموقع
+                        // زر الموقع (الخريطة)
                         let locationHtml = '';
                         if(ord.location_link || ord.Shop_Location_Link) {
                             const link = ord.location_link || ord.Shop_Location_Link;
                             locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
                         }
 
+                        // فك حجب رقم العميل
                         let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب للخصوصية 🛡️</span></div>`;
-                        if (ord.shop_phone && systemSettings.show_phone_numbers && currentCaptain.hide_phone !== true) {
-                            phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900;">${ord.shop_phone}</a></div>`;
+                        const isGlobalShow = (systemSettings.show_phone_numbers === true || String(systemSettings.show_phone_numbers) === "true");
+                        const isCapHidden = (currentCaptain.hide_phone === true || String(currentCaptain.hide_phone) === "true");
+
+                        if (ord.shop_phone && isGlobalShow && !isCapHidden) {
+                            phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900; text-decoration:none;">${ord.shop_phone}</a></div>`;
                         }
 
                         let btnAction = '';
@@ -798,7 +827,7 @@
                         }
 
                         html += `
-                            <div class="order-card ${ord.status==='assigned'?'ringing':''}">
+                            <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                                     <div class="order-rest" style="font-size:18px;">🏪 ${rName}</div>
                                     ${locationHtml}
@@ -952,8 +981,13 @@
         };
 
         window.acceptOrd = async (id, rId) => {
-            // تثبيت التايمر بمجرد القبول
-            if(orderTimers[id]) clearInterval(orderTimers[id]);
+            // تثبيت التايمر بمجرد القبول وتعديل الواجهة فورا
+            if(orderTimers[id]) {
+                clearInterval(orderTimers[id]);
+                delete orderTimers[id];
+            }
+            const card = document.getElementById('card_' + id);
+            if(card) card.classList.remove('ringing');
             
             const up = {}; up[`assigned_orders/${capNodeKey}/${id}/status`] = 'accepted';
             if(rId && rId!=='undefined') up[`orders/${rId}/OrderStatus`] = 'accepted';
@@ -975,8 +1009,12 @@
             window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
-        // الأرشيف الشامل النظيف (ضربة قاضية واحدة تسجل كل التفاصيل)
+        // الأرشيف الشامل النظيف (استخدام الـ ID لمنع تكرار التسجيل)
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
+            if(window.isFinishing) return;
+            window.isFinishing = true;
+            setTimeout(()=> window.isFinishing = false, 3000); // منع الكبس المزدوج
+
             const up = {}; const master = currentCaptain.company || currentCaptain.Client_Master || 'default';
             
             // تغيير الحالة فقط للمنع من الظهور
@@ -997,8 +1035,8 @@
                 }
             }
 
-            const k = push(ref(db, `company_archives/${master}/orders`)).key;
-            up[`company_archives/${master}/orders/${k}`] = { 
+            // استخدام رقم الطلب نفسه كمفتاح لمنع التكرار (Overwriting)
+            up[`company_archives/${master}/orders/${id}`] = { 
                 capKey: capNodeKey, 
                 date: new Date().toISOString(), 
                 value: parseFloat(val), 
