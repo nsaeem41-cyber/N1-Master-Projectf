@@ -472,9 +472,15 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
-            toast.style.color = 'white'; toast.style.padding = '15px 20px'; toast.style.borderRadius = '15px';
-            toast.style.fontWeight = 'bold'; toast.style.fontSize = '14px'; toast.style.textAlign = 'center';
-            toast.style.transition = 'all 0.4s ease'; toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0';
+            toast.style.color = 'white';
+            toast.style.padding = '15px 20px';
+            toast.style.borderRadius = '15px';
+            toast.style.fontWeight = 'bold';
+            toast.style.fontSize = '14px';
+            toast.style.textAlign = 'center';
+            toast.style.transition = 'all 0.4s ease';
+            toast.style.transform = 'translateY(-50px)';
+            toast.style.opacity = '0';
             toast.innerText = msg;
             container.appendChild(toast);
             setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
@@ -594,7 +600,7 @@
             }
         };
 
-        // ================== التسجيل الذكي ==================
+        // ================== التسجيل الذكي و صيد الجذور الأصلية للمناطق ==================
         window.openRegisterScreen = async function() {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('register-screen').classList.add('active');
@@ -621,13 +627,17 @@
             areaSelect.innerHTML = '<option value="">-- اختر منطقتك --</option>';
             try {
                 const snap = await get(ref(db, 'prices'));
-                let areas = [];
+                let sources = [];
                 if(snap.exists()) {
                     const prices = Object.values(snap.val());
-                    areas = [...new Set(prices.filter(p => p.Client_Master === compId || p.Price_Source === compId).map(p => (p.Price_Area || '').trim()))].filter(Boolean);
+                    // نسحب المصادر المعتمدة (Price_Source) وليس الأسماء الفرعية
+                    sources = [...new Set(prices.filter(p => p.Client_Master === compId || p.Price_Source === compId).map(p => (p.Price_Source || '').trim()))].filter(Boolean);
                 }
-                if(areas.length > 0) { areas.forEach(a => areaSelect.innerHTML += `<option value="${a}">${a}</option>`); } 
-                else { areaSelect.innerHTML += `<option value="Main Area">المنطقة الرئيسية</option>`; }
+                if(sources.length > 0) { 
+                    sources.forEach(s => areaSelect.innerHTML += `<option value="${s}">${s}</option>`); 
+                } else { 
+                    areaSelect.innerHTML += `<option value="Main Area">المنطقة الرئيسية</option>`; 
+                }
             } catch(e) {}
         };
 
@@ -652,7 +662,7 @@
                 const newCap = {
                     Cap_User: user, user: user, Cap_Name: name, name: name, Cap_Phone: phone, phone: phone, Cap_Pass: pass, pass: pass,
                     Cap_CarType: carType, Cap_CarPlate: carPlate, Cap_Car: `${carType} | ${carPlate}`,
-                    company: compId, Client_Master: compId, Cap_Location: area, Cap_Balance: 0, balance: 0,
+                    company: compId, Client_Master: compId, Cap_Location: area, Cap_Region: area, Cap_Balance: 0, balance: 0,
                     app_status: 'offline', Cap_Status: 'pending', created_at: Date.now()
                 };
 
@@ -868,7 +878,7 @@
                             locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
                         }
 
-                        // فك حجب الرقم (يظهر طالما الإدارة مش عاملة حجب عام أو حجب مخصص)
+                        // فك حجب رقم العميل حسب إعدادات الإدارة
                         let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
                         let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
                         let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
