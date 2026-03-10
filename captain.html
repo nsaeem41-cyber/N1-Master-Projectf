@@ -1528,8 +1528,10 @@
         setInterval(detectVPN, 5000); 
 
         function listenToSystemSettings() {
-            const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
-            if(!master) return;
+let master = 'default';
+            if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) {
+                master = currentCaptain.company || currentCaptain.Client_Master;
+            }
             
             onValue(ref(db, `settings/${master}/order_timer`), (snap) => {
                 if(snap.exists() && snap.val() > 0) {
