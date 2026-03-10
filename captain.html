@@ -151,7 +151,7 @@
         .fin-val { font-size: 16px; font-weight: 900; color: var(--primary); }
 
         /* حالة الكابتن */
-        .status-toggle-card { background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
+        .status-toggle-card { background: white; border-radius: 15px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; transition: 0.4s; }
         .status-indicator { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
         .status-indicator.online { background: var(--success); box-shadow: 0 0 12px var(--success); }
         .status-indicator.offline { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
@@ -174,6 +174,7 @@
         .action-buttons { display: flex; gap: 10px; }
         .btn-action { flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; border: none; color: white; transition: 0.3s; }
         
+        /* استعادة الألوان الزاهية للأزرار */
         .btn-accept { background: var(--success); }
         .btn-reject { background: var(--danger); }
         .btn-status-arrived-shop { background: #0ea5e9; } 
@@ -314,7 +315,7 @@
                     <img src="logo.jpg" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold);" alt="N One">
                     <div style="display: flex; flex-direction: column;">
                         <div style="font-size: 16px;">كابتن 🦸‍♂️</div>
-                        <div id="ui_company_name" class="header-company">الشركة التابعة</div>
+                        <div id="ui_company_name" class="header-company">جاري التحديث...</div>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -402,13 +403,6 @@
                         <label>تغيير كلمة المرور</label>
                         <input type="password" id="set_pass">
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; border: 1px solid #bae6fd; padding: 12px 15px; border-radius: 12px; margin-top: 15px;">
-                        <span style="font-size: 13px; font-weight: bold; color: var(--primary);">تفعيل العمل في الخلفية (الاهتزاز) 🛡️</span>
-                        <label class="switch">
-                            <input type="checkbox" id="bg_mode_toggle" onchange="toggleBackgroundMode(this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
                     <button class="btn-save-settings" onclick="saveSettings()">حفظ التعديلات ✅</button>
                 </div>
             </div>
@@ -458,18 +452,24 @@
             setTimeout(() => { toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
         };
 
+        // ================== اليقظة الدائمة القوية (Keep Online) ==================
         let wakeLock = null;
         async function requestWakeLock() {
-            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { }
+            try { 
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen'); 
+                }
+            } catch (err) { }
         }
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') requestWakeLock(); });
+        document.addEventListener('visibilitychange', () => { 
+            if (document.visibilityState === 'visible') requestWakeLock(); 
+        });
         
-        window.toggleBackgroundMode = function(isActive) {
-            localStorage.setItem('n1_bg_mode', isActive);
-            const bgAudio = document.getElementById('keep-alive-audio');
-            if (isActive) { bgAudio.play().catch(e=>{}); window.showToast("تم تفعيل الاهتزاز بالخلفية"); } 
-            else { bgAudio.pause(); window.showToast("تم الإيقاف", true); }
-        };
+        // ربط السلك للعمل المستمر
+        const bgAudio = document.getElementById('keep-alive-audio');
+        document.body.addEventListener('click', () => {
+            bgAudio.play().catch(e=>{});
+        }, { once: true });
 
         // ================== PWA إعدادات ==================
         let deferredPrompt;
@@ -654,9 +654,17 @@
                 document.getElementById('login-screen').classList.remove('active'); 
                 document.getElementById('main-screen').classList.add('active');
                 
-                const bgTog = document.getElementById('bg_mode_toggle');
-                if(localStorage.getItem('n1_bg_mode') === 'true') { bgTog.checked = true; toggleBackgroundMode(true); }
+                // تفعيل اليقظة غصب
+                const isSavedOnline = currentCaptain.app_status === 'online';
+                const tgl = document.getElementById('toggle_status');
+                tgl.checked = isSavedOnline;
                 
+                if (isSavedOnline) {
+                    document.getElementById('ui_status_indicator').className='status-indicator online'; 
+                    document.getElementById('ui_status_text').innerHTML='متاح وجاهز 🟢'; 
+                    document.getElementById('ui_status_text').style.color = "var(--success)";
+                }
+
                 requestWakeLock(); initListeners();
             }
         }
@@ -729,7 +737,7 @@
                 }
             });
 
-            // جلب التقييم
+            // جلب التقييم المباشر
             const myPhone = currentCaptain.Cap_Phone || currentCaptain.phone;
             onValue(ref(db, `ratings/captains/${myPhone}`), (snap) => {
                 if(snap.exists()) {
@@ -749,21 +757,28 @@
                         return;
                     }
                     currentCaptain = data; 
+                    
+                    // تحديث الحالة بالـ LocalStorage للـ Keep Online
+                    localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
+                    
                     updateUIProfile(currentCaptain); 
                 } else {
                     logout();
                 }
             });
 
-            // الطلبات النشطة (الرادار القاطع)
+            // الطلبات النشطة واستقبال الصافي من الرادار
             onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                 const cont = document.getElementById('active-orders-container');
+                const toggleSection = document.getElementById('status-toggle-section');
+                
                 let html = '', hasActive = false, ring = false;
                 
-                // عزل كامل لو هو أوفلاين
+                // عزل كامل لو هو أوفلاين (الرادار أعمى)
                 if(!currentCaptain || currentCaptain.app_status !== 'online') {
                     cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
                     document.getElementById('hotspots-section').style.display = 'none';
+                    toggleSection.style.display = 'flex'; // يظل الزر ظاهر عشان يقدر يفتحه
                     const aud = document.getElementById('order-ringtone');
                     if(aud) { aud.pause(); aud.currentTime=0; }
                     return;
@@ -786,6 +801,7 @@
                         const valSafe = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
                         const feeSafe = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
                         const commSafe = parseFloat(ord.commission_amount || 0).toFixed(2);
+                        const netSafe = (feeSafe - commSafe).toFixed(2);
                         
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                         rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
@@ -834,7 +850,7 @@
                             btnAction = `<button class="btn-action btn-status-completed" style="width:100%;" onclick="finishOrd('${id}','${ord.linkedRadarId}',${valSafe},${feeSafe},${commSafe},'${rName}')">تم التسليم بنجاح 💎</button>`;
                         }
 
-                        // إظهار قيمة الطلب والتوصيل فقط، بدون الصافي
+                        // الشفافية المالية المزدوجة (عرض رقيق لسعر التوصيل والصافي تحته بخط صغير)
                         html += `
                             <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
@@ -847,9 +863,10 @@
                                         <div class="detail-lbl">قيمة الطلب</div>
                                         <div class="detail-val" style="color:var(--primary);">${valSafe} د.أ</div>
                                     </div>
-                                    <div class="detail-box">
-                                        <div class="detail-lbl">رسوم التوصيل</div>
-                                        <div class="detail-val" style="color:var(--info);">${feeSafe} د.أ</div>
+                                    <div class="detail-box" style="display:flex; flex-direction:column; justify-content:center;">
+                                        <div class="detail-lbl" style="margin-bottom:2px;">أجرة التوصيل</div>
+                                        <div class="detail-val" style="color:var(--info); font-size:14px;">${feeSafe} د.أ</div>
+                                        <div style="font-size:10px; color:#166534; font-weight:bold; margin-top:2px;">(صافي: ${netSafe} د.أ)</div>
                                     </div>
                                 </div>
                                 ${discountHtml}
@@ -866,13 +883,25 @@
                 
                 cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
                 
+                // اختفاء تكتيكي لزر الحالة لتوسيع المساحة
+                if(hasActive) {
+                    toggleSection.style.display = 'none';
+                } else {
+                    toggleSection.style.display = 'flex';
+                }
+
+                // رنة اختراق الخلفية
                 const aud = document.getElementById('order-ringtone');
-                if(ring && currentCaptain.app_status === 'online') { aud.play().catch(e=>{}); } else { aud.pause(); aud.currentTime=0; }
+                if(ring && currentCaptain.app_status === 'online') { 
+                    aud.play().catch(e=>console.log("Play error due to interaction policy.")); 
+                } else { 
+                    aud.pause(); aud.currentTime=0; 
+                }
                 
                 document.getElementById('hotspots-section').style.display = (!hasActive && systemSettings.hotspots_active) ? 'block' : 'none';
             });
 
-            // الإنجازات السريعة Shallow
+            // الإنجازات السريعة (بدون الصافي)
             const archQuery = query(ref(db, `company_archives/${master}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
             onValue(archQuery, (snap) => {
                 if(snap.exists()) {
@@ -916,7 +945,7 @@
         function updateUIProfile(data) {
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
             
-            // جلب السيارة والترميز بطريقة مضمونة
+            // صيد الترميز وإظهاره بكل هيبة
             const cType = data.Cap_CarType || data.car_type || (data.Cap_Car ? data.Cap_Car.split('|')[0].trim() : 'مركبة');
             const cPlate = data.Cap_CarCode || data.Cap_CarPlate || data.car_code || (data.Cap_Car && data.Cap_Car.includes('|') ? data.Cap_Car.split('|')[1].trim() : '');
             
@@ -927,17 +956,21 @@
                 </div>
             `;
             
-            // جلب الاسم الصحيح للشركة وإظهاره
+            // صيد مسمى الشركة الألماسي
             let mName = data.company || data.Client_Master || "N One";
             if(mName !== "N One") {
                 get(ref(db, `users/${mName}`)).then(s => { 
                     if(s.exists()) {
                         const compTrueName = s.val().Client_Name || s.val().name || mName;
                         document.getElementById('ui_company_name').innerText = compTrueName; 
+                    } else {
+                        get(ref(db, `shops/${mName}`)).then(s2 => {
+                            if(s2.exists()) document.getElementById('ui_company_name').innerText = s2.val().Client_Name || s2.val().name || mName;
+                        });
                     }
                 });
             } else {
-                document.getElementById('ui_company_name').innerText = "الإدارة المباشرة";
+                document.getElementById('ui_company_name').innerText = "N One";
             }
 
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
@@ -966,7 +999,7 @@
             }
         }
 
-        // ================== زر التفعيل الفوري ==================
+        // ================== زر التفعيل الفوري (Keep Online Local Sync) ==================
         window.toggleOnlineStatus = async function() {
             const toggleBtn = document.getElementById('toggle_status');
             const isOnline = toggleBtn.checked;
@@ -988,21 +1021,37 @@
             }
 
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
+            
+            // لحام الحالة بالـ LocalStorage
+            if(currentCaptain) {
+                currentCaptain.app_status = isOnline ? 'online' : 'offline';
+                localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
+            }
         };
 
         window.acceptOrd = async (id, rId) => {
-            // توقيف التايمر بمجرد الموافقة
+            // توقيف التايمر فوراً عند القبول
             if(orderTimers[id]) {
                 clearInterval(orderTimers[id]);
                 delete orderTimers[id];
             }
+            if(orderTimers[`seen_${id}`]) delete orderTimers[`seen_${id}`];
             
             const card = document.getElementById('card_' + id);
-            if(card) card.classList.remove('ringing');
+            if(card) {
+                card.classList.remove('ringing');
+                const tText = document.getElementById(`text_timer_${id}`);
+                const tBar = document.getElementById(`bar_timer_${id}`);
+                if(tText) tText.style.display = 'none';
+                if(tBar) tBar.style.display = 'none';
+            }
             
             const up = {}; up[`assigned_orders/${capNodeKey}/${id}/status`] = 'accepted';
             if(rId && rId!=='undefined') up[`orders/${rId}/OrderStatus`] = 'accepted';
             await update(ref(db), up);
+            
+            const aud = document.getElementById('order-ringtone');
+            if(aud) { aud.pause(); aud.currentTime = 0; }
         };
         
         window.updOrd = async (id, stat, rId, comm) => {
@@ -1020,11 +1069,11 @@
             window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
-        // الأرشيف الشامل النظيف (حل جذري للطلب المكرر باستخدام الـ ID)
+        // الأرشيف الشامل النظيف (الضربة القاضية لمنع التكرار)
         window.isFinishingOrder = window.isFinishingOrder || {};
         
         window.finishOrd = async (id, rId, val, fee, comm, rName) => {
-            // قفل حديدي لمنع التكرار نهائياً
+            // قفل حديدي
             if(window.isFinishingOrder[id]) return;
             window.isFinishingOrder[id] = true;
 
@@ -1046,7 +1095,7 @@
                 }
             }
 
-            // التوثيق باستخدام نفس ID الطلب لمنع تكرار السجل
+            // استخدام رقم الطلب نفسه كمفتاح لمنع التكرار (Overwriting)
             up[`company_archives/${master}/orders/${id}`] = { 
                 capKey: capNodeKey, 
                 date: new Date().toISOString(), 
@@ -1074,6 +1123,8 @@
             setTimeout(()=> { 
                 update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); 
                 delete window.isFinishingOrder[id];
+                // إظهار زر التفعيل بعد الانتهاء
+                document.getElementById('status-toggle-section').style.display = 'flex';
             }, 3000);
         };
 
@@ -1089,7 +1140,7 @@
             window.showToast("تم الحفظ ✅"); document.getElementById('settings-modal').style.display='none';
         };
 
-        // عرض الأرشيف الشامل
+        // عرض الأرشيف الشامل بالمليم
         window.openHistoryModal = async () => {
             const cont = document.getElementById('history-list-container'); cont.innerHTML = "جاري التحميل...";
             document.getElementById('history-modal').style.display = 'flex';
@@ -1116,7 +1167,7 @@
                             </div>
                         </div>
                         <div class="h-row" style="margin-top:8px; font-size:12px; background:#f1f5f9; padding:5px; border-radius:8px;">
-                            <span style="color:var(--primary);">قيمة الفاتورة: <b>${parseFloat(o.value||0).toFixed(2)} د.أ</b></span>
+                            <span style="color:var(--primary);">قيمة الطلب: <b>${parseFloat(o.value||0).toFixed(2)} د.أ</b></span>
                             <span style="color:var(--info);">الأجرة: <b>${parseFloat(o.fee||0).toFixed(2)} د.أ</b></span>
                         </div>
                         <div class="h-row" style="margin-top:5px; font-size:11px; gap:5px;">
