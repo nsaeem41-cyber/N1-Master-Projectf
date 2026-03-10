@@ -750,605 +750,264 @@
     </div>
 <script>
 
-        // إعدادات تثبيت الـ PWA وزر المتابعة من المتصفح
-        let deferredPrompt
-        const splash = document.getElementById('pwa-splash')
-        const btnInstall = document.getElementById('btn-install-app')
-        const btnContinue = document.getElementById('btn-continue-app')
-
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches || navigator.standalone
-        
-        if (isStandalone) { splash.style.display = 'none' }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault()
-            deferredPrompt = e
-            if(isStandalone) splash.style.display = 'none'
-        })
-
-        btnInstall.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt()
-                const { outcome } = await deferredPrompt.userChoice
-                if (outcome === 'accepted') { splash.style.display = 'none' }
-                deferredPrompt = null
-            }
-        })
-
-        // هذا الزر اللي بيسمح لك تدخلي من المتصفح فورا
-        btnContinue.addEventListener('click', () => {
-            splash.style.opacity = '0'
-            setTimeout(() => { splash.style.display = 'none' }, 500)
-        })
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err))
-            })
-        }
-
-        // ================= أنظمة العمل بالخلفية المتقدمة =================
-        let wakeLock = null
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen')
-                }
-            } catch (err) { }
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock()
-            }
-        })
-        
-        window.toggleBackgroundMode = async function(isActive, isSilentLoad = false) {
-            localStorage.setItem('n1_bg_mode', isActive)
-            const bgAudio = document.getElementById('keep-alive-audio')
-            if (isActive) {
-                if ('Notification' in window && Notification.permission !== 'granted') {
-                    Notification.requestPermission()
-                }
-                bgAudio.play().catch(e => console.log("تحتاج تفاعل لتشغيل الخلفية"))
-                if(!isSilentLoad) window.showToast("تم تفعيل العمل بالخلفية وحفظه بنجاح 🛡️", false)
-            } else {
-                bgAudio.pause()
-                if(!isSilentLoad) window.showToast("تم إيقاف العمل بالخلفية", true)
-            }
-        }
-
-        setInterval(() => {
-            const bgToggle = document.getElementById('bg_mode_toggle')
-            const bgAudio = document.getElementById('keep-alive-audio')
-            if (bgToggle && bgToggle.checked && bgAudio.paused) {
-                bgAudio.play().catch(e => {})
-            }
-        }, 5000)
-
-        function sendSystemNotification(title, body) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.ready.then(function(registration) {
-                        registration.showNotification(title, {
-                            body: body,
-                            icon: 'logo.jpg',
-                            vibrate: [500, 250, 500, 250, 500, 250, 500],
-                            tag: 'new-order',
-                            requireInteraction: true
-                        })
-                    })
-                } else {
-                    new Notification(title, { body: body, icon: 'logo.jpg' })
-                }
-            }
-        }
-        
-        window.showToast = function(msg, isError = false) {
-            const container = document.getElementById('toast-container')
-            const toast = document.createElement('div')
-            toast.className = 'app-toast'
-            if(isError) toast.style.borderLeftColor = '#ef4444'
-            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg
-            container.appendChild(toast)
-            setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1' }, 10)
-            setTimeout(() => { 
-                toast.style.transform = 'translateY(-50px)'; toast.style.opacity = '0'
-                setTimeout(() => { if(toast.parentNode) toast.remove() }, 400)
-            }, 3000)
-        }
-
-        let confirmCallback = null
-        window.showAppConfirm = function(msg, callback) {
-            document.getElementById('custom-confirm-msg').innerText = msg
-            confirmCallback = callback
-            document.getElementById('custom-confirm-overlay').style.display = 'flex'
-        }
-
-        window.closeAppConfirm = function() {
-            document.getElementById('custom-confirm-overlay').style.display = 'none'
-            confirmCallback = null
-        }
-
-        window.executeAppConfirm = function() {
-            document.getElementById('custom-confirm-overlay').style.display = 'none'
-            if(confirmCallback) confirmCallback()
-            confirmCallback = null
-        }
-        
-        window.openRatingModal = function(shopId) {
-            document.getElementById('rating_shop_id').value = shopId
-            document.getElementById('current_rating_val').value = "0"
-            document.getElementById('selected_tag').value = ""
-            document.getElementById('rating_notes').value = ""
-            document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'))
-            document.getElementById('rating-feedback').style.display = 'none'
-            document.getElementById('rating_title_desc').innerText = "كيف كان أداء المنشأة في تجهيز الطلب"
-            document.getElementById('rating-modal').style.display = 'flex'
-        }
-        
-        window.closeRatingModal = function() {
-            document.getElementById('rating-modal').style.display = 'none'
-        }
-        
-        window.setRating = function(val) {
-            document.getElementById('current_rating_val').value = val
-            const gems = document.querySelectorAll('.gem')
-            gems.forEach((g, index) => {
-                if(index < val) g.classList.add('active')
-                else g.classList.remove('active')
-            })
-            
-            const feedbackSection = document.getElementById('rating-feedback')
-            const question = document.getElementById('dynamic-question')
-            const tagsContainer = document.getElementById('quick-tags')
-            const desc = document.getElementById('rating_title_desc')
-            
-            feedbackSection.style.display = 'block'
-            document.getElementById('selected_tag').value = ""
-            
-            if (val === 1) {
-                desc.innerText = "ضعيف جدا ⚠️"
-                desc.style.color = "var(--danger)"
-                question.innerText = "نأسف لسماع ذلك ما هي المشكلة"
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">تأخير كبير جدا</span>
-                    <span class="tag" onclick="selectTag(this)">تعامل سيء</span>
-                    <span class="tag" onclick="selectTag(this)">الطلب غير جاهز</span>
-                `
-            } else if (val === 2) {
-                desc.innerText = "دون المستوى 😟"
-                desc.style.color = "#d97706"
-                question.innerText = "ما الذي أزعجك في المنشأة"
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">تأخير في التجهيز</span>
-                    <span class="tag" onclick="selectTag(this)">سوء تغليف</span>
-                `
-            } else if (val === 3) {
-                desc.innerText = "مقبول 😐"
-                desc.style.color = "#8b5cf6"
-                question.innerText = "كيف يمكن للمنشأة التحسن"
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">سرعة التجهيز</span>
-                    <span class="tag" onclick="selectTag(this)">التعامل مع الكابتن</span>
-                `
-            } else if (val === 4) {
-                desc.innerText = "ممتاز 🙂"
-                desc.style.color = "var(--info)"
-                question.innerText = "هل هناك ملاحظة بسيطة"
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">تجهيز سريع</span>
-                    <span class="tag" onclick="selectTag(this)">تعامل راقي</span>
-                `
-            } else if (val === 5) {
-                desc.innerText = "ألماسي واحترافي 🌟"
-                desc.style.color = "var(--success)"
-                question.innerText = "شكرا لجهودك يا بطل"
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">احترافية عالية</span>
-                    <span class="tag" onclick="selectTag(this)">تجهيز فوري</span>
-                    <span class="tag" onclick="selectTag(this)">قمة في الرقي</span>
-                `
-            }
-        }
-
-        window.selectTag = function(element) {
-            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'))
-            element.classList.add('active')
-            document.getElementById('selected_tag').value = element.innerText
-        }
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"
-        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js"
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
-            authDomain: "n-one-global.firebaseapp.com",
-            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
-            projectId: "n-one-global",
-            storageBucket: "n-one-global.firebasestorage.app",
-            messagingSenderId: "627262885530",
-            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
-        }
-
-        const app = initializeApp(firebaseConfig)
-        const db = getDatabase(app)
-
-        let currentCaptain = null
-        let capNodeKey = null
-        let ringtoneActive = false
-        let currentLang = 'ar'
-        let globalPricesList = []
-        let verifiedCompanyId = null 
-        
-        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false, hotspots_active: true }
-        let orderTimers = {}
-        let isListenerActive = false
-        let localOrderSeen = {}
-        
-        const dict = {
-            'ar': {
-                lang_loader: 'جاري الاتصال بالنظام',
-                lang_popup_btn: 'حسنا فهمت',
-                lang_history_title: 'سجل الطلبات',
-                lang_settings_title: 'الإعدادات ⚙️',
-                lang_set_user: 'اسم المستخدم (يوزر الدخول)',
-                lang_set_pass: 'كلمة المرور',
-                lang_test_notif: '🔔 تجربة التنبيهات والرنة',
-                lang_toggle_btn: '🌐 Switch to English',
-                lang_save_btn: 'حفظ التعديلات ✅',
-                lang_blocked_title: 'تم إيقاف حسابك',
-                lang_blocked_text: 'عذرا لقد تم إيقاف أو تجميد حسابك من قبل الإدارة يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت',
-                lang_blocked_btn: 'تسجيل الخروج',
-                lang_pending_title: 'حسابك قيد الانتظار',
-                lang_pending_text: 'لقد تم استلام طلب تسجيلك بنجاح الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات',
-                lang_pending_btn: 'العودة للرئيسية',
-                lang_login_sub: 'المنصة الألماسية 💎',
-                lang_login_user_lbl: 'اسم المستخدم (User ID)',
-                lang_login_pass_lbl: 'كلمة المرور (Password)',
-                lang_login_btn: 'دخول آمن 🚀',
-                lang_register_btn: 'تسجيل كابتن جديد 📝',
-                lang_reg_title: 'تسجيل كابتن جديد 📝',
-                lang_reg_comp_id: 'اسم الشركة (اختر من القائمة)',
-                lang_reg_name: 'الاسم الشخصي',
-                lang_reg_phone: 'رقم الهاتف',
-                lang_reg_car_type: 'نوع السيارة',
-                lang_reg_car_code: 'ترميز اللوحة',
-                lang_reg_user: 'اسم المستخدم (User Name) للدخول',
-                lang_reg_pass: 'كلمة المرور (Password)',
-                lang_reg_area: 'المنطقة (التابعة للشركة)',
-                lang_reg_submit: 'إرسال الطلب 🚀',
-                lang_reg_back: 'عودة لشاشة الدخول',
-                lang_header_cap: 'كابتن 🦸‍♂️',
-                lang_btn_out: 'خروج 🔒',
-                lang_bal_warn: 'عذرا وصل رصيدك للحد المانع يرجى شحن رصيدك للاستمرار في استقبال الطلبات',
-                lang_vpn_warn: 'يا كابتن يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة',
-                lang_bal_title: 'الرصيد المالي الفعلي',
-                lang_rating: 'تقييم ألماسي 💎',
-                lang_ach_title: 'إنجاز اليوم 🏆',
-                lang_ach_sub: 'عمل ممتاز',
-                lang_hot_title: 'المطاعم النشطة بمنطقتك 🔥',
-                lang_sec_orders: '📲 الطلبات الواردة',
-                status_online: 'متاح وجاهز للطلبات 🟢',
-                status_offline: 'غير متاح للطلبات 🔴',
-                status_blocked: 'غير متاح (محظور ماليا)',
-                no_orders: 'لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡',
-                no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن',
-                lang_confirm_ok: 'تأكيد ✅',
-                lang_confirm_no: 'إلغاء ❌',
-                dir: 'rtl'
-            },
-            'en': {
-                lang_loader: 'Connecting to System',
-                lang_popup_btn: 'Got it',
-                lang_history_title: 'Order History',
-                lang_settings_title: 'Settings ⚙️',
-                lang_set_user: 'Username',
-                lang_set_pass: 'Password',
-                lang_test_notif: '🔔 Test Notifications',
-                lang_toggle_btn: '🌐 التبديل للعربية',
-                lang_save_btn: 'Save Changes ✅',
-                lang_blocked_title: 'Account Blocked',
-                lang_blocked_text: 'Sorry your account has been suspended Please contact your company management to reactivate',
-                lang_blocked_btn: 'Logout',
-                lang_pending_title: 'Account Pending',
-                lang_pending_text: 'Your registration has been received successfully Please contact your company administration to activate the account',
-                lang_pending_btn: 'Return to Home',
-                lang_login_sub: 'Diamond Portal 💎',
-                lang_login_user_lbl: 'Username',
-                lang_login_pass_lbl: 'Password',
-                lang_login_btn: 'Secure Login 🚀',
-                lang_register_btn: 'Register New Captain 📝',
-                lang_reg_title: 'Register New Captain 📝',
-                lang_reg_comp_id: 'Company Name',
-                lang_reg_name: 'Full Name',
-                lang_reg_phone: 'Phone Number',
-                lang_reg_car_type: 'Car Type',
-                lang_reg_car_code: 'Plate Number',
-                lang_reg_user: 'Username',
-                lang_reg_pass: 'Password',
-                lang_reg_area: 'Approved Work Area',
-                lang_reg_submit: 'Submit Request 🚀',
-                lang_reg_back: 'Back to Login',
-                lang_header_cap: 'Captain 🦸‍♂️',
-                lang_btn_out: 'Logout 🔒',
-                lang_bal_warn: 'Warning balance reached the limit Please recharge to receive orders',
-                lang_vpn_warn: 'Captain please disable VPN to receive orders with the best quality and speed',
-                lang_bal_title: 'Actual Balance',
-                lang_rating: 'Diamond Rating 💎',
-                lang_ach_title: 'Today Wins 🏆',
-                lang_ach_sub: 'Great Job',
-                lang_hot_title: 'Hotspots 🔥',
-                lang_sec_orders: '📲 Incoming Orders',
-                status_online: 'Online Ready 🟢',
-                status_offline: 'Offline 🔴',
-                status_blocked: 'Offline Blocked',
-                no_orders: 'No active orders right now stay near hotspots 📡',
-                no_history: 'No completed orders in history yet',
-                lang_confirm_ok: 'Confirm ✅',
-                lang_confirm_no: 'Cancel ❌',
-                dir: 'ltr'
-            }
-        }
-
-        window.toggleLanguage = function() {
-            currentLang = currentLang === 'ar' ? 'en' : 'ar'
-            document.getElementById('app-body').dir = dict[currentLang].dir
+window.toggleLanguage = function() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            document.getElementById('app-body').dir = dict[currentLang].dir;
             
             for(const key in dict[currentLang]) {
-                const el = document.getElementById(key)
+                const el = document.getElementById(key);
                 if(el) {
-                    if(key === 'lang_blocked_text' || key === 'lang_pending_text') el.innerHTML = dict[currentLang][key]
-                    else el.innerText = dict[currentLang][key]
+                    if(key === 'lang_blocked_text' || key === 'lang_pending_text') el.innerHTML = dict[currentLang][key];
+                    else el.innerText = dict[currentLang][key];
                 }
             }
-            if(currentCaptain) updateUIProfile(currentCaptain)
-        }
+            if(currentCaptain) updateUIProfile(currentCaptain);
+        };
 
-        window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display = 'block' })
-        window.addEventListener('online', () => { document.getElementById('offline-banner').style.display = 'none' })
+        window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display = 'block'; });
+        window.addEventListener('online', () => { document.getElementById('offline-banner').style.display = 'none'; });
 
         window.onload = function() {
-            localStorage.removeItem('n1_captain_daily_stats')
+            localStorage.removeItem('n1_captain_daily_stats');
             
             setTimeout(() => {
-                document.getElementById('loader').style.display = 'none'
-                checkSession()
-            }, 800)
+                document.getElementById('loader').style.display = 'none';
+                checkSession();
+            }, 800);
             
             document.body.addEventListener('click', () => {
-                const audio = document.getElementById('order-ringtone')
+                const audio = document.getElementById('order-ringtone');
                 if(audio.paused && ringtoneActive) {
-                    audio.play().catch(e => console.log(e))
+                    audio.play().catch(e => console.log(e));
                 }
-            }, { once: true })
-        }
+            }, { once: true });
+        };
 
         window.testNotification = function() {
-            const audio = document.getElementById('order-ringtone')
-            audio.play().catch(e => console.log(e))
+            const audio = document.getElementById('order-ringtone');
+            audio.play().catch(e => console.log(e));
             setTimeout(() => {
-                audio.pause()
-                audio.currentTime = 0
-            }, 3000)
+                audio.pause();
+                audio.currentTime = 0;
+            }, 3000);
             
-            sendSystemNotification('N One Diamond 💎', currentLang === 'ar' ? 'إشعار تجريبي لاختبار العمل بالخلفية' : 'Test background notification')
-        }
+            sendSystemNotification('N One Diamond 💎', currentLang === 'ar' ? 'إشعار تجريبي لاختبار العمل بالخلفية' : 'Test background notification');
+        };
 
         function checkSession() {
-            const savedUser = localStorage.getItem('n1_captain_session')
+            const savedUser = localStorage.getItem('n1_captain_session');
             if (savedUser) {
-                currentCaptain = JSON.parse(savedUser)
-                capNodeKey = currentCaptain.Cap_User || currentCaptain.user
+                currentCaptain = JSON.parse(savedUser);
+                capNodeKey = currentCaptain.Cap_User || currentCaptain.user;
                 
                 if (currentCaptain.app_access === 'pending' || currentCaptain.Cap_Status === 'pending') {
-                    document.getElementById('login-screen').classList.remove('active')
-                    document.getElementById('register-screen').classList.remove('active')
-                    document.getElementById('main-screen').classList.remove('active')
-                    document.getElementById('pending-screen').style.display = 'flex'
-                    return
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('register-screen').classList.remove('active');
+                    document.getElementById('main-screen').classList.remove('active');
+                    document.getElementById('pending-screen').style.display = 'flex';
+                    return;
                 }
                 
-                document.getElementById('login-screen').classList.remove('active')
-                document.getElementById('register-screen').classList.remove('active')
-                document.getElementById('main-screen').classList.add('active')
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('register-screen').classList.remove('active');
+                document.getElementById('main-screen').classList.add('active');
                 
-                const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true'
-                const bgToggle = document.getElementById('bg_mode_toggle')
+                const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true';
+                const bgToggle = document.getElementById('bg_mode_toggle');
                 if(bgToggle) {
-                    bgToggle.checked = savedBgMode
-                    if(savedBgMode) toggleBackgroundMode(true, true)
+                    bgToggle.checked = savedBgMode;
+                    if(savedBgMode) toggleBackgroundMode(true, true);
                 }
                 
-                requestWakeLock()
-                initRealtimeListeners()
-                setupAdsAndAlerts()
+                requestWakeLock();
+                initRealtimeListeners();
+                setupAdsAndAlerts();
             } else {
-                document.getElementById('login-screen').classList.add('active')
+                document.getElementById('login-screen').classList.add('active');
             }
         }
 
         window.loginCaptain = async function() {
-            const user = document.getElementById('login_user').value.trim()
-            const pass = document.getElementById('login_pass').value.trim()
+            const user = document.getElementById('login_user').value.trim();
+            const pass = document.getElementById('login_pass').value.trim();
             
-            if(!user || !pass) { window.showToast(currentLang === 'ar' ? "يرجى إدخال اليوزر والباسورد" : "Please enter username and password", true); return }
+            if(!user || !pass) { window.showToast(currentLang === 'ar' ? "يرجى إدخال اليوزر والباسورد" : "Please enter username and password", true); return; }
             
-            document.getElementById('loader').style.display = 'flex'
+            document.getElementById('loader').style.display = 'flex';
             
             try {
-                const capRef = ref(db, `captains/${user}`)
-                const snap = await get(capRef)
+                const capRef = ref(db, `captains/${user}`);
+                const snap = await get(capRef);
                 
                 if (snap.exists() && (snap.val().Cap_Pass === pass || snap.val().pass === pass)) {
-                    const data = snap.val()
+                    const data = snap.val();
                     
                     if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
-                        document.getElementById('loader').style.display = 'none'
-                        document.getElementById('login-screen').classList.remove('active')
-                        document.getElementById('pending-screen').style.display = 'flex'
-                        localStorage.setItem('n1_captain_session', JSON.stringify(data))
-                        return
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('login-screen').classList.remove('active');
+                        document.getElementById('pending-screen').style.display = 'flex';
+                        localStorage.setItem('n1_captain_session', JSON.stringify(data));
+                        return;
                     }
                     
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
-                        document.getElementById('loader').style.display = 'none'
-                        document.getElementById('blocked-screen').style.display = 'flex'
-                        return
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('blocked-screen').style.display = 'flex';
+                        return;
                     }
                     
-                    const sessionToken = Date.now().toString(36) + Math.random().toString(36).substr(2)
-                    data.session_token = sessionToken
-                    await update(capRef, { session_token: sessionToken })
+                    const sessionToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    data.session_token = sessionToken;
+                    await update(capRef, { session_token: sessionToken });
 
-                    localStorage.setItem('n1_captain_session', JSON.stringify(data))
-                    currentCaptain = data
-                    capNodeKey = user
+                    localStorage.setItem('n1_captain_session', JSON.stringify(data));
+                    currentCaptain = data;
+                    capNodeKey = user;
                     
-                    document.getElementById('loader').style.display = 'none'
-                    document.getElementById('login-screen').classList.remove('active')
-                    document.getElementById('main-screen').classList.add('active')
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('login-screen').classList.remove('active');
+                    document.getElementById('main-screen').classList.add('active');
                     
-                    const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true'
-                    const bgToggle = document.getElementById('bg_mode_toggle')
+                    const savedBgMode = localStorage.getItem('n1_bg_mode') === 'true';
+                    const bgToggle = document.getElementById('bg_mode_toggle');
                     if(bgToggle) {
-                        bgToggle.checked = savedBgMode
-                        if(savedBgMode) toggleBackgroundMode(true, true)
+                        bgToggle.checked = savedBgMode;
+                        if(savedBgMode) toggleBackgroundMode(true, true);
                     }
 
-                    requestWakeLock()
-                    initRealtimeListeners()
-                    setupAdsAndAlerts()
+                    requestWakeLock();
+                    initRealtimeListeners();
+                    setupAdsAndAlerts();
                 } else {
-                    document.getElementById('loader').style.display = 'none'
-                    window.showToast(currentLang === 'ar' ? "بيانات الدخول غير صحيحة يرجى التأكد" : "Incorrect login details", true)
+                    document.getElementById('loader').style.display = 'none';
+                    window.showToast(currentLang === 'ar' ? "بيانات الدخول غير صحيحة يرجى التأكد" : "Incorrect login details", true);
                 }
             } catch (error) {
-                document.getElementById('loader').style.display = 'none'
-                window.showToast(currentLang === 'ar' ? "حدث خطأ في الاتصال" : "Connection Error", true)
+                document.getElementById('loader').style.display = 'none';
+                window.showToast(currentLang === 'ar' ? "حدث خطأ في الاتصال" : "Connection Error", true);
             }
-        }
+        };
 
         window.openRegisterScreen = async function() {
-            document.getElementById('login-screen').classList.remove('active')
-            document.getElementById('register-screen').classList.add('active')
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('register-screen').classList.add('active');
             
-            document.getElementById('reg_company_id').innerHTML = `<option value="">${currentLang === 'ar' ? 'جاري تحميل الشركات...' : 'Loading...'}</option>`
-            document.getElementById('company_status_badge').className = 'id-status-badge'
-            document.getElementById('company_status_badge').innerText = ''
-            document.getElementById('verified_company_name').value = ''
+            // فلترة قائمة التبعية (No Admin ID) تمت معالجتها عبر دالة الجلب
+            document.getElementById('reg_company_id').innerHTML = `<option value="">${currentLang === 'ar' ? 'جاري تحميل الشركات...' : 'Loading...'}</option>`;
+            document.getElementById('company_status_badge').className = 'id-status-badge';
+            document.getElementById('company_status_badge').innerText = '';
+            document.getElementById('verified_company_name').value = '';
             
-            const areaSelect = document.getElementById('reg_area')
-            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى اختيار الشركة أولا' : 'Please select company first'}</option>`
-            areaSelect.disabled = true
+            const areaSelect = document.getElementById('reg_area');
+            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى اختيار الشركة أولا' : 'Please select company first'}</option>`;
+            areaSelect.disabled = true;
 
             try {
-                const usersSnap = await get(ref(db, 'users'))
-                let compHtml = `<option value="">${currentLang === 'ar' ? 'اختر الشركة التابع لها' : 'Select Company'}</option>`
+                // جلب الشركات فقط واستثناء الأدمن المباشر (العزل الألماسي)
+                const usersSnap = await get(ref(db, 'users'));
+                let compHtml = `<option value="">${currentLang === 'ar' ? 'اختر الشركة التابع لها' : 'Select Company'}</option>`;
                 
                 if (usersSnap.exists()) {
-                    const usersData = usersSnap.val()
+                    const usersData = usersSnap.val();
                     Object.values(usersData).forEach(u => {
                         if (u.role === 'client' || u.type === 'client' || (u.external_reg_enabled && u.external_reg_id && u.role !== 'admin')) {
-                            const dispName = u.Client_Name || u.name || u.user
-                            const valId = u.Client_User || u.user || u.external_reg_id
+                            const dispName = u.Client_Name || u.name || u.user;
+                            const valId = u.Client_User || u.user || u.external_reg_id;
                             if (valId) {
-                                compHtml += `<option value="${valId}">${dispName}</option>`
+                                compHtml += `<option value="${valId}">${dispName}</option>`;
                             }
                         }
-                    })
+                    });
                 }
-                document.getElementById('reg_company_id').innerHTML = compHtml
+                document.getElementById('reg_company_id').innerHTML = compHtml;
 
-                const snap = await get(ref(db, 'prices'))
+                const snap = await get(ref(db, 'prices'));
                 if(snap.exists()) {
-                    globalPricesList = Object.values(snap.val())
+                    globalPricesList = Object.values(snap.val());
                 }
             } catch(e) { }
-        }
+        };
 
         window.verifyCompanyId = async function() {
-            const compIdInput = document.getElementById('reg_company_id').value
-            const badge = document.getElementById('company_status_badge')
-            const areaSelect = document.getElementById('reg_area')
-            const hiddenCompName = document.getElementById('verified_company_name')
+            const compIdInput = document.getElementById('reg_company_id').value;
+            const badge = document.getElementById('company_status_badge');
+            const areaSelect = document.getElementById('reg_area');
+            const hiddenCompName = document.getElementById('verified_company_name');
             
             if (!compIdInput) {
-                badge.className = 'id-status-badge'
-                badge.innerText = ''
-                areaSelect.disabled = true
-                verifiedCompanyId = null
-                hiddenCompName.value = ''
-                areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى اختيار الشركة' : 'Select company'}</option>`
-                return
+                badge.className = 'id-status-badge';
+                badge.innerText = '';
+                areaSelect.disabled = true;
+                verifiedCompanyId = null;
+                hiddenCompName.value = '';
+                areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى اختيار الشركة' : 'Select company'}</option>`;
+                return;
             }
 
-            badge.className = 'id-status-badge verifying'
-            badge.innerText = currentLang === 'ar' ? 'جاري التحقق' : 'Verifying'
+            badge.className = 'id-status-badge verifying';
+            badge.innerText = currentLang === 'ar' ? 'جاري التحقق' : 'Verifying';
 
             try {
-                const userSnap = await get(ref(db, `users/${compIdInput}`))
+                const userSnap = await get(ref(db, `users/${compIdInput}`));
                 if (userSnap.exists() && (userSnap.val().role === 'client' || userSnap.val().type === 'client' || userSnap.val().role === 'admin')) {
-                    const compData = userSnap.val()
-                    const compName = compData.Client_Name || compData.name || compIdInput
+                    const compData = userSnap.val();
+                    const compName = compData.Client_Name || compData.name || compIdInput;
                     
-                    badge.className = 'id-status-badge success'
-                    badge.innerText = `✅ ${compName}`
-                    verifiedCompanyId = compIdInput
-                    hiddenCompName.value = compName
+                    badge.className = 'id-status-badge success';
+                    badge.innerText = `✅ ${compName}`;
+                    verifiedCompanyId = compIdInput;
+                    hiddenCompName.value = compName;
                     
-                    areaSelect.disabled = false
-                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>`
-                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => (p.Price_Area || '').trim()))].filter(Boolean)
+                    areaSelect.disabled = false;
+                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>`;
+                    const areas = [...new Set(globalPricesList.filter(p => p.Client_Master === compIdInput || p.Price_Source === compIdInput).map(p => (p.Price_Area || '').trim()))].filter(Boolean);
                     
                     if (areas.length > 0) {
-                        areas.forEach(a => { areaSelect.innerHTML += `<option value="${a}">${a}</option>` })
+                        areas.forEach(a => { areaSelect.innerHTML += `<option value="${a}">${a}</option>`; });
                     } else {
-                        areaSelect.innerHTML += `<option value="Main Area">${currentLang === 'ar' ? 'المنطقة الرئيسية' : 'Main Area'}</option>`
+                        areaSelect.innerHTML += `<option value="Main Area">${currentLang === 'ar' ? 'المنطقة الرئيسية' : 'Main Area'}</option>`;
                     }
                 } else {
-                    badge.className = 'id-status-badge error'
-                    badge.innerText = currentLang === 'ar' ? 'معرف غير صالح' : 'Invalid ID'
-                    verifiedCompanyId = null
-                    hiddenCompName.value = ''
-                    areaSelect.disabled = true
-                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى إدخال معرف صحيح' : 'Please enter a valid ID'}</option>`
+                    badge.className = 'id-status-badge error';
+                    badge.innerText = currentLang === 'ar' ? 'معرف غير صالح' : 'Invalid ID';
+                    verifiedCompanyId = null;
+                    hiddenCompName.value = '';
+                    areaSelect.disabled = true;
+                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى إدخال معرف صحيح' : 'Please enter a valid ID'}</option>`;
                 }
             } catch(e) {
-                badge.className = 'id-status-badge error'
-                badge.innerText = currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error'
+                badge.className = 'id-status-badge error';
+                badge.innerText = currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error';
             }
-        }
+        };
 
         window.submitRegistration = async function() {
-            const name = document.getElementById('reg_name').value.trim()
-            const phone = document.getElementById('reg_phone').value.trim()
-            const carType = document.getElementById('reg_car_type').value.trim()
-            const carCode = document.getElementById('reg_car_code').value.trim()
-            const user = document.getElementById('reg_user').value.trim()
-            const pass = document.getElementById('reg_pass').value.trim()
-            const area = document.getElementById('reg_area').value
+            const name = document.getElementById('reg_name').value.trim();
+            const phone = document.getElementById('reg_phone').value.trim();
+            const carType = document.getElementById('reg_car_type').value.trim();
+            const carCode = document.getElementById('reg_car_code').value.trim();
+            const user = document.getElementById('reg_user').value.trim();
+            const pass = document.getElementById('reg_pass').value.trim();
+            const area = document.getElementById('reg_area').value;
 
             if(!verifiedCompanyId) {
-                window.showToast(currentLang === 'ar' ? "يرجى اختيار شركة صحيحة أولا" : "Please select a valid company first", true)
-                return
+                window.showToast(currentLang === 'ar' ? "يرجى اختيار شركة صحيحة أولا" : "Please select a valid company first", true);
+                return;
             }
 
             if(!name || !phone || !carType || !carCode || !user || !pass || !area) {
-                window.showToast(currentLang === 'ar' ? "يرجى تعبئة جميع الحقول الأساسية" : "Please fill all basic fields", true)
-                return
+                window.showToast(currentLang === 'ar' ? "يرجى تعبئة جميع الحقول الأساسية" : "Please fill all basic fields", true);
+                return;
             }
 
-            document.getElementById('loader').style.display = 'flex'
+            document.getElementById('loader').style.display = 'flex';
 
             try {
-                const existing = await get(ref(db, `captains/${user}`))
+                const existing = await get(ref(db, `captains/${user}`));
                 if(existing.exists()) {
-                    document.getElementById('loader').style.display = 'none'
-                    window.showToast(currentLang === 'ar' ? "اسم المستخدم محجوز يرجى التغيير" : "Username already exists", true)
-                    return
+                    document.getElementById('loader').style.display = 'none';
+                    window.showToast(currentLang === 'ar' ? "اسم المستخدم محجوز يرجى التغيير" : "Username already exists", true);
+                    return;
                 }
 
                 const newCaptain = {
@@ -1358,7 +1017,7 @@
                     Cap_Pass: pass, pass: pass,
                     Cap_CarType: carType,
                     Cap_CarCode: carCode,
-                    Cap_Car: `${carType} - ${carCode}`, 
+                    Cap_Car: `${carType} - ${carCode}`, // حفظ المدمج عشان توافق الأكواد القديمة
                     company: verifiedCompanyId,
                     Client_Master: verifiedCompanyId,
                     Cap_Location: area, Cap_Region: area,
@@ -1367,293 +1026,293 @@
                     app_status: 'offline',
                     Cap_Status: 'pending',
                     created_at: Date.now()
-                }
+                };
 
-                await set(ref(db, `captains/${user}`), newCaptain)
+                await set(ref(db, `captains/${user}`), newCaptain);
                 
-                localStorage.setItem('n1_captain_session', JSON.stringify(newCaptain))
-                currentCaptain = newCaptain
-                capNodeKey = user
+                localStorage.setItem('n1_captain_session', JSON.stringify(newCaptain));
+                currentCaptain = newCaptain;
+                capNodeKey = user;
                 
-                document.getElementById('loader').style.display = 'none'
-                document.getElementById('register-screen').classList.remove('active')
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('register-screen').classList.remove('active');
                 
-                checkSession() 
+                checkSession(); 
                 
             } catch(e) {
-                document.getElementById('loader').style.display = 'none'
-                window.showToast(currentLang === 'ar' ? "حدث خطأ أثناء التسجيل" : "Registration Error", true)
+                document.getElementById('loader').style.display = 'none';
+                window.showToast(currentLang === 'ar' ? "حدث خطأ أثناء التسجيل" : "Registration Error", true);
             }
-        }
+        };
 
         window.backToLogin = function() {
-            document.getElementById('register-screen').classList.remove('active')
-            document.getElementById('login-screen').classList.add('active')
-        }
+            document.getElementById('register-screen').classList.remove('active');
+            document.getElementById('login-screen').classList.add('active');
+        };
 
         window.logout = function() {
-            isListenerActive = false
-            localStorage.removeItem('n1_captain_session')
-            window.location.reload()
-        }
+            isListenerActive = false;
+            localStorage.removeItem('n1_captain_session');
+            window.location.reload();
+        };
 
         function setupAdsAndAlerts() {
-            const master = currentCaptain.company || currentCaptain.Client_Master
-            let activeAds = { admin: null, client: null }
-            let activeAlerts = { admin: null, client: null }
+            const master = currentCaptain.company || currentCaptain.Client_Master;
+            let activeAds = { admin: null, client: null };
+            let activeAlerts = { admin: null, client: null };
             
-            let masterNameForAlerts = master || "N One"
+            let masterNameForAlerts = master || "N One";
             if (master) {
                 get(ref(db, `users/${master}`)).then(snap => {
-                    if (snap.exists()) masterNameForAlerts = snap.val().Client_Name || snap.val().name || master
-                })
+                    if (snap.exists()) masterNameForAlerts = snap.val().Client_Name || snap.val().name || master;
+                });
             }
 
             const renderAd = () => {
-                const now = Date.now()
-                let displayAd = null
-                let senderLabel = "Management"
+                const now = Date.now();
+                let displayAd = null;
+                let senderLabel = "Management";
 
                 if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) {
-                    displayAd = activeAds.client
-                    senderLabel = masterNameForAlerts
+                    displayAd = activeAds.client;
+                    senderLabel = masterNameForAlerts;
                 } else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) {
-                    displayAd = activeAds.admin
-                    senderLabel = currentLang === 'ar' ? "الإدارة العامة" : "General Admin"
+                    displayAd = activeAds.admin;
+                    senderLabel = currentLang === 'ar' ? "الإدارة العامة" : "General Admin";
                 }
 
-                const adContainer = document.getElementById('smart-ad-container')
+                const adContainer = document.getElementById('smart-ad-container');
                 if (displayAd && displayAd.text) {
-                    document.getElementById('smart-ad-text').innerText = displayAd.text
-                    document.getElementById('ad-sender-badge').innerText = currentLang === 'ar' ? `إشعار من ${senderLabel} 👑` : `Notice from ${senderLabel} 👑`
-                    adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal')
-                    adContainer.style.display = 'flex'
+                    document.getElementById('smart-ad-text').innerText = displayAd.text;
+                    document.getElementById('ad-sender-badge').innerText = currentLang === 'ar' ? `إشعار من ${senderLabel} 👑` : `Notice from ${senderLabel} 👑`;
+                    adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal');
+                    adContainer.style.display = 'flex';
                 } else {
-                    adContainer.style.display = 'none'
+                    adContainer.style.display = 'none';
                 }
-            }
+            };
 
             const renderAlert = () => {
-                let displayAlert = activeAlerts.client || activeAlerts.admin
-                let senderLabel = activeAlerts.client ? masterNameForAlerts : (currentLang==='ar' ? "الإدارة العامة" : "General Admin")
+                let displayAlert = activeAlerts.client || activeAlerts.admin;
+                let senderLabel = activeAlerts.client ? masterNameForAlerts : (currentLang==='ar' ? "الإدارة العامة" : "General Admin");
 
                 if (displayAlert && displayAlert.message) {
-                    const lastSeen = localStorage.getItem('last_seen_alert_cap_' + capNodeKey) || 0
+                    const lastSeen = localStorage.getItem('last_seen_alert_cap_' + capNodeKey) || 0;
                     if (displayAlert.timestamp > lastSeen) {
-                        const lbl = currentLang === 'ar' ? "رسالة إدارية من" : "Administrative Message from"
-                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">${lbl} ${senderLabel}</div>${displayAlert.message}`
-                        document.getElementById('app-popup-overlay').style.display = 'flex'
-                        localStorage.setItem('last_seen_alert_cap_' + capNodeKey, displayAlert.timestamp)
+                        const lbl = currentLang === 'ar' ? "رسالة إدارية من" : "Administrative Message from";
+                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">${lbl} ${senderLabel}</div>${displayAlert.message}`;
+                        document.getElementById('app-popup-overlay').style.display = 'flex';
+                        localStorage.setItem('last_seen_alert_cap_' + capNodeKey, displayAlert.timestamp);
                     }
                 }
-            }
+            };
 
             const extractData = (val) => {
-                if (!val) return null
-                if (val.captains && val.captains[capNodeKey]) return val.captains[capNodeKey]
-                if (val.global) return val.global
-                return null
-            }
+                if (!val) return null;
+                if (val.captains && val.captains[capNodeKey]) return val.captains[capNodeKey];
+                if (val.global) return val.global;
+                return null;
+            };
 
-            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractData(snap.val()); renderAd() })
-            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractData(snap.val()); renderAlert() })
+            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractData(snap.val()); renderAd(); });
+            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractData(snap.val()); renderAlert(); });
 
             if(master) {
-                onValue(ref(db, `client_announcements/${master}/captains`), snap => { activeAds.client = extractData(snap.val()); renderAd() })
-                onValue(ref(db, `client_alerts/${master}/captains`), snap => { activeAlerts.client = extractData(snap.val()); renderAlert() })
+                onValue(ref(db, `client_announcements/${master}/captains`), snap => { activeAds.client = extractData(snap.val()); renderAd(); });
+                onValue(ref(db, `client_alerts/${master}/captains`), snap => { activeAlerts.client = extractData(snap.val()); renderAlert(); });
             }
         }
 
-        let isVpnDetected = false
+        let isVpnDetected = false;
         async function detectVPN() {
-            if(!systemSettings.anti_vpn) { isVpnDetected = false; return }
+            if(!systemSettings.anti_vpn) { isVpnDetected = false; return; }
             try {
-                const response = await fetch('https://ipapi.co/json/')
-                const data = await response.json()
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
                 if (data.country_code && data.country_code !== 'JO') {
-                    isVpnDetected = true
+                    isVpnDetected = true;
                 } else {
-                    isVpnDetected = false
+                    isVpnDetected = false;
                 }
             } catch(e) {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1)
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                isVpnDetected = (tz && tz.indexOf('Asia/Amman') === -1);
             }
         }
-        setInterval(detectVPN, 5000) 
+        setInterval(detectVPN, 5000); 
 
         function listenToSystemSettings() {
-            const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null
-            if(!master) return
+            const master = currentCaptain ? (currentCaptain.company || currentCaptain.Client_Master) : null;
+            if(!master) return;
             
             onValue(ref(db, `settings/${master}/order_timer`), (snap) => {
                 if(snap.exists() && snap.val() > 0) {
-                    systemSettings.order_timer = parseInt(snap.val())
+                    systemSettings.order_timer = parseInt(snap.val());
                 } else {
                     onValue(ref(db, 'settings/order_timer'), (fallbackSnap) => {
                         if(fallbackSnap.exists() && fallbackSnap.val().seconds) {
-                            systemSettings.order_timer = parseInt(fallbackSnap.val().seconds)
+                            systemSettings.order_timer = parseInt(fallbackSnap.val().seconds);
                         }
-                    })
+                    });
                 }
-            })
+            });
             
             onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
                 if(snap.exists()) {
-                    systemSettings.show_phone_numbers = snap.val()
+                    systemSettings.show_phone_numbers = snap.val();
                 } else {
                     onValue(ref(db, `settings/global_show_phone_numbers`), (fallbackSnap) => {
-                        systemSettings.show_phone_numbers = fallbackSnap.exists() ? fallbackSnap.val() : false
-                    })
+                        systemSettings.show_phone_numbers = fallbackSnap.exists() ? fallbackSnap.val() : false;
+                    });
                 }
-            })
+            });
 
             onValue(ref(db, `settings/${master}/anti_vpn`), (snap) => {
-                systemSettings.anti_vpn = snap.exists() ? snap.val() : false
-                if(systemSettings.anti_vpn) detectVPN()
-            })
+                systemSettings.anti_vpn = snap.exists() ? snap.val() : false;
+                if(systemSettings.anti_vpn) detectVPN();
+            });
 
             onValue(ref(db, `settings/${master}/hotspots_active`), (snap) => {
-                systemSettings.hotspots_active = snap.exists() ? snap.val() : true
-                const hsSection = document.getElementById('hotspots-section')
-                const hasOrders = document.querySelectorAll('.order-card').length > 0
+                systemSettings.hotspots_active = snap.exists() ? snap.val() : true;
+                const hsSection = document.getElementById('hotspots-section');
+                const hasOrders = document.querySelectorAll('.order-card').length > 0;
                 if(hsSection && !hasOrders) {
-                    hsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none'
+                    hsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
                 }
-            })
+            });
         }
 
         setInterval(() => {
             if (currentCaptain) {
-                const vpnWarning = document.getElementById('vpn-warning')
+                const vpnWarning = document.getElementById('vpn-warning');
                 if (systemSettings.anti_vpn && isVpnDetected) {
-                    vpnWarning.style.display = 'flex'
+                    vpnWarning.style.display = 'flex';
                     if(currentCaptain.app_status === 'online') {
-                        forceOffline()
-                        document.getElementById('toggle_status').checked = false
+                        forceOffline();
+                        document.getElementById('toggle_status').checked = false;
                     }
                 } else {
-                    vpnWarning.style.display = 'none'
+                    vpnWarning.style.display = 'none';
                 }
             }
-        }, 2000)
+        }, 2000);
 
         function startVisualTimer(orderId, timeLeft, totalTime) {
-            if(orderTimers[orderId]) clearInterval(orderTimers[orderId])
-            const lblSec = currentLang === 'ar' ? "ثانية للقبول" : "sec left"
+            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
+            const lblSec = currentLang === 'ar' ? "ثانية للقبول" : "sec left";
 
             orderTimers[orderId] = setInterval(() => {
-                timeLeft--
-                const bar = document.getElementById(`bar_timer_${orderId}`)
-                const text = document.getElementById(`text_timer_${orderId}`)
+                timeLeft--;
+                const bar = document.getElementById(`bar_timer_${orderId}`);
+                const text = document.getElementById(`text_timer_${orderId}`);
                 
                 if(timeLeft <= 0) {
-                    clearInterval(orderTimers[orderId])
-                    rejectOrderAuto(orderId) 
+                    clearInterval(orderTimers[orderId]);
+                    rejectOrderAuto(orderId); 
                 } else {
-                    if(text) text.innerText = `${timeLeft} ${lblSec} ⏳`
-                    const percent = (timeLeft / totalTime) * 100
+                    if(text) text.innerText = `${timeLeft} ${lblSec} ⏳`;
+                    const percent = (timeLeft / totalTime) * 100;
                     if(bar) {
-                        bar.style.width = `${percent}%`
-                        if(percent < 30) bar.style.background = '#991b1b' 
+                        bar.style.width = `${percent}%`;
+                        if(percent < 30) bar.style.background = '#991b1b'; 
                     }
                 }
-            }, 1000)
+            }, 1000);
         }
 
         window.rejectOrderAuto = async function(orderId) {
-            if(orderTimers[orderId]) clearInterval(orderTimers[orderId])
-            const updates = {}
-            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'timeout' 
-            await update(ref(db), updates)
-            window.showToast(currentLang === 'ar' ? "انتهى الوقت تم سحب الطلب ⏳" : "Time out Order reassigned ⏳", true)
-        }
+            if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
+            const updates = {};
+            updates[`assigned_orders/${capNodeKey}/${orderId}/status`] = 'timeout'; 
+            await update(ref(db), updates);
+            window.showToast(currentLang === 'ar' ? "انتهى الوقت تم سحب الطلب ⏳" : "Time out Order reassigned ⏳", true);
+        };
 
         function initRealtimeListeners() {
-            if(!capNodeKey || isListenerActive) return
-            isListenerActive = true
-            listenToSystemSettings()
+            if(!capNodeKey || isListenerActive) return;
+            isListenerActive = true;
+            listenToSystemSettings();
 
-            const profileRef = ref(db, `captains/${capNodeKey}`)
+            const profileRef = ref(db, `captains/${capNodeKey}`);
             onValue(profileRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    const data = snapshot.val()
+                    const data = snapshot.val();
                     
                     if (currentCaptain && data.session_token && currentCaptain.session_token && data.session_token !== currentCaptain.session_token) {
-                        window.showToast(currentLang === 'ar' ? "تم تسجيل الدخول من جهاز آخر 🔒" : "Logged in from another device 🔒", true)
-                        setTimeout(() => { logout() }, 2000)
-                        return
+                        window.showToast(currentLang === 'ar' ? "تم تسجيل الدخول من جهاز آخر 🔒" : "Logged in from another device 🔒", true);
+                        setTimeout(() => { logout(); }, 2000);
+                        return;
                     }
                     
-                    currentCaptain = data
+                    currentCaptain = data;
                     
                     if (data.app_access === 'pending' || data.Cap_Status === 'pending') {
-                        document.getElementById('blocked-screen').style.display = 'none'
-                        document.getElementById('main-screen').classList.remove('active')
-                        document.getElementById('pending-screen').style.display = 'flex'
-                        return
+                        document.getElementById('blocked-screen').style.display = 'none';
+                        document.getElementById('main-screen').classList.remove('active');
+                        document.getElementById('pending-screen').style.display = 'flex';
+                        return;
                     }
                     
                     if (data.app_access === 'denied' || data.Cap_Status === 'paused') {
-                        document.getElementById('pending-screen').style.display = 'none'
-                        document.getElementById('blocked-screen').style.display = 'flex'
+                        document.getElementById('pending-screen').style.display = 'none';
+                        document.getElementById('blocked-screen').style.display = 'flex';
                         if(data.app_status === 'online') {
-                            forceOffline()
+                            forceOffline();
                         }
-                        return
+                        return;
                     } else {
-                        document.getElementById('blocked-screen').style.display = 'none'
-                        document.getElementById('pending-screen').style.display = 'none'
+                        document.getElementById('blocked-screen').style.display = 'none';
+                        document.getElementById('pending-screen').style.display = 'none';
                     }
 
-                    updateUIProfile(data)
+                    updateUIProfile(data);
                 } else {
-                    document.getElementById('blocked-screen').style.display = 'flex'
-                    localStorage.removeItem('n1_captain_session')
+                    document.getElementById('blocked-screen').style.display = 'flex';
+                    localStorage.removeItem('n1_captain_session');
                 }
-            })
+            });
 
-            // المراقبة الحية للطلبات الخاصة بالكابتن فقط (Shallow Fetching)
-            const myOrdersRef = ref(db, `assigned_orders/${capNodeKey}`)
+            // المراقبة الحية للطلبات (الجزء الخاص بالكابتن فقط - Shallow Fetching)
+            const myOrdersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(myOrdersRef, (snapshot) => {
-                const container = document.getElementById('active-orders-container')
-                const hotspotsSection = document.getElementById('hotspots-section')
-                const statusToggleSection = document.getElementById('status-toggle-section')
+                const container = document.getElementById('active-orders-container');
+                const hotspotsSection = document.getElementById('hotspots-section');
+                const statusToggleSection = document.getElementById('status-toggle-section');
                 
-                let hasActive = false, hasNewRinging = false
-                let newHtmlContent = '' 
-                const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`
+                let hasActive = false, hasNewRinging = false;
+                let newHtmlContent = ''; 
+                const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                 if (snapshot.exists()) {
-                    const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}))
+                    const orders = Object.entries(snapshot.val()).map(([k, v]) => ({...v, id: k}));
                     
                     orders.forEach(ord => {
                         const cleanRestName = (name) => {
-                            if(!name) return currentLang==='ar' ? 'الموقع' : 'Location'
-                            let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '')
-                            return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location')
-                        }
-                        const restName = cleanRestName(ord.restaurant)
-                        const safeRestName = restName.replace(/'/g, "\\'")
+                            if(!name) return currentLang==='ar' ? 'الموقع' : 'Location';
+                            let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
+                            return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
+                        };
+                        const restName = cleanRestName(ord.restaurant);
+                        const safeRestName = restName.replace(/'/g, "\\'");
                         
-                        let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers
-                        let phoneHtml = ''
+                        let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
+                        let phoneHtml = '';
                         if (ord.shop_phone) {
                             if (isPhoneHidden) {
-                                phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge">رقم محجوب 🛡️</span></div>`
+                                phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge">رقم محجوب 🛡️</span></div>`;
                             } else {
-                                phoneHtml = `<div class="order-rest-phone">📞 هاتف المنشأة: <a href="tel:${ord.shop_phone}" style="color:var(--info); text-decoration:none;" title="اتصال بالمنشأة" target="_blank">${ord.shop_phone}</a></div>`
+                                phoneHtml = `<div class="order-rest-phone">📞 هاتف المنشأة: <a href="tel:${ord.shop_phone}" style="color:var(--info); text-decoration:none;" title="اتصال بالمنشأة" target="_blank">${ord.shop_phone}</a></div>`;
                             }
                         }
 
-                        // المعادلة المالية الشفافة للكابتن
-                        const ordValSafe = parseFloat(ord.value || 0).toFixed(2)
-                        const ordFeeSafe = parseFloat(ord.fee || 0).toFixed(2)
-                        const originalFee = parseFloat(ord.original_fee || ordFeeSafe).toFixed(2)
-                        const discountAmt = parseFloat(ord.discount || 0).toFixed(2)
-                        const commAmountSafe = parseFloat(ord.commission_amount || 0)
+                        // المعادلة المالية الشفافة
+                        const ordValSafe = parseFloat(ord.value || 0).toFixed(2);
+                        const ordFeeSafe = parseFloat(ord.fee || 0).toFixed(2);
+                        const originalFee = parseFloat(ord.original_fee || ordFeeSafe).toFixed(2);
+                        const discountAmt = parseFloat(ord.discount || 0).toFixed(2);
+                        const commAmountSafe = parseFloat(ord.commission_amount || 0);
 
-                        let financialsHtml = ''
+                        let financialsHtml = '';
                         if (discountAmt > 0 && originalFee > ordFeeSafe) {
                             financialsHtml = `
                                 <div class="fin-container">
@@ -1661,32 +1320,32 @@
                                         <span class="fin-orig">${originalFee} د.أ</span>
                                         <span class="fin-disc">-${discountAmt} خصم</span>
                                     </div>
-                                    <div class="fin-net">${ordFeeSafe} د.أ صافي التوصيل</div>
+                                    <div class="fin-net">${ordFeeSafe} د.أ صافي</div>
                                 </div>
-                            `
+                            `;
                         } else {
                             financialsHtml = `
                                 <div class="detail-box">
                                     <div class="detail-lbl">${currentLang === 'ar'?'أجرة التوصيل':'Delivery Fee'}</div>
                                     <div class="detail-val" style="color:var(--success); font-size:16px;">${ordFeeSafe} د.أ</div>
                                 </div>
-                            `
+                            `;
                         }
 
                         if (ord.status === 'assigned') {
-                            if(currentCaptain.app_status !== 'online') return
+                            if(currentCaptain.app_status !== 'online') return;
 
-                            if(!localOrderSeen[ord.id]) localOrderSeen[ord.id] = Date.now()
-                            const elapsed = Math.floor((Date.now() - localOrderSeen[ord.id]) / 1000)
-                            let timeLeft = systemSettings.order_timer - elapsed
+                            if(!localOrderSeen[ord.id]) localOrderSeen[ord.id] = Date.now();
+                            const elapsed = Math.floor((Date.now() - localOrderSeen[ord.id]) / 1000);
+                            let timeLeft = systemSettings.order_timer - elapsed;
 
-                            if(timeLeft <= 0) { rejectOrderAuto(ord.id); return }
+                            if(timeLeft <= 0) { rejectOrderAuto(ord.id); return; }
 
-                            hasActive = true; hasNewRinging = true
+                            hasActive = true; hasNewRinging = true;
                             
-                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-                            const btnAccept = currentLang === 'ar' ? "قبول الطلب ✅" : "Accept ✅"
-                            const btnReject = currentLang === 'ar' ? "رفض ❌" : "Reject ❌"
+                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                            const btnAccept = currentLang === 'ar' ? "قبول الطلب ✅" : "Accept ✅";
+                            const btnReject = currentLang === 'ar' ? "رفض ❌" : "Reject ❌";
                             
                             newHtmlContent += `
                                 <div class="order-card ringing" id="card_${ord.id}">
@@ -1698,7 +1357,7 @@
                                     ${phoneHtml}
                                     <div class="order-details" style="display:flex; flex-direction:column; gap:10px;">
                                         <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
-                                            <span style="font-size:11px; color:#64748b; font-weight:bold;">قيمة الطلب:</span>
+                                            <span style="font-size:11px; color:#64748b; font-weight:bold;">قيمة الفاتورة:</span>
                                             <span style="font-size:13px; font-weight:900; color:var(--primary);">${ordValSafe} د.أ</span>
                                         </div>
                                         ${financialsHtml}
@@ -1710,43 +1369,43 @@
                                         <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
                                     </div>
                                 </div>
-                            `
-                            setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50)
+                            `;
+                            setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
                             
                             if (document.visibilityState !== 'visible' || !document.hasFocus()) {
-                                sendSystemNotification('🚀 طلب جديد بانتظارك!', `من منشأة: ${restName} - افتح فوراً للقبول 💎`)
+                                sendSystemNotification('🚀 طلب جديد بانتظارك!', `من منشأة: ${restName} - افتح فوراً للقبول 💎`);
                             }
                         }
                         else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
-                            hasActive = true
-                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+                            hasActive = true;
+                            const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
-                            let mapQuery = (ord.restaurant || ord.location_link || '')
-                            if (mapQuery.includes('-')) mapQuery = mapQuery.split('-')[0].trim()
-                            const mapLink = ord.location_link || (`http://googleusercontent.com/maps.google.com/search?q=${encodeURIComponent(mapQuery)}`)
+                            let mapQuery = (ord.restaurant || ord.location_link || '');
+                            if (mapQuery.includes('-')) mapQuery = mapQuery.split('-')[0].trim();
+                            const mapLink = ord.location_link || (`http://googleusercontent.com/maps.google.com/search?q=${encodeURIComponent(mapQuery)}`);
 
-                            let btnClass = '', btnText = '', nextAction = ''
+                            let btnClass = '', btnText = '', nextAction = '';
 
                             if (ord.status === 'accepted') {
-                                btnClass = 'btn-status-arrived-shop'
-                                btnText = currentLang === 'ar' ? 'وصلت المنشأة 🏪' : 'Arrived at Shop 🏪'
-                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${commAmountSafe}')`
+                                btnClass = 'btn-status-arrived-shop';
+                                btnText = currentLang === 'ar' ? 'وصلت المنشأة 🏪' : 'Arrived at Shop 🏪';
+                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_shop', '${ord.linkedRadarId}', '${commAmountSafe}')`;
                             } else if (ord.status === 'arrived_at_shop') {
-                                btnClass = 'btn-status-picked'
-                                btnText = currentLang === 'ar' ? 'استلمت الطلب 🥡' : 'Picked Up 🥡'
-                                nextAction = `updateOrderStatus('${ord.id}', 'picked_up', '${ord.linkedRadarId}', 0)`
+                                btnClass = 'btn-status-picked';
+                                btnText = currentLang === 'ar' ? 'استلمت الطلب 🥡' : 'Picked Up 🥡';
+                                nextAction = `updateOrderStatus('${ord.id}', 'picked_up', '${ord.linkedRadarId}', 0)`;
                             } else if (ord.status === 'picked_up') {
-                                btnClass = 'btn-status-onway'
-                                btnText = currentLang === 'ar' ? 'أنا في الطريق للعميل 🚗' : 'On the Way 🚗'
-                                nextAction = `updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', 0)`
+                                btnClass = 'btn-status-onway';
+                                btnText = currentLang === 'ar' ? 'أنا في الطريق للعميل 🚗' : 'On the Way 🚗';
+                                nextAction = `updateOrderStatus('${ord.id}', 'on_way', '${ord.linkedRadarId}', 0)`;
                             } else if (ord.status === 'on_way') {
-                                btnClass = 'btn-status-arrived'
-                                btnText = currentLang === 'ar' ? 'وصلت عند العميل 📍' : 'Arrived at Customer 📍'
-                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_customer', '${ord.linkedRadarId}', 0)`
+                                btnClass = 'btn-status-arrived';
+                                btnText = currentLang === 'ar' ? 'وصلت عند العميل 📍' : 'Arrived at Customer 📍';
+                                nextAction = `updateOrderStatus('${ord.id}', 'arrived_at_customer', '${ord.linkedRadarId}', 0)`;
                             } else if (ord.status === 'arrived_at_customer') {
-                                btnClass = 'btn-status-completed'
-                                btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎'
-                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}', ${ordValSafe}, ${ordFeeSafe}, ${commAmountSafe}, '${safeRestName}')`
+                                btnClass = 'btn-status-completed';
+                                btnText = currentLang === 'ar' ? 'تم التسليم بنجاح 💎' : 'Delivered 💎';
+                                nextAction = `completeOrder('${ord.id}', '${ord.linkedRadarId}', ${ordValSafe}, ${ordFeeSafe}, ${commAmountSafe}, '${safeRestName}')`;
                             }
 
                             newHtmlContent += `
@@ -1762,262 +1421,259 @@
                                     ${phoneHtml}
                                     <div class="order-details" style="display:flex; flex-direction:column; gap:10px;">
                                         <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
-                                            <span style="font-size:11px; color:#64748b; font-weight:bold;">قيمة الطلب:</span>
+                                            <span style="font-size:11px; color:#64748b; font-weight:bold;">قيمة الفاتورة:</span>
                                             <span style="font-size:13px; font-weight:900; color:var(--primary);">${ordValSafe} د.أ</span>
                                         </div>
                                         ${financialsHtml}
                                     </div>
                                     <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
                                 </div>
-                            `
+                            `;
                         }
-                    })
+                    });
                 }
                 
                 if (hasActive) {
-                    if(hotspotsSection) hotspotsSection.style.display = 'none'
-                    if(statusToggleSection) statusToggleSection.style.display = 'none'
+                    if(hotspotsSection) hotspotsSection.style.display = 'none';
+                    if(statusToggleSection) statusToggleSection.style.display = 'none';
                 } else {
-                    if(hotspotsSection) hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none'
-                    if(statusToggleSection) statusToggleSection.style.display = 'flex'
+                    if(hotspotsSection) hotspotsSection.style.display = systemSettings.hotspots_active ? 'grid' : 'none';
+                    if(statusToggleSection) statusToggleSection.style.display = 'flex';
                 }
 
-                const audio = document.getElementById('order-ringtone')
+                const audio = document.getElementById('order-ringtone');
                 if (hasNewRinging && currentCaptain.app_status === 'online') {
-                    ringtoneActive = true
-                    audio.play().catch(e => console.log("تحتاج تفاعل"))
+                    ringtoneActive = true;
+                    audio.play().catch(e => console.log("تحتاج تفاعل"));
                 } else {
-                    ringtoneActive = false
-                    audio.pause(); audio.currentTime = 0
+                    ringtoneActive = false;
+                    audio.pause(); audio.currentTime = 0;
                 }
                 
                 if (!hasActive) {
-                    container.innerHTML = `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">${dict[currentLang].no_orders}</div>`
+                    container.innerHTML = `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">${dict[currentLang].no_orders}</div>`;
                 } else {
-                    container.innerHTML = newHtmlContent
+                    container.innerHTML = newHtmlContent;
                 }
-            })
+            });
 
-            // سحب أرشيف الشركة للكابتن الحالي فقط (Shallow Fetching)
-            const compId = currentCaptain.company || currentCaptain.Client_Master
+            // سحب أرشيف الشركة فقط لتوفير الداتا
+            const compId = currentCaptain.company || currentCaptain.Client_Master;
             if(compId) {
-                const archiveRef = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey))
+                const archiveRef = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
                 onValue(archiveRef, (archiveSnap) => {
                     if(archiveSnap.exists()) {
-                        let cloudTodayCount = 0
-                        let cloudTodayVal = 0
-                        let cloudTodayFee = 0
-                        const todayStr = new Date().toDateString() 
+                        let cloudTodayCount = 0;
+                        let cloudTodayVal = 0;
+                        let cloudTodayFee = 0;
+                        const todayStr = new Date().toDateString(); 
                         
                         Object.values(archiveSnap.val()).forEach(o => {
                             if (new Date(o.date).toDateString() === todayStr) {
-                                cloudTodayCount++
-                                cloudTodayVal += parseFloat(o.value || 0) || 0 
-                                cloudTodayFee += parseFloat(o.fee || 0) || 0 
+                                cloudTodayCount++;
+                                cloudTodayVal += parseFloat(o.value || 0) || 0; 
+                                cloudTodayFee += parseFloat(o.fee || 0) || 0; 
                             }
-                        })
+                        });
                         
-                        document.getElementById('ui_today_count').innerText = cloudTodayCount
-                        document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2) 
-                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2)
+                        document.getElementById('ui_today_count').innerText = cloudTodayCount;
+                        document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
+                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
                     }
-                })
+                });
             }
 
-            // الخرائط الحرارية (Hotspots) - تحليل السحابة
-            const globalOrdersRef = ref(db, 'orders')
+            // الخرائط الحرارية المبسطة
+            const globalOrdersRef = ref(db, 'orders');
             onValue(globalOrdersRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    const allOrders = snapshot.val()
-                    const areaCounts = {}
-                    const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim()
+                    const allOrders = snapshot.val();
+                    const areaCounts = {};
+                    const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim();
                     
                     for(let key in allOrders) {
-                        const ord = allOrders[key]
+                        const ord = allOrders[key];
                         if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
-                            const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim()
+                            const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
                             if(ordArea === myArea || myArea === '' || myArea === 'عام') {
-                                let rName = ord.Shop_Name || ord.restaurant || ''
-                                rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '') 
-                                rName = rName.split('-')[0].trim() 
-                                if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1
+                                let rName = ord.Shop_Name || ord.restaurant || '';
+                                rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
+                                rName = rName.split('-')[0].trim(); 
+                                if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
                             }
                         }
                     }
 
-                    const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a])
-                    const hotspotsContainer = document.getElementById('ui_hotspots')
-                    let hsHtml = '' 
+                    const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
+                    const hotspotsContainer = document.getElementById('ui_hotspots');
+                    let hsHtml = ''; 
 
                     if(sortedRests.length > 0) {
-                        sortedRests.slice(0, 3).forEach(restName => { hsHtml += `<div class="hotspot-tag">${restName} 🔥</div>` })
+                        sortedRests.slice(0, 3).forEach(restName => { hsHtml += `<div class="hotspot-tag">${restName} 🔥</div>`; });
                     } else {
-                        hsHtml = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots'}</div>`
+                        hsHtml = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots'}</div>`;
                     }
-                    if(hotspotsContainer) hotspotsContainer.innerHTML = hsHtml
+                    hotspotsContainer.innerHTML = hsHtml;
                 }
-            })
+            });
             
             // نبض الكابتن
             setInterval(() => {
                 if (currentCaptain && currentCaptain.app_status === 'online') {
-                    update(ref(db, `captains/${capNodeKey}`), { last_active: Date.now() })
+                    update(ref(db, `captains/${capNodeKey}`), { last_active: Date.now() });
                 }
-            }, 30000) 
+            }, 30000); 
         }
 
-        let masterListenerRef = null
+        let masterListenerRef = null;
         function updateUIProfile(data) {
-            const masterId = data.company || data.Client_Master
+            const masterId = data.company || data.Client_Master;
             if (masterId) {
                 if (masterListenerRef !== masterId) {
-                    masterListenerRef = masterId
+                    masterListenerRef = masterId;
                     onValue(ref(db, `users/${masterId}`), snap => {
-                        let mName = masterId
-                        if (snap.exists()) mName = snap.val().Client_Name || snap.val().name || masterId
-                        const el = document.getElementById('ui_company_name')
-                        if (el) el.innerText = mName
-                    })
+                        let mName = masterId;
+                        if (snap.exists()) mName = snap.val().Client_Name || snap.val().name || masterId;
+                        const el = document.getElementById('ui_company_name');
+                        if (el) el.innerText = mName;
+                    });
                 }
             } else {
-                document.getElementById('ui_company_name').innerText = "N One"
+                document.getElementById('ui_company_name').innerText = "N One";
             }
             
-            document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name
+            document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
+            document.getElementById('ui_cap_car').innerText = data.Cap_Car || (currentLang==='ar'?'السيارة غير محددة':'Car info missing');
             
-            let carInfo = data.Cap_CarType ? `${data.Cap_CarType} - ${data.Cap_CarCode || ''}` : data.Cap_Car
-            document.getElementById('ui_cap_car').innerText = carInfo || (currentLang==='ar'?'السيارة غير محددة':'Car info missing')
+            const bal = parseFloat(data.Cap_Balance || data.balance || 0);
+            const balEl = document.getElementById('ui_cap_bal');
+            balEl.innerHTML = `${bal.toFixed(2)} <span style="font-size:14px;">د.أ</span>`;
             
-            const bal = parseFloat(data.Cap_Balance || data.balance || 0)
-            const balEl = document.getElementById('ui_cap_bal')
-            balEl.innerHTML = `${bal.toFixed(2)} <span style="font-size:14px;">د.أ</span>`
-            
-            const toggleBtn = document.getElementById('toggle_status')
-            const statusInd = document.getElementById('ui_status_indicator')
-            const statusTxt = document.getElementById('ui_status_text')
-            const warningBanner = document.getElementById('balance-warning')
-            const energyBar = document.getElementById('energy-bar')
+            const toggleBtn = document.getElementById('toggle_status');
+            const statusInd = document.getElementById('ui_status_indicator');
+            const statusTxt = document.getElementById('ui_status_text');
+            const warningBanner = document.getElementById('balance-warning');
+            const energyBar = document.getElementById('energy-bar');
 
             if (bal <= -1) {
-                balEl.classList.add('negative')
-                warningBanner.style.display = 'flex'
-                if (data.app_status === 'online') forceOffline()
-                toggleBtn.checked = false; toggleBtn.disabled = true
-                statusInd.className = 'status-indicator offline'
-                statusTxt.innerText = dict[currentLang].status_blocked
-                energyBar.classList.remove('active')
+                balEl.classList.add('negative');
+                warningBanner.style.display = 'flex';
+                if (data.app_status === 'online') forceOffline();
+                toggleBtn.checked = false; toggleBtn.disabled = true;
+                statusInd.className = 'status-indicator offline';
+                statusTxt.innerText = dict[currentLang].status_blocked;
+                energyBar.classList.remove('active');
             } else {
-                balEl.classList.remove('negative')
-                warningBanner.style.display = 'none'
-                toggleBtn.disabled = false
+                balEl.classList.remove('negative');
+                warningBanner.style.display = 'none';
+                toggleBtn.disabled = false;
                 if (data.app_status === 'online') {
-                    toggleBtn.checked = true
-                    statusInd.className = 'status-indicator online'
-                    statusTxt.innerText = dict[currentLang].status_online
-                    energyBar.classList.add('active')
+                    toggleBtn.checked = true;
+                    statusInd.className = 'status-indicator online';
+                    statusTxt.innerText = dict[currentLang].status_online;
+                    energyBar.classList.add('active');
                 } else {
-                    toggleBtn.checked = false
-                    statusInd.className = 'status-indicator offline'
-                    statusTxt.innerText = dict[currentLang].status_offline
-                    energyBar.classList.remove('active')
+                    toggleBtn.checked = false;
+                    statusInd.className = 'status-indicator offline';
+                    statusTxt.innerText = dict[currentLang].status_offline;
+                    energyBar.classList.remove('active');
                 }
             }
         }
 
         window.toggleOnlineStatus = async function() {
-            const isOnline = document.getElementById('toggle_status').checked
-            const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0)
+            const isOnline = document.getElementById('toggle_status').checked;
+            const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
             
             if (isOnline && bal <= -1) {
-                window.showToast(currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online", true)
-                document.getElementById('toggle_status').checked = false
-                return
+                window.showToast(currentLang === 'ar' ? "لا يمكنك التفعيل يرجى شحن الرصيد" : "Recharge balance to go online", true);
+                document.getElementById('toggle_status').checked = false;
+                return;
             }
 
             if (isOnline && systemSettings.anti_vpn && isVpnDetected) {
-                window.showToast(currentLang === 'ar' ? "يرجى إغلاق الـ VPN لتتمكن من التفعيل" : "Please disable VPN", true)
-                document.getElementById('toggle_status').checked = false
-                return
+                window.showToast(currentLang === 'ar' ? "يرجى إغلاق الـ VPN لتتمكن من التفعيل" : "Please disable VPN", true);
+                document.getElementById('toggle_status').checked = false;
+                return;
             }
 
-            await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' })
-        }
+            await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
+        };
 
         async function forceOffline() {
-            await update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' })
+            await update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' });
         }
 
         window.acceptOrder = async function(appOrdId, radarOrdId) {
-            if(orderTimers[appOrdId]) clearInterval(orderTimers[appOrdId])
-            const updates = {}
-            updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted'
+            if(orderTimers[appOrdId]) clearInterval(orderTimers[appOrdId]);
+            const updates = {};
+            updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted';
             
             if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                updates[`orders/${radarOrdId}/OrderStatus`] = 'accepted'
+                updates[`orders/${radarOrdId}/OrderStatus`] = 'accepted';
             }
 
             try {
-                await update(ref(db), updates)
-                window.showToast(currentLang === 'ar' ? "تم قبول الطلب توجه للمنشأة 🚀" : "Order accepted 🚀", false)
+                await update(ref(db), updates);
+                window.showToast(currentLang === 'ar' ? "تم قبول الطلب توجه للمنشأة 🚀" : "Order accepted 🚀", false);
             } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال حاول مجددا" : "Connection error please retry", true)
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال حاول مجددا" : "Connection error please retry", true);
             }
-        }
+        };
 
         window.rejectOrder = async function(orderId) {
             window.showAppConfirm(currentLang === 'ar' ? "هل أنت متأكد من رفض الطلب ❌" : "Are you sure you want to reject ❌", async () => {
-                if(orderTimers[orderId]) clearInterval(orderTimers[orderId])
-                await update(ref(db), { [`assigned_orders/${capNodeKey}/${orderId}/status`]: 'rejected' })
-            })
-        }
+                if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
+                await update(ref(db), { [`assigned_orders/${capNodeKey}/${orderId}/status`]: 'rejected' });
+            });
+        };
 
         window.updateOrderStatus = async function(appOrdId, newStatus, radarOrdId, commAmount) {
             try {
-                const updates = {}
-                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus
+                const updates = {};
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = newStatus;
                 
                 if (newStatus === 'arrived_at_shop') {
-                    const commission = parseFloat(commAmount || 0)
+                    const commission = parseFloat(commAmount || 0);
                     if (commission > 0) {
-                        const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0)
-                        const newBal = (currentBal - commission).toFixed(2)
+                        const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+                        const newBal = (currentBal - commission).toFixed(2);
 
-                        updates[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal)
-                        updates[`captains/${capNodeKey}/balance`] = parseFloat(newBal)
-                        updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true
+                        updates[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal);
+                        updates[`captains/${capNodeKey}/balance`] = parseFloat(newBal);
+                        updates[`assigned_orders/${capNodeKey}/${appOrdId}/is_commission_deducted`] = true;
                         
                         if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                            updates[`orders/${radarOrdId}/Cap_Commission`] = commission
-                            updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed'
+                            updates[`orders/${radarOrdId}/Cap_Commission`] = commission;
+                            updates[`orders/${radarOrdId}/FinancialStatus`] = 'confirmed';
                         }
                     }
                 }
                 
                 if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                    let radarStatus = newStatus
-                    if(newStatus === 'arrived_at_shop') radarStatus = 'accepted' 
-                    if(newStatus === 'arrived_at_customer') radarStatus = 'arrived'
-                    updates[`orders/${radarOrdId}/OrderStatus`] = radarStatus
+                    let radarStatus = newStatus;
+                    if(newStatus === 'arrived_at_shop') radarStatus = 'accepted'; 
+                    if(newStatus === 'arrived_at_customer') radarStatus = 'arrived';
+                    updates[`orders/${radarOrdId}/OrderStatus`] = radarStatus;
                 }
 
-                await update(ref(db), updates)
-                window.showToast(currentLang === 'ar' ? "تم تحديث الحالة بنجاح 🚀" : "Status updated 🚀", false)
+                await update(ref(db), updates);
+                window.showToast(currentLang === 'ar' ? "تم تحديث الحالة بنجاح 🚀" : "Status updated 🚀", false);
             } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true)
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
             }
-        }
+        };
 
-        // بروتوكول القيد الواحد (Single Entry Guard)
         window.completeOrder = async function(appOrdId, radarOrdId, ordVal, ordFee, ordComm, restName) {
             try {
-                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default'
-                const updates = {}
+                const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                const updates = {};
                 
-                // مسح الطلب من الواجهة
-                updates[`assigned_orders/${capNodeKey}/${appOrdId}`] = null
+                // بروتوكول القيد الواحد (Single Entry Guard)
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}`] = null; // مسح من واجهة الكابتن
                 
-                // إضافة القيد الوحيد في الأرشيف المالي للشركة
-                const newArchiveRef = push(ref(db, `company_archives/${compId}/orders`))
+                // إضافة القيد الوحيد المالي الشامل
+                const newArchiveRef = push(ref(db, `company_archives/${compId}/orders`));
                 updates[`company_archives/${compId}/orders/${newArchiveRef.key}`] = {
                     capKey: capNodeKey,
                     date: new Date().toISOString(),
@@ -2027,54 +1683,54 @@
                     rest: restName,
                     appOrdId: appOrdId,
                     live_status: 'delivered'
-                }
+                };
 
-                let shopId = ''
+                let shopId = '';
                 if (radarOrdId && radarOrdId !== 'undefined' && radarOrdId !== 'null') {
-                    updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered'
-                    const ordSnap = await get(ref(db, `orders/${radarOrdId}`))
-                    if(ordSnap.exists()) { shopId = ordSnap.val().Shop_User }
+                    updates[`orders/${radarOrdId}/OrderStatus`] = 'delivered';
+                    const ordSnap = await get(ref(db, `orders/${radarOrdId}`));
+                    if(ordSnap.exists()) { shopId = ordSnap.val().Shop_User; }
                 }
 
-                await update(ref(db), updates)
-                window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false)
+                await update(ref(db), updates);
+                window.showToast(currentLang === 'ar' ? "تم التسليم بنجاح يا بطل 💎" : "Delivered successfully 💎", false);
                 
                 if(shopId && shopId !== 'undefined' && shopId !== 'null') {
-                    setTimeout(() => { openRatingModal(shopId) }, 1500)
+                    setTimeout(() => { openRatingModal(shopId); }, 1500);
                 }
             } catch (e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true)
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
             }
-        }
+        };
         
         window.openHistoryModal = async function() {
-            const container = document.getElementById('history-list-container')
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`
-            document.getElementById('history-modal').style.display = 'flex'
+            const container = document.getElementById('history-list-container');
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
+            document.getElementById('history-modal').style.display = 'flex';
             
-            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default'
+            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
             
             try {
                 // سحب مخصص ومفلتر من الفايربيز مباشرة
-                const archiveRef = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey))
-                const snap = await get(archiveRef)
-                let hHtml = ''
+                const archiveRef = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
+                const snap = await get(archiveRef);
+                let hHtml = '';
                 
                 if(snap.exists()) {
-                    const myOrders = Object.values(snap.val()).sort((a,b) => new Date(b.date) - new Date(a.date))
+                    const myOrders = Object.values(snap.val()).sort((a,b) => new Date(b.date) - new Date(a.date));
                     
                     if(myOrders.length === 0) {
-                        hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`
+                        hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
                     } else {
                         myOrders.forEach(ord => {
-                            const d = new Date(ord.date)
-                            const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')
-                            const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+                            const d = new Date(ord.date);
+                            const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+                            const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
                             
-                            const ordVal = parseFloat(ord.value || 0).toFixed(2)
-                            const delFee = parseFloat(ord.fee || 0).toFixed(2)
-                            const comm = parseFloat(ord.comm || 0).toFixed(2)
-                            const restName = ord.rest || (currentLang === 'ar' ? 'الموقع' : 'Location')
+                            const ordVal = parseFloat(ord.value || 0).toFixed(2);
+                            const delFee = parseFloat(ord.fee || 0).toFixed(2);
+                            const comm = parseFloat(ord.comm || 0).toFixed(2);
+                            const restName = ord.rest || (currentLang === 'ar' ? 'الموقع' : 'Location');
                             
                             hHtml += `
                                 <div class="history-item">
@@ -2084,83 +1740,83 @@
                                     </div>
                                     <div class="h-row" style="margin-top:8px; font-size:12px;">
                                         <span style="color:var(--primary);">قيمة الفاتورة: <b>${ordVal} د.أ</b></span>
-                                        <span style="color:var(--success);">الصافي لك: <b>${delFee} د.أ</b></span>
+                                        <span style="color:var(--success);">أجرة التوصيل: <b>${delFee} د.أ</b></span>
                                     </div>
                                     <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
                                         <span style="color:#64748b;">${currentLang === 'ar' ? "عمولة المنصة المخصومة" : "App Commission"}</span>
                                         <span class="h-commission">-${comm} د.أ</span>
                                     </div>
                                 </div>
-                            `
-                        })
+                            `;
+                        });
                     }
                 } else {
-                    hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`
+                    hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
                 }
                 
-                container.innerHTML = hHtml
+                container.innerHTML = hHtml;
             } catch(e) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-weight:bold;">حدث خطأ في تحميل السجل</div>`
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-weight:bold;">حدث خطأ في تحميل السجل</div>`;
             }
-        }
+        };
 
         window.submitRating = async function() {
-            const val = parseInt(document.getElementById('current_rating_val').value)
-            const shopId = document.getElementById('rating_shop_id').value
-            const selectedTag = document.getElementById('selected_tag').value
-            const notes = document.getElementById('rating_notes').value.trim()
+            const val = parseInt(document.getElementById('current_rating_val').value);
+            const shopId = document.getElementById('rating_shop_id').value;
+            const selectedTag = document.getElementById('selected_tag').value;
+            const notes = document.getElementById('rating_notes').value.trim();
             
-            if(val === 0) { window.showToast("الرجاء اختيار التقييم أولا", true); return }
+            if(val === 0) { window.showToast("الرجاء اختيار التقييم أولا", true); return; }
             
             try {
-                const newRatingRef = push(ref(db, `ratings/shops/${shopId}`))
+                const newRatingRef = push(ref(db, `ratings/shops/${shopId}`));
                 await set(newRatingRef, {
                     captainId: capNodeKey,
                     rating: val,
                     reason: selectedTag,
                     notes: notes,
                     timestamp: Date.now()
-                })
-                window.showToast("شكرا لتقييمك 💎")
-                closeRatingModal()
+                });
+                window.showToast("شكرا لتقييمك 💎");
+                closeRatingModal();
             } catch(e) {
-                window.showToast("حدث خطأ أثناء إرسال التقييم", true)
-                closeRatingModal()
+                window.showToast("حدث خطأ أثناء إرسال التقييم", true);
+                closeRatingModal();
             }
-        }
+        };
 
         window.openSettingsModal = function() {
-            document.getElementById('set_user').value = currentCaptain.Cap_User || currentCaptain.user || ''
-            document.getElementById('set_pass').value = currentCaptain.Cap_Pass || currentCaptain.pass || ''
-            document.getElementById('settings-modal').style.display = 'flex'
-        }
+            document.getElementById('set_user').value = currentCaptain.Cap_User || currentCaptain.user || '';
+            document.getElementById('set_pass').value = currentCaptain.Cap_Pass || currentCaptain.pass || '';
+            document.getElementById('settings-modal').style.display = 'flex';
+        };
 
         window.saveSettings = async function() {
-            const newUser = document.getElementById('set_user').value.trim()
-            const newPass = document.getElementById('set_pass').value.trim()
-            if(!newUser || !newPass) { window.showToast(currentLang === 'ar' ? "البيانات فارغة" : "Fields cannot be empty", true); return }
+            const newUser = document.getElementById('set_user').value.trim();
+            const newPass = document.getElementById('set_pass').value.trim();
+            if(!newUser || !newPass) { window.showToast(currentLang === 'ar' ? "البيانات فارغة" : "Fields cannot be empty", true); return; }
 
             try {
                 if(newUser !== capNodeKey) {
-                    const newData = { ...currentCaptain, Cap_User: newUser, user: newUser, Cap_Pass: newPass, pass: newPass }
-                    const updates = {}
-                    updates[`captains/${newUser}`] = newData
-                    updates[`captains/${capNodeKey}`] = null
-                    await update(ref(db), updates)
+                    const newData = { ...currentCaptain, Cap_User: newUser, user: newUser, Cap_Pass: newPass, pass: newPass };
+                    const updates = {};
+                    updates[`captains/${newUser}`] = newData;
+                    updates[`captains/${capNodeKey}`] = null;
+                    await update(ref(db), updates);
                     
-                    capNodeKey = newUser; currentCaptain = newData
-                    localStorage.setItem('n1_captain_session', JSON.stringify(newData))
+                    capNodeKey = newUser; currentCaptain = newData;
+                    localStorage.setItem('n1_captain_session', JSON.stringify(newData));
                 } else {
-                    await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass })
-                    currentCaptain.Cap_Pass = newPass; currentCaptain.pass = newPass
-                    localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain))
+                    await update(ref(db, `captains/${capNodeKey}`), { Cap_Pass: newPass, pass: newPass });
+                    currentCaptain.Cap_Pass = newPass; currentCaptain.pass = newPass;
+                    localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
                 }
-                window.showToast(currentLang === 'ar' ? "تم التحديث بنجاح" : "Updated successfully", false)
-                document.getElementById('settings-modal').style.display = 'none'
+                window.showToast(currentLang === 'ar' ? "تم التحديث بنجاح" : "Updated successfully", false);
+                document.getElementById('settings-modal').style.display = 'none';
             } catch(e) {
-                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection Error", true)
+                window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection Error", true);
             }
-        }
+        };
 
     </script>
 </body>
