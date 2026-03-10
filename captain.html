@@ -765,6 +765,13 @@
                         let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                         rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
+                        // زر الموقع
+                        let locationHtml = '';
+                        if(ord.location_link || ord.Shop_Location_Link) {
+                            const link = ord.location_link || ord.Shop_Location_Link;
+                            locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
+                        }
+
                         let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب للخصوصية 🛡️</span></div>`;
                         if (ord.shop_phone && systemSettings.show_phone_numbers && currentCaptain.hide_phone !== true) {
                             phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900;">${ord.shop_phone}</a></div>`;
@@ -792,7 +799,10 @@
 
                         html += `
                             <div class="order-card ${ord.status==='assigned'?'ringing':''}">
-                                <div class="order-rest" style="font-size:18px;">🏪 ${rName}</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <div class="order-rest" style="font-size:18px;">🏪 ${rName}</div>
+                                    ${locationHtml}
+                                </div>
                                 ${phoneHtml}
                                 <div class="order-details">
                                     <div class="detail-box">
@@ -942,6 +952,9 @@
         };
 
         window.acceptOrd = async (id, rId) => {
+            // تثبيت التايمر بمجرد القبول
+            if(orderTimers[id]) clearInterval(orderTimers[id]);
+            
             const up = {}; up[`assigned_orders/${capNodeKey}/${id}/status`] = 'accepted';
             if(rId && rId!=='undefined') up[`orders/${rId}/OrderStatus`] = 'accepted';
             await update(ref(db), up);
