@@ -505,37 +505,52 @@
             document.getElementById('offline-guard').style.display = 'none';
         });
 
-        // ================== جدار الحماية (Anti-VPN Check) ==================
+        // ================== جدار الحماية الأشرس (Anti-VPN Check) ==================
         async function checkVPNStatus() {
             if (!systemSettings.anti_vpn) {
                 document.getElementById('vpn-guard').style.display = 'none';
                 return;
             }
+
+            // فحص المنطقة الزمنية (أسرع فحص)
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (tz && tz !== 'Asia/Amman') {
+                blockVPN(); return;
+            }
+
             try {
-                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                // فحص IP ومزود الخدمة (يكشف الـ VPN حتى لو اختار الأردن)
+                const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
-                if (data.country !== 'JO') { 
-                    document.getElementById('vpn-guard').style.display = 'flex';
-                    if (currentCaptain && currentCaptain.app_status === 'online') {
-                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
-                        document.getElementById('toggle_status').checked = false;
-                        document.getElementById('ui_status_indicator').className='status-indicator offline'; 
-                        document.getElementById('ui_status_text').innerHTML='غير متاح 🔴'; 
-                        document.getElementById('ui_status_text').style.color = "var(--danger)";
-                    }
-                } else {
-                    document.getElementById('vpn-guard').style.display = 'none';
+                
+                if (data.country_code !== 'JO' && data.country !== 'Jordan') { 
+                    blockVPN(); return;
                 }
+                
+                // فحص دقيق للشركات السحابية وبروكسيات الـ VPN
+                const org = (data.org || '').toLowerCase();
+                if(org.includes('vpn') || org.includes('proxy') || org.includes('datacenter') || org.includes('hosting') || org.includes('cloud') || org.includes('digitalocean') || org.includes('amazon')) {
+                    blockVPN(); return;
+                }
+
+                document.getElementById('vpn-guard').style.display = 'none';
             } catch (e) {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                if (tz && !tz.includes('Amman')) {
-                    document.getElementById('vpn-guard').style.display = 'flex';
-                    if (currentCaptain && currentCaptain.app_status === 'online') {
-                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
-                    }
-                }
+                // فشل الفحص بصمت لعدم إزعاج الكابتن إذا كان النت ضعيف
             }
         }
+        
+        function blockVPN() {
+            document.getElementById('vpn-guard').style.display = 'flex';
+            if (currentCaptain && currentCaptain.app_status === 'online') {
+                update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                const tgl = document.getElementById('toggle_status');
+                if(tgl) tgl.checked = false;
+                document.getElementById('ui_status_indicator').className='status-indicator offline'; 
+                document.getElementById('ui_status_text').innerHTML='غير متاح 🔴'; 
+                document.getElementById('ui_status_text').style.color = "var(--danger)";
+            }
+        }
+        
         setInterval(checkVPNStatus, 15000);
 
         window.showToast = function(msg, isError = false) {
@@ -806,6 +821,9 @@
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
 
+            // تأمين التايمر للرقم المعتمد
+            totalTime = systemSettings.order_timer;
+
             orderTimers[orderId] = setInterval(() => {
                 timeLeft--;
                 const bar = document.getElementById(`bar_timer_${orderId}`);
@@ -838,9 +856,6 @@
         function initListeners() {
             let masterRaw = 'default';
             if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) masterRaw = currentCaptain.company || currentCaptain.Client_Master;
-            
-            // تجاوز آمن للأسماء في الفايربيز
-            const masterSafe = masterRaw.replace(/[.#$\[\]]/g, '_');
 
             // فحص انقطاع سيرفر الفايربيز
             const connectedRef = ref(db, ".info/connected");
@@ -852,51 +867,44 @@
                 }
             });
 
+            // الاعتماد المباشر على ID الماستر لفك شيفرة الريموت (بدون استعلامات معقدة)
             try {
-                // جلب إعدادات الريموت من الشركة الأم
-                onValue(ref(db, `users/${masterRaw}`), (masterSnap) => {
-                    let actualMaster = masterRaw;
-                    if (masterSnap.exists() && masterSnap.val().Client_User) {
-                        actualMaster = masterSnap.val().Client_User;
-                    }
-                    
-                    onValue(ref(db, `settings/${actualMaster}`), (snap) => {
-                        if(snap.exists()) {
-                            const s = snap.val();
-                            // قراءة الرقم الحقيقي للتايمر
-                            systemSettings.order_timer = parseInt(s.order_timer) || 10;
-                            systemSettings.show_phone_numbers = s.show_phone_numbers || false;
-                            systemSettings.hotspots_active = s.hotspots_active !== false;
-                            systemSettings.anti_vpn = s.anti_vpn || false;
+                onValue(ref(db, `settings/${masterRaw}`), (snap) => {
+                    if(snap.exists()) {
+                        const s = snap.val();
+                        // سحب التايمر المباشر وتحديث الذاكرة
+                        systemSettings.order_timer = parseInt(s.order_timer) || 10;
+                        systemSettings.show_phone_numbers = s.show_phone_numbers || false;
+                        systemSettings.hotspots_active = s.hotspots_active !== false;
+                        systemSettings.anti_vpn = s.anti_vpn || false;
 
-                            // الخرائط الحرارية النظيفة
-                            const hsCont = document.getElementById('ui_hotspots');
-                            if(systemSettings.hotspots_active) {
-                                if(!hotspotUnsubscribe) {
-                                    const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
-                                    hotspotUnsubscribe = onValue(q, (hSnap) => {
-                                        if(hSnap.exists()) {
-                                            const counts = {};
-                                            Object.values(hSnap.val()).forEach(o => {
-                                                let rn = o.Shop_Name || o.restaurant || ''; rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
-                                                if(rn) counts[rn] = (counts[rn] || 0) + 1;
-                                            });
-                                            const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
-                                            if(sorted.length > 0) {
-                                                hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
-                                            } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
+                        // التطهير من الاستهلاك للخرائط الحرارية
+                        const hsCont = document.getElementById('ui_hotspots');
+                        if(systemSettings.hotspots_active) {
+                            if(!hotspotUnsubscribe) {
+                                const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
+                                hotspotUnsubscribe = onValue(q, (hSnap) => {
+                                    if(hSnap.exists()) {
+                                        const counts = {};
+                                        Object.values(hSnap.val()).forEach(o => {
+                                            let rn = o.Shop_Name || o.restaurant || ''; rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
+                                            if(rn) counts[rn] = (counts[rn] || 0) + 1;
+                                        });
+                                        const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+                                        if(sorted.length > 0) {
+                                            hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
                                         } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
-                                    });
-                                }
-                            } else {
-                                if(hotspotUnsubscribe) {
-                                    hotspotUnsubscribe();
-                                    hotspotUnsubscribe = null;
-                                }
-                                hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
+                                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حالياً</div>`; }
+                                });
                             }
+                        } else {
+                            if(hotspotUnsubscribe) {
+                                hotspotUnsubscribe();
+                                hotspotUnsubscribe = null;
+                            }
+                            hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
                         }
-                    });
+                    }
                 });
             } catch(e) {}
 
@@ -957,7 +965,7 @@
                                 ring = true;
                                 if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
                                 const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
-                                // التايمر الحقيقي يسحب من المتغير
+                                // التايمر الحقيقي يسحب من المتغير المحدث
                                 timeLeft = systemSettings.order_timer - elapsed;
                                 if(timeLeft <= 0) { rejectOrderAuto(id); return; }
                             }
@@ -1044,6 +1052,7 @@
                     
                     if(toggleSection) toggleSection.style.display = hasActive ? 'none' : 'flex';
 
+                    // الإشعارات والاهتزاز المتكرر
                     const aud = document.getElementById('order-ringtone');
                     if(ring && currentCaptain.app_status === 'online') { 
                         if(aud && aud.paused) aud.play().catch(e=>{}); 
@@ -1099,6 +1108,7 @@
             `;
             
             let mName = data.company || data.Client_Master || "N One";
+            // حماية الجذور من التعليق
             if(mName !== "N One") {
                 try {
                     get(ref(db, `users/${mName}`)).then(s => { 
