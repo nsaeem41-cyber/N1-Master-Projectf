@@ -87,8 +87,6 @@
         .user-info-area { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
         .sub-countdown { font-size: 11px; padding: 4px 8px; border-radius: 10px; margin-bottom: 4px; font-weight: 800; border: 1px solid transparent; transition: 0.3s; }
         .sub-active { background: rgba(255,255,255,0.1); color: var(--gold); border-color: rgba(212,175,55,0.5); }
-        .sub-warning { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-        .sub-expired { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
         /* تصميم الإعدادات الاحترافي الفخم */
         .settings-card { max-width: 600px; margin: 0 auto; padding: 0; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.05); }
@@ -238,7 +236,7 @@
         
         <div style="display:flex; gap:15px; align-items:center;">
             <div class="user-info-area">
-                <div id="sub-timer" class="sub-countdown sub-active">تحديث حالة النظام...</div>
+                <div id="sub-timer" class="sub-countdown sub-active">نظام الإدارة نشط</div>
                 <span id="welcome-msg" style="font-size:14px; font-weight:900; color:white;">مرحباً</span>
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
@@ -264,7 +262,7 @@
                 <span style="font-size: 24px;">🛡️</span>
                 <div>
                     <h3 style="margin: 0; color: var(--primary); font-size: 14px;">مركز بروتوكولات الأمان (Cyber Control)</h3>
-                    <small style="color: #64748b; font-weight: bold;">مسار التحكم مقفل باسم الشركة</small>
+                    <small style="color: #64748b; font-weight: bold;">مسار التحكم مقفل حصرياً للمعرف الجذري</small>
                 </div>
             </div>
 
@@ -397,11 +395,8 @@
                         <input type="number" id="fixed_commission" placeholder="0.50" step="0.01" style="margin-top:6px;">
                     </div>
 
-                    <select id="sub_duration">
-                        <option value="30">صلاحية النظام: 30 يوم</option>
-                        <option value="90">صلاحية النظام: 3 أشهر</option>
-                        <option value="180">صلاحية النظام: 6 أشهر</option>
-                        <option value="365">صلاحية النظام: سنة</option>
+                    <select id="sub_duration" style="display: none;">
+                        <option value="365" selected>صلاحية غير محدودة</option>
                     </select>
 
                     <button class="btn-action btn-add" onclick="addShop()">تسجيل وتوثيق المنشأة 🚀</button>
@@ -434,7 +429,7 @@
                             </tr>
                         </thead>
                         <tbody id="shops-table-body">
-                            <tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#94a3b8;">جاري الاتصال بقاعدة البيانات المركزية... ⏳</td></tr>
+                            <tr><td colspan="8" style="text-align:center; padding:20px; font-weight:bold; color:#94a3b8;">جاري تحميل بيانات المنشآت التابعة... ⏳</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -552,6 +547,7 @@
             setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
         };
 
+        // تسلسل الإقلاع الألماسي (Safe Boot)
         window.onload = function() {
             try {
                 const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
@@ -559,8 +555,7 @@
                 if (savedUser) {
                     currentUser = JSON.parse(savedUser);
                     
-                    // تثبيت المعرفات الجذرية مع الحماية
-                    COMPANY_ROOT_ID = String(currentUser.Client_User || currentUser.user || '').trim();
+                    COMPANY_ROOT_ID = String(currentUser.Client_User || currentUser.user || currentUser.Client_ID || '').trim();
                     COMPANY_ROOT_NAME = currentUser.Client_Name || currentUser.name || 'مؤسسة غير معرفة';
                     
                     if(!COMPANY_ROOT_ID) {
@@ -581,66 +576,22 @@
                 document.getElementById('profile_user').value = COMPANY_ROOT_ID;
                 document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
 
-                // تشغيل الوظائف داخل دروع حماية
-                try { checkAdPermission(); } catch(e) { console.error(e); }
-                try { updateCountdownTimer(); } catch(e) { console.error(e); }
-                try { setupRealtimeFreezeListener(); } catch(e) { console.error(e); }
-                try { setupSmartAdsListener(); } catch(e) { console.error(e); }
-                try { setupAlertsListener(); } catch(e) { console.error(e); }
-                try { fetchData(); } catch(e) { console.error(e); }
-                try { fetchCyberSettings(); } catch(e) { console.error(e); }
+                // تحميل البيانات الأساسية أولا لضمان عدم تعليق الجدول
+                fetchData();
+
+                // تحميل الوظائف الفرعية بدروع حماية مستقلة
+                try { checkAdPermission(); } catch(e) {}
+                try { setupRealtimeFreezeListener(); } catch(e) {}
+                try { setupSmartAdsListener(); } catch(e) {}
+                try { setupAlertsListener(); } catch(e) {}
+                try { fetchCyberSettings(); } catch(e) {}
 
             } catch(e) {
-                console.error("Critical Boot Error:", e);
+                console.error("Critical Boot Error", e);
             }
         };
 
-        // ================= حماية العداد من الانهيار =================
-        function updateCountdownTimer() {
-            const timerEl = document.getElementById('sub-timer');
-            try {
-                const expVal = currentUser.Client_Expiry || currentUser.expiry;
-                
-                if (!expVal) {
-                    timerEl.innerText = "مستوى صلاحية ممتد";
-                    timerEl.className = "sub-countdown sub-active";
-                    return;
-                }
-
-                // محاولة تحويل القيمة لتاريخ
-                let expiryDate = new Date(expVal);
-                
-                // إذا كانت القيمة مجرد رقم (مثلا 365) وليس تاريخ حقيقي
-                if (isNaN(expiryDate.getTime())) {
-                    timerEl.innerText = "صلاحية غير مقيدة بتاريخ";
-                    timerEl.className = "sub-countdown sub-active";
-                    return;
-                }
-
-                expiryDate.setHours(23, 59, 59, 999);
-                const now = new Date();
-                const diffTime = expiryDate.getTime() - now.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays > 0) {
-                    if (diffDays <= 3) {
-                        timerEl.innerText = `⚠️ انتباه: النظام سينتهي خلال ${diffDays} يوم`;
-                        timerEl.className = "sub-countdown sub-warning";
-                    } else {
-                        timerEl.innerText = `حالة النظام: نشط (${diffDays} يوم)`;
-                        timerEl.className = "sub-countdown sub-active";
-                    }
-                } else {
-                    timerEl.innerText = `توقف النظام الإداري`;
-                    timerEl.className = "sub-countdown sub-expired";
-                }
-            } catch (e) {
-                timerEl.innerText = "النظام يعمل";
-                timerEl.className = "sub-countdown sub-active";
-            }
-        }
-
-        // ================= دوال التحكم السيبراني (مربوطة بالجذر) =================
+        // ================= دوال التحكم السيبراني (مربوطة بالجذر المطلق) =================
         window.fetchCyberSettings = function() {
             if(!COMPANY_ROOT_ID) return;
 
@@ -656,7 +607,7 @@
                 onValue(ref(db, `settings/${COMPANY_ROOT_ID}/hotspots_active`), (snap) => {
                     document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
                 });
-            } catch(e) { console.error("Settings fetch error:", e); }
+            } catch(e) { console.error("Settings error", e); }
         };
 
         window.updateRemoteTimer = async function() {
@@ -701,7 +652,7 @@
                         allData = snapshot.exists() ? Object.values(snapshot.val()) : [];
                         renderShops();
                         updateClientAdTargets(); 
-                    } catch(e) { console.error("Error processing shops data:", e); }
+                    } catch(e) { console.error("Data Error", e); }
                 });
             } catch(e){}
 
@@ -789,16 +740,8 @@
                         toggleBtn = `<button class="btn-freeze" title="تقييد الوصول" onclick="toggleStatus('${shop.Client_User || shop.user}', 'active')">🚫</button>`;
                     }
                     
+                    // حماية كود التاريخ لمنع الانهيار
                     let daysLeft = "مفتوح";
-                    if (shop.Client_Expiry || shop.expiry) {
-                        let exp = new Date(shop.Client_Expiry || shop.expiry);
-                        if(!isNaN(exp.getTime())) {
-                            exp.setHours(23, 59, 59, 999);
-                            const diff = exp.getTime() - new Date().getTime();
-                            const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                            daysLeft = d > 0 ? d + " يوم" : "انتهت المهلة";
-                        }
-                    }
                     
                     let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 التوجيه الجغرافي</a>` : '';
                     let pricingBadge = (shop.Client_PricingArea || shop.pricing_area) ? `<br><span style="font-size:10px; background:#fefce8; color:#b45309; padding:2px 6px; border-radius:4px; border:1px solid #fde68a; display:inline-block; margin-top:4px;">🏷️ ${shop.Client_PricingArea || shop.pricing_area}</span>` : '';
@@ -1039,11 +982,6 @@
                             document.getElementById('display_company_name_settings').innerText = COMPANY_ROOT_NAME;
                         }
 
-                        if(data.Client_Expiry || data.expiry) {
-                            currentUser.Client_Expiry = data.Client_Expiry || data.expiry;
-                            updateCountdownTimer();
-                        }
-
                         if (data.Client_Status === 'paused' || data.status === 'paused') {
                             showAppToast("تم تقييد الوصول للوحة الإدارة. يرجى الاتصال بالمركز الرئيسي.", true);
                             setTimeout(() => {
@@ -1053,12 +991,17 @@
                             }, 3000);
                         }
                     } else {
-                        showAppToast("تم إلغاء ارتباط الحساب بقاعدة البيانات. سيتم إغلاق الجلسة.", true);
-                        setTimeout(() => {
-                            localStorage.removeItem('current_company_user');
-                            localStorage.removeItem('currentUser');
-                            window.location.replace('index.html');
-                        }, 3000);
+                        // دعم إضافي: في حال الإدارة تم تسجيلها كـ shop بالخطأ
+                        get(ref(db, `shops/${COMPANY_ROOT_ID}`)).then(shopSnap => {
+                            if(!shopSnap.exists()) {
+                                showAppToast("تم إلغاء ارتباط الحساب بقاعدة البيانات. سيتم إغلاق الجلسة.", true);
+                                setTimeout(() => {
+                                    localStorage.removeItem('current_company_user');
+                                    localStorage.removeItem('currentUser');
+                                    window.location.replace('index.html');
+                                }, 3000);
+                            }
+                        });
                     }
                 });
             } catch(e){}
@@ -1310,7 +1253,6 @@
             const locLink = document.getElementById('shop_location_link').value.trim();
             const balance = document.getElementById('shop_balance').value || "0";
             const subType = document.getElementById('sub_type').value;
-            const days = document.getElementById('sub_duration').value;
             
             let commission = "0";
             if (subType === 'paid' || subType === 'commission') {
@@ -1330,9 +1272,6 @@
                 showAppToast("تعارض في البيانات: المعرف موجود مسبقاً.", true);
                 return;
             }
-
-            const expDate = new Date();
-            expDate.setDate(expDate.getDate() + parseInt(days));
             
             // العزل المطلق: ربط المنشأة بالجذر
             const newShop = {
@@ -1349,8 +1288,6 @@
                 pricing_area: pricingArea,
                 Client_Location: locLink,  
                 Client_Comm: commission, 
-                Client_Expiry: expDate.toISOString().split('T')[0], 
-                Client_PlanDays: days,
                 Client_Balance: balance,
                 Shop_Balance: balance,
                 name: name,
