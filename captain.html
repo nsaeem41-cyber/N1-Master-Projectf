@@ -27,7 +27,7 @@
         /* ================= تصميم Captain App (Royal Navy & Diamond White) ================= */
         :root {
             --primary: #0f172a;  
-            --accent: #1e293b;      
+            --accent: #1e293b;     
             --gold: #d4af37;       
             --bg: #f8fafc;         
             --panel: #ffffff;      
@@ -268,7 +268,7 @@
         input:checked + .slider:before { transform: translateX(26px); }
         input:disabled + .slider { background-color: #e2e8f0; cursor: not-allowed; opacity: 0.5; }
 
-        /* رسائل التحذير والـ VPN */
+        /* رسائل التحذير */
         .warning-banner, .vpn-warning-banner {
             border-radius: 12px; padding: 15px; margin-bottom: 20px; display: none;
             font-size: 13px; font-weight: bold; align-items: center; gap: 10px; animation: fadeIn 0.3s;
@@ -295,7 +295,7 @@
         .fin-val { font-size: 16px; font-weight: 900; color: var(--primary); }
         .fin-val.success { color: var(--success); }
 
-        /* الطلبات الحالية والمعادلة المالية الشفافة */
+        /* الطلبات الحالية */
         .section-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
         
         .order-card {
@@ -310,17 +310,9 @@
         .order-rest { font-size: 16px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
         .order-rest-phone { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;}
         .order-details { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
-        
         .detail-box { text-align: center; flex: 1; }
         .detail-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
         .detail-val { font-size: 13px; font-weight: bold; color: var(--primary); }
-
-        /* تجهيزات المعادلة المالية الألماسية */
-        .fin-container { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; }
-        .fin-row { display: flex; justify-content: center; gap: 8px; align-items: center; }
-        .fin-orig { color: #94a3b8; text-decoration: line-through; font-size: 11px; font-weight: bold; }
-        .fin-disc { color: var(--danger); font-size: 11px; font-weight: bold; background: #fef2f2; padding: 2px 6px; border-radius: 6px; border: 1px solid #fecaca; }
-        .fin-net { color: var(--success); font-size: 14px; font-weight: 900; background: #ecfdf5; padding: 4px 12px; border-radius: 8px; border: 1px solid #a7f3d0; margin-top: 2px; }
         
         .action-buttons { display: flex; gap: 10px; }
         .btn-action {
@@ -415,7 +407,7 @@
         .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
 
         #loader {
-            display: none;
+            display: none; /* تم إخفاء اللودر لضمان التحميل الفوري */
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
             z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: var(--gold);
         }
@@ -440,6 +432,7 @@
         .hotspot-tag { display: inline-block; background: #fff0f2; color: var(--danger); border: 1px solid #ffccd5; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2); animation: pulseAlert 2s infinite; }
     </style>
 </head>
+<body id="app-body">
 <body id="app-body">
 
     <audio id="keep-alive-audio" loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
@@ -536,7 +529,7 @@
                 <div class="settings-form">
                     <div class="settings-group">
                         <label id="lang_set_user">اسم المستخدم (يوزر الدخول)</label>
-                        <input type="text" id="set_user" autocomplete="off" readonly style="cursor:not-allowed;">
+                        <input type="text" id="set_user" autocomplete="off">
                     </div>
                     <div class="settings-group">
                         <label id="lang_set_pass">كلمة المرور</label>
@@ -594,10 +587,8 @@
                 <div class="login-logo" style="font-size: 24px; margin-bottom: 25px;" id="lang_reg_title">تسجيل كابتن جديد 📝</div>
                 
                 <div class="input-group">
-                    <label id="lang_reg_comp_id">اسم الشركة المعتمدة (اختر من القائمة)</label>
-                    <select id="reg_company_id" onchange="verifyCompanyId()">
-                        <option value="">جاري تحميل الشركات...</option>
-                    </select>
+                    <label id="lang_reg_comp_id">معرف الشركة (Company ID)</label>
+                    <input type="text" id="reg_company_id" placeholder="أدخل كود الشركة المراد الانضمام إليها" oninput="verifyCompanyId()">
                     <div id="company_status_badge" class="id-status-badge"></div>
                     <input type="hidden" id="verified_company_name" value="">
                 </div>
@@ -610,21 +601,13 @@
                     <label id="lang_reg_phone">رقم الهاتف</label>
                     <input type="tel" id="reg_phone" placeholder="مثال 07xxxxxxxx">
                 </div>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; text-align: right;">
-                    <div style="flex: 1;">
-                        <label id="lang_reg_car_type" style="display: block; font-size: 12px; margin-bottom: 8px; color: #94a3b8; font-weight: bold;">نوع السيارة</label>
-                        <input type="text" id="reg_car_type" placeholder="مثال: كيا سيراتو" style="width: 100%; padding: 15px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(255,255,255,0.05); color: white; font-weight: bold; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label id="lang_reg_car_code" style="display: block; font-size: 12px; margin-bottom: 8px; color: #94a3b8; font-weight: bold;">ترميز اللوحة</label>
-                        <input type="text" id="reg_car_code" placeholder="مثال: 50-12345" style="width: 100%; padding: 15px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(255,255,255,0.05); color: white; font-weight: bold; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s;">
-                    </div>
+                <div class="input-group">
+                    <label id="lang_reg_car">السيارة (النوع والترميز)</label>
+                    <input type="text" id="reg_car" placeholder="مثال كيا سيراتو - 50-12345">
                 </div>
-
                 <div class="input-group">
                     <label id="lang_reg_user">اسم المستخدم (User Name) للدخول</label>
-                    <input type="text" id="reg_user" placeholder="أدخل اسم المستخدم" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                    <input type="text" id="reg_user" placeholder="أدخل اسم المستخدم">
                 </div>
                 <div class="input-group">
                     <label id="lang_reg_pass">كلمة المرور (Password)</label>
@@ -634,7 +617,7 @@
                 <div class="input-group">
                     <label id="lang_reg_area">المنطقة (التابعة للشركة)</label>
                     <select id="reg_area" disabled>
-                        <option value="">يرجى اختيار الشركة أولاً...</option>
+                        <option value="">يرجى التحقق من معرف الشركة أولاً...</option>
                     </select>
                 </div>
                 
@@ -749,8 +732,364 @@
 
     </div>
 <script>
+        // إعدادات تثبيت الـ PWA
+        let deferredPrompt;
+        const splash = document.getElementById('pwa-splash');
+        const btnInstall = document.getElementById('btn-install-app');
+        const btnContinue = document.getElementById('btn-continue-app');
 
-window.toggleLanguage = function() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches || navigator.standalone;
+        
+        if (isStandalone) { splash.style.display = 'none'; }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if(isStandalone) splash.style.display = 'none';
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') { splash.style.display = 'none'; }
+                deferredPrompt = null;
+            }
+        });
+
+        btnContinue.addEventListener('click', () => {
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.visibility = 'hidden'; }, 500);
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+            });
+        }
+
+        // ================= أنظمة العمل بالخلفية المتقدمة =================
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) { }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+        
+        window.toggleBackgroundMode = async function(isActive, isSilentLoad = false) {
+            localStorage.setItem('n1_bg_mode', isActive);
+            const bgAudio = document.getElementById('keep-alive-audio');
+            if (isActive) {
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                    Notification.requestPermission();
+                }
+                bgAudio.play().catch(e => console.log("تحتاج تفاعل لتشغيل الخلفية"));
+                if(!isSilentLoad) window.showToast("تم تفعيل العمل بالخلفية وحفظه بنجاح 🛡️", false);
+            } else {
+                bgAudio.pause();
+                if(!isSilentLoad) window.showToast("تم إيقاف العمل بالخلفية", true);
+            }
+        };
+
+        setInterval(() => {
+            const bgToggle = document.getElementById('bg_mode_toggle');
+            const bgAudio = document.getElementById('keep-alive-audio');
+            if (bgToggle && bgToggle.checked && bgAudio.paused) {
+                bgAudio.play().catch(e => {});
+            }
+        }, 5000);
+
+        function sendSystemNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(function(registration) {
+                        registration.showNotification(title, {
+                            body: body,
+                            icon: 'logo.jpg',
+                            vibrate: [500, 250, 500, 250, 500, 250, 500],
+                            tag: 'new-order',
+                            requireInteraction: true
+                        });
+                    });
+                } else {
+                    new Notification(title, { body: body, icon: 'logo.jpg' });
+                }
+            }
+        }
+        
+        window.showToast = function(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
+            toast.style.color = 'white';
+            toast.style.padding = '15px 20px';
+            toast.style.borderRadius = '15px';
+            toast.style.fontWeight = 'bold';
+            toast.style.fontSize = '14px';
+            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+            toast.style.textAlign = 'center';
+            toast.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            toast.style.transform = 'translateY(-50px)';
+            toast.style.opacity = '0';
+            toast.innerText = msg;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(-50px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        };
+
+        let confirmCallback = null;
+        window.showAppConfirm = function(msg, callback) {
+            document.getElementById('custom-confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('custom-confirm-overlay').style.display = 'flex';
+        };
+
+        window.closeAppConfirm = function() {
+            document.getElementById('custom-confirm-overlay').style.display = 'none';
+            confirmCallback = null;
+        };
+
+        window.executeAppConfirm = function() {
+            document.getElementById('custom-confirm-overlay').style.display = 'none';
+            if(confirmCallback) confirmCallback();
+            confirmCallback = null;
+        };
+        
+        window.openRatingModal = function(shopId) {
+            document.getElementById('rating_shop_id').value = shopId;
+            document.getElementById('current_rating_val').value = "0";
+            document.getElementById('selected_tag').value = "";
+            document.getElementById('rating_notes').value = "";
+            document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
+            document.getElementById('rating-feedback').style.display = 'none';
+            document.getElementById('rating_title_desc').innerText = "كيف كان أداء المنشأة في تجهيز الطلب";
+            document.getElementById('rating-modal').style.display = 'flex';
+        };
+        
+        window.closeRatingModal = function() {
+            document.getElementById('rating-modal').style.display = 'none';
+        };
+        
+        window.setRating = function(val) {
+            document.getElementById('current_rating_val').value = val;
+            const gems = document.querySelectorAll('.gem');
+            gems.forEach((g, index) => {
+                if(index < val) g.classList.add('active');
+                else g.classList.remove('active');
+            });
+            
+            const feedbackSection = document.getElementById('rating-feedback');
+            const question = document.getElementById('dynamic-question');
+            const tagsContainer = document.getElementById('quick-tags');
+            const desc = document.getElementById('rating_title_desc');
+            
+            feedbackSection.style.display = 'block';
+            document.getElementById('selected_tag').value = "";
+            
+            if (val === 1) {
+                desc.innerText = "ضعيف جدا ⚠️";
+                desc.style.color = "var(--danger)";
+                question.innerText = "نأسف لسماع ذلك ما هي المشكلة";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تأخير كبير جدا</span>
+                    <span class="tag" onclick="selectTag(this)">تعامل سيء</span>
+                    <span class="tag" onclick="selectTag(this)">الطلب غير جاهز</span>
+                `;
+            } else if (val === 2) {
+                desc.innerText = "دون المستوى 😟";
+                desc.style.color = "#d97706";
+                question.innerText = "ما الذي أزعجك في المنشأة";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تأخير في التجهيز</span>
+                    <span class="tag" onclick="selectTag(this)">سوء تغليف</span>
+                `;
+            } else if (val === 3) {
+                desc.innerText = "مقبول 😐";
+                desc.style.color = "#8b5cf6";
+                question.innerText = "كيف يمكن للمنشأة التحسن";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">سرعة التجهيز</span>
+                    <span class="tag" onclick="selectTag(this)">التعامل مع الكابتن</span>
+                `;
+            } else if (val === 4) {
+                desc.innerText = "ممتاز 🙂";
+                desc.style.color = "var(--info)";
+                question.innerText = "هل هناك ملاحظة بسيطة";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">تجهيز سريع</span>
+                    <span class="tag" onclick="selectTag(this)">تعامل راقي</span>
+                `;
+            } else if (val === 5) {
+                desc.innerText = "ألماسي واحترافي 🌟";
+                desc.style.color = "var(--success)";
+                question.innerText = "شكرا لجهودك يا بطل";
+                tagsContainer.innerHTML = `
+                    <span class="tag" onclick="selectTag(this)">احترافية عالية</span>
+                    <span class="tag" onclick="selectTag(this)">تجهيز فوري</span>
+                    <span class="tag" onclick="selectTag(this)">قمة في الرقي</span>
+                `;
+            }
+        };
+
+        window.selectTag = function(element) {
+            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('selected_tag').value = element.innerText;
+        };
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
+            authDomain: "n-one-global.firebaseapp.com",
+            databaseURL: "https://n-one-global-default-rtdb.firebaseio.com",
+            projectId: "n-one-global",
+            storageBucket: "n-one-global.firebasestorage.app",
+            messagingSenderId: "627262885530",
+            appId: "1:627262885530:web:bc0ae0d748c61ed91b5923"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentCaptain = null;
+        let capNodeKey = null;
+        let allCompletedOrders = [];
+        let ringtoneActive = false;
+        let currentLang = 'ar';
+        let globalPricesList = [];
+        let verifiedCompanyId = null; 
+        
+        let systemSettings = { order_timer: 10, anti_vpn: false, show_phone_numbers: false, hotspots_active: true };
+        let orderTimers = {};
+        let isListenerActive = false;
+        let localOrderSeen = {};
+        
+        const dict = {
+            'ar': {
+                lang_loader: 'جاري الاتصال بالنظام',
+                lang_popup_btn: 'حسنا فهمت',
+                lang_history_title: 'سجل الطلبات',
+                lang_settings_title: 'الإعدادات ⚙️',
+                lang_set_user: 'اسم المستخدم (يوزر الدخول)',
+                lang_set_pass: 'كلمة المرور',
+                lang_test_notif: '🔔 تجربة التنبيهات والرنة',
+                lang_toggle_btn: '🌐 Switch to English',
+                lang_save_btn: 'حفظ التعديلات ✅',
+                lang_blocked_title: 'تم إيقاف حسابك',
+                lang_blocked_text: 'عذرا لقد تم إيقاف أو تجميد حسابك من قبل الإدارة يرجى مراجعة إدارة الشركة التابع لها لإعادة تفعيل الحساب بأسرع وقت',
+                lang_blocked_btn: 'تسجيل الخروج',
+                lang_pending_title: 'حسابك قيد الانتظار',
+                lang_pending_text: 'لقد تم استلام طلب تسجيلك بنجاح الرجاء التواصل مع إدارة الشركة لتفعيل الحساب لتتمكن من استقبال الطلبات',
+                lang_pending_btn: 'العودة للرئيسية',
+                lang_login_sub: 'المنصة الألماسية 💎',
+                lang_login_user_lbl: 'اسم المستخدم (User ID)',
+                lang_login_pass_lbl: 'كلمة المرور (Password)',
+                lang_login_btn: 'دخول آمن 🚀',
+                lang_register_btn: 'تسجيل كابتن جديد 📝',
+                lang_reg_title: 'تسجيل كابتن جديد 📝',
+                lang_reg_comp_id: 'معرف الشركة (Company ID)',
+                lang_reg_name: 'الاسم الشخصي',
+                lang_reg_phone: 'رقم الهاتف',
+                lang_reg_car: 'السيارة (النوع والترميز)',
+                lang_reg_user: 'اسم المستخدم (User Name) للدخول',
+                lang_reg_pass: 'كلمة المرور (Password)',
+                lang_reg_area: 'المنطقة (التابعة للشركة)',
+                lang_reg_submit: 'إرسال الطلب 🚀',
+                lang_reg_back: 'عودة لشاشة الدخول',
+                lang_header_cap: 'كابتن 🦸‍♂️',
+                lang_btn_out: 'خروج 🔒',
+                lang_bal_warn: 'عذرا وصل رصيدك للحد المانع يرجى شحن رصيدك للاستمرار في استقبال الطلبات',
+                lang_vpn_warn: 'يا كابتن يرجى إغلاق الـ VPN لتتمكن من استقبال الطلبات بأفضل جودة وسرعة ممكنة',
+                lang_bal_title: 'الرصيد المالي الفعلي',
+                lang_rating: 'تقييم ألماسي 💎',
+                lang_ach_title: 'إنجاز اليوم 🏆',
+                lang_ach_sub: 'عمل ممتاز',
+                lang_hot_title: 'المطاعم النشطة بمنطقتك 🔥',
+                lang_sec_orders: '📲 الطلبات الواردة',
+                status_online: 'متاح وجاهز للطلبات 🟢',
+                status_offline: 'غير متاح للطلبات 🔴',
+                status_blocked: 'غير متاح (محظور ماليا)',
+                no_orders: 'لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡',
+                no_history: 'لا يوجد سجل طلبات مكتملة حتى الآن',
+                lang_confirm_ok: 'تأكيد ✅',
+                lang_confirm_no: 'إلغاء ❌',
+                dir: 'rtl'
+            },
+            'en': {
+                lang_loader: 'Connecting to System',
+                lang_popup_btn: 'Got it',
+                lang_history_title: 'Order History',
+                lang_settings_title: 'Settings ⚙️',
+                lang_set_user: 'Username',
+                lang_set_pass: 'Password',
+                lang_test_notif: '🔔 Test Notifications',
+                lang_toggle_btn: '🌐 التبديل للعربية',
+                lang_save_btn: 'Save Changes ✅',
+                lang_blocked_title: 'Account Blocked',
+                lang_blocked_text: 'Sorry your account has been suspended Please contact your company management to reactivate',
+                lang_blocked_btn: 'Logout',
+                lang_pending_title: 'Account Pending',
+                lang_pending_text: 'Your registration has been received successfully Please contact your company administration to activate the account',
+                lang_pending_btn: 'Return to Home',
+                lang_login_sub: 'Diamond Portal 💎',
+                lang_login_user_lbl: 'Username',
+                lang_login_pass_lbl: 'Password',
+                lang_login_btn: 'Secure Login 🚀',
+                lang_register_btn: 'Register New Captain 📝',
+                lang_reg_title: 'Register New Captain 📝',
+                lang_reg_comp_id: 'Company ID',
+                lang_reg_name: 'Full Name',
+                lang_reg_phone: 'Phone Number',
+                lang_reg_car: 'Car (Type & Plate)',
+                lang_reg_user: 'Username',
+                lang_reg_pass: 'Password',
+                lang_reg_area: 'Approved Work Area',
+                lang_reg_submit: 'Submit Request 🚀',
+                lang_reg_back: 'Back to Login',
+                lang_header_cap: 'Captain 🦸‍♂️',
+                lang_btn_out: 'Logout 🔒',
+                lang_bal_warn: 'Warning balance reached the limit Please recharge to receive orders',
+                lang_vpn_warn: 'Captain please disable VPN to receive orders with the best quality and speed',
+                lang_bal_title: 'Actual Balance',
+                lang_rating: 'Diamond Rating 💎',
+                lang_ach_title: 'Today Wins 🏆',
+                lang_ach_sub: 'Great Job',
+                lang_hot_title: 'Hotspots 🔥',
+                lang_sec_orders: '📲 Incoming Orders',
+                status_online: 'Online Ready 🟢',
+                status_offline: 'Offline 🔴',
+                status_blocked: 'Offline Blocked',
+                no_orders: 'No active orders right now stay near hotspots 📡',
+                no_history: 'No completed orders in history yet',
+                lang_confirm_ok: 'Confirm ✅',
+                lang_confirm_no: 'Cancel ❌',
+                dir: 'ltr'
+            }
+        };
+
+        window.toggleLanguage = function() {
             currentLang = currentLang === 'ar' ? 'en' : 'ar';
             document.getElementById('app-body').dir = dict[currentLang].dir;
             
@@ -892,35 +1231,16 @@ window.toggleLanguage = function() {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('register-screen').classList.add('active');
             
-            // فلترة قائمة التبعية (No Admin ID) تمت معالجتها عبر دالة الجلب
-            document.getElementById('reg_company_id').innerHTML = `<option value="">${currentLang === 'ar' ? 'جاري تحميل الشركات...' : 'Loading...'}</option>`;
+            document.getElementById('reg_company_id').value = '';
             document.getElementById('company_status_badge').className = 'id-status-badge';
             document.getElementById('company_status_badge').innerText = '';
             document.getElementById('verified_company_name').value = '';
             
             const areaSelect = document.getElementById('reg_area');
-            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى اختيار الشركة أولا' : 'Please select company first'}</option>`;
+            areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى التحقق من معرف الشركة أولا' : 'Please verify Company ID first'}</option>`;
             areaSelect.disabled = true;
 
             try {
-                // جلب الشركات فقط واستثناء الأدمن المباشر (العزل الألماسي)
-                const usersSnap = await get(ref(db, 'users'));
-                let compHtml = `<option value="">${currentLang === 'ar' ? 'اختر الشركة التابع لها' : 'Select Company'}</option>`;
-                
-                if (usersSnap.exists()) {
-                    const usersData = usersSnap.val();
-                    Object.values(usersData).forEach(u => {
-                        if (u.role === 'client' || u.type === 'client' || (u.external_reg_enabled && u.external_reg_id && u.role !== 'admin')) {
-                            const dispName = u.Client_Name || u.name || u.user;
-                            const valId = u.Client_User || u.user || u.external_reg_id;
-                            if (valId) {
-                                compHtml += `<option value="${valId}">${dispName}</option>`;
-                            }
-                        }
-                    });
-                }
-                document.getElementById('reg_company_id').innerHTML = compHtml;
-
                 const snap = await get(ref(db, 'prices'));
                 if(snap.exists()) {
                     globalPricesList = Object.values(snap.val());
@@ -929,18 +1249,17 @@ window.toggleLanguage = function() {
         };
 
         window.verifyCompanyId = async function() {
-            const compIdInput = document.getElementById('reg_company_id').value;
+            const compIdInput = document.getElementById('reg_company_id').value.trim();
             const badge = document.getElementById('company_status_badge');
             const areaSelect = document.getElementById('reg_area');
             const hiddenCompName = document.getElementById('verified_company_name');
             
-            if (!compIdInput) {
+            if (compIdInput.length < 3) {
                 badge.className = 'id-status-badge';
                 badge.innerText = '';
                 areaSelect.disabled = true;
                 verifiedCompanyId = null;
                 hiddenCompName.value = '';
-                areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى اختيار الشركة' : 'Select company'}</option>`;
                 return;
             }
 
@@ -984,19 +1303,18 @@ window.toggleLanguage = function() {
         window.submitRegistration = async function() {
             const name = document.getElementById('reg_name').value.trim();
             const phone = document.getElementById('reg_phone').value.trim();
-            const carType = document.getElementById('reg_car_type').value.trim();
-            const carCode = document.getElementById('reg_car_code').value.trim();
+            const car = document.getElementById('reg_car').value.trim();
             const user = document.getElementById('reg_user').value.trim();
             const pass = document.getElementById('reg_pass').value.trim();
             const area = document.getElementById('reg_area').value;
 
             if(!verifiedCompanyId) {
-                window.showToast(currentLang === 'ar' ? "يرجى اختيار شركة صحيحة أولا" : "Please select a valid company first", true);
+                window.showToast(currentLang === 'ar' ? "يرجى إدخال معرف شركة صحيح أولا" : "Please enter a valid Company ID first", true);
                 return;
             }
 
-            if(!name || !phone || !carType || !carCode || !user || !pass || !area) {
-                window.showToast(currentLang === 'ar' ? "يرجى تعبئة جميع الحقول الأساسية" : "Please fill all basic fields", true);
+            if(!name || !phone || !car || !user || !pass || !area) {
+                window.showToast(currentLang === 'ar' ? "يرجى تعبئة جميع الحقول بشكل صحيح" : "Please fill all fields correctly", true);
                 return;
             }
 
@@ -1006,7 +1324,7 @@ window.toggleLanguage = function() {
                 const existing = await get(ref(db, `captains/${user}`));
                 if(existing.exists()) {
                     document.getElementById('loader').style.display = 'none';
-                    window.showToast(currentLang === 'ar' ? "اسم المستخدم محجوز يرجى التغيير" : "Username already exists", true);
+                    window.showToast(currentLang === 'ar' ? "اسم المستخدم مستخدم مسبقا يرجى اختيار اسم آخر" : "Username already exists", true);
                     return;
                 }
 
@@ -1015,12 +1333,10 @@ window.toggleLanguage = function() {
                     Cap_Name: name, name: name,
                     Cap_Phone: phone, phone: phone,
                     Cap_Pass: pass, pass: pass,
-                    Cap_CarType: carType,
-                    Cap_CarCode: carCode,
-                    Cap_Car: `${carType} - ${carCode}`, // حفظ المدمج عشان توافق الأكواد القديمة
+                    Cap_Car: car,
                     company: verifiedCompanyId,
                     Client_Master: verifiedCompanyId,
-                    Cap_Location: area, Cap_Region: area,
+                    Cap_Location: area,
                     Cap_Balance: 0, balance: 0,
                     app_access: 'pending', 
                     app_status: 'offline',
@@ -1272,15 +1588,16 @@ window.toggleLanguage = function() {
                 }
             });
 
-            // المراقبة الحية للطلبات (الجزء الخاص بالكابتن فقط - Shallow Fetching)
-            const myOrdersRef = ref(db, `assigned_orders/${capNodeKey}`);
-            onValue(myOrdersRef, (snapshot) => {
+            // المراقبة الحية للطلبات السيادية
+            const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
+            onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
                 const hotspotsSection = document.getElementById('hotspots-section');
                 const statusToggleSection = document.getElementById('status-toggle-section');
                 
                 let hasActive = false, hasNewRinging = false;
                 let newHtmlContent = ''; 
+                const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                 if (snapshot.exists()) {
@@ -1292,7 +1609,7 @@ window.toggleLanguage = function() {
                             let c = name.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '');
                             return c.trim() || (currentLang==='ar' ? 'الموقع' : 'Location');
                         };
-                        const restName = cleanRestName(ord.restaurant);
+                        const restName = cleanRestName(ord.restaurant || ord.Shop_Pickup);
                         const safeRestName = restName.replace(/'/g, "\\'");
                         
                         let isPhoneHidden = currentCaptain.hide_phone === true || !systemSettings.show_phone_numbers;
@@ -1305,32 +1622,9 @@ window.toggleLanguage = function() {
                             }
                         }
 
-                        // المعادلة المالية الشفافة
-                        const ordValSafe = parseFloat(ord.value || 0).toFixed(2);
-                        const ordFeeSafe = parseFloat(ord.fee || 0).toFixed(2);
-                        const originalFee = parseFloat(ord.original_fee || ordFeeSafe).toFixed(2);
-                        const discountAmt = parseFloat(ord.discount || 0).toFixed(2);
-                        const commAmountSafe = parseFloat(ord.commission_amount || 0);
-
-                        let financialsHtml = '';
-                        if (discountAmt > 0 && originalFee > ordFeeSafe) {
-                            financialsHtml = `
-                                <div class="fin-container">
-                                    <div class="fin-row">
-                                        <span class="fin-orig">${originalFee} د.أ</span>
-                                        <span class="fin-disc">-${discountAmt} خصم</span>
-                                    </div>
-                                    <div class="fin-net">${ordFeeSafe} د.أ صافي</div>
-                                </div>
-                            `;
-                        } else {
-                            financialsHtml = `
-                                <div class="detail-box">
-                                    <div class="detail-lbl">${currentLang === 'ar'?'أجرة التوصيل':'Delivery Fee'}</div>
-                                    <div class="detail-val" style="color:var(--success); font-size:16px;">${ordFeeSafe} د.أ</div>
-                                </div>
-                            `;
-                        }
+                        const ordValSafe = parseFloat(ord.value || ord.Shop_Val || ord.order_value || 0).toFixed(2);
+                        const ordFeeSafe = parseFloat(ord.fee || ord.Shop_Fee || ord.delivery_fee || 0).toFixed(2);
+                        const commAmountSafe = parseFloat(ord.commission_amount || ord.company_share || 0);
 
                         if (ord.status === 'assigned') {
                             if(currentCaptain.app_status !== 'online') return;
@@ -1355,17 +1649,20 @@ window.toggleLanguage = function() {
                                     </div>
                                     <div class="order-rest" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🏪 ${restName}</div>
                                     ${phoneHtml}
-                                    <div class="order-details" style="display:flex; flex-direction:column; gap:10px;">
-                                        <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
-                                            <span style="font-size:11px; color:#64748b; font-weight:bold;">قيمة الفاتورة:</span>
-                                            <span style="font-size:13px; font-weight:900; color:var(--primary);">${ordValSafe} د.أ</span>
+                                    <div class="order-details">
+                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                            <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
+                                            <div class="detail-val">${ordValSafe} د.أ</div>
                                         </div>
-                                        ${financialsHtml}
+                                        <div class="detail-box">
+                                            <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
+                                            <div class="detail-val" style="color:var(--success);">${ordFeeSafe} د.أ</div>
+                                        </div>
                                     </div>
                                     <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${currentLang === 'ar' ? 'ثانية للقبول' : 'sec left'} ⏳</div>
                                     <div class="order-timer-bar" id="bar_timer_${ord.id}" style="width: 100%;"></div>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ord.linkedRadarId}')">${btnAccept}</button>
+                                        <button class="btn-action btn-accept" onclick="acceptOrder('${ord.id}', '${ordFeeSafe}', '${ord.linkedRadarId}')">${btnAccept}</button>
                                         <button class="btn-action btn-reject" onclick="rejectOrder('${ord.id}')">${btnReject}</button>
                                     </div>
                                 </div>
@@ -1373,16 +1670,31 @@ window.toggleLanguage = function() {
                             setTimeout(() => startVisualTimer(ord.id, timeLeft, systemSettings.order_timer), 50);
                             
                             if (document.visibilityState !== 'visible' || !document.hasFocus()) {
-                                sendSystemNotification('🚀 طلب جديد بانتظارك!', `من منشأة: ${restName} - افتح فوراً للقبول 💎`);
+                                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                                    navigator.serviceWorker.ready.then(reg => {
+                                        reg.showNotification('🚀 طلب جديد بانتظارك!', {
+                                            body: `من منشأة: ${restName} - افتح فوراً للقبول 💎`,
+                                            icon: 'logo.jpg',
+                                            badge: 'logo.jpg',
+                                            tag: 'new-order-' + ord.id, 
+                                            vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40],
+                                            requireInteraction: true,
+                                            data: { url: './captain.html' }
+                                        });
+                                    });
+                                }
+                            } else {
+                                window.showToast(`🚀 طلب جديد من ${restName}`, false);
                             }
                         }
                         else if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived_at_customer'].includes(ord.status)) {
                             hasActive = true;
                             const ordTime = new Date(ord.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                             
-                            let mapQuery = (ord.restaurant || ord.location_link || '');
+                            let mapQuery = (ord.restaurant || ord.Shop_Pickup || '');
                             if (mapQuery.includes('-')) mapQuery = mapQuery.split('-')[0].trim();
-                            const mapLink = ord.location_link || (`http://googleusercontent.com/maps.google.com/search?q=${encodeURIComponent(mapQuery)}`);
+                            if (mapQuery.includes('+')) mapQuery = mapQuery.split('+')[0].trim();
+                            const mapLink = ord.Shop_Location || ord.pickup_link || ord.pickup || (`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`);
 
                             let btnClass = '', btnText = '', nextAction = '';
 
@@ -1416,15 +1728,20 @@ window.toggleLanguage = function() {
                                     </div>
                                     <div class="order-rest" style="display:flex; justify-content:space-between; align-items:center;">
                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">🏪 ${restName}</span>
-                                        <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
+                                        <div style="display:flex; gap:8px;">
+                                            <a href="${mapLink}" target="_blank" class="btn-map-link">${arrowSvg}</a>
+                                        </div>
                                     </div>
                                     ${phoneHtml}
-                                    <div class="order-details" style="display:flex; flex-direction:column; gap:10px;">
-                                        <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #cbd5e1; padding-bottom:5px;">
-                                            <span style="font-size:11px; color:#64748b; font-weight:bold;">قيمة الفاتورة:</span>
-                                            <span style="font-size:13px; font-weight:900; color:var(--primary);">${ordValSafe} د.أ</span>
+                                    <div class="order-details">
+                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                            <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
+                                            <div class="detail-val">${ordValSafe} د.أ</div>
                                         </div>
-                                        ${financialsHtml}
+                                        <div class="detail-box">
+                                            <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
+                                            <div class="detail-val" style="color:var(--success);">${ordFeeSafe} د.أ</div>
+                                        </div>
                                     </div>
                                     <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
                                 </div>
@@ -1457,68 +1774,69 @@ window.toggleLanguage = function() {
                 }
             });
 
-            // سحب أرشيف الشركة فقط لتوفير الداتا
-            const compId = currentCaptain.company || currentCaptain.Client_Master;
-            if(compId) {
-                const archiveRef = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
-                onValue(archiveRef, (archiveSnap) => {
-                    if(archiveSnap.exists()) {
-                        let cloudTodayCount = 0;
-                        let cloudTodayVal = 0;
-                        let cloudTodayFee = 0;
-                        const todayStr = new Date().toDateString(); 
+            // الأرشيف والعدادات السحابية
+            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
+                if(archiveSnap.exists()) {
+                    let cloudTodayCount = 0;
+                    let cloudTodayVal = 0;
+                    let cloudTodayFee = 0;
+                    const todayStr = new Date().toDateString(); 
+                    
+                    Object.values(archiveSnap.val()).forEach(o => {
+                        if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
+                            cloudTodayCount++;
+                            cloudTodayVal += parseFloat(o.value || 0) || 0; 
+                            cloudTodayFee += parseFloat(o.fee || 0) || 0; 
+                        }
+                    });
+                    
+                    document.getElementById('ui_today_count').innerText = cloudTodayCount;
+                    document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
+                    document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
+                }
+            });
+
+            // الخرائط الحرارية
+            const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
+            if(companyMaster) {
+                const globalOrdersRef = ref(db, 'orders');
+                onValue(globalOrdersRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const allOrders = snapshot.val();
+                        const areaCounts = {};
+                        const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim();
                         
-                        Object.values(archiveSnap.val()).forEach(o => {
-                            if (new Date(o.date).toDateString() === todayStr) {
-                                cloudTodayCount++;
-                                cloudTodayVal += parseFloat(o.value || 0) || 0; 
-                                cloudTodayFee += parseFloat(o.fee || 0) || 0; 
+                        for(let key in allOrders) {
+                            const ord = allOrders[key];
+                            if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
+                                const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
+                                if(ordArea === myArea || myArea === '' || myArea === 'عام') {
+                                    let rName = ord.Shop_Name || ord.restaurant || '';
+                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
+                                    rName = rName.split('-')[0].trim(); 
+                                    if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
+                                }
                             }
-                        });
-                        
-                        document.getElementById('ui_today_count').innerText = cloudTodayCount;
-                        document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
-                        document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
+                        }
+
+                        const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
+                        const hotspotsContainer = document.getElementById('ui_hotspots');
+                        let hsHtml = ''; 
+
+                        if(sortedRests.length > 0) {
+                            sortedRests.slice(0, 3).forEach(restName => { hsHtml += `<div class="hotspot-tag">${restName} 🔥</div>`; });
+                        } else {
+                            hsHtml = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots'}</div>`;
+                        }
+                        hotspotsContainer.innerHTML = hsHtml;
+                    } else {
+                         document.getElementById('ui_hotspots').innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">لا يوجد ضغط طلبات بمنطقتك حالياً</div>`;
                     }
                 });
             }
-
-            // الخرائط الحرارية المبسطة
-            const globalOrdersRef = ref(db, 'orders');
-            onValue(globalOrdersRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const allOrders = snapshot.val();
-                    const areaCounts = {};
-                    const myArea = (currentCaptain.Cap_Region || currentCaptain.Cap_Location || '').trim();
-                    
-                    for(let key in allOrders) {
-                        const ord = allOrders[key];
-                        if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
-                            const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
-                            if(ordArea === myArea || myArea === '' || myArea === 'عام') {
-                                let rName = ord.Shop_Name || ord.restaurant || '';
-                                rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
-                                rName = rName.split('-')[0].trim(); 
-                                if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
-                            }
-                        }
-                    }
-
-                    const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
-                    const hotspotsContainer = document.getElementById('ui_hotspots');
-                    let hsHtml = ''; 
-
-                    if(sortedRests.length > 0) {
-                        sortedRests.slice(0, 3).forEach(restName => { hsHtml += `<div class="hotspot-tag">${restName} 🔥</div>`; });
-                    } else {
-                        hsHtml = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots'}</div>`;
-                    }
-                    hotspotsContainer.innerHTML = hsHtml;
-                }
-            });
             
-            // نبض الكابتن
-            setInterval(() => {
+            const heartBeat = setInterval(() => {
                 if (currentCaptain && currentCaptain.app_status === 'online') {
                     update(ref(db, `captains/${capNodeKey}`), { last_active: Date.now() });
                 }
@@ -1604,7 +1922,7 @@ window.toggleLanguage = function() {
             await update(ref(db, `captains/${capNodeKey}`), { app_status: 'offline' });
         }
 
-        window.acceptOrder = async function(appOrdId, radarOrdId) {
+        window.acceptOrder = async function(appOrdId, fee, radarOrdId) {
             if(orderTimers[appOrdId]) clearInterval(orderTimers[appOrdId]);
             const updates = {};
             updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'accepted';
@@ -1669,10 +1987,9 @@ window.toggleLanguage = function() {
                 const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
                 const updates = {};
                 
-                // بروتوكول القيد الواحد (Single Entry Guard)
-                updates[`assigned_orders/${capNodeKey}/${appOrdId}`] = null; // مسح من واجهة الكابتن
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
+                updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
                 
-                // إضافة القيد الوحيد المالي الشامل
                 const newArchiveRef = push(ref(db, `company_archives/${compId}/orders`));
                 updates[`company_archives/${compId}/orders/${newArchiveRef.key}`] = {
                     capKey: capNodeKey,
@@ -1681,8 +1998,7 @@ window.toggleLanguage = function() {
                     fee: ordFee,
                     comm: ordComm,
                     rest: restName,
-                    appOrdId: appOrdId,
-                    live_status: 'delivered'
+                    appOrdId: appOrdId
                 };
 
                 let shopId = '';
@@ -1700,63 +2016,6 @@ window.toggleLanguage = function() {
                 }
             } catch (e) {
                 window.showToast(currentLang === 'ar' ? "حدث خطأ بالاتصال" : "Connection error", true);
-            }
-        };
-        
-        window.openHistoryModal = async function() {
-            const container = document.getElementById('history-list-container');
-            container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
-            document.getElementById('history-modal').style.display = 'flex';
-            
-            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
-            
-            try {
-                // سحب مخصص ومفلتر من الفايربيز مباشرة
-                const archiveRef = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
-                const snap = await get(archiveRef);
-                let hHtml = '';
-                
-                if(snap.exists()) {
-                    const myOrders = Object.values(snap.val()).sort((a,b) => new Date(b.date) - new Date(a.date));
-                    
-                    if(myOrders.length === 0) {
-                        hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
-                    } else {
-                        myOrders.forEach(ord => {
-                            const d = new Date(ord.date);
-                            const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
-                            const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-                            
-                            const ordVal = parseFloat(ord.value || 0).toFixed(2);
-                            const delFee = parseFloat(ord.fee || 0).toFixed(2);
-                            const comm = parseFloat(ord.comm || 0).toFixed(2);
-                            const restName = ord.rest || (currentLang === 'ar' ? 'الموقع' : 'Location');
-                            
-                            hHtml += `
-                                <div class="history-item">
-                                    <div class="h-row">
-                                        <span style="font-weight:900;">${currentLang === 'ar' ? "الوجهة" : "Destination"}: ${restName}</span>
-                                        <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
-                                    </div>
-                                    <div class="h-row" style="margin-top:8px; font-size:12px;">
-                                        <span style="color:var(--primary);">قيمة الفاتورة: <b>${ordVal} د.أ</b></span>
-                                        <span style="color:var(--success);">أجرة التوصيل: <b>${delFee} د.أ</b></span>
-                                    </div>
-                                    <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                                        <span style="color:#64748b;">${currentLang === 'ar' ? "عمولة المنصة المخصومة" : "App Commission"}</span>
-                                        <span class="h-commission">-${comm} د.أ</span>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    }
-                } else {
-                    hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
-                }
-                
-                container.innerHTML = hHtml;
-            } catch(e) {
-                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-weight:bold;">حدث خطأ في تحميل السجل</div>`;
             }
         };
 
@@ -1782,6 +2041,61 @@ window.toggleLanguage = function() {
             } catch(e) {
                 window.showToast("حدث خطأ أثناء إرسال التقييم", true);
                 closeRatingModal();
+            }
+        };
+
+        window.openHistoryModal = async function() {
+            const container = document.getElementById('history-list-container');
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">${currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>`;
+            document.getElementById('history-modal').style.display = 'flex';
+            
+            const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            
+            try {
+                const snap = await get(ref(db, `company_archives/${compId}/orders`));
+                let hHtml = '';
+                
+                if(snap.exists()) {
+                    const myOrders = Object.values(snap.val()).filter(o => o.capKey === capNodeKey).sort((a,b) => new Date(b.date) - new Date(a.date));
+                    
+                    if(myOrders.length === 0) {
+                        hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
+                    } else {
+                        myOrders.forEach(ord => {
+                            const d = new Date(ord.date);
+                            const dateStr = d.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+                            const timeStr = d.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                            
+                            const ordVal = parseFloat(ord.value || 0).toFixed(2);
+                            const delFee = parseFloat(ord.fee || 0).toFixed(2);
+                            const comm = parseFloat(ord.comm || 0).toFixed(2);
+                            const restName = ord.rest || (currentLang === 'ar' ? 'الموقع' : 'Location');
+                            
+                            hHtml += `
+                                <div class="history-item">
+                                    <div class="h-row">
+                                        <span>${currentLang === 'ar' ? "الوجهة" : "Destination"}: ${restName}</span>
+                                        <span style="color:#64748b; font-size:11px;">${dateStr} - ${timeStr}</span>
+                                    </div>
+                                    <div class="h-row" style="margin-top:8px; font-size:12px;">
+                                        <span style="color:var(--primary);">قيمة الطلب: <b>${ordVal} د.أ</b></span>
+                                        <span style="color:var(--success);">أجرة التوصيل: <b>${delFee} د.أ</b></span>
+                                    </div>
+                                    <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                                        <span>${currentLang === 'ar' ? "عمولة الشركة المخصومة" : "Company Commission"}</span>
+                                        <span class="h-commission">-${comm} د.أ</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                } else {
+                    hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
+                }
+                
+                container.innerHTML = hHtml;
+            } catch(e) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-weight:bold;">حدث خطأ في تحميل السجل</div>`;
             }
         };
 
