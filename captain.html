@@ -407,7 +407,7 @@
         .blocked-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; font-weight: bold; }
 
         #loader {
-            display: none; /* تم إخفاء اللودر لضمان التحميل الفوري */
+            display: none; 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary);
             z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: var(--gold);
         }
@@ -432,7 +432,6 @@
         .hotspot-tag { display: inline-block; background: #fff0f2; color: var(--danger); border: 1px solid #ffccd5; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2); animation: pulseAlert 2s infinite; }
     </style>
 </head>
-<body id="app-body">
 <body id="app-body">
 
     <audio id="keep-alive-audio" loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
@@ -587,8 +586,8 @@
                 <div class="login-logo" style="font-size: 24px; margin-bottom: 25px;" id="lang_reg_title">تسجيل كابتن جديد 📝</div>
                 
                 <div class="input-group">
-                    <label id="lang_reg_comp_id">معرف الشركة (Company ID)</label>
-                    <input type="text" id="reg_company_id" placeholder="أدخل كود الشركة المراد الانضمام إليها" oninput="verifyCompanyId()">
+                    <label id="lang_reg_comp_id">معرف الشركة (الاسم التجاري أو الكود)</label>
+                    <input type="text" id="reg_company_id" placeholder="أدخل معرف الشركة المراد الانضمام إليها" oninput="verifyCompanyId()">
                     <div id="company_status_badge" class="id-status-badge"></div>
                     <input type="hidden" id="verified_company_name" value="">
                 </div>
@@ -601,10 +600,18 @@
                     <label id="lang_reg_phone">رقم الهاتف</label>
                     <input type="tel" id="reg_phone" placeholder="مثال 07xxxxxxxx">
                 </div>
-                <div class="input-group">
-                    <label id="lang_reg_car">السيارة (النوع والترميز)</label>
-                    <input type="text" id="reg_car" placeholder="مثال كيا سيراتو - 50-12345">
+                
+                <div style="display:flex; gap:10px;">
+                    <div class="input-group" style="flex:1;">
+                        <label id="lang_reg_car_type">نوع السيارة</label>
+                        <input type="text" id="reg_car_type" placeholder="مثال: كيا سيراتو">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label id="lang_reg_car_plate">رقم اللوحة</label>
+                        <input type="text" id="reg_car_plate" placeholder="مثال: 50-12345">
+                    </div>
                 </div>
+
                 <div class="input-group">
                     <label id="lang_reg_user">اسم المستخدم (User Name) للدخول</label>
                     <input type="text" id="reg_user" placeholder="أدخل اسم المستخدم">
@@ -689,12 +696,12 @@
                                 <div class="fin-val" id="ui_today_count">0</div>
                             </div>
                             <div class="fin-box" style="border-left: 1px solid #e2e8f0;">
-                                <div class="fin-lbl">قيم الطلبات</div>
-                                <div class="fin-val" id="ui_today_val">0.00</div>
+                                <div class="fin-lbl">الصافي لك</div>
+                                <div class="fin-val" id="ui_today_net" style="color:var(--success);">0.00</div>
                             </div>
                             <div class="fin-box">
-                                <div class="fin-lbl">أجور التوصيل</div>
-                                <div class="fin-val success" id="ui_today_fee">0.00</div>
+                                <div class="fin-lbl">عمولة الشركة</div>
+                                <div class="fin-val" id="ui_today_comm" style="color:var(--danger);">0.00</div>
                             </div>
                         </div>
                     </div>
@@ -768,7 +775,7 @@
             });
         }
 
-        // ================= أنظمة العمل بالخلفية المتقدمة =================
+        // ================= أنظمة العمل بالخلفية المتقدمة (تحديث الألماس) =================
         let wakeLock = null;
         async function requestWakeLock() {
             try {
@@ -778,8 +785,9 @@
             } catch (err) { }
         }
 
+        // إبقاء الشاشة ضاوية وإعادة الطلب عند العودة للتطبيق
         document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
+            if (document.visibilityState === 'visible') {
                 requestWakeLock();
             }
         });
@@ -958,7 +966,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -1009,10 +1017,11 @@
                 lang_login_btn: 'دخول آمن 🚀',
                 lang_register_btn: 'تسجيل كابتن جديد 📝',
                 lang_reg_title: 'تسجيل كابتن جديد 📝',
-                lang_reg_comp_id: 'معرف الشركة (Company ID)',
+                lang_reg_comp_id: 'الشركة (الاسم التجاري أو الكود)',
                 lang_reg_name: 'الاسم الشخصي',
                 lang_reg_phone: 'رقم الهاتف',
-                lang_reg_car: 'السيارة (النوع والترميز)',
+                lang_reg_car_type: 'نوع السيارة (مثال: كيا سيراتو)',
+                lang_reg_car_plate: 'رقم اللوحة (ترميز-رقم)',
                 lang_reg_user: 'اسم المستخدم (User Name) للدخول',
                 lang_reg_pass: 'كلمة المرور (Password)',
                 lang_reg_area: 'المنطقة (التابعة للشركة)',
@@ -1059,10 +1068,11 @@
                 lang_login_btn: 'Secure Login 🚀',
                 lang_register_btn: 'Register New Captain 📝',
                 lang_reg_title: 'Register New Captain 📝',
-                lang_reg_comp_id: 'Company ID',
+                lang_reg_comp_id: 'Company ID or Trade Name',
                 lang_reg_name: 'Full Name',
                 lang_reg_phone: 'Phone Number',
-                lang_reg_car: 'Car (Type & Plate)',
+                lang_reg_car_type: 'Car Type',
+                lang_reg_car_plate: 'Plate Number',
                 lang_reg_user: 'Username',
                 lang_reg_pass: 'Password',
                 lang_reg_area: 'Approved Work Area',
@@ -1120,17 +1130,6 @@
                     audio.play().catch(e => console.log(e));
                 }
             }, { once: true });
-        };
-
-        window.testNotification = function() {
-            const audio = document.getElementById('order-ringtone');
-            audio.play().catch(e => console.log(e));
-            setTimeout(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }, 3000);
-            
-            sendSystemNotification('N One Diamond 💎', currentLang === 'ar' ? 'إشعار تجريبي لاختبار العمل بالخلفية' : 'Test background notification');
         };
 
         function checkSession() {
@@ -1248,6 +1247,7 @@
             } catch(e) { }
         };
 
+        // تحديث الألماس: فلترة الشركات ومنع الأنساب للإدارة العليا
         window.verifyCompanyId = async function() {
             const compIdInput = document.getElementById('reg_company_id').value.trim();
             const badge = document.getElementById('company_status_badge');
@@ -1268,8 +1268,10 @@
 
             try {
                 const userSnap = await get(ref(db, `users/${compIdInput}`));
-                if (userSnap.exists() && (userSnap.val().role === 'client' || userSnap.val().type === 'client' || userSnap.val().role === 'admin')) {
-                    const compData = userSnap.val();
+                const compData = userSnap.val();
+                
+                // منع تسجيل الكابتن تحت الإدارة العليا (Admin) مباشرة والسماح فقط للشركات
+                if (userSnap.exists() && (compData.role === 'client' || compData.type === 'client' || compData.role === 'company')) {
                     const compName = compData.Client_Name || compData.name || compIdInput;
                     
                     badge.className = 'id-status-badge success';
@@ -1288,11 +1290,11 @@
                     }
                 } else {
                     badge.className = 'id-status-badge error';
-                    badge.innerText = currentLang === 'ar' ? 'معرف غير صالح' : 'Invalid ID';
+                    badge.innerText = currentLang === 'ar' ? 'الاسم التجاري غير صالح للتسجيل' : 'Invalid Trade Name';
                     verifiedCompanyId = null;
                     hiddenCompName.value = '';
                     areaSelect.disabled = true;
-                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى إدخال معرف صحيح' : 'Please enter a valid ID'}</option>`;
+                    areaSelect.innerHTML = `<option value="">${currentLang === 'ar' ? 'يرجى إدخال اسم تجاري صحيح' : 'Please enter a valid Name'}</option>`;
                 }
             } catch(e) {
                 badge.className = 'id-status-badge error';
@@ -1300,20 +1302,22 @@
             }
         };
 
+        // تحديث الألماس: فصل بيانات السيارة للتنظيم
         window.submitRegistration = async function() {
             const name = document.getElementById('reg_name').value.trim();
             const phone = document.getElementById('reg_phone').value.trim();
-            const car = document.getElementById('reg_car').value.trim();
+            const carType = document.getElementById('reg_car_type').value.trim();
+            const carPlate = document.getElementById('reg_car_plate').value.trim();
             const user = document.getElementById('reg_user').value.trim();
             const pass = document.getElementById('reg_pass').value.trim();
             const area = document.getElementById('reg_area').value;
 
             if(!verifiedCompanyId) {
-                window.showToast(currentLang === 'ar' ? "يرجى إدخال معرف شركة صحيح أولا" : "Please enter a valid Company ID first", true);
+                window.showToast(currentLang === 'ar' ? "يرجى إدخال اسم تجاري للشركة صحيح أولا" : "Please enter a valid Company Name first", true);
                 return;
             }
 
-            if(!name || !phone || !car || !user || !pass || !area) {
+            if(!name || !phone || !carType || !carPlate || !user || !pass || !area) {
                 window.showToast(currentLang === 'ar' ? "يرجى تعبئة جميع الحقول بشكل صحيح" : "Please fill all fields correctly", true);
                 return;
             }
@@ -1333,7 +1337,9 @@
                     Cap_Name: name, name: name,
                     Cap_Phone: phone, phone: phone,
                     Cap_Pass: pass, pass: pass,
-                    Cap_Car: car,
+                    Cap_CarType: carType,
+                    Cap_CarPlate: carPlate,
+                    Cap_Car: `${carType} | ${carPlate}`,
                     company: verifiedCompanyId,
                     Client_Master: verifiedCompanyId,
                     Cap_Location: area,
@@ -1439,53 +1445,17 @@
             }
         }
 
-// نظام الـ Anti-VPN المحدث (عزل فوري واستقرار بالاستعلام)
+        // نظام الـ Anti-VPN المحدث (هجوم سيبراني مضاد بثلاث طبقات حماية)
         let isVpnDetected = false;
         async function detectVPN() {
-            // إذا كانت الإدارة طافية الـ VPN، نلغي الفحص فورا
             if(!systemSettings.anti_vpn) { 
                 isVpnDetected = false; 
                 return; 
             }
             
-            // خط الدفاع الأول (سريع وموثوق جدا): فحص توقيت الجهاز
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            if(tz && tz.indexOf('Asia/Amman') === -1) {
-                isVpnDetected = true; 
-                return;
-            }
-            
-            // خط الدفاع الثاني: فحص الـ IP (كل 15 ثانية لتجنب الحظر من المزود)
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.country_code && data.country_code !== 'JO') { 
-                        isVpnDetected = true; 
-                    } else { 
-                        isVpnDetected = false; 
-                    }
-                }
-            } catch(e) { 
-                // في حال حجب المزود أو تعطل النت، نبقي الاعتماد على توقيت الجهاز
-                console.log('VPN IP Check Skipped - Using Timezone Fallback'); 
-            }
-        }
-        
-// نظام الـ Anti-VPN المحدث (هجوم سيبراني مضاد بثلاث طبقات حماية)
-        let isVpnDetected = false;
-        async function detectVPN() {
-            // إذا كانت الإدارة طافية الـ VPN، نلغي الفحص فورا
-            if(!systemSettings.anti_vpn) { 
-                isVpnDetected = false; 
-                return; 
-            }
-            
-            // مانع الكاش (عشان الـ VPN ما يخدع المتصفح ببيانات قديمة)
             const noCache = new Date().getTime();
 
             try {
-                // خط الدفاع الأول (API قوي ومفتوح)
                 const response = await fetch('https://ipwho.is/?_=' + noCache);
                 if (response.ok) {
                     const data = await response.json();
@@ -1494,16 +1464,14 @@
                     } else { 
                         isVpnDetected = false; 
                     }
-                    return; // إذا نجح الفحص نطلع من الدالة
+                    return;
                 }
                 throw new Error("API 1 Failed");
             } catch(e) { 
                 try {
-                    // خط الدفاع الثاني (في حال الـ VPN عمل بلوك للموقع الأول)
                     const res2 = await fetch('https://freeipapi.com/api/json?_=' + noCache);
                     if (res2.ok) {
                         const data2 = await res2.json();
-                        // الانتباه لاسم المتغير في هذا الموقع
                         if (data2.countryCode && data2.countryCode !== 'JO') {
                             isVpnDetected = true;
                         } else {
@@ -1513,7 +1481,6 @@
                     }
                     throw new Error("API 2 Failed");
                 } catch(e2) {
-                    // خط الدفاع الثالث (التوقيت الزمني للجهاز كحل أخير)
                     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
                     if(tz && tz.indexOf('Asia/Amman') === -1) {
                         isVpnDetected = true;
@@ -1522,13 +1489,12 @@
             }
         }
         
-        // استدعاء فوري أول ما يفتح التطبيق
         setTimeout(detectVPN, 1000);
-        // فحص سريع كل 5 ثواني عشان يلقط التلاعب فورا
         setInterval(detectVPN, 5000); 
 
         function listenToSystemSettings() {
-let master = 'default';
+            // التعديل الألماسي اللي بيجبر الكابتن يسمع الريموت حتى لو متغيراته معلقة
+            let master = 'default';
             if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) {
                 master = currentCaptain.company || currentCaptain.Client_Master;
             }
@@ -1545,6 +1511,7 @@ let master = 'default';
                 }
             });
             
+            // درع الخصوصية لإخفاء الأرقام من الإدارة
             onValue(ref(db, `settings/${master}/show_phone_numbers`), (snap) => {
                 if(snap.exists()) {
                     systemSettings.show_phone_numbers = snap.val();
@@ -1557,7 +1524,6 @@ let master = 'default';
 
             onValue(ref(db, `settings/${master}/anti_vpn`), (snap) => {
                 systemSettings.anti_vpn = snap.exists() ? snap.val() : false;
-                // تفعيل الفحص فورا لو الإدارة شغلته
                 if(systemSettings.anti_vpn) detectVPN();
             });
 
@@ -1571,13 +1537,11 @@ let master = 'default';
             });
         }
 
-        // رادار المراقبة اللحظي (كل ثانيتين) لتطبيق عقوبة الـ VPN
         setInterval(() => {
             if (currentCaptain) {
                 const vpnWarning = document.getElementById('vpn-warning');
                 if (systemSettings.anti_vpn && isVpnDetected) {
                     if (vpnWarning) vpnWarning.style.display = 'flex';
-                    // إذا كان أونلاين، بنرميه أوفلاين فورا
                     if(currentCaptain.app_status === 'online') {
                         forceOffline();
                         const toggleBtn = document.getElementById('toggle_status');
@@ -1665,7 +1629,7 @@ let master = 'default';
                 }
             });
 
-            // المراقبة الحية للطلبات السيادية
+            // المراقبة الحية للطلبات السيادية والمعادلة المالية
             const ordersRef = ref(db, `assigned_orders/${capNodeKey}`);
             onValue(ordersRef, (snapshot) => {
                 const container = document.getElementById('active-orders-container');
@@ -1674,7 +1638,6 @@ let master = 'default';
                 
                 let hasActive = false, hasNewRinging = false;
                 let newHtmlContent = ''; 
-                const todayStr = new Date().toDateString();
                 const arrowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
                 if (snapshot.exists()) {
@@ -1693,7 +1656,7 @@ let master = 'default';
                         let phoneHtml = '';
                         if (ord.shop_phone) {
                             if (isPhoneHidden) {
-                                phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge">رقم محجوب 🛡️</span></div>`;
+                                phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge">الرقم محجوب للخصوصية 🛡️</span></div>`;
                             } else {
                                 phoneHtml = `<div class="order-rest-phone">📞 هاتف المنشأة: <a href="tel:${ord.shop_phone}" style="color:var(--info); text-decoration:none;" title="اتصال بالمنشأة" target="_blank">${ord.shop_phone}</a></div>`;
                             }
@@ -1731,9 +1694,13 @@ let master = 'default';
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
                                             <div class="detail-val">${ordValSafe} د.أ</div>
                                         </div>
-                                        <div class="detail-box">
+                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ordFeeSafe} د.أ</div>
+                                            <div class="detail-val" style="color:var(--info);">${ordFeeSafe} د.أ</div>
+                                        </div>
+                                        <div class="detail-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
+                                            <div class="detail-lbl" style="color:#166534;">الصافي لك 💰</div>
+                                            <div class="detail-val" style="color:#166534;">${(ordFeeSafe - commAmountSafe).toFixed(2)} د.أ</div>
                                         </div>
                                     </div>
                                     <div class="order-timer-text" id="text_timer_${ord.id}">${timeLeft} ${currentLang === 'ar' ? 'ثانية للقبول' : 'sec left'} ⏳</div>
@@ -1815,9 +1782,13 @@ let master = 'default';
                                             <div class="detail-lbl">${currentLang === 'ar'?'قيمة الطلب':'Order Val'}</div>
                                             <div class="detail-val">${ordValSafe} د.أ</div>
                                         </div>
-                                        <div class="detail-box">
+                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
                                             <div class="detail-lbl">${currentLang === 'ar'?'رسوم التوصيل':'Delivery Fee'}</div>
-                                            <div class="detail-val" style="color:var(--success);">${ordFeeSafe} د.أ</div>
+                                            <div class="detail-val" style="color:var(--info);">${ordFeeSafe} د.أ</div>
+                                        </div>
+                                        <div class="detail-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
+                                            <div class="detail-lbl" style="color:#166534;">الصافي لك 💰</div>
+                                            <div class="detail-val" style="color:#166534;">${(ordFeeSafe - commAmountSafe).toFixed(2)} د.أ</div>
                                         </div>
                                     </div>
                                     <button class="btn-action ${btnClass}" onclick="${nextAction}" style="width: 100%; border: none; font-weight: 900;">${btnText}</button>
@@ -1851,41 +1822,44 @@ let master = 'default';
                 }
             });
 
-            // الأرشيف والعدادات السحابية
+            // الأرشيف والعدادات السحابية المسرعة (Shallow Fetching)
             const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
-            onValue(ref(db, `company_archives/${compId}/orders`), (archiveSnap) => {
+            const archiveQuery = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
+            
+            onValue(archiveQuery, (archiveSnap) => {
                 if(archiveSnap.exists()) {
                     let cloudTodayCount = 0;
-                    let cloudTodayVal = 0;
-                    let cloudTodayFee = 0;
+                    let cloudTodayNet = 0;
+                    let cloudTodayComm = 0;
                     const todayStr = new Date().toDateString(); 
                     
                     Object.values(archiveSnap.val()).forEach(o => {
-                        if (o.capKey === capNodeKey && new Date(o.date).toDateString() === todayStr) {
+                        if (new Date(o.date).toDateString() === todayStr) {
                             cloudTodayCount++;
-                            cloudTodayVal += parseFloat(o.value || 0) || 0; 
-                            cloudTodayFee += parseFloat(o.fee || 0) || 0; 
+                            const orderFee = parseFloat(o.fee || 0) || 0;
+                            const orderComm = parseFloat(o.comm || 0) || 0;
+                            cloudTodayNet += (orderFee - orderComm);
+                            cloudTodayComm += orderComm;
                         }
                     });
                     
                     document.getElementById('ui_today_count').innerText = cloudTodayCount;
-                    document.getElementById('ui_today_val').innerText = cloudTodayVal.toFixed(2); 
-                    document.getElementById('ui_today_fee').innerText = cloudTodayFee.toFixed(2);
+                    document.getElementById('ui_today_net').innerText = cloudTodayNet.toFixed(2); 
+                    document.getElementById('ui_today_comm').innerText = cloudTodayComm.toFixed(2);
                 }
             });
 
-// الخرائط الحرارية (تم ربطها بريموت الإدارة)
+            // الخرائط الحرارية الموجهة الذكية
             const companyMaster = currentCaptain.company || currentCaptain.Client_Master;
             if(companyMaster) {
-                const globalOrdersRef = ref(db, 'orders');
-                onValue(globalOrdersRef, (snapshot) => {
-                    // فحص إذا كانت الإدارة مفعلة نظام الخرائط الحرارية أم لا
+                const hotspotsQuery = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'));
+                onValue(hotspotsQuery, (snapshot) => {
                     if (systemSettings.hotspots_active === false) {
                         const hotspotsContainer = document.getElementById('ui_hotspots');
                         if (hotspotsContainer) {
                             hotspotsContainer.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'تم إيقاف نظام المؤشرات من قبل الإدارة' : 'Hotspots Disabled by Admin'}</div>`;
                         }
-                        return; // الخروج من الدالة إذا كان النظام معطل
+                        return;
                     }
 
                     if (snapshot.exists()) {
@@ -1895,24 +1869,23 @@ let master = 'default';
                         
                         for(let key in allOrders) {
                             const ord = allOrders[key];
-                            // حساب الطلبات الجديدة أو اللي قيد التحضير فقط
-                            if(ord.OrderStatus === 'new' || ord.Shop_Status === 'new') {
-                                const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
-                                if(ordArea === myArea || myArea === '' || myArea === 'عام') {
-                                    let rName = ord.Shop_Name || ord.restaurant || '';
-                                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
-                                    rName = rName.split('-')[0].trim(); 
-                                    if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
-                                }
+                            const ordArea = (ord.OrderArea || ord.Shop_Area || ord.Shop_Pickup || ord.pickup || '').trim();
+                            if(ordArea === myArea || myArea === '' || myArea === 'عام') {
+                                let rName = ord.Shop_Name || ord.restaurant || '';
+                                rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, ''); 
+                                rName = rName.split('-')[0].trim(); 
+                                if(rName) areaCounts[rName] = (areaCounts[rName] || 0) + 1;
                             }
                         }
 
-                        const sortedRests = Object.keys(areaCounts).sort((a, b) => areaCounts[b] - areaCounts[a]);
+                        const sortedRests = Object.entries(areaCounts).sort((a, b) => b[1] - a[1]);
                         const hotspotsContainer = document.getElementById('ui_hotspots');
                         let hsHtml = ''; 
 
                         if(sortedRests.length > 0) {
-                            sortedRests.slice(0, 3).forEach(restName => { hsHtml += `<div class="hotspot-tag">${restName} 🔥</div>`; });
+                            sortedRests.slice(0, 3).forEach(rest => { 
+                                hsHtml += `<div class="hotspot-tag">📍 ${rest[0]} (🔥 ${rest[1]} طلبات)</div>`; 
+                            });
                         } else {
                             hsHtml = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%; text-align:center;">${currentLang === 'ar' ? 'لا يوجد ضغط طلبات بمنطقتك حالياً' : 'No Active Hotspots'}</div>`;
                         }
@@ -1952,8 +1925,13 @@ let master = 'default';
             const nameEl = document.getElementById('ui_cap_name');
             if (nameEl) nameEl.innerText = data.Cap_Name || data.name;
 
+            // تنسيق احترافي لنوع السيارة واللوحة
             const carEl = document.getElementById('ui_cap_car');
-            if (carEl) carEl.innerText = data.Cap_Car || (currentLang==='ar'?'السيارة غير محددة':'Car info missing');
+            if (carEl) {
+                const cType = data.Cap_CarType || (data.Cap_Car ? data.Cap_Car.split('|')[0] : 'السيارة غير محددة');
+                const cPlate = data.Cap_CarPlate || (data.Cap_Car ? data.Cap_Car.split('|')[1] : '');
+                carEl.innerText = `🚗 ${cType} ${cPlate ? ' | 🔢 ' + cPlate : ''}`;
+            }
             
             const bal = parseFloat(data.Cap_Balance || data.balance || 0);
             const balEl = document.getElementById('ui_cap_bal');
@@ -2074,6 +2052,7 @@ let master = 'default';
             }
         };
 
+        // الأرشيف النظيف يسجل العملية مرة وحدة كاملة
         window.completeOrder = async function(appOrdId, radarOrdId, ordVal, ordFee, ordComm, restName) {
             try {
                 const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
@@ -2082,13 +2061,15 @@ let master = 'default';
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/status`] = 'completed';
                 updates[`assigned_orders/${capNodeKey}/${appOrdId}/completed_at`] = Date.now();
                 
+                const netProfit = parseFloat(ordFee) - parseFloat(ordComm);
                 const newArchiveRef = push(ref(db, `company_archives/${compId}/orders`));
                 updates[`company_archives/${compId}/orders/${newArchiveRef.key}`] = {
                     capKey: capNodeKey,
                     date: new Date().toISOString(),
-                    value: ordVal,
-                    fee: ordFee,
-                    comm: ordComm,
+                    value: parseFloat(ordVal),
+                    fee: parseFloat(ordFee),
+                    comm: parseFloat(ordComm),
+                    net: netProfit,
                     rest: restName,
                     appOrdId: appOrdId
                 };
@@ -2144,13 +2125,14 @@ let master = 'default';
             if (modal) modal.style.display = 'flex';
             
             const compId = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            const archiveQuery = query(ref(db, `company_archives/${compId}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
             
             try {
-                const snap = await get(ref(db, `company_archives/${compId}/orders`));
+                const snap = await get(archiveQuery);
                 let hHtml = '';
                 
                 if(snap.exists()) {
-                    const myOrders = Object.values(snap.val()).filter(o => o.capKey === capNodeKey).sort((a,b) => new Date(b.date) - new Date(a.date));
+                    const myOrders = Object.values(snap.val()).sort((a,b) => new Date(b.date) - new Date(a.date));
                     
                     if(myOrders.length === 0) {
                         hHtml = `<div style="text-align:center; padding:20px; color:#94a3b8; font-weight:bold;">${dict[currentLang].no_history}</div>`;
@@ -2163,6 +2145,7 @@ let master = 'default';
                             const ordVal = parseFloat(ord.value || 0).toFixed(2);
                             const delFee = parseFloat(ord.fee || 0).toFixed(2);
                             const comm = parseFloat(ord.comm || 0).toFixed(2);
+                            const net = (delFee - comm).toFixed(2);
                             const restName = ord.rest || (currentLang === 'ar' ? 'الموقع' : 'Location');
                             
                             hHtml += `
@@ -2173,11 +2156,11 @@ let master = 'default';
                                     </div>
                                     <div class="h-row" style="margin-top:8px; font-size:12px;">
                                         <span style="color:var(--primary);">${currentLang === 'ar' ? 'قيمة الطلب' : 'Order Value'}: <b>${ordVal} د.أ</b></span>
-                                        <span style="color:var(--success);">${currentLang === 'ar' ? 'أجرة التوصيل' : 'Delivery Fee'}: <b>${delFee} د.أ</b></span>
+                                        <span style="color:var(--info);">${currentLang === 'ar' ? 'أجرة التوصيل' : 'Delivery Fee'}: <b>${delFee} د.أ</b></span>
                                     </div>
                                     <div class="h-row" style="margin-top:5px; border-top:1px dashed #e2e8f0; padding-top:8px;">
-                                        <span>${currentLang === 'ar' ? "عمولة الشركة المخصومة" : "Company Commission"}</span>
-                                        <span class="h-commission">-${comm} د.أ</span>
+                                        <span>${currentLang === 'ar' ? "الصافي لك (بعد الخصم)" : "Net Profit"}</span>
+                                        <span style="color:var(--success); font-weight:900; font-size:15px;">${net} د.أ</span>
                                     </div>
                                 </div>
                             `;
