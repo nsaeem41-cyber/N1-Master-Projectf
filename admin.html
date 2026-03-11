@@ -321,6 +321,17 @@
                     </select>
                 </div>
 
+                <div class="remote-switch-container" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <span class="switch-label" style="font-size: 12px; color: var(--gold-light);">⏱️ معدل تحديث الحرارة (بالدقائق)</span>
+                    <select id="remote_hotspot_interval" style="background: rgba(15, 23, 42, 0.9);">
+                        <option value="1">كل دقيقة (عالي الاستهلاك)</option>
+                        <option value="5" selected>كل 5 دقائق (موصى به)</option>
+                        <option value="10">كل 10 دقائق (موفر)</option>
+                        <option value="15">كل 15 دقيقة (اقتصادي)</option>
+                        <option value="30">كل 30 دقيقة (خامل)</option>
+                    </select>
+                </div>
+
             </div>
             <button class="btn-save-remote" onclick="saveMasterRemote()">بث التحديثات للأسطول 🚀</button>
         </div>
@@ -468,6 +479,7 @@
                     document.getElementById('remote_hotspots_active').checked = settings.hotspots_active !== false; // افتراضي شغال
                     document.getElementById('remote_order_timer').value = settings.order_timer || 10;
                     document.getElementById('remote_hotspot_count').value = settings.hotspot_count || 3;
+                    document.getElementById('remote_hotspot_interval').value = settings.hotspot_interval || 5; // التايمر الجديد
                 }
             });
         };
@@ -479,6 +491,7 @@
             const hotspotsActive = document.getElementById('remote_hotspots_active').checked;
             const orderTimer = parseInt(document.getElementById('remote_order_timer').value) || 10;
             const hotspotCount = parseInt(document.getElementById('remote_hotspot_count').value) || 3;
+            const hotspotInterval = parseInt(document.getElementById('remote_hotspot_interval').value) || 5; // استخراج التايمر
 
             document.getElementById('loader-overlay').style.display = 'flex';
             try {
@@ -488,6 +501,7 @@
                     hotspots_active: hotspotsActive,
                     order_timer: orderTimer,
                     hotspot_count: hotspotCount,
+                    hotspot_interval: hotspotInterval, // تخزين التايمر بالسيرفر
                     last_updated: Date.now()
                 });
                 document.getElementById('loader-overlay').style.display = 'none';
