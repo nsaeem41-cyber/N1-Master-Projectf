@@ -132,13 +132,46 @@
         .app-popup-btn { background: var(--danger); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; font-size: 15px; transition: 0.3s; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
         .app-popup-btn:hover { background: #b91c1c; transform: translateY(-2px); }
 
-        /* ازرار التبديل الصغيرة (Toggle) */
-        .switch-small { position: relative; display: inline-block; width: 34px; height: 20px; }
-        .switch-small input { opacity: 0; width: 0; height: 0; }
-        .slider-small { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-        .slider-small:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider-small { background-color: var(--success); }
-        input:checked + .slider-small:before { transform: translateX(14px); }
+        /* ================= الريموت الجديد المصغر والفخم المخصص للشركات ================= */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .switch.mini { width: 34px; height: 18px; margin: 0; }
+        .switch.mini .slider:before { height: 12px; width: 12px; left: 3px; bottom: 3px; }
+        .switch.mini input:checked + .slider:before { transform: translateX(16px); }
+        
+        .slim-remote-bar {
+            display: flex; flex-wrap: wrap; gap: 15px; background: #f8fafc; 
+            padding: 12px 20px; border-radius: 12px; border: 1px solid #e2e8f0; 
+            align-items: center; justify-content: space-between;
+        }
+        .remote-item-mini {
+            display: flex; align-items: center; gap: 8px;
+            background: white; padding: 5px 12px; border-radius: 8px;
+            border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .remote-item-mini span.icon { font-size: 16px; }
+        .remote-item-mini span.label { font-size: 11px; color: #475569; font-weight: bold; }
+        
+        .remote-input-mini {
+            width: 50px; height: 24px; padding: 2px 5px; font-size: 12px; 
+            border: 1px solid #e2e8f0; border-radius: 4px; background: #f8fafc; color: var(--primary); text-align: center;
+        }
+        .remote-select-mini {
+            height: 24px; padding: 0 5px; font-size: 11px; 
+            border: 1px solid #e2e8f0; border-radius: 4px; background: #f8fafc; color: var(--primary); cursor: pointer;
+        }
+
+        .btn-save-remote { 
+            background: var(--success); color: white; border: none; 
+            padding: 8px 20px; border-radius: 8px; font-weight: 900; 
+            cursor: pointer; transition: 0.3s; font-size: 13px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+        .btn-save-remote:hover { background: #059669; transform: translateY(-2px);}
 
         /* نظام الإشعارات الذكي المنسدل */
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
@@ -259,39 +292,57 @@
 
     <div class="container">
 
-        <div class="card" style="border-top-color: var(--danger); background: linear-gradient(to left, #f8fafc, #ffffff); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 24px;">🛡️</span>
-                <div>
-                    <h3 style="margin: 0; color: var(--primary); font-size: 14px;">مركز بروتوكولات الأمان (Cyber Control)</h3>
-                    <small style="color: #64748b; font-weight: bold;">أدوات التحكم المتقدمة للإدارة</small>
-                </div>
+        <div id="cyber-control-card" class="card" style="border-top-color: var(--success); display: none; margin-bottom: 20px;">
+            <div class="card-header" style="margin-bottom: 10px; border-bottom: none; padding-bottom: 0;">
+                <span style="color: var(--success); font-size: 14px;">🪄 لوحة التحكم السريعة (Master Remote)</span>
             </div>
-
-            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                    <label style="font-size: 11px; font-weight: bold; color: var(--primary);">⏱️ مهلة الاستجابة للطلب (ثواني):</label>
-                    <input type="number" id="remote_timer_val" style="width: 50px; height: 28px; padding: 0 5px; text-align: center; border-color: var(--info); border-radius: 6px;" min="5" max="60" placeholder="10">
-                    <button class="btn-check" style="background: var(--info); color: white; height: 28px; margin: 0; border-radius: 6px;" onclick="updateRemoteTimer()">تطبيق</button>
+            
+            <div class="slim-remote-bar">
+                <div class="remote-item-mini" title="حظر بروتوكول VPN">
+                    <span class="icon">🛡️</span>
+                    <label class="switch mini"><input type="checkbox" id="remote_anti_vpn"><span class="slider mini"></span></label>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                    <span style="font-size: 11px; font-weight: bold; color: var(--danger);">🛡️ جدار حماية (Anti-VPN)</span>
-                    <label class="switch-small" style="margin: 0;">
-                        <input type="checkbox" id="remote_toggle_vpn" onchange="toggleRemoteVPN(this.checked)">
-                        <span class="slider-small"></span>
-                    </label>
+                <div class="remote-item-mini" title="إظهار أرقام المطاعم">
+                    <span class="icon">📞</span>
+                    <label class="switch mini"><input type="checkbox" id="remote_show_phones"><span class="slider mini"></span></label>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 5px 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                    <span style="font-size: 11px; font-weight: bold; color: #b45309;">🔥 مؤشرات الطلب (Hotspots)</span>
-                    <label class="switch-small" style="margin: 0;">
-                        <input type="checkbox" id="remote_toggle_hotspots" onchange="toggleRemoteHotspots(this.checked)">
-                        <span class="slider-small"></span>
-                    </label>
+                <div class="remote-item-mini" title="تفعيل المناطق الحرارية">
+                    <span class="icon">🔥</span>
+                    <label class="switch mini"><input type="checkbox" id="remote_hotspots_active"><span class="slider mini"></span></label>
                 </div>
+
+                <div class="remote-item-mini" title="وقت استقبال الطلب">
+                    <span class="icon">⏳</span>
+                    <input type="number" id="remote_order_timer" class="remote-input-mini" placeholder="10">
+                </div>
+
+                <div class="remote-item-mini" title="عدد المطاعم الحرارية">
+                    <span class="icon">📊</span>
+                    <select id="remote_hotspot_count" class="remote-select-mini">
+                        <option value="1">1</option>
+                        <option value="3" selected>3</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+
+                <div class="remote-item-mini" title="معدل التحديث">
+                    <span class="icon">⏱️</span>
+                    <select id="remote_hotspot_interval" class="remote-select-mini">
+                        <option value="1">1 د</option>
+                        <option value="5" selected>5 د</option>
+                        <option value="10">10 د</option>
+                        <option value="15">15 د</option>
+                        <option value="30">30 د</option>
+                    </select>
+                </div>
+
+                <button class="btn-save-remote" onclick="saveClientRemote()">بث للأسطول 🚀</button>
             </div>
         </div>
+
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('dashboard', event)">📊 التقارير المالية</button>
             <button class="tab-btn" onclick="switchTab('shops', event)">🏪 إدارة الفروع والمنشآت</button>
@@ -538,7 +589,7 @@
         let currentShopFilter = 'active'; 
         let availablePricingAreas = [];
 
-        // نظام الإشعارات الذكي (بديل Alert)
+        // نظام الإشعارات الذكي
         window.showAppToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -550,7 +601,6 @@
         };
 
         window.onload = function() {
-            // التمويه والحماية
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             
             if (savedUser) {
@@ -560,7 +610,6 @@
                 return;
             }
 
-            // الاعتماد الكامل على اسم الشركة الرسمي في العرض
             const dispName = currentUser.Client_Name || currentUser.name || 'مؤسسة غير معرفة';
             document.getElementById('welcome-msg').innerText = `أهلاً بك، ${dispName}`;
             document.getElementById('display_company_name').innerText = dispName;
@@ -569,6 +618,7 @@
             document.getElementById('profile_user').value = currentUser.Client_User || currentUser.user || '';
             document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
 
+            checkRemotePermission();
             checkAdPermission();
             updateCountdownTimer();
             setupRealtimeFreezeListener(); 
@@ -578,9 +628,73 @@
             fetchCyberSettings(); 
         };
 
+        function checkRemotePermission() {
+            if(!currentUser) return;
+            const username = currentUser.Client_User || currentUser.user;
+            const userRef = ref(db, `users/${username}`);
+            
+            onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.can_use_remote === true || data.can_use_remote === "true") {
+                        document.getElementById('cyber-control-card').style.display = 'block';
+                    } else {
+                        document.getElementById('cyber-control-card').style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        window.fetchCyberSettings = function() {
+            if(!currentUser) return;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            if(!myMaster) return;
+
+            onValue(ref(db, `settings/${myMaster}`), (snap) => {
+                if(snap.exists()) {
+                    const settings = snap.val();
+                    document.getElementById('remote_anti_vpn').checked = settings.anti_vpn || false;
+                    document.getElementById('remote_show_phones').checked = settings.show_phone_numbers || false;
+                    document.getElementById('remote_hotspots_active').checked = settings.hotspots_active !== false; 
+                    document.getElementById('remote_order_timer').value = settings.order_timer || 10;
+                    document.getElementById('remote_hotspot_count').value = settings.hotspot_count || 3;
+                    document.getElementById('remote_hotspot_interval').value = settings.hotspot_interval || 5; 
+                }
+            });
+        };
+
+        window.saveClientRemote = async function() {
+            const antiVpn = document.getElementById('remote_anti_vpn').checked;
+            const showPhones = document.getElementById('remote_show_phones').checked;
+            const hotspotsActive = document.getElementById('remote_hotspots_active').checked;
+            const orderTimer = parseInt(document.getElementById('remote_order_timer').value) || 10;
+            const hotspotCount = parseInt(document.getElementById('remote_hotspot_count').value) || 3;
+            const hotspotInterval = parseInt(document.getElementById('remote_hotspot_interval').value) || 5;
+
+            const myMaster = currentUser.Client_User || currentUser.user;
+            if(!myMaster) return;
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            try {
+                await update(ref(db, `settings/${myMaster}`), {
+                    anti_vpn: antiVpn,
+                    show_phone_numbers: showPhones,
+                    hotspots_active: hotspotsActive,
+                    order_timer: orderTimer,
+                    hotspot_count: hotspotCount,
+                    hotspot_interval: hotspotInterval,
+                    last_updated: Date.now()
+                });
+                document.getElementById('loader-overlay').style.display = 'none';
+                showAppToast("تم بث التحديثات للأسطول بنجاح 🚀");
+            } catch (e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                showAppToast("حدث خطأ أثناء بث التحديثات", true);
+            }
+        };
+
         window.fetchPricingAreas = function() {
             const pricesRef = ref(db, 'prices');
-            // استهلاك ذكي: مراقبة فقط للتغيرات التابعة للمنشأة
             onValue(pricesRef, (snapshot) => {
                 availablePricingAreas = [];
                 const currentUserRef = currentUser.Client_User || currentUser.user;
@@ -851,7 +965,6 @@
             document.getElementById('loader-overlay').style.display = 'flex';
 
             try {
-                // الاعتماد على تثبيت المعرف وتحديث باقي البيانات فقط
                 const updates = {
                     [`users/${originalUser}/Client_Name`]: newName,
                     [`users/${originalUser}/name`]: newName,
@@ -1319,7 +1432,7 @@
             document.getElementById('edit_original_user').value = userKey;
             document.getElementById('edit_shop_name').value = shop.Client_Name || shop.name || '';
             document.getElementById('edit_shop_user').value = shop.Client_User || shop.user || '';
-            document.getElementById('edit_shop_user').readOnly = true; // تطبيق حماية الـ ID
+            document.getElementById('edit_shop_user').readOnly = true; 
             document.getElementById('edit_shop_user').style.cursor = 'not-allowed';
             document.getElementById('edit_shop_pass').value = shop.Client_Pass || shop.pass || '';
             document.getElementById('edit_shop_phone').value = shop.Client_Phone || shop.cap_phone || '';
@@ -1364,7 +1477,6 @@
             if (!shop) return;
 
             const newName = document.getElementById('edit_shop_name').value.trim();
-            // الـ ID لا يتغير بعد الآن بسبب الحماية
             const newPass = document.getElementById('edit_shop_pass').value;
             const newPhone = document.getElementById('edit_shop_phone').value.trim();
             const newPricingArea = document.getElementById('edit_shop_pricing_area').value;
@@ -1391,7 +1503,6 @@
             document.getElementById('loader-overlay').style.display = 'flex';
 
             try {
-                // الاعتماد فقط على التحديث لأن الـ ID مغلق
                 const updates = {
                     [`shops/${originalUser}/Client_Name`]: newName,
                     [`shops/${originalUser}/name`]: newName,
@@ -1432,68 +1543,6 @@
                 showAppToast("لم يكتمل مسار الحذف بسبب خطأ في الخوادم.", true);
             }
         };
-
-        // ========================================================
-        // التحديث 726: دوال التحكم السيبراني (تم العزل المطلق)
-        // ========================================================
-        window.fetchCyberSettings = function() {
-            if(!currentUser) return;
-            const myMaster = currentUser.Client_User || currentUser.user;
-            if(!myMaster) return;
-
-            onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
-                if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
-            });
-            
-            onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
-                document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
-            });
-            
-            onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
-                document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
-            });
-        };
-
-        window.updateRemoteTimer = async function() {
-            const timeVal = document.getElementById('remote_timer_val').value;
-            if(!timeVal || timeVal < 5) { showAppToast("الحد الأدنى لمهلة الاستجابة هو 5 ثواني.", true); return; }
-            document.getElementById('loader-overlay').style.display = 'flex';
-            
-            try {
-                const myMaster = currentUser.Client_User || currentUser.user;
-                if(myMaster) {
-                    await set(ref(db, `settings/${myMaster}/order_timer`), parseInt(timeVal));
-                    showAppToast("تم تحديث مهلة الاستجابة بنجاح عبر النظام.");
-                }
-                document.getElementById('loader-overlay').style.display = 'none';
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                showAppToast("فشل في تطبيق أمر التعديل.", true);
-            }
-        };
-
-        window.toggleRemoteVPN = async function(isActive) {
-            try {
-                const myMaster = currentUser.Client_User || currentUser.user;
-                if(myMaster) {
-                    await set(ref(db, `settings/${myMaster}/anti_vpn`), isActive);
-                    if(isActive) showAppToast("تم تفعيل جدار الحماية ضد التلاعب بالمواقع (Anti-VPN).");
-                    else showAppToast("تم إيقاف تشغيل جدار الحماية.");
-                }
-            } catch(e) { showAppToast("حدث خطأ أثناء تعديل بروتوكول الحماية.", true); }
-        };
-
-        window.toggleRemoteHotspots = async function(isActive) {
-            try {
-                const myMaster = currentUser.Client_User || currentUser.user;
-                if(myMaster) {
-                    await set(ref(db, `settings/${myMaster}/hotspots_active`), isActive);
-                    if(isActive) showAppToast("تم تشغيل نظام التتبع الحراري للطلبات.");
-                    else showAppToast("تم تعطيل نظام المؤشرات.");
-                }
-            } catch(e) { showAppToast("حدث خطأ أثناء الاتصال بالخادم المركزي.", true); }
-        };
-
     </script>
 </body>
 </html>
