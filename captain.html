@@ -225,6 +225,16 @@
         .alert-modal-box { background: white; padding: 30px; border-radius: 24px; text-align: center; max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-top: 6px solid var(--danger); animation: popIn 0.3s ease-out; }
         
         #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
+
+        /* --- Rating System Fixes --- */
+        .gems-container { display: flex; justify-content: center; gap: 12px; margin: 20px 0; direction: ltr; }
+        .gem { font-size: 40px; cursor: pointer; transition: all 0.3s ease; opacity: 0.25; padding: 5px; user-select: none; -webkit-tap-highlight-color: transparent; display: inline-block; }
+        .gem.active { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.7)); }
+        
+        .quick-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .tag { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; color: #475569; transition: all 0.3s ease; font-weight: 900; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .tag.active { background: linear-gradient(135deg, var(--info), #0284c7); color: white; border-color: transparent; box-shadow: 0 4px 10px rgba(2,132,199,0.3); transform: translateY(-2px); }
+
     </style>
 </head>
 <body id="app-body">
@@ -281,28 +291,28 @@
 
     <div id="rating-modal" class="custom-dialog-overlay">
         <div class="alert-modal-box" style="border-top-color: var(--info); padding: 25px;">
-            <div style="font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 5px;">تقييم المنشأة 💎</div>
+            <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 5px;">تقييم المنشأة 💎</div>
             <div id="rating_title_desc" style="font-size: 13px; color: #64748b; font-weight: bold;">كيف كان أداء المنشأة في تجهيز الطلب</div>
             
             <div class="gems-container" id="gems-container">
-                <span class="gem" onclick="setRating(1)">💎</span>
-                <span class="gem" onclick="setRating(2)">💎</span>
-                <span class="gem" onclick="setRating(3)">💎</span>
-                <span class="gem" onclick="setRating(4)">💎</span>
-                <span class="gem" onclick="setRating(5)">💎</span>
+                <div class="gem" onclick="setRating(1)">💎</div>
+                <div class="gem" onclick="setRating(2)">💎</div>
+                <div class="gem" onclick="setRating(3)">💎</div>
+                <div class="gem" onclick="setRating(4)">💎</div>
+                <div class="gem" onclick="setRating(5)">💎</div>
             </div>
             
             <div id="rating-feedback" style="display: none; margin-top: 15px; text-align: right;">
-                <div id="dynamic-question" style="font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">ما هي المشكلة التي واجهتك</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;" id="quick-tags"></div>
-                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; font-weight: bold; box-sizing: border-box; resize: vertical;"></textarea>
+                <div id="dynamic-question" style="font-size: 15px; font-weight: 900; color: var(--primary); margin-bottom: 12px; text-align: center;">ما هي المشكلة التي واجهتك؟</div>
+                <div class="quick-tags" id="quick-tags"></div>
+                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; font-weight: bold; box-sizing: border-box; resize: vertical;"></textarea>
             </div>
 
             <input type="hidden" id="current_rating_val" value="0">
             <input type="hidden" id="rating_shop_id" value="">
             <input type="hidden" id="selected_tag" value="">
             
-            <button class="btn-action" style="background: linear-gradient(135deg, var(--info), #0284c7); width: 100%; margin-top: 20px;" onclick="submitRating()">إرسال التقييم 🚀</button>
+            <button class="btn-action" style="background: linear-gradient(135deg, var(--info), #0284c7); width: 100%; margin-top: 20px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);" onclick="submitRating()">إرسال التقييم 🚀</button>
             <button style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 15px; cursor: pointer; font-weight:bold; font-size: 14px;" onclick="closeRatingModal()">تخطي التقييم</button>
         </div>
     </div>
@@ -655,21 +665,29 @@
             }
         });
 
+        // ================== نظام التقييم الألماسي ==================
         window.openRatingModal = function(shopId) {
-            document.getElementById('rating_shop_id').value = shopId;
+            document.getElementById('rating_shop_id').value = shopId || 'unknown';
             document.getElementById('current_rating_val').value = "0";
             document.getElementById('selected_tag').value = "";
             document.getElementById('rating_notes').value = "";
             document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
             document.getElementById('rating-feedback').style.display = 'none';
-            document.getElementById('rating_title_desc').innerText = "كيف كان أداء المنشأة في تجهيز الطلب";
+            document.getElementById('rating_title_desc').innerText = "كيف كان أداء المنشأة في تجهيز الطلب؟";
             document.getElementById('rating-modal').style.display = 'flex';
         };
-        window.closeRatingModal = function() { document.getElementById('rating-modal').style.display = 'none'; };
+        
+        window.closeRatingModal = function() { 
+            document.getElementById('rating-modal').style.display = 'none'; 
+        };
+        
         window.setRating = function(val) {
             document.getElementById('current_rating_val').value = val;
             const gems = document.querySelectorAll('.gem');
-            gems.forEach((g, index) => { if(index < val) g.classList.add('active'); else g.classList.remove('active'); });
+            gems.forEach((g, index) => { 
+                if(index < val) g.classList.add('active'); 
+                else g.classList.remove('active'); 
+            });
             
             const feedbackSection = document.getElementById('rating-feedback');
             const question = document.getElementById('dynamic-question');
@@ -679,13 +697,34 @@
             feedbackSection.style.display = 'block';
             document.getElementById('selected_tag').value = "";
             
-            if (val === 1) { desc.innerText = "ضعيف جدا ⚠️"; desc.style.color = "var(--danger)"; question.innerText = "نأسف لسماع ذلك ما هي المشكلة"; tagsContainer.innerHTML = `<span class="tag" onclick="selectTag(this)">تأخير كبير جدا</span><span class="tag" onclick="selectTag(this)">تعامل سيء</span><span class="tag" onclick="selectTag(this)">الطلب غير جاهز</span>`; }
-            else if (val === 2) { desc.innerText = "دون المستوى 😟"; desc.style.color = "#d97706"; question.innerText = "ما الذي أزعجك في المنشأة"; tagsContainer.innerHTML = `<span class="tag" onclick="selectTag(this)">تأخير في التجهيز</span><span class="tag" onclick="selectTag(this)">سوء تغليف</span>`; }
-            else if (val === 3) { desc.innerText = "مقبول 😐"; desc.style.color = "#8b5cf6"; question.innerText = "كيف يمكن للمنشأة التحسن"; tagsContainer.innerHTML = `<span class="tag" onclick="selectTag(this)">سرعة التجهيز</span><span class="tag" onclick="selectTag(this)">التعامل مع الكابتن</span>`; }
-            else if (val === 4) { desc.innerText = "ممتاز 🙂"; desc.style.color = "var(--info)"; question.innerText = "هل هناك ملاحظة بسيطة"; tagsContainer.innerHTML = `<span class="tag" onclick="selectTag(this)">تجهيز سريع</span><span class="tag" onclick="selectTag(this)">تعامل راقي</span>`; }
-            else if (val === 5) { desc.innerText = "ألماسي واحترافي 🌟"; desc.style.color = "var(--success)"; question.innerText = "شكرا لجهودك يا بطل"; tagsContainer.innerHTML = `<span class="tag" onclick="selectTag(this)">احترافية عالية</span><span class="tag" onclick="selectTag(this)">تجهيز فوري</span><span class="tag" onclick="selectTag(this)">قمة في الرقي</span>`; }
+            if (val === 1) { 
+                desc.innerText = "ضعيف جدا ⚠️"; desc.style.color = "var(--danger)"; question.innerText = "نأسف لسماع ذلك، ما هي المشكلة؟"; 
+                tagsContainer.innerHTML = `<div class="tag" onclick="selectTag(this)">تأخير كبير جدا</div><div class="tag" onclick="selectTag(this)">تعامل سيء</div><div class="tag" onclick="selectTag(this)">الطلب غير جاهز</div>`; 
+            }
+            else if (val === 2) { 
+                desc.innerText = "دون المستوى 😟"; desc.style.color = "#d97706"; question.innerText = "ما الذي أزعجك في المنشأة؟"; 
+                tagsContainer.innerHTML = `<div class="tag" onclick="selectTag(this)">تأخير في التجهيز</div><div class="tag" onclick="selectTag(this)">سوء تغليف</div>`; 
+            }
+            else if (val === 3) { 
+                desc.innerText = "مقبول 😐"; desc.style.color = "#8b5cf6"; question.innerText = "كيف يمكن للمنشأة التحسن؟"; 
+                tagsContainer.innerHTML = `<div class="tag" onclick="selectTag(this)">سرعة التجهيز</div><div class="tag" onclick="selectTag(this)">التعامل مع الكابتن</div>`; 
+            }
+            else if (val === 4) { 
+                desc.innerText = "ممتاز 🙂"; desc.style.color = "var(--info)"; question.innerText = "هل هناك ملاحظة بسيطة؟"; 
+                tagsContainer.innerHTML = `<div class="tag" onclick="selectTag(this)">تجهيز سريع</div><div class="tag" onclick="selectTag(this)">تعامل راقي</div>`; 
+            }
+            else if (val === 5) { 
+                desc.innerText = "ألماسي واحترافي 🌟"; desc.style.color = "var(--success)"; question.innerText = "شكرا لجهودك يا بطل"; 
+                tagsContainer.innerHTML = `<div class="tag" onclick="selectTag(this)">احترافية عالية</div><div class="tag" onclick="selectTag(this)">تجهيز فوري</div><div class="tag" onclick="selectTag(this)">قمة في الرقي</div>`; 
+            }
         };
-        window.selectTag = function(element) { document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); element.classList.add('active'); document.getElementById('selected_tag').value = element.innerText; };
+        
+        window.selectTag = function(element) { 
+            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); 
+            element.classList.add('active'); 
+            document.getElementById('selected_tag').value = element.innerText; 
+        };
+        
         window.submitRating = async function() {
             const val = parseInt(document.getElementById('current_rating_val').value);
             const shopId = document.getElementById('rating_shop_id').value;
@@ -693,10 +732,16 @@
             const notes = document.getElementById('rating_notes').value.trim();
             if(val === 0) { window.showToast("الرجاء اختيار التقييم أولا", true); return; }
             try {
-                const newRatingRef = push(ref(db, `ratings/shops/${shopId}`));
+                // الحماية من أن يكون shopId فارغ
+                const targetShopId = (shopId && shopId.trim() !== '' && shopId !== 'undefined') ? shopId : 'general_feedback';
+                const newRatingRef = push(ref(db, `ratings/shops/${targetShopId}`));
                 await set(newRatingRef, { captainId: capNodeKey, rating: val, reason: selectedTag, notes: notes, timestamp: Date.now() });
-                window.showToast("شكرا لتقييمك 💎"); closeRatingModal();
-            } catch(e) { window.showToast("حدث خطأ أثناء الإرسال", true); closeRatingModal(); }
+                window.showToast("شكرا لتقييمك 💎"); 
+                closeRatingModal();
+            } catch(e) { 
+                window.showToast("حدث خطأ أثناء الإرسال", true); 
+                closeRatingModal(); 
+            }
         };
 
         window.openRegisterScreen = async function() {
@@ -941,7 +986,8 @@
                     else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}',0)">🚗 في الطريق</button>`; }
                     else if(ord.status === 'on_way') { btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}',0)">📍 وصلت العميل</button>`; }
                     else if(ord.status === 'arrived_at_customer') {
-                        let ratingShopId = ord.rating_shop_id || '';
+                        // تمرير ShopId من الطلب حتى لو كان مخفي
+                        let ratingShopId = ord.rating_shop_id || ord.Shop_User || ord.shop_id || '';
                         btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}')">💎 تم التسليم بنجاح</button>`;
                     }
 
@@ -980,7 +1026,7 @@
             window.hasActiveOrdersLoaded = true; 
             window.hasActiveOrderInProgress = hasActive;
 
-            // تحديث قانون الطلب الواحد في السيرفر (is_busy)
+            // قفل حالة الكابتن عند استلام أي طلب لضمان عدم إرسال طلبات جديدة
             if (currentCaptain && currentCaptain.app_status === 'online') {
                 if (currentCaptain.is_busy !== hasActive) {
                     update(ref(db, `captains/${capNodeKey}`), { is_busy: hasActive });
