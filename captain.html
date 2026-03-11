@@ -235,27 +235,6 @@
         .tag { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; color: #475569; transition: all 0.3s ease; font-weight: 900; user-select: none; -webkit-tap-highlight-color: transparent; }
         .tag.active { background: linear-gradient(135deg, var(--info), #0284c7); color: white; border-color: transparent; box-shadow: 0 4px 10px rgba(2,132,199,0.3); transform: translateY(-2px); }
 
-        /* --- نظام البث والإعلانات للكابتن --- */
-        .app-ad-container { display: none; align-items: center; background: white; margin: 15px 15px 0 15px; padding: 12px 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.04); border-right: 5px solid var(--primary); animation: slideDown 0.4s ease; }
-        .ad-n-one-badge { background: var(--gold); color: var(--primary); padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; margin-left: 12px; white-space: nowrap; box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3); }
-        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
-        .ad-text-scroll { font-weight: 800; font-size: 14px; width: 100%; }
-        .ad-type-normal { border-right-color: var(--primary); }
-        .ad-type-news { border-right-color: var(--info); }
-        .ad-type-news .ad-text-scroll { color: var(--info); }
-        .ad-type-warning { border-right-color: var(--danger); background-color: #fef2f2; }
-        .ad-type-warning .ad-text-scroll { color: var(--danger); }
-        .ad-type-offer { border-right-color: var(--success); }
-        .ad-type-offer .ad-text-scroll { color: var(--success); }
-        .ad-type-system { border-right-color: #8b5cf6; }
-
-        /* --- تصميم التنبيه الطارئ --- */
-        .app-popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-top: 6px solid var(--danger); animation: popIn 0.3s ease-out; }
-        .app-popup-icon { font-size: 50px; margin-bottom: 12px; }
-        .app-popup-msg { font-size: 18px; font-weight: 900; color: var(--primary); line-height: 1.5; margin-bottom: 20px; }
-        .app-popup-btn { background: var(--danger); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; font-size: 15px; transition: 0.3s; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); }
-        .app-popup-btn:hover { background: #b91c1c; transform: translateY(-2px); }
-
     </style>
 </head>
 <body id="app-body">
@@ -272,14 +251,6 @@
             <p class="pwa-text">للحصول على تجربة أسرع ولضمان وصول الطلبات فوراً حمّل تطبيق الكابتن الرسمي الآن</p>
             <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق الآن 🚀</button>
             <button id="btn-continue-app" class="btn-continue-app" onclick="document.getElementById('pwa-splash').style.display='none'">المتابعة من المتصفح</button>
-        </div>
-    </div>
-
-    <div id="app-popup-overlay" class="custom-dialog-overlay" style="z-index: 70000;">
-        <div class="app-popup-box">
-            <div class="app-popup-icon">🚨</div>
-            <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
-            <button class="app-popup-btn" onclick="closeAppPopup()">استلام التعليمات</button>
         </div>
     </div>
 
@@ -432,13 +403,6 @@
                     <button class="btn-action-top" onclick="openSettingsModal()">⚙️</button>
                     <button class="btn-action-top" onclick="openHistoryModal()">📜</button>
                     <button class="btn-logout" onclick="logout()">خروج 🔒</button>
-                </div>
-            </div>
-
-            <div id="smart-ad-container" class="app-ad-container">
-                <div class="ad-n-one-badge">تعميم 📡</div>
-                <div class="ad-content-wrapper">
-                    <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="5"></marquee>
                 </div>
             </div>
 
@@ -768,6 +732,7 @@
             const notes = document.getElementById('rating_notes').value.trim();
             if(val === 0) { window.showToast("الرجاء اختيار التقييم أولا", true); return; }
             try {
+                // الحماية من أن يكون shopId فارغ
                 const targetShopId = (shopId && shopId.trim() !== '' && shopId !== 'undefined') ? shopId : 'general_feedback';
                 const newRatingRef = push(ref(db, `ratings/shops/${targetShopId}`));
                 await set(newRatingRef, { captainId: capNodeKey, rating: val, reason: selectedTag, notes: notes, timestamp: Date.now() });
@@ -792,7 +757,6 @@
                 }
             } catch(e) { select.innerHTML = '<option value="">خطأ في التحميل</option>'; }
         };
-
         window.fetchCompanyAreas = async function() {
             const compId = document.getElementById('reg_company_list').value;
             const areaSelect = document.getElementById('reg_area');
@@ -808,7 +772,6 @@
                 else { areaSelect.innerHTML += `<option value="Main Area">المنطقة الرئيسية</option>`; }
             } catch(e) {}
         };
-
         window.submitRegistration = async function() {
             const compId = document.getElementById('reg_company_list').value; const name = document.getElementById('reg_name').value.trim();
             const phone = document.getElementById('reg_phone').value.trim(); const carType = document.getElementById('reg_car_type').value.trim();
@@ -828,7 +791,6 @@
                 window.showToast("تم إرسال الطلب بنجاح ✅"); window.backToLogin();
             } catch(e) { window.showToast("خطأ بالتسجيل", true); }
         };
-
         window.backToLogin = () => { document.getElementById('register-screen').classList.remove('active'); document.getElementById('login-screen').classList.add('active'); };
         window.logout = () => { localStorage.removeItem('n1_captain_session'); window.location.reload(); };
 
@@ -881,13 +843,11 @@
                 }
             }, 1000);
         }
-
         window.rejectOrderAuto = async function(orderId) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
             await update(ref(db), {[`assigned_orders/${capNodeKey}/${orderId}/status`]: 'timeout'});
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
-
         window.rejectOrd = async (id, rId) => {
             if(orderTimers[id]) { clearInterval(orderTimers[id]); delete orderTimers[id]; }
             if(orderTimers[`seen_${id}`]) delete orderTimers[`seen_${id}`];
@@ -1026,6 +986,7 @@
                     else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}',0)">🚗 في الطريق</button>`; }
                     else if(ord.status === 'on_way') { btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}',0)">📍 وصلت العميل</button>`; }
                     else if(ord.status === 'arrived_at_customer') {
+                        // تمرير ShopId من الطلب حتى لو كان مخفي
                         let ratingShopId = ord.rating_shop_id || ord.Shop_User || ord.shop_id || '';
                         btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}')">💎 تم التسليم بنجاح</button>`;
                     }
@@ -1065,6 +1026,7 @@
             window.hasActiveOrdersLoaded = true; 
             window.hasActiveOrderInProgress = hasActive;
 
+            // قفل حالة الكابتن عند استلام أي طلب لضمان عدم إرسال طلبات جديدة
             if (currentCaptain && currentCaptain.app_status === 'online') {
                 if (currentCaptain.is_busy !== hasActive) {
                     update(ref(db, `captains/${capNodeKey}`), { is_busy: hasActive });
@@ -1100,16 +1062,14 @@
             } else { if(aud) { aud.pause(); aud.currentTime=0; } }
         };
 
-        // ================== نظام الاستماع للإشعارات والتحكم (الجديد) ==================
         function initListeners() {
-            let masterRaw = currentCaptain.company || currentCaptain.Client_Master || 'default'; 
+            let masterRaw = 'default'; 
             const connectedRef = ref(db, ".info/connected");
             onValue(connectedRef, (snap) => {
                 if (snap.val() === true) { document.getElementById('server-offline-guard').style.display = 'none'; } 
                 else { if(navigator.onLine) { document.getElementById('server-offline-guard').style.display = 'flex'; } }
             });
 
-            // الاستماع للريموت المحدث من الشركة التابع لها
             try {
                 onValue(ref(db, `settings/${masterRaw}`), (snap) => {
                     if(snap.exists()) {
@@ -1130,47 +1090,6 @@
                             startHotspotSync();
                         }
                         checkVPNStatus(); if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
-                    }
-                });
-            } catch(e) {}
-
-            // الاستماع للتعميمات والإعلانات (Announcements) الخاصة بالشركة
-            try {
-                onValue(ref(db, `client_announcements/${masterRaw}/captains`), (snapshot) => {
-                    const ads = snapshot.val() || {}; const now = Date.now(); let activeAd = null;
-                    const uName = currentCaptain.Cap_User || currentCaptain.user;
-                    
-                    if (ads.users && ads.users[uName]) { const specificAd = ads.users[uName]; if (!specificAd.expireAt || specificAd.expireAt > now) activeAd = specificAd; }
-                    if (!activeAd && ads.global) { const globalAd = ads.global; if (!globalAd.expireAt || globalAd.expireAt > now) activeAd = globalAd; }
-                    
-                    const adContainer = document.getElementById('smart-ad-container'), adMarquee = document.getElementById('smart-ad-text');
-                    if (activeAd && activeAd.text) { 
-                        adMarquee.innerText = `${activeAd.sender}: ${activeAd.text}`; 
-                        adContainer.className = 'app-ad-container ad-type-' + (activeAd.type || 'normal'); 
-                        adContainer.style.display = 'flex'; 
-                    } else { adContainer.style.display = 'none'; }
-                });
-            } catch(e) {}
-
-            // الاستماع للتنبيهات الطارئة (Alerts) الخاصة بالشركة
-            try {
-                onValue(ref(db, `client_alerts/${masterRaw}/captains`), (snapshot) => {
-                    const alerts = snapshot.val() || {}; let activeAlert = null;
-                    const uName = currentCaptain.Cap_User || currentCaptain.user;
-                    
-                    if (alerts.users && alerts.users[uName]) activeAlert = alerts.users[uName]; 
-                    else if (alerts.global) activeAlert = alerts.global;
-                    
-                    if (activeAlert && activeAlert.message) {
-                        // إخفاء تنبيه تحديث السيتنجز الداخلي
-                        if(activeAlert.message === "UPDATE_SETTINGS_CMD") return; 
-
-                        const lastSeen = localStorage.getItem(`last_seen_alert_${masterRaw}_${uName}`) || 0;
-                        if (activeAlert.timestamp > lastSeen) { 
-                            document.getElementById('app-popup-msg').innerText = activeAlert.message; 
-                            document.getElementById('app-popup-overlay').style.display = 'flex'; 
-                            localStorage.setItem(`last_seen_alert_${masterRaw}_${uName}`, activeAlert.timestamp); 
-                        }
                     }
                 });
             } catch(e) {}
@@ -1203,7 +1122,8 @@
             try { onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => { window.lastOrdersSnap = snap; window.refreshOrdersUI(); }); } catch(e) {}
 
             try {
-                const archQuery = query(ref(db, `company_archives/${masterRaw}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
+                let currentMaster = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                const archQuery = query(ref(db, `company_archives/${currentMaster}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
                 onValue(archQuery, (snap) => {
                     if(snap.exists()) {
                         let cnt=0, totalFee=0, totalOrderVal=0; const today = new Date().toDateString();
@@ -1219,8 +1139,6 @@
                 });
             } catch(e) {}
         }
-
-        window.closeAppPopup = function() { document.getElementById('app-popup-overlay').style.display = 'none'; };
 
         function updateUIProfile(data) {
             document.getElementById('ui_cap_name').innerText = data.Cap_Name || data.name;
