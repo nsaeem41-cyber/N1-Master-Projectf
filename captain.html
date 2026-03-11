@@ -463,7 +463,9 @@
 
         let currentCaptain = null;
         let capNodeKey = null;
-        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false };
+        
+        // ================= إضافة حساس المطاعم (hotspot_count) =================
+        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false, hotspot_count: 3 };
         let orderTimers = {};
         
         window.hasActiveOrdersLoaded = false;
@@ -499,8 +501,13 @@
             document.getElementById('device-offline-guard').style.display = 'none';
         });
 
-        // ================== الحارس المريخي الأشرس للـ VPN (تلقائي بدون ريموت) ==================
+        // ================= حساس الـ VPN المتصل بالريموت =================
         async function checkVPNStatus() {
+            if (!systemSettings.anti_vpn) {
+                document.getElementById('vpn-guard').style.display = 'none';
+                return;
+            }
+
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             if (tz && tz !== 'Asia/Amman') {
                 blockVPN(); return;
@@ -825,6 +832,7 @@
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
 
+            // ================== الكابتن يقرأ التايمر من الريموت ==================
             totalTime = systemSettings.order_timer;
 
             orderTimers[orderId] = setInterval(() => {
@@ -854,7 +862,6 @@
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
 
-        // ================== جسر التحديث اللحظي للواجهة ==================
         window.refreshOrdersUI = function() {
             const snap = window.lastOrdersSnap;
             const cont = document.getElementById('active-orders-container');
@@ -884,6 +891,7 @@
                         ring = true;
                         if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
                         const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
+                        // ================== تطبيق التايمر الجديد على الطلبات الواردة ==================
                         timeLeft = systemSettings.order_timer - elapsed;
                         if(timeLeft <= 0) { rejectOrderAuto(id); return; }
                     }
@@ -906,6 +914,7 @@
                     let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
                     let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
 
+                    // ================== الكابتن يستجيب لريموت إظهار الأرقام ==================
                     if (ord.shop_phone && isGlobalShow && !isCapHidden) {
                         phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900; text-decoration:none;">${ord.shop_phone}</a></div>`;
                     }
@@ -1001,10 +1010,11 @@
             }
         };
 
-        function initListeners() {
-            let masterRaw = 'default';
-            if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) masterRaw = currentCaptain.company || currentCaptain.Client_Master;
+        let hotspotUnsubscribe = null;
 
+        function initListeners() {
+            let masterRaw = 'default'; // استقبال دائم من default لضمان توحيد الريموت
+            
             const connectedRef = ref(db, ".info/connected");
             onValue(connectedRef, (snap) => {
                 if (snap.val() === true) {
@@ -1016,15 +1026,21 @@
                 }
             });
 
+            // ================== استقبال نبضات الريموت من السيرفر ==================
             try {
                 onValue(ref(db, `settings/${masterRaw}`), (snap) => {
                     if(snap.exists()) {
                         const s = snap.val();
+                        // تخزين إعدادات الريموت المريخي
                         systemSettings.order_timer = parseInt(s.order_timer) || 10;
                         systemSettings.show_phone_numbers = s.show_phone_numbers || false;
                         systemSettings.hotspots_active = s.hotspots_active !== false;
+                        systemSettings.anti_vpn = s.anti_vpn || false;
+                        systemSettings.hotspot_count = parseInt(s.hotspot_count) || 3;
 
                         const hsCont = document.getElementById('ui_hotspots');
+                        
+                        // ================== تشغيل/إيقاف وتحديد عدد المناطق الحرارية ==================
                         if(systemSettings.hotspots_active) {
                             if(!hotspotUnsubscribe) {
                                 const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
@@ -1036,7 +1052,8 @@
                                             rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
                                             if(rn) counts[rn] = (counts[rn] || 0) + 1;
                                         });
-                                        const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+                                        // الكابتن يفرز العدد المطلوب من الريموت فقط
+                                        const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, systemSettings.hotspot_count);
                                         if(sorted.length > 0) {
                                             hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
                                         } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
@@ -1051,6 +1068,7 @@
                             document.getElementById('hotspots-section').style.display = 'none';
                         }
                         
+                        checkVPNStatus(); // فحص فوري عند تغيير حالة الـ VPN من الريموت
                         if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
                     }
                 });
@@ -1063,7 +1081,7 @@
                         if(snap.exists()) {
                             let total = 0, count = 0;
                             Object.values(snap.val()).forEach(r => { total += parseInt(r.rating || 0); count++; });
-                            if(count > 0) document.getElementById('lang_rating').innerHTML = `تقييمك ${(total/count).toFixed(1)} 💎`;
+                            if(count > 0) document.getElementById('lang_rating').innerHTML = `تقييم ${(total/count).toFixed(1)} 💎`;
                         }
                     });
                 }
@@ -1096,7 +1114,8 @@
             } catch(e) {}
 
             try {
-                const archQuery = query(ref(db, `company_archives/${masterRaw}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
+                let currentMaster = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                const archQuery = query(ref(db, `company_archives/${currentMaster}/orders`), orderByChild('capKey'), equalTo(capNodeKey));
                 onValue(archQuery, (snap) => {
                     if(snap.exists()) {
                         let cnt=0, totalFee=0, totalOrderVal=0;
