@@ -468,6 +468,7 @@
         
         window.hasActiveOrdersLoaded = false;
         window.hasActiveOrderInProgress = false;
+        window.lastOrdersSnap = null;
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
@@ -853,7 +854,152 @@
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
 
-        let hotspotUnsubscribe = null;
+        // ================== جسر التحديث اللحظي للواجهة ==================
+        window.refreshOrdersUI = function() {
+            const snap = window.lastOrdersSnap;
+            const cont = document.getElementById('active-orders-container');
+            const toggleSection = document.getElementById('status-toggle-section');
+            const hsSec = document.getElementById('hotspots-section');
+
+            let html = '', hasActive = false, ring = false;
+
+            if(!currentCaptain || currentCaptain.app_status !== 'online') {
+                if(cont) cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
+                if(hsSec) hsSec.style.display = 'none';
+                if(toggleSection) toggleSection.style.display = 'flex'; 
+                const aud = document.getElementById('order-ringtone');
+                if(aud) { aud.pause(); aud.currentTime=0; }
+                
+                window.hasActiveOrderInProgress = false; 
+                return;
+            }
+
+            if(snap && snap.exists()) {
+                Object.entries(snap.val()).forEach(([id, ord]) => {
+                    if(ord.status === 'completed' || ord.status === 'timeout' || ord.status === 'rejected') return;
+                    hasActive = true;
+                    
+                    let timeLeft = 0;
+                    if(ord.status === 'assigned') {
+                        ring = true;
+                        if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
+                        const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
+                        timeLeft = systemSettings.order_timer - elapsed;
+                        if(timeLeft <= 0) { rejectOrderAuto(id); return; }
+                    }
+
+                    const valSafe = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
+                    const feeSafe = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
+                    const commSafe = parseFloat(ord.commission_amount || 0).toFixed(2);
+                    const netSafe = (feeSafe - commSafe).toFixed(2);
+                    
+                    let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
+                    rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
+
+                    let locationHtml = '';
+                    if(ord.location_link || ord.Shop_Location_Link) {
+                        const link = ord.location_link || ord.Shop_Location_Link;
+                        locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
+                    }
+
+                    let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
+                    let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
+                    let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
+
+                    if (ord.shop_phone && isGlobalShow && !isCapHidden) {
+                        phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900; text-decoration:none;">${ord.shop_phone}</a></div>`;
+                    }
+
+                    let btnAction = '';
+                    let timerHtml = '';
+                    let discountHtml = '';
+
+                    if(parseFloat(ord.discount || ord.Shop_Discount || 0) > 0) {
+                        discountHtml = `<div style="text-align:center; font-size:11px; color:var(--danger); background:#fef2f2; padding:3px; border-radius:5px; margin-top:5px;">يوجد خصم ${parseFloat(ord.discount || ord.Shop_Discount).toFixed(2)} د.أ</div>`;
+                    }
+
+                    if(ord.status === 'assigned') {
+                        timerHtml = `
+                            <div class="order-timer-text" id="text_timer_${id}">${timeLeft} ثانية للاختفاء ⏳</div>
+                            <div class="order-timer-bar" id="bar_timer_${id}" style="width: 100%;"></div>
+                        `;
+                        btnAction = `<div style="display:flex;gap:10px;"><button class="btn-action btn-accept" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">قبول الطلب ✅</button></div>`;
+                    } else if(ord.status === 'accepted') {
+                        btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}',${commSafe}, ${valSafe}, ${feeSafe}, '${rName}')">وصلت المنشأة 🏪</button>`;
+                    } else if(ord.status === 'arrived_at_shop') {
+                        btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}',0)">استلمت الطلب 🥡</button>`;
+                    } else if(ord.status === 'picked_up') {
+                        btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}',0)">في الطريق 🚗</button>`;
+                    } else if(ord.status === 'on_way') {
+                        btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}',0)">وصلت العميل 📍</button>`;
+                    } else if(ord.status === 'arrived_at_customer') {
+                        let ratingShopId = ord.rating_shop_id || '';
+                        btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='جاري التوثيق ⏳'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}')">تم التسليم بنجاح 💎</button>`;
+                    }
+
+                    html += `
+                        <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <div class="order-rest" style="font-size:18px;">🏪 ${rName}</div>
+                                ${locationHtml}
+                            </div>
+                            ${phoneHtml}
+                            <div class="order-details">
+                                <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
+                                    <div class="detail-lbl">قيمة الطلب</div>
+                                    <div class="detail-val" style="color:var(--primary);">${valSafe} د.أ</div>
+                                </div>
+                                <div class="detail-box" style="display:flex; flex-direction:column; justify-content:center;">
+                                    <div class="detail-lbl" style="margin-bottom:2px;">أجرة التوصيل</div>
+                                    <div class="detail-val" style="color:var(--info); font-size:14px;">${feeSafe} د.أ</div>
+                                    <div style="font-size:10px; color:#166534; font-weight:bold; margin-top:2px;">صافي ${netSafe} د.أ</div>
+                                </div>
+                            </div>
+                            ${discountHtml}
+                            ${timerHtml}
+                            ${btnAction}
+                        </div>
+                    `;
+
+                    if(ord.status === 'assigned') {
+                        setTimeout(() => startVisualTimer(id, timeLeft, systemSettings.order_timer), 50);
+                    }
+                });
+            }
+            
+            window.hasActiveOrdersLoaded = true;
+            window.hasActiveOrderInProgress = hasActive;
+
+            if (!hasActive && currentCaptain) {
+                const checkBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+                if (checkBal <= -1.00) {
+                    document.getElementById('balance-guard').style.display = 'flex';
+                    if (currentCaptain.app_status === 'online') {
+                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                    }
+                    const tgl = document.getElementById('toggle_status');
+                    if(tgl) tgl.checked = false;
+                    const ind = document.getElementById('ui_status_indicator');
+                    if(ind) ind.className='status-indicator offline';
+                    const txt = document.getElementById('ui_status_text');
+                    if(txt) { txt.innerText='رصيد غير كافٍ 🔴'; txt.style.color = "var(--danger)"; }
+                }
+            }
+            
+            if(cont) cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
+            
+            if(toggleSection) toggleSection.style.display = hasActive ? 'none' : 'flex';
+            if(hsSec) hsSec.style.display = (hasActive || !systemSettings.hotspots_active) ? 'none' : 'block';
+
+            const aud = document.getElementById('order-ringtone');
+            if(ring && currentCaptain.app_status === 'online') { 
+                if(aud && aud.paused) aud.play().catch(e=>{}); 
+                if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500]);
+                sendSystemNotification('🚀 أوردر جديد نفاث', 'اضغط للقبول قبل انتهاء الوقت المخصص 💎');
+            } else { 
+                if(aud) { aud.pause(); aud.currentTime=0; }
+            }
+        };
 
         function initListeners() {
             let masterRaw = 'default';
@@ -904,6 +1050,8 @@
                             }
                             document.getElementById('hotspots-section').style.display = 'none';
                         }
+                        
+                        if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
                     }
                 });
             } catch(e) {}
@@ -933,6 +1081,7 @@
                         currentCaptain = data; 
                         localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
                         updateUIProfile(currentCaptain); 
+                        if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
                     } else {
                         logout();
                     }
@@ -941,148 +1090,8 @@
 
             try {
                 onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
-                    const cont = document.getElementById('active-orders-container');
-                    const toggleSection = document.getElementById('status-toggle-section');
-                    const hsSec = document.getElementById('hotspots-section');
-                    
-                    let html = '', hasActive = false, ring = false;
-                    
-                    if(!currentCaptain || currentCaptain.app_status !== 'online') {
-                        cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
-                        if(hsSec) hsSec.style.display = 'none';
-                        if(toggleSection) toggleSection.style.display = 'flex'; 
-                        const aud = document.getElementById('order-ringtone');
-                        if(aud) { aud.pause(); aud.currentTime=0; }
-                        
-                        window.hasActiveOrderInProgress = false; 
-                        return;
-                    }
-
-                    if(snap.exists()) {
-                        Object.entries(snap.val()).forEach(([id, ord]) => {
-                            if(ord.status === 'completed' || ord.status === 'timeout' || ord.status === 'rejected') return;
-                            hasActive = true;
-                            
-                            let timeLeft = 0;
-                            if(ord.status === 'assigned') {
-                                ring = true;
-                                if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
-                                const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
-                                timeLeft = systemSettings.order_timer - elapsed;
-                                if(timeLeft <= 0) { rejectOrderAuto(id); return; }
-                            }
-
-                            const valSafe = parseFloat(ord.value || ord.Shop_Val || 0).toFixed(2);
-                            const feeSafe = parseFloat(ord.fee || ord.Shop_Fee || 0).toFixed(2);
-                            const commSafe = parseFloat(ord.commission_amount || 0).toFixed(2);
-                            const netSafe = (feeSafe - commSafe).toFixed(2);
-                            
-                            let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
-                            rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
-
-                            let locationHtml = '';
-                            if(ord.location_link || ord.Shop_Location_Link) {
-                                const link = ord.location_link || ord.Shop_Location_Link;
-                                locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
-                            }
-
-                            let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
-                            let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
-                            let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
-
-                            if (ord.shop_phone && isGlobalShow && !isCapHidden) {
-                                phoneHtml = `<div class="order-rest-phone" style="font-size:14px;">📞 <a href="tel:${ord.shop_phone}" style="color:var(--info); font-weight:900; text-decoration:none;">${ord.shop_phone}</a></div>`;
-                            }
-
-                            let btnAction = '';
-                            let timerHtml = '';
-                            let discountHtml = '';
-
-                            if(parseFloat(ord.discount || ord.Shop_Discount || 0) > 0) {
-                                discountHtml = `<div style="text-align:center; font-size:11px; color:var(--danger); background:#fef2f2; padding:3px; border-radius:5px; margin-top:5px;">يوجد خصم ${parseFloat(ord.discount || ord.Shop_Discount).toFixed(2)} د.أ</div>`;
-                            }
-
-                            if(ord.status === 'assigned') {
-                                timerHtml = `
-                                    <div class="order-timer-text" id="text_timer_${id}">${timeLeft} ثانية للاختفاء ⏳</div>
-                                    <div class="order-timer-bar" id="bar_timer_${id}" style="width: 100%;"></div>
-                                `;
-                                btnAction = `<div style="display:flex;gap:10px;"><button class="btn-action btn-accept" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">قبول الطلب ✅</button></div>`;
-                            } else if(ord.status === 'accepted') {
-                                btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}',${commSafe}, ${valSafe}, ${feeSafe}, '${rName}')">وصلت المنشأة 🏪</button>`;
-                            } else if(ord.status === 'arrived_at_shop') {
-                                btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}',0)">استلمت الطلب 🥡</button>`;
-                            } else if(ord.status === 'picked_up') {
-                                btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}',0)">في الطريق 🚗</button>`;
-                            } else if(ord.status === 'on_way') {
-                                btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}',0)">وصلت العميل 📍</button>`;
-                            } else if(ord.status === 'arrived_at_customer') {
-                                let ratingShopId = ord.rating_shop_id || '';
-                                btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='جاري التوثيق ⏳'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}')">تم التسليم بنجاح 💎</button>`;
-                            }
-
-                            html += `
-                                <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                                        <div class="order-rest" style="font-size:18px;">🏪 ${rName}</div>
-                                        ${locationHtml}
-                                    </div>
-                                    ${phoneHtml}
-                                    <div class="order-details">
-                                        <div class="detail-box" style="border-left: 1px solid #e2e8f0;">
-                                            <div class="detail-lbl">قيمة الطلب</div>
-                                            <div class="detail-val" style="color:var(--primary);">${valSafe} د.أ</div>
-                                        </div>
-                                        <div class="detail-box" style="display:flex; flex-direction:column; justify-content:center;">
-                                            <div class="detail-lbl" style="margin-bottom:2px;">أجرة التوصيل</div>
-                                            <div class="detail-val" style="color:var(--info); font-size:14px;">${feeSafe} د.أ</div>
-                                            <div style="font-size:10px; color:#166534; font-weight:bold; margin-top:2px;">صافي ${netSafe} د.أ</div>
-                                        </div>
-                                    </div>
-                                    ${discountHtml}
-                                    ${timerHtml}
-                                    ${btnAction}
-                                </div>
-                            `;
-
-                            if(ord.status === 'assigned') {
-                                setTimeout(() => startVisualTimer(id, timeLeft, systemSettings.order_timer), 50);
-                            }
-                        });
-                    }
-                    
-                    window.hasActiveOrdersLoaded = true;
-                    window.hasActiveOrderInProgress = hasActive;
-
-                    if (!hasActive && currentCaptain) {
-                        const checkBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
-                        if (checkBal <= -1.00) {
-                            document.getElementById('balance-guard').style.display = 'flex';
-                            if (currentCaptain.app_status === 'online') {
-                                update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
-                            }
-                            const tgl = document.getElementById('toggle_status');
-                            if(tgl) tgl.checked = false;
-                            const ind = document.getElementById('ui_status_indicator');
-                            if(ind) ind.className='status-indicator offline';
-                            const txt = document.getElementById('ui_status_text');
-                            if(txt) { txt.innerText='رصيد غير كافٍ 🔴'; txt.style.color = "var(--danger)"; }
-                        }
-                    }
-                    
-                    if(cont) cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
-                    
-                    if(toggleSection) toggleSection.style.display = hasActive ? 'none' : 'flex';
-                    if(hsSec) hsSec.style.display = hasActive ? 'none' : 'block';
-
-                    const aud = document.getElementById('order-ringtone');
-                    if(ring && currentCaptain.app_status === 'online') { 
-                        if(aud && aud.paused) aud.play().catch(e=>{}); 
-                        if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500]);
-                        sendSystemNotification('🚀 أوردر جديد نفاث', 'اضغط للقبول قبل انتهاء الوقت المخصص 💎');
-                    } else { 
-                        if(aud) { aud.pause(); aud.currentTime=0; }
-                    }
+                    window.lastOrdersSnap = snap;
+                    window.refreshOrdersUI();
                 });
             } catch(e) {}
 
@@ -1204,6 +1213,7 @@
             if(currentCaptain) {
                 currentCaptain.app_status = isOnline ? 'online' : 'offline';
                 localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
+                if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
             }
         };
 
