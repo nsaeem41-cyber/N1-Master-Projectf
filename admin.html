@@ -78,7 +78,7 @@
         .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; position: relative; z-index: 1; }
 
         /* ================= بوابات الوصول السريع ================= */
-        .quick-access-panel { display: flex; gap: 15px; margin-bottom: 20px; }
+        .quick-access-panel { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
         
         .btn-gate {
             background: rgba(30, 41, 59, 0.7);
@@ -140,6 +140,22 @@
         }
         .btn-add:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212,175,55,0.4); }
 
+        /* ================= مفاتيح الريموت الذكية (Toggle Switches) ================= */
+        .remote-switch-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(5, 8, 20, 0.6); border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px; border-radius: 8px; transition: 0.3s;
+        }
+        .remote-switch-container:hover { border-color: var(--gold); background: rgba(15, 23, 42, 0.95); }
+        .switch-label { font-size: 14px; font-weight: bold; color: #cbd5e1; }
+        
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
         /* ================= الجداول ================= */
         .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
@@ -174,13 +190,16 @@
         .ad-color-warning { color: #f87171; background: #7f1d1d; font-weight: bold; }
         .ad-color-offer { color: #34d399; background: #064e3b; }
         
-        .ad-controls { display: flex; gap: 10px; margin-top: 15px; }
+        .ad-controls { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;}
         .btn-broadcast { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-size: 13px; transition: 0.3s;}
         .btn-broadcast:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
-        .btn-popup { background: #ef4444; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s;}
+        .btn-popup { background: #ef4444; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s; flex: 1;}
         .btn-popup:hover { background: #dc2626; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);}
-        .btn-clear-ad { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s;}
+        .btn-clear-ad { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s; flex: 1;}
         .btn-clear-ad:hover {background: #334155;}
+        
+        .btn-save-remote { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 15px; font-size: 15px;}
+        .btn-save-remote:hover { filter: brightness(1.1); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); transform: translateY(-2px);}
 
         /* ================= رسالة التأسيس الرسمية (مموهة) ================= */
         #birthday-overlay {
@@ -255,6 +274,55 @@
                 <div class="stat-label">إجمالي الجرد المالي</div>
                 <div class="stat-number" id="revenue-count" style="color: var(--gold);">0</div>
             </div>
+        </div>
+
+        <div class="card" style="border-top-color: var(--success);">
+            <div class="card-header">
+                <span style="color: var(--success);">🎛️ عصا التحكم السحرية (Master Remote)</span>
+            </div>
+            <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                
+                <div class="remote-switch-container">
+                    <span class="switch-label">🛡️ حظر بروتوكول VPN</span>
+                    <label class="switch">
+                        <input type="checkbox" id="remote_anti_vpn">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="remote-switch-container">
+                    <span class="switch-label">📞 إظهار أرقام المطاعم</span>
+                    <label class="switch">
+                        <input type="checkbox" id="remote_show_phones">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="remote-switch-container">
+                    <span class="switch-label">🔥 تفعيل المناطق الحرارية</span>
+                    <label class="switch">
+                        <input type="checkbox" id="remote_hotspots_active">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="remote-switch-container" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <span class="switch-label" style="font-size: 12px; color: var(--gold-light);">⏳ وقت استقبال الطلب (بالثواني)</span>
+                    <input type="number" id="remote_order_timer" placeholder="مثال: 10" style="background: rgba(15, 23, 42, 0.9);">
+                </div>
+
+                <div class="remote-switch-container" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <span class="switch-label" style="font-size: 12px; color: var(--gold-light);">📊 عدد المطاعم الحرارية المعروضة</span>
+                    <select id="remote_hotspot_count" style="background: rgba(15, 23, 42, 0.9);">
+                        <option value="1">أعلى مطعم 1</option>
+                        <option value="3" selected>أعلى 3 مطاعم</option>
+                        <option value="5">أعلى 5 مطاعم</option>
+                        <option value="10">أعلى 10 مطاعم</option>
+                    </select>
+                </div>
+
+            </div>
+            <button class="btn-save-remote" onclick="saveMasterRemote()">بث التحديثات للأسطول 🚀</button>
         </div>
 
         <div class="card">
@@ -387,6 +455,47 @@
                 }
             }
             fetchData();
+            loadMasterRemote(); // سحب بيانات الريموت عند الفتح
+        };
+
+        // ================= سحب إعدادات الريموت من السيرفر =================
+        window.loadMasterRemote = function() {
+            onValue(ref(db, 'settings/default'), (snapshot) => {
+                if (snapshot.exists()) {
+                    const settings = snapshot.val();
+                    document.getElementById('remote_anti_vpn').checked = settings.anti_vpn || false;
+                    document.getElementById('remote_show_phones').checked = settings.show_phone_numbers || false;
+                    document.getElementById('remote_hotspots_active').checked = settings.hotspots_active !== false; // افتراضي شغال
+                    document.getElementById('remote_order_timer').value = settings.order_timer || 10;
+                    document.getElementById('remote_hotspot_count').value = settings.hotspot_count || 3;
+                }
+            });
+        };
+
+        // ================= بث التحديثات للأسطول (حفظ الريموت) =================
+        window.saveMasterRemote = async function() {
+            const antiVpn = document.getElementById('remote_anti_vpn').checked;
+            const showPhones = document.getElementById('remote_show_phones').checked;
+            const hotspotsActive = document.getElementById('remote_hotspots_active').checked;
+            const orderTimer = parseInt(document.getElementById('remote_order_timer').value) || 10;
+            const hotspotCount = parseInt(document.getElementById('remote_hotspot_count').value) || 3;
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            try {
+                await update(ref(db, 'settings/default'), {
+                    anti_vpn: antiVpn,
+                    show_phone_numbers: showPhones,
+                    hotspots_active: hotspotsActive,
+                    order_timer: orderTimer,
+                    hotspot_count: hotspotCount,
+                    last_updated: Date.now()
+                });
+                document.getElementById('loader-overlay').style.display = 'none';
+                showNotification("تم بث التحديثات بنجاح إلى جميع الكباتن 🚀");
+            } catch (e) {
+                document.getElementById('loader-overlay').style.display = 'none';
+                showNotification("حدث خطأ أثناء بث التحديثات", "error");
+            }
         };
 
         window.fetchData = function() {
