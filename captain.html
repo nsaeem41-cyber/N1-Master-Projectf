@@ -449,7 +449,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -466,7 +466,6 @@
         let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false };
         let orderTimers = {};
         
-        // متغيرات التتبع الذكي لحالة الكابتن والطلبات 🛡️
         window.hasActiveOrdersLoaded = false;
         window.hasActiveOrderInProgress = false;
         
@@ -500,6 +499,11 @@
         });
 
         async function checkVPNStatus() {
+            if (!systemSettings.anti_vpn) {
+                document.getElementById('vpn-guard').style.display = 'none';
+                return;
+            }
+
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             if (tz && tz !== 'Asia/Amman') {
                 blockVPN(); return;
@@ -573,7 +577,6 @@
             if(bgAudio) bgAudio.play().catch(e=>{});
         }, { once: true });
 
-        // ================= البند 1: تثبيت إعدادات الخلفية =================
         window.toggleBackgroundMode = function(isActive) {
             localStorage.setItem('n1_captain_bg_mode', isActive ? 'true' : 'false');
             if (isActive) {
@@ -795,7 +798,7 @@
                     if(txt) { txt.innerHTML='متاح وجاهز 🟢'; txt.style.color = "var(--success)"; }
                 }
 
-                restoreSettings(); // استرجاع إعدادات الخلفية المحفوظة
+                restoreSettings();
                 requestWakeLock(); initListeners(); checkVPNStatus();
             }
         }
@@ -825,6 +828,8 @@
         function startVisualTimer(orderId, timeLeft, totalTime) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
 
+            totalTime = systemSettings.order_timer;
+
             orderTimers[orderId] = setInterval(() => {
                 timeLeft--;
                 const bar = document.getElementById(`bar_timer_${orderId}`);
@@ -852,6 +857,8 @@
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
 
+        let hotspotUnsubscribe = null;
+
         function initListeners() {
             let masterRaw = 'default';
             if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) masterRaw = currentCaptain.company || currentCaptain.Client_Master;
@@ -866,6 +873,45 @@
                     }
                 }
             });
+
+            try {
+                onValue(ref(db, `settings/${masterRaw}`), (snap) => {
+                    if(snap.exists()) {
+                        const s = snap.val();
+                        systemSettings.order_timer = parseInt(s.order_timer) || 10;
+                        systemSettings.show_phone_numbers = s.show_phone_numbers || false;
+                        systemSettings.hotspots_active = s.hotspots_active !== false;
+                        systemSettings.anti_vpn = s.anti_vpn || false;
+
+                        const hsCont = document.getElementById('ui_hotspots');
+                        if(systemSettings.hotspots_active) {
+                            if(!hotspotUnsubscribe) {
+                                const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
+                                hotspotUnsubscribe = onValue(q, (hSnap) => {
+                                    if(hSnap.exists()) {
+                                        const counts = {};
+                                        Object.values(hSnap.val()).forEach(o => {
+                                            let rn = o.Shop_Name || o.restaurant || ''; 
+                                            rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
+                                            if(rn) counts[rn] = (counts[rn] || 0) + 1;
+                                        });
+                                        const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+                                        if(sorted.length > 0) {
+                                            hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
+                                        } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
+                                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
+                                });
+                            }
+                        } else {
+                            if(hotspotUnsubscribe) {
+                                hotspotUnsubscribe();
+                                hotspotUnsubscribe = null;
+                            }
+                            document.getElementById('hotspots-section').style.display = 'none';
+                        }
+                    }
+                });
+            } catch(e) {}
 
             try {
                 const myPhone = currentCaptain.Cap_Phone || currentCaptain.phone;
@@ -891,8 +937,6 @@
                         }
                         currentCaptain = data; 
                         localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
-                        
-                        // ================= البند 2: التحديث اللحظي للرصيد =================
                         updateUIProfile(currentCaptain); 
                     } else {
                         logout();
@@ -904,16 +948,18 @@
                 onValue(ref(db, `assigned_orders/${capNodeKey}`), (snap) => {
                     const cont = document.getElementById('active-orders-container');
                     const toggleSection = document.getElementById('status-toggle-section');
+                    const hsSec = document.getElementById('hotspots-section');
                     
                     let html = '', hasActive = false, ring = false;
                     
                     if(!currentCaptain || currentCaptain.app_status !== 'online') {
                         cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
+                        if(hsSec) hsSec.style.display = 'none';
                         if(toggleSection) toggleSection.style.display = 'flex'; 
                         const aud = document.getElementById('order-ringtone');
                         if(aud) { aud.pause(); aud.currentTime=0; }
                         
-                        window.hasActiveOrderInProgress = false; // تصفير الحالة
+                        window.hasActiveOrderInProgress = false; 
                         return;
                     }
 
@@ -927,7 +973,7 @@
                                 ring = true;
                                 if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
                                 const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
-                                timeLeft = 10 - elapsed;
+                                timeLeft = systemSettings.order_timer - elapsed;
                                 if(timeLeft <= 0) { rejectOrderAuto(id); return; }
                             }
 
@@ -946,7 +992,7 @@
                             }
 
                             let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
-                            let isGlobalShow = false; // افتراضي للأصلي
+                            let isGlobalShow = (String(systemSettings.show_phone_numbers) === "true" || systemSettings.show_phone_numbers === true);
                             let isCapHidden = (String(currentCaptain.hide_phone) === "true" || currentCaptain.hide_phone === true);
 
                             if (ord.shop_phone && isGlobalShow && !isCapHidden) {
@@ -1005,7 +1051,7 @@
                             `;
 
                             if(ord.status === 'assigned') {
-                                setTimeout(() => startVisualTimer(id, timeLeft, 10), 50);
+                                setTimeout(() => startVisualTimer(id, timeLeft, systemSettings.order_timer), 50);
                             }
                         });
                     }
@@ -1013,7 +1059,6 @@
                     window.hasActiveOrdersLoaded = true;
                     window.hasActiveOrderInProgress = hasActive;
 
-                    // ================= البند 3: نظام القفل الذكي بعد المهمة =================
                     if (!hasActive && currentCaptain) {
                         const checkBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
                         if (checkBal <= -1.00) {
@@ -1033,6 +1078,7 @@
                     if(cont) cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
                     
                     if(toggleSection) toggleSection.style.display = hasActive ? 'none' : 'flex';
+                    if(hsSec) hsSec.style.display = hasActive ? 'none' : 'block';
 
                     const aud = document.getElementById('order-ringtone');
                     if(ring && currentCaptain.app_status === 'online') { 
@@ -1107,10 +1153,11 @@
             if(bal <= -1.00) {
                 bEl.classList.add('negative');
                 
-                // ================= البند 3: حماية الكابتن إذا كان معه طلب =================
                 if (window.hasActiveOrdersLoaded && !window.hasActiveOrderInProgress) {
                     if(data.app_status==='online') {
                         update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                        document.getElementById('balance-guard').style.display='flex';
+                    } else {
                         document.getElementById('balance-guard').style.display='flex';
                     }
                     if(tgl) tgl.checked=false; 
@@ -1119,7 +1166,6 @@
                 }
             } else {
                 bEl.classList.remove('negative');
-                // ================= البند 2: التحديث اللحظي =================
                 document.getElementById('balance-guard').style.display='none';
                 if(tgl) tgl.disabled=false;
                 if(data.app_status==='online') { 
@@ -1143,7 +1189,6 @@
             const isOnline = toggleBtn.checked;
             const bal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
             
-            // ================= البند 3: حماية زر الأونلاين المانع =================
             if (isOnline && bal <= -1.00 && !window.hasActiveOrderInProgress) {
                 document.getElementById('balance-guard').style.display = 'flex';
                 toggleBtn.checked = false; return;
