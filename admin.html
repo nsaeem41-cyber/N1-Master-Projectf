@@ -141,20 +141,46 @@
         .btn-add:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212,175,55,0.4); }
 
         /* ================= مفاتيح الريموت الذكية (Toggle Switches) ================= */
-        .remote-switch-container {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(5, 8, 20, 0.6); border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px 15px; border-radius: 8px; transition: 0.3s;
-        }
-        .remote-switch-container:hover { border-color: var(--gold); background: rgba(15, 23, 42, 0.95); }
-        .switch-label { font-size: 14px; font-weight: bold; color: #cbd5e1; }
-        
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: var(--success); }
         input:checked + .slider:before { transform: translateX(24px); }
+
+        /* تعديلات الريموت المصغر الكيوت */
+        .switch.mini { width: 34px; height: 18px; margin: 0; }
+        .switch.mini .slider:before { height: 12px; width: 12px; left: 3px; bottom: 3px; }
+        .switch.mini input:checked + .slider:before { transform: translateX(16px); }
+        
+        .slim-remote-bar {
+            display: flex; flex-wrap: wrap; gap: 15px; background: rgba(5,8,20,0.5); 
+            padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2); 
+            align-items: center; justify-content: space-between;
+        }
+        .remote-item-mini {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(15,23,42,0.8); padding: 5px 12px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .remote-item-mini span.icon { font-size: 16px; }
+        .remote-item-mini span.label { font-size: 11px; color: var(--gold-light); font-weight: bold; }
+        
+        .remote-input-mini {
+            width: 50px; height: 24px; padding: 2px 5px; font-size: 12px; 
+            border: none; background: transparent; color: white; text-align: center;
+        }
+        .remote-select-mini {
+            height: 24px; padding: 0 5px; font-size: 11px; 
+            border: none; background: transparent; color: white; cursor: pointer;
+        }
+
+        .btn-save-remote { 
+            background: var(--success); color: white; border: none; 
+            padding: 8px 20px; border-radius: 8px; font-weight: 900; 
+            cursor: pointer; transition: 0.3s; font-size: 13px;
+        }
+        .btn-save-remote:hover { filter: brightness(1.1); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); transform: translateY(-2px);}
 
         /* ================= الجداول ================= */
         .table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
@@ -198,9 +224,6 @@
         .btn-clear-ad { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition:0.3s; flex: 1;}
         .btn-clear-ad:hover {background: #334155;}
         
-        .btn-save-remote { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 15px; font-size: 15px;}
-        .btn-save-remote:hover { filter: brightness(1.1); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); transform: translateY(-2px);}
-
         /* ================= رسالة التأسيس الرسمية (مموهة) ================= */
         #birthday-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -276,64 +299,55 @@
             </div>
         </div>
 
-        <div class="card" style="border-top-color: var(--success);">
-            <div class="card-header">
-                <span style="color: var(--success);">🎛️ عصا التحكم السحرية (Master Remote)</span>
+        <div class="card" style="border-top-color: var(--success); padding: 15px 25px;">
+            <div class="card-header" style="margin-bottom: 10px; border-bottom: none; padding-bottom: 0;">
+                <span style="color: var(--success); font-size: 14px;">🎛️ لوحة التحكم السريعة (Master Remote)</span>
             </div>
-            <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                
-                <div class="remote-switch-container">
-                    <span class="switch-label">🛡️ حظر بروتوكول VPN</span>
-                    <label class="switch">
-                        <input type="checkbox" id="remote_anti_vpn">
-                        <span class="slider"></span>
-                    </label>
+            
+            <div class="slim-remote-bar">
+                <div class="remote-item-mini" title="حظر بروتوكول VPN">
+                    <span class="icon">🛡️</span>
+                    <label class="switch mini"><input type="checkbox" id="remote_anti_vpn"><span class="slider mini"></span></label>
                 </div>
 
-                <div class="remote-switch-container">
-                    <span class="switch-label">📞 إظهار أرقام المطاعم</span>
-                    <label class="switch">
-                        <input type="checkbox" id="remote_show_phones">
-                        <span class="slider"></span>
-                    </label>
+                <div class="remote-item-mini" title="إظهار أرقام المطاعم">
+                    <span class="icon">📞</span>
+                    <label class="switch mini"><input type="checkbox" id="remote_show_phones"><span class="slider mini"></span></label>
                 </div>
 
-                <div class="remote-switch-container">
-                    <span class="switch-label">🔥 تفعيل المناطق الحرارية</span>
-                    <label class="switch">
-                        <input type="checkbox" id="remote_hotspots_active">
-                        <span class="slider"></span>
-                    </label>
+                <div class="remote-item-mini" title="تفعيل المناطق الحرارية">
+                    <span class="icon">🔥</span>
+                    <label class="switch mini"><input type="checkbox" id="remote_hotspots_active"><span class="slider mini"></span></label>
                 </div>
 
-                <div class="remote-switch-container" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                    <span class="switch-label" style="font-size: 12px; color: var(--gold-light);">⏳ وقت استقبال الطلب (بالثواني)</span>
-                    <input type="number" id="remote_order_timer" placeholder="مثال: 10" style="background: rgba(15, 23, 42, 0.9);">
+                <div class="remote-item-mini" title="وقت استقبال الطلب">
+                    <span class="icon">⏳</span>
+                    <input type="number" id="remote_order_timer" class="remote-input-mini" placeholder="10">
                 </div>
 
-                <div class="remote-switch-container" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                    <span class="switch-label" style="font-size: 12px; color: var(--gold-light);">📊 عدد المطاعم الحرارية المعروضة</span>
-                    <select id="remote_hotspot_count" style="background: rgba(15, 23, 42, 0.9);">
-                        <option value="1">أعلى مطعم 1</option>
-                        <option value="3" selected>أعلى 3 مطاعم</option>
-                        <option value="5">أعلى 5 مطاعم</option>
-                        <option value="10">أعلى 10 مطاعم</option>
+                <div class="remote-item-mini" title="عدد المطاعم الحرارية">
+                    <span class="icon">📊</span>
+                    <select id="remote_hotspot_count" class="remote-select-mini">
+                        <option value="1">1</option>
+                        <option value="3" selected>3</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
                     </select>
                 </div>
 
-                <div class="remote-switch-container" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                    <span class="switch-label" style="font-size: 12px; color: var(--gold-light);">⏱️ معدل تحديث الحرارة (بالدقائق)</span>
-                    <select id="remote_hotspot_interval" style="background: rgba(15, 23, 42, 0.9);">
-                        <option value="1">كل دقيقة (عالي الاستهلاك)</option>
-                        <option value="5" selected>كل 5 دقائق (موصى به)</option>
-                        <option value="10">كل 10 دقائق (موفر)</option>
-                        <option value="15">كل 15 دقيقة (اقتصادي)</option>
-                        <option value="30">كل 30 دقيقة (خامل)</option>
+                <div class="remote-item-mini" title="معدل التحديث">
+                    <span class="icon">⏱️</span>
+                    <select id="remote_hotspot_interval" class="remote-select-mini">
+                        <option value="1">1 د</option>
+                        <option value="5" selected>5 د</option>
+                        <option value="10">10 د</option>
+                        <option value="15">15 د</option>
+                        <option value="30">30 د</option>
                     </select>
                 </div>
 
+                <button class="btn-save-remote" onclick="saveMasterRemote()">بث 🚀</button>
             </div>
-            <button class="btn-save-remote" onclick="saveMasterRemote()">بث التحديثات للأسطول 🚀</button>
         </div>
 
         <div class="card">
@@ -352,9 +366,15 @@
                 </select>
                 <input type="number" id="sub_price" placeholder="قيمة العقد (د.أ)">
                 
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(5,8,20,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                    <input type="checkbox" id="can_send_ads" style="width: 16px; height: 16px; cursor: pointer;" checked>
-                    <label for="can_send_ads" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 12px;">منح صلاحية الإعلانات 📢</label>
+                <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(5,8,20,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); justify-content: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="can_send_ads" style="width: 14px; height: 14px; cursor: pointer;" checked>
+                        <label for="can_send_ads" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 11px;">صلاحية الإعلانات 📢</label>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="can_use_remote" style="width: 14px; height: 14px; cursor: pointer;">
+                        <label for="can_use_remote" style="font-weight: bold; color: var(--gold-light); cursor: pointer; margin: 0; font-size: 11px;">باقة الرفاهية (الريموت) 🪄</label>
+                    </div>
                 </div>
 
                 <button class="btn-add" id="btnAddUser" onclick="addUser()">إدراج واعتماد 🚀</button>
@@ -705,19 +725,22 @@
                     daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم متبقي ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم متبقي</span>`;
                 }
                 
-                const adStatusText = item.can_send_ads ? `<br><span style="font-size:11px; color:#38bdf8; font-weight:bold;">📢 صلاحية الإعلان: معتمدة</span>` : `<br><span style="font-size:11px; color:#94a3b8; font-weight:bold;">🚫 صلاحية الإعلان: محجوبة</span>`;
+                const adStatusText = item.can_send_ads ? `<br><span style="font-size:10px; color:#38bdf8; font-weight:bold;">📢 إعلان: متاح</span>` : `<br><span style="font-size:10px; color:#94a3b8; font-weight:bold;">🚫 إعلان: محجوب</span>`;
+                const remoteStatusText = item.can_use_remote ? `<br><span style="font-size:10px; color:#d4af37; font-weight:bold;">🪄 ريموت: متاح</span>` : `<br><span style="font-size:10px; color:#94a3b8; font-weight:bold;">🚫 ريموت: محجوب</span>`;
 
                 const toggleBtn = currentStatus === 'active'
                     ? `<button class="action-btn act-freeze" title="تعليق النظام" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
                     : `<button class="action-btn act-active" title="رفع التعليق" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
 
                 const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="إدارة صلاحية الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
+                
+                const remoteToggleBtn = `<button class="action-btn" style="background: ${item.can_use_remote ? '#475569' : '#d4af37'}; color: ${item.can_use_remote ? '#fff' : '#000'};" title="إدارة باقة الرفاهية (الريموت)" onclick="toggleRemotePermission('${item.Client_User || item.user}', ${item.can_use_remote || false})">🪄</button>`;
 
                 const row = `
                     <tr>
                         <td style="color: var(--gold-light); font-size: 14px;"><b>${item.Client_Name || item.name}</b></td>
                         <td style="font-size:13px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold; font-family: monospace;">ID: ${item.Client_User || item.user}<br>KEY: ${item.Client_Pass || item.pass}</td>
-                        <td style="font-size:14px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText}</td>
+                        <td style="font-size:14px; font-weight: 900; color: #fff;">${item.Client_Price || item.price || 0} د.أ ${adStatusText} ${remoteStatusText}</td>
                         <td style="font-size:13px;">${daysText}</td>
                         <td>${statusBadge}</td>
                         <td>
@@ -726,6 +749,7 @@
                                 ${toggleBtn}
                                 <button class="action-btn act-renew" title="تجديد العقد" onclick="renewUser('${item.Client_User || item.user}')">🔄</button>
                                 ${adToggleBtn}
+                                ${remoteToggleBtn}
                                 <button class="action-btn act-delete" title="إلغاء التوثيق" onclick="deleteUser('${item.Client_User || item.user}')">❌</button>
                             </div>
                         </td>
@@ -743,6 +767,7 @@
             const days = document.getElementById('sub_duration').value;
             const price = document.getElementById('sub_price').value;
             const canSendAds = document.getElementById('can_send_ads').checked;
+            const canUseRemote = document.getElementById('can_use_remote').checked;
 
             if (!name || !user || !pass || !price) { showNotification("جميع الحقول إلزامية لاستكمال التسجيل", "error"); return; }
 
@@ -769,6 +794,7 @@
                 Client_Price: price,
                 Client_PlanDays: days,
                 can_send_ads: canSendAds,
+                can_use_remote: canUseRemote,
                 id: "CL_" + Date.now(), 
                 user: user, 
                 pass: pass, 
@@ -791,6 +817,7 @@
                 document.getElementById('new_pass').value = '';
                 document.getElementById('sub_price').value = '';
                 document.getElementById('can_send_ads').checked = true;
+                document.getElementById('can_use_remote').checked = false;
             } catch(e) {
                 document.getElementById('loader-overlay').style.display = 'none';
                 showNotification("انقطاع في المسار المباشر نحو قاعدة البيانات", "error");
@@ -816,6 +843,27 @@
             await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
             showNotification("تم تحديث مستوى الصلاحيات بنجاح");
+        }
+
+        window.toggleRemotePermission = async function(username, currentStatus) {
+            const nextStatus = !currentStatus;
+            
+            const confirmResult = await Swal.fire({
+                title: 'تعديل باقة الرفاهية',
+                text: nextStatus ? "هل توافق على منح هذا الكيان العصا السحرية (الريموت)؟" : "هل تريد سحب صلاحية استخدام الريموت من هذا الكيان؟",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d4af37',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'تأكيد العملية',
+                cancelButtonText: 'إلغاء'
+            });
+            if (!confirmResult.isConfirmed) return;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            await update(ref(db, 'users/' + username), { can_use_remote: nextStatus });
+            document.getElementById('loader-overlay').style.display = 'none';
+            showNotification("تم تحديث باقة الرفاهية للشركة بنجاح 🪄");
         }
 
         window.editUser = async function(username, oldName, oldPass) {
