@@ -9,7 +9,7 @@
         /* ================= تصميم Client Diamond (Royal Navy & Gold Theme) المدمج والرشيق ================= */
         :root {
             --primary: #0f172a;    
-            --accent: #1e293b;       
+            --accent: #1e293b;      
             --gold: #d4af37;       
             --bg: #f8fafc;         
             --text: #334155;       
@@ -238,7 +238,7 @@
         
         <div style="display:flex; gap:15px; align-items:center;">
             <div class="user-info-area">
-                <div id="sub-timer" class="sub-countdown sub-active">جاري التحديث...</div>
+                <div id="sub-timer" class="sub-countdown sub-active">تحديث حالة النظام...</div>
                 <span id="welcome-msg" style="font-size:14px; font-weight:900; color:white;">مرحباً</span>
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
@@ -446,7 +446,7 @@
                 <div class="settings-header-royal">
                     <div class="settings-avatar">🏢</div>
                     <div class="settings-title-area">
-                        <h2 id="display_company_name_settings">الشركة</h2>
+                        <h2 id="display_company_name">الشركة</h2>
                         <span>حساب الإدارة المعتمد</span>
                     </div>
                 </div>
@@ -554,78 +554,33 @@
             const savedUser = localStorage.getItem('current_company_user') || localStorage.getItem('currentUser');
             
             if (savedUser) {
-                try {
-                    currentUser = JSON.parse(savedUser);
-                } catch(e) {
-                    window.location.replace('index.html');
-                    return;
-                }
+                currentUser = JSON.parse(savedUser);
             } else {
                 window.location.replace('index.html');
                 return;
             }
 
+            // الاعتماد الكامل على اسم الشركة الرسمي في العرض
             const dispName = currentUser.Client_Name || currentUser.name || 'مؤسسة غير معرفة';
             document.getElementById('welcome-msg').innerText = `أهلاً بك، ${dispName}`;
             document.getElementById('display_company_name').innerText = dispName;
-            document.getElementById('display_company_name_settings').innerText = dispName;
             
             document.getElementById('profile_name').value = dispName;
             document.getElementById('profile_user').value = currentUser.Client_User || currentUser.user || '';
             document.getElementById('profile_pass').value = currentUser.Client_Pass || currentUser.pass || '';
 
-            // حماية كاملة لتشغيل الدوال
-            try { fetchData(); } catch(e) {}
-            try { updateCountdownTimer(); } catch(e) {}
-            try { fetchCyberSettings(); } catch(e) {}
-            try { checkAdPermission(); } catch(e) {}
-            try { setupRealtimeFreezeListener(); } catch(e) {}
-            try { setupSmartAdsListener(); } catch(e) {}
-            try { setupAlertsListener(); } catch(e) {}
+            checkAdPermission();
+            updateCountdownTimer();
+            setupRealtimeFreezeListener(); 
+            setupSmartAdsListener();
+            setupAlertsListener(); 
+            fetchData();
+            fetchCyberSettings(); 
         };
-
-        function updateCountdownTimer() {
-            try {
-                const timerEl = document.getElementById('sub-timer');
-                const expVal = currentUser.Client_Expiry || currentUser.expiry;
-                
-                if (!expVal) {
-                    timerEl.innerText = "مستوى صلاحية ممتد";
-                    timerEl.className = "sub-countdown sub-active";
-                    return;
-                }
-
-                const expiryDate = new Date(expVal);
-                if (isNaN(expiryDate.getTime())) {
-                    timerEl.innerText = "صلاحية غير مقيدة";
-                    timerEl.className = "sub-countdown sub-active";
-                    return;
-                }
-
-                expiryDate.setHours(23, 59, 59, 999);
-                const now = new Date();
-                const diffTime = expiryDate.getTime() - now.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays > 0) {
-                    if (diffDays <= 3) {
-                        timerEl.innerText = `⚠️ انتباه: النظام سينتهي خلال ${diffDays} يوم`;
-                        timerEl.className = "sub-countdown sub-warning";
-                    } else {
-                        timerEl.innerText = `حالة النظام: نشط (${diffDays} يوم)`;
-                        timerEl.className = "sub-countdown sub-active";
-                    }
-                } else {
-                    timerEl.innerText = `توقف النظام الإداري`;
-                    timerEl.className = "sub-countdown sub-expired";
-                }
-            } catch (e) {
-                document.getElementById('sub-timer').innerText = "نظام الإدارة نشط";
-            }
-        }
 
         window.fetchPricingAreas = function() {
             const pricesRef = ref(db, 'prices');
+            // استهلاك ذكي: مراقبة فقط للتغيرات التابعة للمنشأة
             onValue(pricesRef, (snapshot) => {
                 availablePricingAreas = [];
                 const currentUserRef = currentUser.Client_User || currentUser.user;
@@ -816,6 +771,34 @@
             document.getElementById('app-popup-overlay').style.display = 'none';
         }
 
+        function updateCountdownTimer() {
+            const timerEl = document.getElementById('sub-timer');
+            if (!currentUser.Client_Expiry && !currentUser.expiry) {
+                timerEl.innerText = "مستوى صلاحية ممتد";
+                timerEl.className = "sub-countdown sub-active";
+                return;
+            }
+
+            const expiryDate = new Date(currentUser.Client_Expiry || currentUser.expiry);
+            expiryDate.setHours(23, 59, 59, 999);
+            const now = new Date();
+            const diffTime = expiryDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 0) {
+                if (diffDays <= 3) {
+                    timerEl.innerText = `⚠️ انتباه: النظام سينتهي خلال ${diffDays} يوم`;
+                    timerEl.className = "sub-countdown sub-warning";
+                } else {
+                    timerEl.innerText = `حالة النظام: نشط (${diffDays} يوم)`;
+                    timerEl.className = "sub-countdown sub-active";
+                }
+            } else {
+                timerEl.innerText = `توقف النظام الإداري`;
+                timerEl.className = "sub-countdown sub-expired";
+            }
+        }
+
         function setupRealtimeFreezeListener() {
             if(!currentUser || (!currentUser.Client_User && !currentUser.user)) return;
             const username = currentUser.Client_User || currentUser.user;
@@ -829,7 +812,6 @@
                         currentUser.Client_Name = data.Client_Name || data.name;
                         document.getElementById('welcome-msg').innerText = `أهلاً بك، ${currentUser.Client_Name}`;
                         document.getElementById('display_company_name').innerText = currentUser.Client_Name;
-                        document.getElementById('display_company_name_settings').innerText = currentUser.Client_Name;
                     }
 
                     if(data.Client_Expiry || data.expiry) {
@@ -869,6 +851,7 @@
             document.getElementById('loader-overlay').style.display = 'flex';
 
             try {
+                // الاعتماد على تثبيت المعرف وتحديث باقي البيانات فقط
                 const updates = {
                     [`users/${originalUser}/Client_Name`]: newName,
                     [`users/${originalUser}/name`]: newName,
@@ -888,7 +871,6 @@
                 
                 document.getElementById('welcome-msg').innerText = `أهلاً بك، ${newName}`;
                 document.getElementById('display_company_name').innerText = newName;
-                document.getElementById('display_company_name_settings').innerText = newName;
                 
                 showAppToast("تم حفظ التحديثات بشكل آمن.");
             } catch (error) {
@@ -1265,12 +1247,10 @@
                 let daysLeft = "مفتوح";
                 if (shop.Client_Expiry || shop.expiry) {
                     const exp = new Date(shop.Client_Expiry || shop.expiry);
-                    if (!isNaN(exp.getTime())) {
-                        exp.setHours(23, 59, 59, 999);
-                        const diff = exp.getTime() - new Date().getTime();
-                        const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                        daysLeft = d > 0 ? d + " يوم" : "انتهت المهلة";
-                    }
+                    exp.setHours(23, 59, 59, 999);
+                    const diff = exp.getTime() - new Date().getTime();
+                    const d = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                    daysLeft = d > 0 ? d + " يوم" : "انتهت المهلة";
                 }
                 
                 let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" style="font-size:11px; font-weight:bold; color:var(--info); text-decoration:none;">📍 التوجيه الجغرافي</a>` : '';
@@ -1384,6 +1364,7 @@
             if (!shop) return;
 
             const newName = document.getElementById('edit_shop_name').value.trim();
+            // الـ ID لا يتغير بعد الآن بسبب الحماية
             const newPass = document.getElementById('edit_shop_pass').value;
             const newPhone = document.getElementById('edit_shop_phone').value.trim();
             const newPricingArea = document.getElementById('edit_shop_pricing_area').value;
@@ -1410,6 +1391,7 @@
             document.getElementById('loader-overlay').style.display = 'flex';
 
             try {
+                // الاعتماد فقط على التحديث لأن الـ ID مغلق
                 const updates = {
                     [`shops/${originalUser}/Client_Name`]: newName,
                     [`shops/${originalUser}/name`]: newName,
@@ -1452,26 +1434,24 @@
         };
 
         // ========================================================
-        // دوال التحكم السيبراني (مربوطة بالمسمى الجذري بأمان تام)
+        // التحديث 726: دوال التحكم السيبراني (تم العزل المطلق)
         // ========================================================
         window.fetchCyberSettings = function() {
             if(!currentUser) return;
             const myMaster = currentUser.Client_User || currentUser.user;
             if(!myMaster) return;
 
-            try {
-                onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
-                    if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
-                });
-                
-                onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
-                    document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
-                });
-                
-                onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
-                    document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
-                });
-            } catch(e) {}
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snap) => {
+                if(snap.exists()) document.getElementById('remote_timer_val').value = snap.val();
+            });
+            
+            onValue(ref(db, `settings/${myMaster}/anti_vpn`), (snap) => {
+                document.getElementById('remote_toggle_vpn').checked = snap.exists() ? snap.val() : false;
+            });
+            
+            onValue(ref(db, `settings/${myMaster}/hotspots_active`), (snap) => {
+                document.getElementById('remote_toggle_hotspots').checked = snap.exists() ? snap.val() : false;
+            });
         };
 
         window.updateRemoteTimer = async function() {
