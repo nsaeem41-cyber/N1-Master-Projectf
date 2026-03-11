@@ -449,7 +449,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -466,7 +466,7 @@
         let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false };
         let orderTimers = {};
         
-        // متغيرات التتبع الذكي لحالة الكابتن
+        // ================= متغيرات ذكية لمراقبة حالة الكابتن والطلبات =================
         window.hasActiveOrdersLoaded = false;
         window.hasActiveOrderInProgress = false;
         
@@ -832,8 +832,6 @@
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
 
-        let hotspotUnsubscribe = null;
-
         function initListeners() {
             let masterRaw = 'default';
             if (currentCaptain && (currentCaptain.company || currentCaptain.Client_Master)) masterRaw = currentCaptain.company || currentCaptain.Client_Master;
@@ -848,45 +846,6 @@
                     }
                 }
             });
-
-            try {
-                onValue(ref(db, `settings/${masterRaw}`), (snap) => {
-                    if(snap.exists()) {
-                        const s = snap.val();
-                        systemSettings.order_timer = parseInt(s.order_timer) || 10;
-                        systemSettings.show_phone_numbers = s.show_phone_numbers || false;
-                        systemSettings.hotspots_active = s.hotspots_active !== false;
-                        systemSettings.anti_vpn = s.anti_vpn || false;
-
-                        const hsCont = document.getElementById('ui_hotspots');
-                        if(systemSettings.hotspots_active) {
-                            if(!hotspotUnsubscribe) {
-                                const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
-                                hotspotUnsubscribe = onValue(q, (hSnap) => {
-                                    if(hSnap.exists()) {
-                                        const counts = {};
-                                        Object.values(hSnap.val()).forEach(o => {
-                                            let rn = o.Shop_Name || o.restaurant || ''; 
-                                            rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
-                                            if(rn) counts[rn] = (counts[rn] || 0) + 1;
-                                        });
-                                        const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
-                                        if(sorted.length > 0) {
-                                            hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
-                                        } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
-                                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
-                                });
-                            }
-                        } else {
-                            if(hotspotUnsubscribe) {
-                                hotspotUnsubscribe();
-                                hotspotUnsubscribe = null;
-                            }
-                            hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">تم إيقاف المؤشرات من الإدارة</div>`;
-                        }
-                    }
-                });
-            } catch(e) {}
 
             try {
                 const myPhone = currentCaptain.Cap_Phone || currentCaptain.phone;
@@ -1034,7 +993,7 @@
                     window.hasActiveOrdersLoaded = true;
                     window.hasActiveOrderInProgress = hasActive;
 
-                    // فحص التجميد الذكي بعد انتهاء أي أوردر
+                    // ================== فحص التجميد الذكي للرصيد ==================
                     if (!hasActive && currentCaptain) {
                         const checkBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
                         if (checkBal <= -1.00) {
@@ -1129,7 +1088,7 @@
             if(bal <= -1.00) {
                 bEl.classList.add('negative');
                 
-                // حماية الكابتن: لا تفصله إذا كان معاه أوردر شغال هسا
+                // ================== حماية الكابتن إذا كان معه طلب ==================
                 if (window.hasActiveOrdersLoaded && !window.hasActiveOrderInProgress) {
                     if(data.app_status==='online') {
                         update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
