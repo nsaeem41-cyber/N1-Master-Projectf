@@ -167,15 +167,10 @@
         .btn-status-arrived { background: #06b6d4; } 
         .btn-status-completed { background: var(--gold); color: var(--primary); } 
 
-        .hotspot-tag { display: inline-block; background: #fff0f2; color: var(--danger); border: 1px solid #ffccd5; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 4px; }
-        
         @keyframes pulseAlert { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .ringing { border-right: 4px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); animation: pulseAlert 1.5s infinite; }
 
         #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
-
-        .btn-eye { background: none; border: none; font-size: 18px; cursor: pointer; transition: 0.3s; opacity: 0.7; }
-        .btn-eye.active { opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); }
 
     </style>
 </head>
@@ -394,20 +389,10 @@
                     </label>
                 </div>
 
-                <div id="hotspots-section" class="achievement-card" style="display:none;">
-                    <div class="ach-title">
-                        <span>المطاعم النشطة بمنطقتك 🔥</span>
-                        <button id="btn_toggle_hotspots" class="btn-eye active" onclick="toggleHotspotsVisibility()">👁️</button>
-                    </div>
-                    <div id="ui_hotspots" style="display:flex; justify-content:center; flex-wrap:wrap; gap:5px;">
-                        <div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">جاري الرصد</div>
-                    </div>
-                </div>
-
                 <div class="section-title">📲 الطلبات الواردة</div>
                 <div id="active-orders-container">
                     <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">
-                        لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡
+                        لا توجد طلبات حاليا خليك قريب من المطاعم 📡
                     </div>
                 </div>
 
@@ -455,7 +440,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -470,16 +455,12 @@
         let currentCaptain = null;
         let capNodeKey = null;
         
-        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false, hotspot_count: 3, hotspot_interval: 5 };
+        let systemSettings = { order_timer: 10, show_phone_numbers: false, anti_vpn: false };
         let orderTimers = {};
         
         window.hasActiveOrdersLoaded = false;
         window.hasActiveOrderInProgress = false;
         window.lastOrdersSnap = null;
-        window.isHotspotUIVisible = true; // حالة إظهار/إخفاء المطاعم يدوياً
-        
-        let hotspotSyncInterval = null;
-        let lastKnownIntervalValue = 5; 
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
@@ -541,7 +522,7 @@
         function blockVPN() {
             document.getElementById('vpn-guard').style.display = 'flex';
             if (currentCaptain && currentCaptain.app_status === 'online') {
-                update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                update(ref(db, `captains/${capNodeKey}`), {app_status:'offline', is_busy: false});
                 const tgl = document.getElementById('toggle_status');
                 if(tgl) tgl.checked = false;
                 const ind = document.getElementById('ui_status_indicator');
@@ -768,7 +749,7 @@
                     Cap_User: user, user: user, Cap_Name: name, name: name, Cap_Phone: phone, phone: phone, Cap_Pass: pass, pass: pass,
                     Cap_CarType: carType, Cap_CarPlate: carPlate, Cap_Car: `${carType} | ${carPlate}`,
                     company: compId, Client_Master: compId, Cap_Location: area, Cap_Region: area, Cap_Balance: 0, balance: 0,
-                    app_status: 'offline', Cap_Status: 'pending', created_at: Date.now()
+                    app_status: 'offline', is_busy: false, Cap_Status: 'pending', created_at: Date.now()
                 };
 
                 await set(ref(db, `captains/${user}`), newCap);
@@ -809,9 +790,6 @@
                     if(ind) ind.className='status-indicator online'; 
                     if(txt) { txt.innerHTML='متاح وجاهز 🟢'; txt.style.color = "var(--success)"; }
                 }
-                
-                // ================== النبضة شغالة دائماً (حتى بالـ Offline) ==================
-                startHotspotSync(); 
 
                 restoreSettings();
                 requestWakeLock(); initListeners(); checkVPNStatus();
@@ -872,7 +850,6 @@
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
 
-        // ================== زر الرفض الذكي (يرجع الطلب للسيرفر فوراً) ==================
         window.rejectOrd = async (id, rId) => {
             if(orderTimers[id]) {
                 clearInterval(orderTimers[id]);
@@ -882,10 +859,9 @@
             
             const card = document.getElementById('card_' + id);
             if(card) {
-                card.style.display = 'none'; // إخفاء فوري من الشاشة
+                card.style.display = 'none'; 
             }
             
-            // تغيير الحالة لـ rejected عند الكابتن، عشان السيرفر يلقطها ويعيد توجيهها (الدورة الذكية)
             const up = {}; 
             up[`assigned_orders/${capNodeKey}/${id}/status`] = 'rejected';
             await update(ref(db), up);
@@ -896,38 +872,25 @@
             window.showToast("تم رفض الطلب ❌");
         };
 
-        // ================== زر إظهار/إخفاء المطاعم ==================
-        window.toggleHotspotsVisibility = function() {
-            window.isHotspotUIVisible = !window.isHotspotUIVisible;
-            const btn = document.getElementById('btn_toggle_hotspots');
-            const ui = document.getElementById('ui_hotspots');
-            
-            if(window.isHotspotUIVisible) {
-                btn.classList.add('active');
-                ui.style.display = 'flex';
-                fetchHotspots(); // تحديث فوري عند الإظهار
-            } else {
-                btn.classList.remove('active');
-                ui.style.display = 'none';
-            }
-        };
-
         window.refreshOrdersUI = function() {
             const snap = window.lastOrdersSnap;
             const cont = document.getElementById('active-orders-container');
             const toggleSection = document.getElementById('status-toggle-section');
-            const hsSec = document.getElementById('hotspots-section');
 
             let html = '', hasActive = false, ring = false;
 
             if(!currentCaptain || currentCaptain.app_status !== 'online') {
                 if(cont) cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
-                if(hsSec) hsSec.style.display = systemSettings.hotspots_active ? 'block' : 'none'; // الحرارة بتضل ظاهرة بالـ Offline
                 if(toggleSection) toggleSection.style.display = 'flex'; 
                 const aud = document.getElementById('order-ringtone');
                 if(aud) { aud.pause(); aud.currentTime=0; }
                 
                 window.hasActiveOrderInProgress = false; 
+                
+                if (currentCaptain && currentCaptain.is_busy !== false) {
+                    update(ref(db, `captains/${capNodeKey}`), { is_busy: false });
+                    currentCaptain.is_busy = false;
+                }
                 return;
             }
 
@@ -953,7 +916,6 @@
                     let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                     rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
-                    // ================== إخفاء خريطة التوجه إلا إذا تم القبول ==================
                     let locationHtml = '';
                     if(ord.status !== 'assigned') { 
                         if(ord.location_link || ord.Shop_Location_Link) {
@@ -985,7 +947,6 @@
                             <div class="order-timer-text" id="text_timer_${id}">${timeLeft} ثانية للاختفاء ⏳</div>
                             <div class="order-timer-bar" id="bar_timer_${id}" style="width: 100%;"></div>
                         `;
-                        // إضافة زر الرفض
                         btnAction = `
                             <div style="display:flex;gap:10px;">
                                 <button class="btn-action btn-accept" style="flex:2;" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">قبول الطلب ✅</button>
@@ -1037,12 +998,20 @@
             window.hasActiveOrdersLoaded = true;
             window.hasActiveOrderInProgress = hasActive;
 
+            // ================== نظام قفل الطلب الواحد ==================
+            if (currentCaptain && currentCaptain.app_status === 'online') {
+                if (currentCaptain.is_busy !== hasActive) {
+                    update(ref(db, `captains/${capNodeKey}`), { is_busy: hasActive });
+                    currentCaptain.is_busy = hasActive; 
+                }
+            }
+
             if (!hasActive && currentCaptain) {
                 const checkBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
                 if (checkBal <= -1.00) {
                     document.getElementById('balance-guard').style.display = 'flex';
                     if (currentCaptain.app_status === 'online') {
-                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline', is_busy: false});
                     }
                     const tgl = document.getElementById('toggle_status');
                     if(tgl) tgl.checked = false;
@@ -1053,10 +1022,9 @@
                 }
             }
             
-            if(cont) cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم النشطة 📡</div>`;
+            if(cont) cont.innerHTML = hasActive ? html : `<div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; font-weight: bold; border: 2px dashed #e2e8f0; border-radius: 15px;">لا توجد طلبات حاليا خليك قريب من المطاعم 📡</div>`;
             
             if(toggleSection) toggleSection.style.display = hasActive ? 'none' : 'flex';
-            if(hsSec) hsSec.style.display = (hasActive || !systemSettings.hotspots_active) ? 'none' : 'block';
 
             const aud = document.getElementById('order-ringtone');
             if(ring && currentCaptain.app_status === 'online') { 
@@ -1067,40 +1035,6 @@
                 if(aud) { aud.pause(); aud.currentTime=0; }
             }
         };
-
-        function startHotspotSync() {
-            if(hotspotSyncInterval) clearInterval(hotspotSyncInterval);
-            
-            // النبضة شغالة دائماً طالما الميزة مفعلة بالريموت (حتى لو أوفلاين)
-            if(systemSettings.hotspots_active && currentCaptain) {
-                fetchHotspots(); // نبضة فورية
-                const intervalMs = (systemSettings.hotspot_interval || 5) * 60 * 1000;
-                hotspotSyncInterval = setInterval(fetchHotspots, intervalMs);
-            } else {
-                document.getElementById('hotspots-section').style.display = 'none';
-            }
-        }
-
-        function fetchHotspots() {
-            if(!systemSettings.hotspots_active || window.hasActiveOrderInProgress || !window.isHotspotUIVisible) return;
-            
-            const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
-            get(q).then((hSnap) => {
-                const hsCont = document.getElementById('ui_hotspots');
-                if(hSnap.exists()) {
-                    const counts = {};
-                    Object.values(hSnap.val()).forEach(o => {
-                        let rn = o.Shop_Name || o.restaurant || ''; 
-                        rn = rn.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
-                        if(rn) counts[rn] = (counts[rn] || 0) + 1;
-                    });
-                    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, systemSettings.hotspot_count);
-                    if(sorted.length > 0) {
-                        hsCont.innerHTML = sorted.map(r => `<div class="hotspot-tag">📍 ${r[0]} (🔥 ${r[1]})</div>`).join('');
-                    } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
-                } else { hsCont.innerHTML = `<div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">لا يوجد ضغط طلبات حاليا</div>`; }
-            });
-        }
 
         function initListeners() {
             let masterRaw = 'default'; 
@@ -1122,24 +1056,8 @@
                         const s = snap.val();
                         systemSettings.order_timer = parseInt(s.order_timer) || 10;
                         systemSettings.show_phone_numbers = s.show_phone_numbers || false;
-                        systemSettings.hotspots_active = s.hotspots_active !== false;
                         systemSettings.anti_vpn = s.anti_vpn || false;
-                        systemSettings.hotspot_count = parseInt(s.hotspot_count) || 3;
-                        systemSettings.hotspot_interval = parseInt(s.hotspot_interval) || 5;
 
-                        if(lastKnownIntervalValue !== systemSettings.hotspot_interval) {
-                            lastKnownIntervalValue = systemSettings.hotspot_interval;
-                            startHotspotSync();
-                        }
-
-                        if(!systemSettings.hotspots_active) {
-                            if(hotspotSyncInterval) clearInterval(hotspotSyncInterval);
-                            document.getElementById('hotspots-section').style.display = 'none';
-                        } else {
-                            document.getElementById('hotspots-section').style.display = 'block';
-                            startHotspotSync();
-                        }
-                        
                         checkVPNStatus(); 
                         if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
                     }
@@ -1250,7 +1168,7 @@
                 
                 if (window.hasActiveOrdersLoaded && !window.hasActiveOrderInProgress) {
                     if(data.app_status==='online') {
-                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
+                        update(ref(db, `captains/${capNodeKey}`), {app_status:'offline', is_busy: false});
                         document.getElementById('balance-guard').style.display='flex';
                     } else {
                         document.getElementById('balance-guard').style.display='flex';
@@ -1299,10 +1217,12 @@
                 txt.innerHTML='غير متاح 🔴'; txt.style.color = "var(--danger)";
             }
 
-            await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
+            const isBusyNow = isOnline ? window.hasActiveOrderInProgress : false;
+            await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline', is_busy: isBusyNow });
             
             if(currentCaptain) {
                 currentCaptain.app_status = isOnline ? 'online' : 'offline';
+                currentCaptain.is_busy = isBusyNow;
                 localStorage.setItem('n1_captain_session', JSON.stringify(currentCaptain));
                 if(typeof window.refreshOrdersUI === 'function') window.refreshOrdersUI();
             }
@@ -1409,7 +1329,6 @@
                     update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); 
                     delete window.isFinishingOrder[id];
                     document.getElementById('status-toggle-section').style.display = 'flex';
-                    fetchHotspots(); // سحب نبضة فورية بعد إنهاء الطلب مباشرة
                 }, 3000);
             } catch(e) {
                 window.showToast("حدث خطأ أثناء التوثيق", true);
