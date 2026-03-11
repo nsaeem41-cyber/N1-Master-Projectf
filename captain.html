@@ -132,7 +132,7 @@
         .rating-text { font-size: 10px; color: #94a3b8; margin-top: 3px; font-weight: bold; }
 
         .achievement-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; text-align: center; }
-        .ach-title { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; }
+        .ach-title { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
         .financial-row { display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
         .fin-box { flex: 1; }
         .fin-lbl { font-size: 10px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
@@ -173,6 +173,9 @@
         .ringing { border-right: 4px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); animation: pulseAlert 1.5s infinite; }
 
         #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
+
+        .btn-eye { background: none; border: none; font-size: 18px; cursor: pointer; transition: 0.3s; opacity: 0.7; }
+        .btn-eye.active { opacity: 1; filter: drop-shadow(0 0 5px var(--gold)); }
 
     </style>
 </head>
@@ -392,7 +395,10 @@
                 </div>
 
                 <div id="hotspots-section" class="achievement-card" style="display:none;">
-                    <div class="ach-title">المطاعم النشطة بمنطقتك 🔥</div>
+                    <div class="ach-title">
+                        <span>المطاعم النشطة بمنطقتك 🔥</span>
+                        <button id="btn_toggle_hotspots" class="btn-eye active" onclick="toggleHotspotsVisibility()">👁️</button>
+                    </div>
                     <div id="ui_hotspots" style="display:flex; justify-content:center; flex-wrap:wrap; gap:5px;">
                         <div style="font-size: 10px; color: #94a3b8; font-weight: bold; width: 100%;">جاري الرصد</div>
                     </div>
@@ -470,8 +476,8 @@
         window.hasActiveOrdersLoaded = false;
         window.hasActiveOrderInProgress = false;
         window.lastOrdersSnap = null;
+        window.isHotspotUIVisible = true; // حالة إظهار/إخفاء المطاعم يدوياً
         
-        // ================= متغيرات نبضة الحرارة =================
         let hotspotSyncInterval = null;
         let lastKnownIntervalValue = 5; 
         
@@ -802,8 +808,10 @@
                     const txt = document.getElementById('ui_status_text');
                     if(ind) ind.className='status-indicator online'; 
                     if(txt) { txt.innerHTML='متاح وجاهز 🟢'; txt.style.color = "var(--success)"; }
-                    startHotspotSync(); // تشغيل النبضة إذا كان الكابتن أونلاين
                 }
+                
+                // ================== النبضة شغالة دائماً (حتى بالـ Offline) ==================
+                startHotspotSync(); 
 
                 restoreSettings();
                 requestWakeLock(); initListeners(); checkVPNStatus();
@@ -864,6 +872,46 @@
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
 
+        // ================== زر الرفض الذكي (يرجع الطلب للسيرفر فوراً) ==================
+        window.rejectOrd = async (id, rId) => {
+            if(orderTimers[id]) {
+                clearInterval(orderTimers[id]);
+                delete orderTimers[id];
+            }
+            if(orderTimers[`seen_${id}`]) delete orderTimers[`seen_${id}`];
+            
+            const card = document.getElementById('card_' + id);
+            if(card) {
+                card.style.display = 'none'; // إخفاء فوري من الشاشة
+            }
+            
+            // تغيير الحالة لـ rejected عند الكابتن، عشان السيرفر يلقطها ويعيد توجيهها (الدورة الذكية)
+            const up = {}; 
+            up[`assigned_orders/${capNodeKey}/${id}/status`] = 'rejected';
+            await update(ref(db), up);
+            
+            const aud = document.getElementById('order-ringtone');
+            if(aud) { aud.pause(); aud.currentTime = 0; }
+            
+            window.showToast("تم رفض الطلب ❌");
+        };
+
+        // ================== زر إظهار/إخفاء المطاعم ==================
+        window.toggleHotspotsVisibility = function() {
+            window.isHotspotUIVisible = !window.isHotspotUIVisible;
+            const btn = document.getElementById('btn_toggle_hotspots');
+            const ui = document.getElementById('ui_hotspots');
+            
+            if(window.isHotspotUIVisible) {
+                btn.classList.add('active');
+                ui.style.display = 'flex';
+                fetchHotspots(); // تحديث فوري عند الإظهار
+            } else {
+                btn.classList.remove('active');
+                ui.style.display = 'none';
+            }
+        };
+
         window.refreshOrdersUI = function() {
             const snap = window.lastOrdersSnap;
             const cont = document.getElementById('active-orders-container');
@@ -874,7 +922,7 @@
 
             if(!currentCaptain || currentCaptain.app_status !== 'online') {
                 if(cont) cont.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger); font-size: 14px; font-weight: bold; border: 2px dashed #fecaca; border-radius: 15px; background: #fef2f2;">الاستقبال مغلق 🔴 يرجى تفعيل الحالة لتلقي الطلبات</div>`;
-                if(hsSec) hsSec.style.display = 'none';
+                if(hsSec) hsSec.style.display = systemSettings.hotspots_active ? 'block' : 'none'; // الحرارة بتضل ظاهرة بالـ Offline
                 if(toggleSection) toggleSection.style.display = 'flex'; 
                 const aud = document.getElementById('order-ringtone');
                 if(aud) { aud.pause(); aud.currentTime=0; }
@@ -905,10 +953,15 @@
                     let rName = ord.restaurant || ord.Shop_Pickup || 'الموقع';
                     rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
+                    // ================== إخفاء خريطة التوجه إلا إذا تم القبول ==================
                     let locationHtml = '';
-                    if(ord.location_link || ord.Shop_Location_Link) {
-                        const link = ord.location_link || ord.Shop_Location_Link;
-                        locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
+                    if(ord.status !== 'assigned') { 
+                        if(ord.location_link || ord.Shop_Location_Link) {
+                            const link = ord.location_link || ord.Shop_Location_Link;
+                            locationHtml = `<a href="${link}" target="_blank" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; text-decoration:none; border:1px solid #bae6fd;">موقع التوجه 📍</a>`;
+                        }
+                    } else {
+                        locationHtml = `<span style="background:#f1f5f9; color:#94a3b8; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:bold; border:1px solid #e2e8f0;">الموقع محمي 🔒</span>`;
                     }
 
                     let phoneHtml = `<div class="order-rest-phone"><span class="hidden-phone-badge" style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:10px; border:1px solid #fecaca; font-size:10px;">الرقم محجوب 🛡️</span></div>`;
@@ -932,7 +985,12 @@
                             <div class="order-timer-text" id="text_timer_${id}">${timeLeft} ثانية للاختفاء ⏳</div>
                             <div class="order-timer-bar" id="bar_timer_${id}" style="width: 100%;"></div>
                         `;
-                        btnAction = `<div style="display:flex;gap:10px;"><button class="btn-action btn-accept" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">قبول الطلب ✅</button></div>`;
+                        // إضافة زر الرفض
+                        btnAction = `
+                            <div style="display:flex;gap:10px;">
+                                <button class="btn-action btn-accept" style="flex:2;" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">قبول الطلب ✅</button>
+                                <button class="btn-action btn-reject" style="flex:1;" onclick="rejectOrd('${id}','${ord.linkedRadarId}')">رفض ❌</button>
+                            </div>`;
                     } else if(ord.status === 'accepted') {
                         btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}',${commSafe}, ${valSafe}, ${feeSafe}, '${rName}')">وصلت المنشأة 🏪</button>`;
                     } else if(ord.status === 'arrived_at_shop') {
@@ -1010,11 +1068,11 @@
             }
         };
 
-        // ================== محرك النبضات الذكي (المرتبط بالريموت) ==================
         function startHotspotSync() {
             if(hotspotSyncInterval) clearInterval(hotspotSyncInterval);
             
-            if(systemSettings.hotspots_active && currentCaptain && currentCaptain.app_status === 'online') {
+            // النبضة شغالة دائماً طالما الميزة مفعلة بالريموت (حتى لو أوفلاين)
+            if(systemSettings.hotspots_active && currentCaptain) {
                 fetchHotspots(); // نبضة فورية
                 const intervalMs = (systemSettings.hotspot_interval || 5) * 60 * 1000;
                 hotspotSyncInterval = setInterval(fetchHotspots, intervalMs);
@@ -1024,7 +1082,7 @@
         }
 
         function fetchHotspots() {
-            if(!systemSettings.hotspots_active || window.hasActiveOrderInProgress) return;
+            if(!systemSettings.hotspots_active || window.hasActiveOrderInProgress || !window.isHotspotUIVisible) return;
             
             const q = query(ref(db, 'orders'), orderByChild('OrderStatus'), equalTo('new'), limitToLast(20));
             get(q).then((hSnap) => {
@@ -1058,7 +1116,6 @@
                 }
             });
 
-            // ================== استقبال التحديثات من الريموت ==================
             try {
                 onValue(ref(db, `settings/${masterRaw}`), (snap) => {
                     if(snap.exists()) {
@@ -1070,7 +1127,6 @@
                         systemSettings.hotspot_count = parseInt(s.hotspot_count) || 3;
                         systemSettings.hotspot_interval = parseInt(s.hotspot_interval) || 5;
 
-                        // إذا تغير توقيت النبضة بالريموت، بنعمل ريستارت للمحرك فوراً
                         if(lastKnownIntervalValue !== systemSettings.hotspot_interval) {
                             lastKnownIntervalValue = systemSettings.hotspot_interval;
                             startHotspotSync();
@@ -1079,6 +1135,9 @@
                         if(!systemSettings.hotspots_active) {
                             if(hotspotSyncInterval) clearInterval(hotspotSyncInterval);
                             document.getElementById('hotspots-section').style.display = 'none';
+                        } else {
+                            document.getElementById('hotspots-section').style.display = 'block';
+                            startHotspotSync();
                         }
                         
                         checkVPNStatus(); 
@@ -1193,7 +1252,6 @@
                     if(data.app_status==='online') {
                         update(ref(db, `captains/${capNodeKey}`), {app_status:'offline'});
                         document.getElementById('balance-guard').style.display='flex';
-                        if(hotspotSyncInterval) clearInterval(hotspotSyncInterval); // إيقاف النبضة
                     } else {
                         document.getElementById('balance-guard').style.display='flex';
                     }
@@ -1236,12 +1294,9 @@
             if(isOnline) {
                 ind.className='status-indicator online'; 
                 txt.innerHTML='متاح وجاهز 🟢'; txt.style.color = "var(--success)";
-                startHotspotSync(); // تشغيل النبضة
             } else {
                 ind.className='status-indicator offline'; 
                 txt.innerHTML='غير متاح 🔴'; txt.style.color = "var(--danger)";
-                if(hotspotSyncInterval) clearInterval(hotspotSyncInterval); // إيقاف النبضة
-                document.getElementById('hotspots-section').style.display = 'none';
             }
 
             await update(ref(db, `captains/${capNodeKey}`), { app_status: isOnline ? 'online' : 'offline' });
