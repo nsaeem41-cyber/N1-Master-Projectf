@@ -5,260 +5,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N One | مصفوفة الأسعار المركزية (Pricing Matrix)</title>
     
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* ================= تصميم Diamond Matrix (Royal Navy & Gold) ================= */
-        :root {
-            --primary: #0f172a;      
-            --accent: #1e293b;       
-            --gold: #d4af37;         
-            --bg: #f8fafc;           
-            --panel: #ffffff;      
-            --text: #334155;       
-            --success: #10b981;    
-            --danger: #ef4444;     
-            --info: #0ea5e9;
-            --diamond: #e0f2fe;
-            --night: #311b92;        
+        :root { 
+            --primary: #020617; 
+            --gold: #D4AF37; 
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --night: #4f46e5; /* Indigo for night mode */
         }
-
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--bg); margin: 0; padding: 0; 
-            color: var(--text); user-select: none; overflow-x: hidden; 
+            font-family: 'Cairo', sans-serif; 
+            background-color: var(--primary); 
+            color: #e2e8f0; 
+            overflow-x: hidden; 
+            background-image: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.05) 0%, transparent 80%), linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); 
+            user-select: none; 
         }
 
-        /* الهيدر الملكي الألماسي */
-        .navbar { 
-            background: var(--primary); height: 75px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 30px; 
-            box-shadow: 0 4px 25px rgba(15, 23, 42, 0.2); 
-            border-bottom: 4px solid var(--gold); 
-            position: sticky; top: 0; z-index: 1000; transition: 0.5s;
-        }
-        .navbar.night-mode { background: linear-gradient(45deg, #0f172a, #311b92); border-bottom-color: #7c4dff; }
-
-        .brand { font-size: 24px; font-weight: 900; color: white; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 15px; }
-        .gold-text { color: var(--gold); }
-        .company-name-badge { font-size: 13px; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3); color: var(--gold); }
+        /* التنسيقات الألماسية للواجهة */
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(212, 175, 55, 0.15); box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.4); }
+        .gold-glow { text-shadow: 0 0 8px rgba(212, 175, 55, 0.4); color: var(--gold); }
+        .neon-button-gold { background: linear-gradient(45deg, var(--gold), #F9E27D); color: #020617; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); transition: all 0.2s ease; }
+        .neon-button-gold:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+        .neon-button-success { background: linear-gradient(45deg, #10b981, #34d399); color: #020617; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); transition: all 0.2s ease; }
+        .neon-button-success:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
         
-        .btn-back { background: var(--accent); color: white; border: 1px solid #475569; padding: 10px 20px; border-radius: 12px; cursor: pointer; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; }
-        .btn-back:hover { background: #334155; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
-        /* التصميم الرئيسي المقسم (Sidebar + Main Content) */
-        .layout-wrapper { display: flex; max-width: 1600px; margin: 30px auto; padding: 0 20px; gap: 25px; align-items: flex-start; }
-
-        /* القائمة الجانبية (الشريط الطولي) */
-        .sidebar {
-            width: 320px; background: white; padding: 25px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border-top: 5px solid var(--primary);
-            border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
-            position: sticky; top: 100px; display: flex; flex-direction: column; gap: 20px;
-        }
-
-        .main-content { flex: 1; }
-
-        /* بنر التحكم الليلي */
-        .night-control-bar {
-            background: #f8fafc; padding: 15px; border-radius: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-right: 4px solid var(--night); border-left: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
-        }
+        .vault-input { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(212, 175, 55, 0.2); color: #F9E27D; font-family: monospace; transition: 0.2s;}
+        .vault-input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 5px rgba(212, 175, 55, 0.2);}
         
-        /* زر التبديل (Switch) */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        /* Sci-Fi Toggle */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        input:checked + .slider { background-color: var(--night); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1e293b; transition: .3s; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 34px;}
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: #cbd5e1; transition: .3s; box-shadow: 0 0 5px rgba(255, 255, 255, 0.2); border-radius: 50%;}
+        input:checked + .slider { background-color: var(--primary); border-color: var(--night); }
+        input:checked + .slider:before { transform: translateX(22px); background-color: #818cf8; box-shadow: 0 0 10px rgba(79, 70, 229, 0.8);}
 
-        /* اختيار المصدر */
-        .source-group { display: flex; flex-direction: column; gap: 10px; }
-        .source-select { padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-weight: 800; color: var(--primary); outline: none; width: 100%; font-size: 15px; background: #f8fafc; transition: 0.3s; }
-        .source-select:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        /* كروت التسعير (Price Cards) */
+        .price-card { transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .price-card:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .price-card.gold-offer { background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05)); border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.15); }
         
-        /* أزرار المصدر الصغيرة */
-        .source-actions { display: flex; gap: 8px; justify-content: center; }
-        .mini-circle-btn { 
-            width: 40px; height: 40px; border-radius: 50%; border: none; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-            font-size: 16px; background: #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .mini-circle-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .color-indicator { width: 4px; height: 100%; position: absolute; right: 0; top: 0; border-radius: 0 12px 12px 0; }
+        .low-price { background: #10b981; box-shadow: 0 0 10px #10b981; } 
+        .med-price { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; } 
+        .high-price { background: #ef4444; box-shadow: 0 0 10px #ef4444; } 
 
-        /* البحث */
-        .search-box { position: relative; width: 100%; }
-        .search-input { width: 100%; padding: 12px 40px 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; background: #f8fafc; font-size: 14px; font-weight: 700; color: var(--primary); box-sizing: border-box; transition: 0.3s; }
-        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
-        .search-icon { position: absolute; right: 12px; top: 12px; font-size: 16px; color: #94a3b8; }
+        .night-badge { position: absolute; top: -8px; right: -8px; font-size: 9px; font-weight: 900; background: var(--night); color: white; padding: 3px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(79, 70, 229, 0.6); pointer-events: none; z-index: 10; letter-spacing: 1px;}
+        .offer-timer { font-size: 10px; font-weight: 900; font-family: monospace; position: absolute; bottom: 8px; left: 15px; padding: 3px 8px; border-radius: 8px; }
 
-        /* صندوق الخصم */
-        .discount-box { background: #fefce8; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; display: flex; flex-direction: column; gap: 10px; }
-        .discount-inputs { display: flex; gap: 10px; }
-        .discount-input { width: 100%; padding: 10px; border: 2px solid #fcd34d; border-radius: 8px; outline: none; text-align: center; font-weight: 900; color: #b45309; font-size: 14px; background: white; transition: 0.3s; }
-        .discount-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
-        .btn-discount { background: var(--gold); border: none; color: var(--primary); font-weight: 900; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; }
-        .btn-discount:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4); }
-        .btn-revert { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); font-weight: 900; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; }
-        .btn-revert:hover { background: #fecaca; }
+        .area-name-input { border: none; font-weight: 900; font-size: 15px; color: white; flex: 1; outline: none; background: transparent; transition: 0.3s; padding: 8px; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .area-name-input:focus { border-bottom-color: var(--gold); }
+        .price-val-input { width: 80px; padding: 8px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; text-align: center; font-weight: 900; color: var(--gold); outline: none; font-size: 16px; transition: 0.3s; background: rgba(2, 6, 23, 0.8); }
+        .price-val-input:focus { border-color: var(--success); box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); color: var(--success); }
+        .price-val-input:disabled { background: rgba(255,255,255,0.05); color: #64748b; border-color: rgba(255,255,255,0.1); cursor: not-allowed; }
 
-        /* أزرار التحكم الرئيسية الطولية */
-        .main-actions { display: flex; flex-direction: column; gap: 10px; }
-        .btn-royal {
-            padding: 14px 20px; border: none; border-radius: 12px; font-weight: 900;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
-            background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1); font-size: 14px; width: 100%;
-        }
-        .btn-royal:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(15, 23, 42, 0.15); }
-        .btn-royal:active { transform: scale(0.98); }
-        .btn-save { background: var(--success); }
+        /* الأزرار الدائرية الصغيرة */
+        .mini-circle-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 14px; background: rgba(15, 23, 42, 0.8); color: #cbd5e1; }
+        .mini-circle-btn:hover { background: rgba(212, 175, 55, 0.1); border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+        .btn-offer.active { color: #f59e0b; border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
 
-        /* المصفوفة (الجدول المزدوج) */
-        .matrix-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
-
-        .price-card {
-            background: white; border-radius: 20px; padding: 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
-            display: flex; align-items: center; gap: 15px; transition: 0.3s;
-            position: relative; overflow: hidden;
-        }
-        .price-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: var(--gold); }
-
-        /* الكرت الذهبي (عرض خاص) */
-        .price-card.gold-offer { background: linear-gradient(135deg, #fefce8, #fef9c3); border: 1px solid var(--gold); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2); }
-        .price-card.gold-offer .area-name-input { color: #b45309; }
-
-        /* مؤشر الترند ومؤقت العرض */
-        .trend-icon { font-size: 11px; position: absolute; top: 8px; left: 15px; opacity: 0.8; font-weight: bold; color: var(--primary); }
-        .offer-timer { font-size: 11px; font-weight: 900; color: var(--info); position: absolute; bottom: 5px; right: 25px; background: rgba(14, 165, 233, 0.1); padding: 2px 8px; border-radius: 10px; }
-
-        /* مؤشر اللون الجانبي */
-        .color-indicator { width: 6px; height: 100%; position: absolute; right: 0; top: 0; border-radius: 0 20px 20px 0; }
-        .low-price { background: #10b981; } 
-        .med-price { background: #f59e0b; } 
-        .high-price { background: #ef4444; } 
-
-        .area-name-input { border: none; font-weight: 900; font-size: 16px; color: var(--primary); flex: 1; outline: none; background: transparent; transition: 0.3s; padding: 8px; border-radius: 8px; width: 100%; }
-        .area-name-input:focus { background: #f1f5f9; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-
-        /* خانة السعر */
-        .price-wrapper { position: relative; display: flex; align-items: center; justify-content: center; }
-        .price-val-input { width: 80px; padding: 10px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; font-weight: 900; color: var(--primary); outline: none; font-size: 16px; transition: 0.3s; background: #f8fafc; }
-        .price-val-input:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
-        .price-val-input:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
-        
-        /* شارة الزيادة الليلية */
-        .night-badge { 
-            font-size: 11px; font-weight: 800; background: var(--night); color: white; 
-            padding: 4px 8px; border-radius: 8px; position: absolute; 
-            top: -15px; right: -10px; white-space: nowrap; pointer-events: none;
-            box-shadow: 0 2px 5px rgba(49, 27, 146, 0.3); z-index: 10;
-        }
-
-        /* أدوات الكرت الصغيرة */
-        .card-tools { display: flex; gap: 8px; align-items: center; }
-        .btn-map { color: var(--info); }
-        .btn-offer { color: #94a3b8; } 
-        .btn-offer.active { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.5); background: #fefce8; border-color: #fde68a; }
-
-        /* نظام الإشعارات الذكي المنسدل */
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid var(--gold); padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateX(120%); animation: slideIn 0.4s forwards, fadeOut 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
-        @keyframes slideIn { to { transform: translateX(0); } }
-        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+        .app-toast { background: rgba(15, 23, 42, 0.98); border: 1px solid var(--gold); color: #f8fafc; padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 8px 20px rgba(0,0,0,0.4); transform: translateX(120%); animation: slideIn 0.3s forwards, fadeOut 0.3s forwards 3.6s; font-size: 13px; display: flex; align-items: center; gap: 10px; border-right-width: 4px; border-right-color: var(--gold);}
+        @keyframes slideIn { to { transform: translateX(0); } } @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
 
-        /* ترويسة الطباعة المخفية */
-        .print-header { display: none; text-align: center; border-bottom: 4px solid var(--gold); padding-bottom: 15px; margin-bottom: 25px; }
-
-        /* ================= تصميم الطباعة ================= */
+        /* الطباعة */
+        .print-header { display: none; text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 15px; margin-bottom: 25px; }
         @media print {
-            body { background: white; -webkit-print-color-adjust: exact; }
-            .navbar, .sidebar { display: none !important; }
+            body { background: white; color: black; -webkit-print-color-adjust: exact; }
+            .navbar, .sidebar, .card-tools, .night-badge { display: none !important; }
             .layout-wrapper { display: block; padding: 0; margin: 0; }
             .print-header { display: block; }
             .matrix-container { display: block; column-count: 2; column-gap: 25px; }
-            .price-card { break-inside: avoid; border: 1px solid #cbd5e1; box-shadow: none; margin-bottom: 12px; padding: 10px 15px; border-radius: 10px; }
-            .area-name-input, .price-val-input { border: none; background: transparent; font-size: 14px; }
+            .price-card { break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; margin-bottom: 12px; padding: 10px 15px; border-radius: 10px; background: white !important; }
+            .area-name-input, .price-val-input { border: none !important; background: transparent !important; color: black !important; font-size: 14px; }
             .price-val-input { text-align: left; }
-            .card-tools, .trend-icon, .color-indicator { display: none; }
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
     <div id="toast-container"></div>
 
-    <nav class="navbar" id="main-nav">
-        <div class="brand">
-            N <span class="gold-text">One</span> Diamond Matrix 💎
-            <span id="header-company-name" class="company-name-badge">جاري التحميل...</span>
+    <nav id="main-nav" class="glass-panel h-20 flex justify-between items-center px-6 md:px-10 border-b-4 border-b-yellow-500 transition-all duration-500 z-50 sticky top-0">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-700 flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                <i class="fas fa-gem text-slate-900 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-white tracking-widest flex items-center gap-2">N <span class="gold-glow">ONE</span> MATRIX</h1>
+                <span id="header-company-name" class="text-[10px] text-yellow-500 font-mono tracking-[0.2em] bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">جاري التحميل...</span>
+            </div>
         </div>
-        <a href="client.html" class="btn-back">⬅️ إغلاق المصفوفة</a>
+        <button onclick="window.close()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
+            <i class="fas fa-times"></i> إغلاق
+        </button>
     </nav>
 
-    <div class="layout-wrapper">
-        <aside class="sidebar">
+    <div class="layout-wrapper flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full p-4 md:p-8 gap-6 flex-1 items-start">
+        
+        <aside class="sidebar w-full lg:w-80 glass-panel rounded-3xl p-6 flex flex-col gap-6 sticky top-28 border-t-4 border-t-slate-700">
             
-            <div class="source-group">
-                <label style="font-weight:900; font-size:14px; color:var(--primary);">المصدر المعتمد للنطاق</label>
-                <select id="source-select" class="source-select" onchange="renderMatrix()">
-                </select>
-                <div class="source-actions">
-                    <button class="mini-circle-btn" onclick="addSource()" title="إضافة مصدر جديد">➕</button>
-                    <button class="mini-circle-btn" onclick="duplicateSource()" title="استنساخ القائمة" style="background:#f0f9ff; color:var(--info); border: 1px solid #bae6fd;">📑</button>
-                    <button class="mini-circle-btn" onclick="deleteSource()" title="مسح المصدر" style="background:#fef2f2; color:var(--danger); border: 1px solid #fecaca;">🗑️</button>
+            <div class="space-y-3">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest"><i class="fas fa-database ml-1 text-yellow-500"></i> المصدر المعتمد للنطاق</label>
+                <select id="source-select" class="vault-input w-full p-3 rounded-xl text-sm appearance-none focus:border-yellow-500" onchange="renderMatrix()"></select>
+                <div class="flex justify-center gap-2 mt-2">
+                    <button class="mini-circle-btn" onclick="addSource()" title="إضافة مصدر جديد"><i class="fas fa-plus text-emerald-400"></i></button>
+                    <button class="mini-circle-btn" onclick="duplicateSource()" title="استنساخ القائمة"><i class="fas fa-copy text-indigo-400"></i></button>
+                    <button class="mini-circle-btn border-red-500/30 hover:bg-red-500/10" onclick="deleteSource()" title="مسح المصدر"><i class="fas fa-trash text-red-400"></i></button>
                 </div>
             </div>
 
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" class="search-input" placeholder="فلترة الوجهات..." oninput="renderMatrix()">
+            <div class="relative">
+                <input type="text" id="search-input" class="vault-input w-full p-3 pr-10 rounded-xl text-sm" placeholder="فلترة الوجهات..." oninput="renderMatrix()">
+                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
             </div>
 
-            <div class="night-control-bar">
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                    <div style="font-weight:900; font-size:13px; color:var(--primary);">بروتوكول الحارس الليلي 🌙</div>
-                    <div style="font-size:10px; font-weight:bold; color:#64748b;">إضافة 0.50 د.أ (يمنع التعديل اليدوي)</div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-indigo-500/30 flex justify-between items-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-indigo-500/10 to-transparent"></div>
+                <div class="flex flex-col gap-1 relative z-10">
+                    <div class="font-black text-xs text-indigo-400 flex items-center gap-2"><i class="fas fa-moon"></i> بروتوكول الحارس الليلي</div>
+                    <div class="text-[9px] font-bold text-slate-500 tracking-wider">إضافة 0.50 د.أ (يمنع التعديل اليدوي)</div>
                 </div>
-                <label class="switch">
+                <label class="switch relative z-10">
                     <input type="checkbox" id="night-toggle" onchange="toggleNightModeOverride()" checked>
                     <span class="slider"></span>
                 </label>
             </div>
 
-            <div class="discount-box">
-                <div style="font-size: 13px; font-weight: 900; color: #b45309; text-align: center;">تفعيل العروض الخاصة 🌟</div>
-                <div class="discount-inputs">
-                    <input type="number" id="global-discount-input" class="discount-input" placeholder="خصم %" min="0" max="100">
-                    <input type="number" id="discount-duration" class="discount-input" placeholder="ساعات ⏳" min="1">
+            <div class="bg-gradient-to-br from-yellow-500/10 to-transparent p-5 rounded-2xl border border-yellow-500/30 flex flex-col gap-4">
+                <div class="text-xs font-black text-yellow-500 text-center flex items-center justify-center gap-2">
+                    <i class="fas fa-magic"></i> تفعيل العروض الخاصة
                 </div>
-                <button class="btn-discount" onclick="applyGlobalDiscount()">تطبيق العرض الآلي 🪄</button>
-                <button class="btn-revert" onclick="revertGlobalDiscount()">إلغاء وإرجاع التسعيرة 🔄</button>
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="number" id="global-discount-input" class="vault-input w-full p-2.5 rounded-lg text-sm text-center font-bold text-yellow-400" placeholder="خصم %" min="0" max="100">
+                        <i class="fas fa-percent absolute left-2 top-1/2 -translate-y-1/2 text-yellow-600/50 text-[10px]"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <input type="number" id="discount-duration" class="vault-input w-full p-2.5 rounded-lg text-sm text-center font-bold text-yellow-400" placeholder="المدة (س)" min="1">
+                        <i class="fas fa-hourglass-half absolute left-2 top-1/2 -translate-y-1/2 text-yellow-600/50 text-[10px]"></i>
+                    </div>
+                </div>
+                <button class="bg-yellow-600/20 hover:bg-yellow-500 hover:text-slate-900 text-yellow-500 border border-yellow-500/50 font-bold p-2.5 rounded-lg text-xs transition-all shadow-[0_0_10px_rgba(212,175,55,0.1)]" onclick="applyGlobalDiscount()">تطبيق العرض الآلي 🚀</button>
+                <button class="bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 border border-red-500/30 font-bold p-2.5 rounded-lg text-[10px] transition-all" onclick="revertGlobalDiscount()">إلغاء واسترجاع التسعيرة 🔄</button>
             </div>
 
-            <div class="main-actions">
-                <button class="btn-royal" style="background:var(--accent);" onclick="addArea()">➕ إدراج وجهة جديدة</button>
-                <button class="btn-royal btn-save" id="save-btn" onclick="saveData()">💾 توثيق واعتماد البيانات</button>
-                <button class="btn-royal" style="background:#64748b;" onclick="window.print()">🖨️ طباعة السجل الرسمي</button>
+            <div class="flex flex-col gap-3 mt-auto pt-4 border-t border-slate-700">
+                <button class="bg-slate-800 hover:bg-slate-700 text-white font-bold p-3 rounded-xl text-sm border border-slate-600 transition-all flex items-center justify-center gap-2" onclick="addArea()">
+                    <i class="fas fa-map-marker-alt text-emerald-400"></i> إدراج وجهة جديدة
+                </button>
+                <button id="save-btn" class="neon-button-success p-3 rounded-xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2" onclick="saveData()">
+                    <i class="fas fa-save"></i> توثيق واعتماد البيانات
+                </button>
+                <button class="bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold p-3 rounded-xl text-xs border border-slate-800 transition-all flex items-center justify-center gap-2" onclick="window.print()">
+                    <i class="fas fa-print"></i> طباعة السجل الرسمي
+                </button>
             </div>
 
         </aside>
 
-        <main class="main-content">
+        <main class="main-content flex-1 w-full">
             <div class="print-header">
-                <h1 style="color:var(--primary); margin:0; font-weight:900;">N <span style="color:var(--gold)">One</span> Delivery</h1>
-                <p style="margin:8px 0; color:#475569; font-size:15px; font-weight:bold;">مصفوفة الأسعار المعتمدة - <span id="print-source-name" style="color:var(--primary);"></span></p>
+                <h1 style="color:black; margin:0; font-weight:900;">N One Delivery</h1>
+                <p style="margin:8px 0; color:#475569; font-size:15px; font-weight:bold;">مصفوفة الأسعار المعتمدة - <span id="print-source-name"></span></p>
             </div>
 
-            <div id="matrix-grid" class="matrix-container">
+            <div id="matrix-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 matrix-container">
                 </div>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, set, get, child, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ",
@@ -277,13 +201,13 @@
         let isNightActive = false; 
         let currentUser = null;
 
-        // نظام الإشعارات الذكي (Toast)
+        // نظام الإشعارات
         window.showAppToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'app-toast';
-            if(isError) toast.style.borderLeftColor = '#ef4444';
-            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg;
+            if(isError) toast.style.borderRightColor = '#ef4444';
+            toast.innerHTML = (isError ? '<i class="fas fa-exclamation-triangle text-red-500"></i> ' : '<i class="fas fa-gem text-yellow-500"></i> ') + msg;
             container.appendChild(toast);
             setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
         };
@@ -310,7 +234,9 @@
             
             setInterval(checkNightMode, 60000);
             setInterval(updateTimersUI, 60000); 
-            setInterval(autoRevertExpiredOffers, 60000); // المزامنة السحابية لانتهاء العروض
+            
+            // الحارس الذكي الأشرس: يشتغل كل 10 ثواني ويمسح العروض المنتهية فوراً
+            setInterval(autoRevertExpiredOffers, 10000); 
         };
 
         function setupRealtimeFreezeListener() {
@@ -322,7 +248,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.Client_Status === 'paused' || data.status === 'paused') {
-                        showAppToast("تم تقييد الوصول للوحة التحكم. يرجى مراجعة الإدارة.", true);
+                        showAppToast("تم تقييد الوصول. يرجى مراجعة الإدارة.", true);
                         setTimeout(() => {
                             localStorage.clear();
                             window.location.replace('index.html');
@@ -379,8 +305,11 @@
             }
 
             const nav = document.getElementById('main-nav');
-            if (isNightActive) nav.classList.add('night-mode');
-            else nav.classList.remove('night-mode');
+            if (isNightActive) {
+                nav.style.borderBottomColor = 'var(--night)';
+            } else {
+                nav.style.borderBottomColor = 'var(--gold)';
+            }
         }
 
         window.toggleNightModeOverride = function() {
@@ -446,7 +375,6 @@
             }
         }
 
-        // ================= العصا السحرية للخصم والتوقيت السحابي =================
         window.applyGlobalDiscount = function() {
             const source = document.getElementById('source-select').value;
             const discountInput = document.getElementById('global-discount-input').value;
@@ -466,7 +394,7 @@
                 return;
             }
 
-            if(confirm(`سيتم تطبيق خصم ${discountPercent}% لمدة ${durationHours} ساعة على الوجهات المميزة بنجمة. تأكيد؟`)) {
+            if(confirm(`تفعيل العرض الآلي بنسبة ${discountPercent}% لمدة ${durationHours} ساعة على الوجهات المميزة؟`)) {
                 const endTime = Date.now() + (durationHours * 60 * 60 * 1000);
                 let affectedCount = 0;
                 
@@ -516,7 +444,7 @@
             }
         }
 
-        // الحارس الذكي لانتهاء العروض (مزامنة سحابية)
+        // الحارس الذكي لانتهاء العروض (مزامنة سحابية) الأشرس
         window.autoRevertExpiredOffers = async function() {
             let needsSave = false;
             const now = Date.now();
@@ -538,7 +466,7 @@
 
             if (needsSave) {
                 renderMatrix();
-                // حفظ صامت في الفايربيز عشان نضمن تحديث الأطراف (المنشآت) فورا
+                // حفظ صامت في الفايربيز عشان نضمن تحديث الأطراف فورا بدون انتظار
                 let updates = {};
                 for (const source in pricingData) {
                     pricingData[source].forEach(item => {
@@ -549,7 +477,7 @@
                 }
                 try {
                     await update(ref(db), updates);
-                    console.log("تم تحديث أسعار العروض المنتهية سحابياً.");
+                    console.log("تم تحديث أسعار العروض المنتهية سحابياً بواسطة الحارس الذكي.");
                 } catch(e) {}
             }
         }
@@ -561,13 +489,14 @@
                 if(endTime) {
                     const diff = endTime - now;
                     if (diff <= 0) {
-                        el.innerText = "انتهى التوقيت ⏳";
+                        el.innerHTML = '<i class="fas fa-times-circle"></i> انتهى التوقيت';
                         el.style.color = "var(--danger)";
-                        el.style.background = "#fef2f2";
+                        el.style.background = "rgba(239, 68, 68, 0.1)";
+                        el.style.border = "1px solid rgba(239, 68, 68, 0.3)";
                     } else {
                         const h = Math.floor(diff / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        el.innerText = `⏳ متبقي ${h}س و ${m}د`;
+                        el.innerHTML = `<i class="fas fa-hourglass-half"></i> متبقي ${h}س و ${m}د`;
                     }
                 }
             });
@@ -591,12 +520,12 @@
                 const basePrice = parseFloat(item.price);
                 let displayPrice = basePrice;
                 let nightBadgeHtml = '';
-                // قفل التعديل إذا كان الحارس الليلي مفعل
+                
                 let disableInput = isNightActive ? 'disabled title="مغلق. يرجى إيقاف الحارس الليلي لتعديل السعر الأساسي"' : '';
                 
                 if (isNightActive) {
                     displayPrice += 0.50;
-                    nightBadgeHtml = `<span class="night-badge">+0.50 تعرفة ليلية 🌙</span>`;
+                    nightBadgeHtml = `<span class="night-badge">+0.50 ليلية <i class="fas fa-moon ml-1"></i></span>`;
                 }
 
                 let colorClass = 'med-price';
@@ -609,7 +538,7 @@
                 let trendHtml = '';
                 const oneDay = 24 * 60 * 60 * 1000;
                 if (item.lastMod && (now - item.lastMod < oneDay)) {
-                    trendHtml = '<span class="trend-icon">📈 محدث حديثاً</span>';
+                    trendHtml = '<span class="absolute top-2 left-4 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"><i class="fas fa-chart-line"></i> محدث</span>';
                 }
 
                 let priceSectionHtml = `<input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" ${disableInput} onchange="updateItem('${source}', ${index}, 'price', this.value)">`;
@@ -622,37 +551,38 @@
                     if (diff > 0) {
                         const h = Math.floor(diff / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}">⏳ متبقي ${h}س و ${m}د</div>`;
+                        timerHtml = `<div class="offer-timer text-indigo-400 bg-indigo-500/10 border border-indigo-500/20" data-endtime="${item.offerEndTime}"><i class="fas fa-hourglass-half"></i> متبقي ${h}س و ${m}د</div>`;
                     } else {
-                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}" style="color:var(--danger); background:#fef2f2;">انتهى التوقيت ⏳</div>`;
+                        timerHtml = `<div class="offer-timer" data-endtime="${item.offerEndTime}" style="color:var(--danger); background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3);"><i class="fas fa-times-circle"></i> انتهى التوقيت</div>`;
                     }
                     
                     priceSectionHtml = `
-                        <div style="display:flex; flex-direction:column; align-items:center;">
-                            <del style="color:var(--danger); font-size:12px; font-weight:bold; margin-bottom:2px;">${displayOriginal.toFixed(2)}</del>
-                            <input type="number" class="price-val-input" value="${displayPrice.toFixed(2)}" step="0.25" ${disableInput} onchange="updateItem('${source}', ${index}, 'price', this.value)" style="border-color:var(--success); color:var(--success); box-shadow: 0 0 5px rgba(16, 185, 129, 0.2);">
+                        <div class="flex flex-col items-center">
+                            <del class="text-red-400 text-[10px] font-black mb-1 opacity-80">${displayOriginal.toFixed(2)}</del>
+                            <input type="number" class="price-val-input border-emerald-500/50 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]" value="${displayPrice.toFixed(2)}" step="0.25" ${disableInput} onchange="updateItem('${source}', ${index}, 'price', this.value)">
                         </div>
                     `;
                 }
 
                 container.innerHTML += `
-                    <div class="price-card ${offerClass}">
+                    <div class="price-card glass-panel p-5 rounded-2xl flex items-center justify-between gap-4 ${offerClass}">
                         <div class="color-indicator ${colorClass}"></div>
                         ${trendHtml}
                         ${timerHtml}
                         
-                        <input type="text" class="area-name-input" placeholder="اسم الوجهة" value="${item.area}" onchange="updateItem('${source}', ${index}, 'area', this.value)">
-                        
-                        <div class="price-wrapper">
-                            ${nightBadgeHtml}
-                            ${priceSectionHtml}
+                        <div class="flex-1 min-w-0 pr-2">
+                            <input type="text" class="area-name-input" placeholder="اسم الوجهة" value="${item.area}" onchange="updateItem('${source}', ${index}, 'area', this.value)">
+                            <div class="flex gap-2 mt-3">
+                                <button class="mini-circle-btn text-indigo-400" onclick="openMap('${item.area}', '${source}')" title="الخريطة"><i class="fas fa-map-marker-alt"></i></button>
+                                <button class="mini-circle-btn btn-offer ${starClass}" onclick="toggleOffer('${source}', ${index})" title="تمييز العرض"><i class="fas fa-star"></i></button>
+                                <button class="mini-circle-btn text-red-400 hover:border-red-500/50 hover:bg-red-500/10" onclick="deleteItem('${source}', ${index})" title="إزالة الوجهة"><i class="fas fa-trash"></i></button>
+                            </div>
                         </div>
                         
-                        <div class="card-tools">
-                            <span style="font-size:12px; font-weight:bold; color:#64748b; margin-left:10px;">د.أ</span>
-                            <button class="mini-circle-btn btn-map" onclick="openMap('${item.area}', '${source}')" title="فحص الإحداثيات الجغرافية">📍</button>
-                            <button class="mini-circle-btn btn-offer ${starClass}" onclick="toggleOffer('${source}', ${index})" title="إدراج في قائمة العروض">⭐</button>
-                            <button class="mini-circle-btn" onclick="deleteItem('${source}', ${index})" style="color:var(--danger);" title="إزالة الوجهة">✕</button>
+                        <div class="relative flex flex-col items-center pl-3">
+                            ${nightBadgeHtml}
+                            ${priceSectionHtml}
+                            <span class="text-[10px] font-bold text-slate-500 mt-1">د.أ</span>
                         </div>
                     </div>
                 `;
@@ -662,8 +592,8 @@
         window.updateItem = function(source, index, field, value) {
             if (field === 'price') {
                 if (isNightActive) {
-                    showAppToast("لا يمكن تعديل السعر الأساسي أثناء تفعيل بروتوكول الحارس الليلي.", true);
-                    renderMatrix(); // إعادة رسم لإلغاء التغيير في الواجهة
+                    showAppToast("مغلق. يرجى إيقاف الحارس الليلي للتعديل.", true);
+                    renderMatrix(); 
                     return;
                 }
                 let newVal = parseFloat(value);
@@ -680,7 +610,7 @@
         window.addArea = function() {
             const source = document.getElementById('source-select').value;
             if(!source) {
-                showAppToast("يرجى تحديد المصدر المعتمد أولاً", true);
+                showAppToast("يرجى تحديد المصدر أولاً", true);
                 return;
             }
             
@@ -716,8 +646,7 @@
 
         window.saveData = async function() {
             const btn = document.getElementById('save-btn');
-            btn.innerHTML = "جاري التوثيق ⏳";
-            btn.style.background = "#f59e0b";
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوثيق';
             
             const myMaster = currentUser.Client_User || currentUser.user;
             
@@ -759,20 +688,16 @@
                 const deletePromises = deletedIds.map(id => remove(ref(db, `prices/${id}`)));
                 await Promise.all(deletePromises);
                 
-                btn.innerHTML = "تم الاعتماد 📡";
-                btn.style.background = "#047857";
+                btn.innerHTML = '<i class="fas fa-check-double"></i> تم الاعتماد';
                 setTimeout(() => {
-                    btn.innerHTML = "💾 توثيق واعتماد البيانات";
-                    btn.style.background = "var(--success)";
-                    showAppToast("تم حفظ المصفوفة وتعميمها بنجاح عبر الشبكة.");
+                    btn.innerHTML = '<i class="fas fa-save"></i> توثيق واعتماد البيانات';
+                    showAppToast("تم حفظ المصفوفة وتعميمها بنجاح 💎");
                 }, 1500);
             } catch(e) {
-                showAppToast("حدث خطأ تقني أثناء محاولة الحفظ.", true);
-                btn.innerHTML = "💾 توثيق واعتماد البيانات";
-                btn.style.background = "var(--success)";
+                showAppToast("حدث خطأ أثناء التوثيق", true);
+                btn.innerHTML = '<i class="fas fa-save"></i> توثيق واعتماد البيانات';
             }
         }
-
     </script>
 </body>
 </html>
