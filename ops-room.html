@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root { --primary: #020617; --gold: #D4AF37; --success: #10b981; --danger: #ef4444; --info: #0ea5e9; }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--primary); color: #e2e8f0; overflow-x: hidden; background-image: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.05) 0%, transparent 80%), linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)); user-select: none; }
+        :root { --primary: #020617; --gold: #D4AF37; --success: #10b981; --danger: #ef4444; --info: #0ea5e9; --night: #311b92; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--primary); color: #e2e8f0; overflow-x: hidden; background-image: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.05) 0%, transparent 80%), linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); user-select: none; }
 
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(212, 175, 55, 0.15); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); }
         .gold-glow { text-shadow: 0 0 10px rgba(212, 175, 55, 0.4); color: var(--gold); }
@@ -58,6 +58,15 @@
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
+
+        @media print {
+            body { background: white; color: black; }
+            .navbar, .side-content, .action-btns, .btn-print, .stats-grid, .nav-tabs, .filter-group { display: none !important; }
+            .main-content { width: 100%; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #000; }
+            table { font-size: 12px; }
+            td, th { color: black !important; border-bottom: 1px solid #ccc !important; }
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
@@ -176,7 +185,7 @@
                                 </tr>
                             </thead>
                             <tbody id="completed-table-body">
-                                <tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">سجل العمليات مهيأ وجاهز للإطلاق المريخي الجديد 🚀</td></tr>
+                                <tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مكتملة حالياً 🍃</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -672,7 +681,7 @@
             });
         }
 
-        // البند الثالث: خوارزمية فحص الإنترنت 3 ثواني (Smart Ping)
+        // البند الثالث: خوارزمية فحص الإنترنت 6 ثواني للشبكات الضعيفة + التوثيق المالي
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -687,9 +696,9 @@
                         const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
 
-                        // 1. فحص استجابة الجهاز 3 ثواني
+                        // 1. فحص استجابة الجهاز (زدناها لـ 6 ثواني عشان نعطي مجال حقيقي للنت يشبك)
                         if (ord.status === 'assigned') {
-                            if (elapsed > 3000 || isAppClosed) { 
+                            if (elapsed > 6000 || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                 hasUpdates = true;
@@ -728,12 +737,65 @@
                         hasUpdates = true;
                     }
                     
-                    if (['arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'completed'].includes(ord.status)) {
-                        // حالة completed تعني الكابتن أكد التسليم
-                        if (ord.status === 'completed') { 
-                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
-                            hasUpdates = true; 
+                    // ================= الدائرة المالية وتسجيل العمليات المكتملة في الرادار =================
+                    if (ord.status === 'completed' && !ord.is_completed_processed) { 
+                        
+                        const commission = parseFloat(ord.commission_amount || 0);
+                        const fee = parseFloat(ord.fee || 0);
+                        const value = parseFloat(ord.value || 0);
+                        let discountAmount = 0;
+                        let promoCode = "---";
+                        let shopName = ord.restaurant || "";
+
+                        // تحديث الطلب الأصلي
+                        if (ord.linkedRadarId) {
+                            const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
+                            if (radOrd) {
+                                discountAmount = parseFloat(radOrd.Shop_Discount || radOrd.discount || 0);
+                                promoCode = radOrd.Shop_Promo || radOrd.promo || "---";
+                                shopName = radOrd.Shop_Name || radOrd.restaurant || shopName;
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
+                                updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
+                                updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
+                            }
                         }
+
+                        // خصم الرصيد من الكابتن
+                        const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        let capName = ord.cap_name || "كابتن";
+                        if(capData) {
+                            capName = capData.Cap_Name || capData.name || capName;
+                            if(commission > 0) {
+                                const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - commission).toFixed(2);
+                                updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                                updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
+                            }
+                        }
+
+                        // توثيق السجل المكتمل
+                        let archiveKey = ord.linkedRadarId || appOrdId;
+                        const entry = {
+                            orderId: archiveKey,
+                            appOrdId: appOrdId,
+                            time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                            date: new Date().toISOString(),
+                            cap: capName,
+                            capKey: capKey,
+                            rest: shopName,
+                            value: value,
+                            fee: fee,
+                            comm: commission,
+                            discount: discountAmount,
+                            promo: promoCode,
+                            net: fee - commission,
+                            live_status: 'delivered',
+                            via: ord.dispatch_method || 'App',
+                            companyId: activeCompanyName
+                        };
+                        saveOrderToCloud(entry);
+
+                        updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
+                        hasUpdates = true; 
                     }
                 }
             }
@@ -985,7 +1047,7 @@
             document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span class="text-sm font-normal text-slate-400">د.أ</span>';
             document.getElementById('side-net-profit').innerHTML = netProfit.toFixed(2) + ' <span class="text-xs font-normal text-slate-400">د.أ</span>';
 
-            if (uniqueOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">سجل العمليات مهيأ وجاهز للإطلاق المريخي الجديد 🚀</td></tr>'; return; }
+            if (uniqueOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مكتملة حالياً 🍃</td></tr>'; return; }
 
             tbody.innerHTML = '';
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
