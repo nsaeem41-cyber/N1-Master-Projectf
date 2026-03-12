@@ -666,7 +666,7 @@
             });
         }
 
-        // ================= الدماغ المحاسبي (تم إزالة الخصم المستعجل وربط الأرشيف) =================
+        // ================= الدماغ المحاسبي (قواعد الـ 3 ثواني والخصم الآمن) =================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -681,8 +681,9 @@
                         const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
                         const elapsed = now - ord.timestamp;
 
+                        // الخوارزمية الملكية: 3 ثواني لضعف الشبكة (لم يتم الاستلام)
                         if (ord.status === 'assigned') {
-                            if (elapsed > remoteOrderTimer || isAppClosed) { 
+                            if (elapsed > 3000 || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 if(ord.linkedRadarId) {
                                     updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
@@ -693,8 +694,9 @@
                                 continue;
                             }
                         }
+                        // الخوارزمية الملكية: التوقيت الطبيعي (رن عند الكابتن)
                         else if (ord.status === 'received' || ord.status === 'ringing') {
-                            if (elapsed > (remoteOrderTimer + 2000) || isAppClosed) {
+                            if (elapsed > remoteOrderTimer || isAppClosed) {
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                 hasUpdates = true;
@@ -718,11 +720,10 @@
                     
                     if (['arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered'].includes(ord.status)) {
                         
-                        // هنا التكتيك الألماسي لمنع التكرار (استخدام ID واحد يتيم)
                         let archiveKey = ord.linkedRadarId || appOrdId;
                         const isAlreadySaved = completedOrders.some(o => o.orderId === archiveKey);
                         
-                        // الخصم الملكي: فقط عند التسليم النهائي
+                        // الخصم الملكي: فقط عند التسليم النهائي (ولا قرش قبل)
                         if (ord.status === 'delivered' && !ord.is_commission_deducted) {
                             const commission = parseFloat(ord.commission_amount || 0);
                             if(commission > 0) {
@@ -742,7 +743,7 @@
                             hasUpdates = true;
                         }
 
-                        // التوثيق النظيف
+                        // التوثيق النظيف (لمنع التكرار)
                         let discountAmount = 0;
                         if(ord.linkedRadarId) {
                             const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
@@ -793,6 +794,7 @@
             if (hasUpdates) update(ref(db), updates);
         }
 
+        // ================= رسم الرادار الفخم (بدون لمس المنطقة المحرمة للفلترة) =================
         window.renderRadar = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('live-table-body');
@@ -947,6 +949,8 @@
                 if(availableCaptains.length === 0) break;
                 const ordId = ord.Shop_Ord_ID || ord.id;
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                
+                // الاستهداف الجغرافي الصارم (عمان، الزرقاء، الجبيهة... الخ)
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
                 let eligibleCaptains = availableCaptains.filter(c => (c.Cap_Region || c.Cap_Location || '').trim() === shopOriginArea);
@@ -957,6 +961,7 @@
                     return !(radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey]);
                 });
 
+                // تصفير الذاكرة وإعادة التدوير (الدورة تضل متاحة)
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ordId}`] = null;
                      delete radarMemory[ordId]; 
@@ -1108,7 +1113,7 @@
                 let activeCount = Object.values(allAssignedOrders[capKey] || {}).filter(o => ['assigned', 'accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived'].includes(o.status)).length;
                 if (activeCount > 0 && !confirm(`الكابتن مشغول بـ ${activeCount} طلب. تأكيد؟`)) return;
 
-                // الخصم رح يصير هسا هون عشان هاد يدوي ومباشر (بديش أستنى التسليم لأن مافي سيستم تطبيق يكبس فيه)
+                // الخصم اليدوي المباشر
                 const newBal = (parseFloat(currentTargetCaptain.Cap_Balance || currentTargetCaptain.balance || 0) - parseFloat(commission)).toFixed(2);
                 updates[`${currentTargetCaptain._node}/${capKey}/Cap_Balance`] = parseFloat(newBal); updates[`${currentTargetCaptain._node}/${capKey}/balance`] = parseFloat(newBal);
                 
@@ -1131,18 +1136,30 @@
             ['man_rest_name', 'man_hidden_url', 'man_val', 'man_fee', 'linked_order_id'].forEach(id => document.getElementById(id).value = '');
         };
 
-        // العدادات الثلاثية (المحاسبة الملكية)
+        // العدادات الثلاثية (المحاسبة الملكية) - بدون تكرار في السجلات
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
-            const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName));
             
-            document.getElementById('stat-completed-total').innerText = todayOrders.length;
+            // الفلترة لمنع التكرار نهائيا
+            let uniqueOrders = [];
+            let seenIds = new Set();
+            
+            completedOrders.forEach(o => {
+                if(new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName)) {
+                    if(!seenIds.has(o.orderId)) {
+                        seenIds.add(o.orderId);
+                        uniqueOrders.push(o);
+                    }
+                }
+            });
+            
+            document.getElementById('stat-completed-total').innerText = uniqueOrders.length;
             
             let totalComm = 0;
             let totalDisc = 0;
 
-            todayOrders.forEach(o => {
+            uniqueOrders.forEach(o => {
                 totalComm += parseFloat(o.comm || 0);
                 totalDisc += parseFloat(o.discount || 0);
             });
@@ -1154,12 +1171,12 @@
             document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span class="text-sm font-normal text-slate-400">د.أ</span>';
             document.getElementById('side-net-profit').innerHTML = netProfit.toFixed(2) + ' <span class="text-xs font-normal text-slate-400">د.أ</span>';
 
-            if (todayOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مسجلة اليوم</td></tr>'; return; }
+            if (uniqueOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مسجلة اليوم</td></tr>'; return; }
 
             tbody.innerHTML = '';
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             
-            todayOrders.forEach(o => {
+            uniqueOrders.forEach(o => {
                 let liveStatusBadge = o.live_status === 'delivered' ? '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/30">مكتمل 💎</span>' : '<span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-700">مرحلي ⏳</span>';
                 let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Name === o.cap || u.name === o.cap);
                 let liveDot = cData && cData.app_status === 'online' ? '<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981] inline-block ml-1"></span>' : '<span class="w-2 h-2 rounded-full bg-red-500 inline-block ml-1"></span>';
