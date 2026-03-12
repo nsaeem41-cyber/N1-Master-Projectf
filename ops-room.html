@@ -686,11 +686,11 @@
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
-                    if (ord.dispatch_method === 'Auto') {
-                        const elapsed = now - ord.timestamp;
-                        const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                        const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
+                    const elapsed = now - ord.timestamp;
+                    const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                    const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
 
+                    if (ord.dispatch_method === 'Auto') {
                         // 1. فحص استجابة الجهاز (وسّعناها لـ 6 ثواني عشان نعطي مجال حقيقي للنت يشبك براحته)
                         if (ord.status === 'assigned') {
                             if (elapsed > 6000 || isAppClosed) { 
@@ -718,22 +718,20 @@
                         }
                     }
 
-                    // تحديثات حالة الطلب للمتابعة أثناء الرحلة
                     if (ord.status === 'accepted' && !ord.is_accepted_marked) {
-                        const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
-                        if(capData && ord.linkedRadarId) {
-                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = capData.Cap_Name || capData.name || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = capData.Cap_Phone || capData.phone || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = capData.Cap_CarType || capData.Cap_Car || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = capData.Cap_CarCode || '';
+                        if(assignedCap && ord.linkedRadarId) {
+                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = assignedCap.Cap_Name || assignedCap.name || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = assignedCap.Cap_Phone || assignedCap.phone || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap.Cap_CarType || assignedCap.Cap_Car || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap.Cap_CarCode || '';
                             updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
                         }
                         updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
                         hasUpdates = true;
                     }
                     
-                    // ================= الضربة المالية المحكمة وتسجيل العمليات المكتملة بـ "نبضة واحدة" =================
-                    if (ord.status === 'completed' && !ord.is_completed_processed) { 
+                    // ================= الدائرة المالية وتسجيل العمليات المكتملة بـ "نبضة واحدة" =================
+                    if ((ord.status === 'completed' || ord.status === 'delivered') && !ord.is_completed_processed) { 
                         
                         const commission = parseFloat(ord.commission_amount || 0);
                         const fee = parseFloat(ord.fee || 0);
@@ -756,20 +754,21 @@
                         }
 
                         // 2. خصم الرصيد من الكابتن الفعلي
-                        const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         let capName = ord.cap_name || "كابتن";
-                        if(capData) {
-                            capName = capData.Cap_Name || capData.name || capName;
+                        if(assignedCap) {
+                            capName = assignedCap.Cap_Name || assignedCap.name || capName;
                             if(commission > 0) {
-                                const currentBal = parseFloat(capData.Cap_Balance || capData.balance || 0);
+                                const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
                                 const newBal = (currentBal - commission).toFixed(2);
-                                updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                                updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
+                                updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                                updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
                             }
                         }
 
                         // 3. توثيق السجل المكتمل في أرشيف الإمبراطورية (يظهر فوراً في الديكور)
                         let archiveKey = ord.linkedRadarId || appOrdId;
+                        let masterCompany = activeCompanyName || 'default';
+                        
                         const entry = {
                             orderId: archiveKey,
                             appOrdId: appOrdId,
@@ -786,10 +785,10 @@
                             net: fee - commission,
                             live_status: 'delivered',
                             via: ord.dispatch_method || 'App',
-                            companyId: activeCompanyName
+                            companyId: masterCompany
                         };
                         
-                        updates[`company_archives/${activeCompanyName || 'default'}/orders/${archiveKey}`] = entry;
+                        updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = entry;
 
                         // 4. حذف الطلب من حلقة التوزيع للكابتن
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
@@ -798,7 +797,9 @@
                     }
                 }
             }
-            if (hasUpdates) update(ref(db), updates);
+            if (hasUpdates) {
+                update(ref(db), updates).catch(e=>{});
+            }
         }
 
         window.renderRadar = function() {
@@ -828,7 +829,7 @@
             }
 
             if (pendingOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest">الرادار هادئ حاليا 📡</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono tracking-widest text-sm">الرادار هادئ حاليا 📡</td></tr>';
                 return;
             }
 
@@ -913,7 +914,7 @@
         };
 
         window.triggerAutoRadarMaster = async function(silent = false) {
-            checkQueueReset(); // تحديث الدور اليومي
+            checkQueueReset();
             
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             let activeLinkedIds = new Set(), busyCaptains = new Set();
@@ -921,12 +922,10 @@
             for(let capKey in allAssignedOrders) {
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
-                    // (القفل الفولاذي) نعتبر الكابتن مشغول بكل الحالات إلا لو انرفض أو خلص عشان ما يطلع له طلب وهمي
-                    if (st !== 'completed' && st !== 'timeout' && st !== 'rejected') {
+                    // القفل الفولاذي: أي حالة ما عدا الرفض أو التمام بتخلي الكابتن مشغول عشان ما يرمي له الرادار طلب وهمي
+                    if (st !== 'completed' && st !== 'timeout' && st !== 'rejected' && st !== 'delivered') {
                         busyCaptains.add(capKey);
-                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
-                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
-                        }
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
                     }
                 }
             }
@@ -961,7 +960,6 @@
                 const ordId = ord.Shop_Ord_ID || ord.id;
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
                 
-                // البند الثاني: التخصيص الجغرافي (الجبيهة للجبيهة)
                 const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
 
                 let eligibleCaptains = availableCaptains.filter(c => (c.Cap_Region || c.Cap_Location || '').trim() === shopOriginArea);
@@ -975,12 +973,11 @@
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ordId}`] = null;
                      delete radarMemory[ordId]; 
-                     unskippedCaptains = eligibleCaptains; // تدوير حلقة الرادار (Recycling)
+                     unskippedCaptains = eligibleCaptains; 
                 }
 
                 if (unskippedCaptains.length === 0) continue;
                 
-                // البند الأول: آلية التوزيع بالدور التسلسلي
                 unskippedCaptains.sort((a, b) => {
                     const keyA = a.Cap_User || a.user || a.Cap_Phone || a.phone;
                     const keyB = b.Cap_User || b.user || b.Cap_Phone || b.phone;
@@ -1015,7 +1012,6 @@
             }
         };
 
-        // البند الثاني: النظام المحاسبي للعمليات المكتملة
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
@@ -1024,7 +1020,7 @@
             let seenIds = new Set();
             
             completedOrders.forEach(o => {
-                if(new Date(o.date).toDateString() === today && o.cap !== "مرفوض") {
+                if(new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === (activeCompanyName || 'default'))) {
                     if(!seenIds.has(o.orderId)) {
                         seenIds.add(o.orderId);
                         uniqueOrders.push(o);
@@ -1057,7 +1053,6 @@
             uniqueOrders.forEach(o => {
                 let liveStatusBadge = o.live_status === 'delivered' ? '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/30">مكتمل 💎</span>' : '<span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-700">مرحلي ⏳</span>';
                 
-                // توثيق العمليات والحالة: إظهار الصح الأخضر
                 let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Name === o.cap || u.name === o.cap);
                 let liveDot = cData && cData.app_status === 'online' ? '<span class="text-emerald-400 ml-1 text-xs" title="جاهز للمهمة القادمة"><i class="fas fa-check-circle"></i></span>' : '<span class="text-slate-500 ml-1 text-xs" title="غير متصل"><i class="fas fa-circle"></i></span>';
 
