@@ -732,7 +732,6 @@
             const notes = document.getElementById('rating_notes').value.trim();
             if(val === 0) { window.showToast("الرجاء اختيار التقييم أولا", true); return; }
             try {
-                // الحماية من أن يكون shopId فارغ
                 const targetShopId = (shopId && shopId.trim() !== '' && shopId !== 'undefined') ? shopId : 'general_feedback';
                 const newRatingRef = push(ref(db, `ratings/shops/${targetShopId}`));
                 await set(newRatingRef, { captainId: capNodeKey, rating: val, reason: selectedTag, notes: notes, timestamp: Date.now() });
@@ -936,8 +935,13 @@
                     hasActive = true;
                     
                     let timeLeft = 0;
-                    if(ord.status === 'assigned') {
+                    let isIncoming = (ord.status === 'assigned' || ord.status === 'ringing');
+
+                    if(isIncoming) {
                         ring = true;
+                        if(ord.status === 'assigned') {
+                            update(ref(db), {[`assigned_orders/${capNodeKey}/${id}/status`]: 'ringing'}).catch(()=>{});
+                        }
                         if(!orderTimers[`seen_${id}`]) orderTimers[`seen_${id}`] = Date.now();
                         const elapsed = Math.floor((Date.now() - orderTimers[`seen_${id}`]) / 1000);
                         timeLeft = systemSettings.order_timer - elapsed;
@@ -953,7 +957,7 @@
                     rName = rName.replace(/(?:https?|ftp):\/\/[\n\S]+/g, '').split('-')[0].trim();
 
                     let locationHtml = '';
-                    if(ord.status !== 'assigned') { 
+                    if(!isIncoming) { 
                         if(ord.location_link || ord.Shop_Location_Link) {
                             const link = ord.location_link || ord.Shop_Location_Link;
                             locationHtml = `<a href="${link}" target="_blank" class="location-btn">📍 التوجه</a>`;
@@ -969,7 +973,7 @@
 
                     if(parseFloat(ord.discount || ord.Shop_Discount || 0) > 0) { discountHtml = `<div class="discount-tag">يوجد خصم للعميل بقيمة ${parseFloat(ord.discount || ord.Shop_Discount).toFixed(2)} د.أ</div>`; }
 
-                    if(ord.status === 'assigned') {
+                    if(isIncoming) {
                         timerHtml = `
                             <div class="order-timer-text" id="text_timer_${id}">${timeLeft} ثانية للاختفاء ⏳</div>
                             <div class="order-timer-bar-container">
@@ -981,18 +985,18 @@
                                 <button class="btn-action btn-accept" style="flex:2;" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">✅ قبول الطلب</button>
                                 <button class="btn-action btn-reject" style="flex:1;" onclick="rejectOrd('${id}','${ord.linkedRadarId}')">❌ رفض</button>
                             </div>`;
-                    } else if(ord.status === 'accepted') { btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}',${commSafe}, ${valSafe}, ${feeSafe}, '${rName}')">🏪 وصلت المنشأة</button>`; }
-                    else if(ord.status === 'arrived_at_shop') { btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}',0)">🥡 استلمت الطلب</button>`; }
-                    else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}',0)">🚗 في الطريق</button>`; }
-                    else if(ord.status === 'on_way') { btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}',0)">📍 وصلت العميل</button>`; }
+                    } else if(ord.status === 'accepted') { btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}')">🏪 وصلت المنشأة</button>`; }
+                    else if(ord.status === 'arrived_at_shop') { btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}')">🥡 استلمت الطلب</button>`; }
+                    else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}')">🚗 في الطريق</button>`; }
+                    else if(ord.status === 'on_way') { btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}')">📍 وصلت العميل</button>`; }
                     else if(ord.status === 'arrived_at_customer') {
-                        // تمرير ShopId من الطلب حتى لو كان مخفي
                         let ratingShopId = ord.rating_shop_id || ord.Shop_User || ord.shop_id || '';
-                        btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}')">💎 تم التسليم بنجاح</button>`;
+                        let cleanNameForBtn = rName.replace(/'/g, "\\'");
+                        btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}', ${commSafe}, ${valSafe}, ${feeSafe}, '${cleanNameForBtn}')">💎 تم التسليم بنجاح</button>`;
                     }
 
                     html += `
-                        <div class="order-card ${ord.status==='assigned'?'ringing':''}" id="card_${id}">
+                        <div class="order-card ${isIncoming?'ringing':''}" id="card_${id}">
                             <div class="order-header">
                                 <div class="order-rest-info">
                                     <div class="order-rest">🏪 ${rName}</div>
@@ -1019,14 +1023,13 @@
                         </div>
                     `;
 
-                    if(ord.status === 'assigned') { setTimeout(() => startVisualTimer(id, timeLeft, systemSettings.order_timer), 50); }
+                    if(isIncoming) { setTimeout(() => startVisualTimer(id, timeLeft, systemSettings.order_timer), 50); }
                 });
             }
             
             window.hasActiveOrdersLoaded = true; 
             window.hasActiveOrderInProgress = hasActive;
 
-            // قفل حالة الكابتن عند استلام أي طلب لضمان عدم إرسال طلبات جديدة
             if (currentCaptain && currentCaptain.app_status === 'online') {
                 if (currentCaptain.is_busy !== hasActive) {
                     update(ref(db, `captains/${capNodeKey}`), { is_busy: hasActive });
@@ -1206,40 +1209,67 @@
             const aud = document.getElementById('order-ringtone'); if(aud) { aud.pause(); aud.currentTime = 0; }
         };
         
-        window.updOrd = async (id, stat, rId, comm, val = 0, fee = 0, rName = '') => {
+        window.updOrd = async (id, stat, rId) => {
             const up = {}; up[`assigned_orders/${capNodeKey}/${id}/status`] = stat;
-            if(stat === 'arrived_at_shop') {
-                if(comm > 0) {
-                    const nb = (parseFloat(currentCaptain.Cap_Balance||0) - comm).toFixed(2);
-                    up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb); up[`captains/${capNodeKey}/balance`] = parseFloat(nb);
-                    up[`assigned_orders/${capNodeKey}/${id}/is_commission_deducted`] = true;
-                }
-                let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
-                let discountAmount = 0; let promoCode = "---"; let fullRestName = rName; let shopId = '';
-                if(rId && rId!=='undefined') {
-                    try {
-                        const ordSnap = await get(ref(db, `orders/${rId}`));
-                        if(ordSnap.exists()) { 
-                            const oData = ordSnap.val(); discountAmount = parseFloat(oData.Shop_Discount || oData.discount || 0); promoCode = oData.Shop_Promo || oData.promo || "---";
-                            fullRestName = oData.Shop_Name || oData.restaurant || rName; shopId = oData.Shop_User || '';
-                        }
-                    } catch(e) {}
-                }
-                up[`company_archives/${master}/orders/${id}`] = { capKey: capNodeKey, date: new Date().toISOString(), value: parseFloat(val), fee: parseFloat(fee), comm: parseFloat(comm), discount: discountAmount, promo: promoCode, net: (parseFloat(fee) - parseFloat(comm)), rest: fullRestName, appOrdId: id };
-                up[`assigned_orders/${capNodeKey}/${id}/rating_shop_id`] = shopId;
-            }
             if(rId && rId!=='undefined') { up[`orders/${rId}/OrderStatus`] = (stat==='arrived_at_shop')?'accepted':(stat==='arrived_at_customer')?'arrived':stat; }
             await update(ref(db), up); window.showToast("تم تحديث حالة الطلب 🚀");
         };
 
         window.isFinishingOrder = window.isFinishingOrder || {};
-        window.finishOrd = async (id, rId, ratingShopId) => {
+        window.finishOrd = async (id, rId, ratingShopId, comm, val, fee, rName) => {
             if(window.isFinishingOrder[id]) return; window.isFinishingOrder[id] = true;
-            const up = {}; up[`assigned_orders/${capNodeKey}/${id}/status`] = 'completed';
+            
+            const up = {}; 
+            up[`assigned_orders/${capNodeKey}/${id}/status`] = 'completed';
             if(rId && rId!=='undefined') { up[`orders/${rId}/OrderStatus`] = 'delivered'; }
+
+            if(comm > 0) {
+                const nb = (parseFloat(currentCaptain.Cap_Balance||0) - comm).toFixed(2);
+                up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb); 
+                up[`captains/${capNodeKey}/balance`] = parseFloat(nb);
+                up[`assigned_orders/${capNodeKey}/${id}/is_commission_deducted`] = true;
+                if(rId && rId!=='undefined') {
+                    up[`orders/${rId}/Cap_Commission`] = parseFloat(comm);
+                    up[`orders/${rId}/FinancialStatus`] = 'confirmed';
+                }
+            }
+
+            let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
+            let discountAmount = 0; let promoCode = "---"; let fullRestName = rName || '';
+
+            if(rId && rId!=='undefined') {
+                try {
+                    const ordSnap = await get(ref(db, `orders/${rId}`));
+                    if(ordSnap.exists()) { 
+                        const oData = ordSnap.val(); 
+                        discountAmount = parseFloat(oData.Shop_Discount || oData.discount || 0); 
+                        promoCode = oData.Shop_Promo || oData.promo || "---";
+                        fullRestName = oData.Shop_Name || oData.restaurant || fullRestName; 
+                    }
+                } catch(e) {}
+            }
+
+            up[`company_archives/${master}/orders/${id}`] = { 
+                capKey: capNodeKey, 
+                cap: currentCaptain.Cap_Name || currentCaptain.name || "كابتن",
+                date: new Date().toISOString(), 
+                time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                value: parseFloat(val||0), 
+                fee: parseFloat(fee||0), 
+                comm: parseFloat(comm||0), 
+                discount: discountAmount, 
+                promo: promoCode, 
+                net: (parseFloat(fee||0) - parseFloat(comm||0)), 
+                rest: fullRestName, 
+                appOrdId: id,
+                orderId: rId && rId!=='undefined' ? rId : id,
+                live_status: 'delivered',
+                via: 'App'
+            };
+            
             try {
                 await update(ref(db), up); window.showToast("تم التسليم بوقار 💎", false);
-                if(ratingShopId) { setTimeout(() => { openRatingModal(ratingShopId); }, 1500); }
+                if(ratingShopId && ratingShopId!=='undefined') { setTimeout(() => { openRatingModal(ratingShopId); }, 1500); }
                 setTimeout(()=> { update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null}); delete window.isFinishingOrder[id]; document.getElementById('status-toggle-section').style.display = 'flex'; fetchHotspots(); }, 3000);
             } catch(e) {
                 window.showToast("حدث خطأ أثناء التوثيق", true); delete window.isFinishingOrder[id];
