@@ -59,6 +59,30 @@
         ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
+        /* ستايل الواجهات الجديدة للسجلات والمالية */
+        .royal-finance-box {
+            background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(2,6,23,0.95));
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .royal-finance-box::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%);
+            animation: rotateGlow 10s linear infinite; z-index: 0; pointer-events: none;
+        }
+        @keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .finance-item { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .finance-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .finance-label { font-size: 13px; color: #94a3b8; font-weight: bold; }
+        .finance-value { font-size: 18px; font-weight: 900; font-family: monospace; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        
+        .completed-badge { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; }
+        .money-badge { background: rgba(212,175,55,0.1); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-weight: 900; font-family: monospace; }
+
         @media print {
             body { background: white; color: black; }
             .navbar, .side-content, .action-btns, .btn-print, .stats-grid, .nav-tabs, .filter-group { display: none !important; }
@@ -176,16 +200,15 @@
                             <thead class="bg-black/20">
                                 <tr>
                                     <th>الوقت</th>
-                                    <th>الكابتن</th>
-                                    <th>المنشأة</th>
-                                    <th>العمولة</th>
-                                    <th>التوثيق</th>
-                                    <th>مسار الطلب</th>
-                                    <th class="text-center">حذف</th>
+                                    <th>الكابتن المنفذ</th>
+                                    <th>المنشأة التجارية</th>
+                                    <th>العمولة المستقطعة</th>
+                                    <th>حالة الطلب</th>
+                                    <th class="text-center">إدارة</th>
                                 </tr>
                             </thead>
                             <tbody id="completed-table-body">
-                                <tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مكتملة حالياً 🍃</td></tr>
+                                <tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest">السجل نظيف بانتظار الإنجازات 💎</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -216,7 +239,7 @@
                                 <input type="text" id="new_cap_car_code" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-left" dir="ltr" placeholder="50-12345">
                             </div>
                             <div class="sm:col-span-2">
-                                <label class="block text-[10px] text-slate-400 mb-1">المصدر المعتمد (للتخصيص الجغرافي)</label>
+                                <label class="block text-[10px] text-slate-400 mb-1">المصدر المعتمد</label>
                                 <select id="new_cap_region" class="vault-input w-full p-2.5 rounded-lg text-sm appearance-none bg-slate-800">
                                     <option value="">جاري تحميل المصادر...</option>
                                 </select>
@@ -297,23 +320,22 @@
 
         <aside class="w-full lg:w-80 border-r border-slate-800 bg-slate-900/30 p-4 md:p-6 overflow-y-auto flex flex-col gap-6">
             
-            <div class="glass-panel rounded-3xl p-5 relative overflow-hidden group hover:border-yellow-500/50 transition-colors">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-yellow-500/10 rounded-full blur-2xl"></div>
-                <div class="text-[10px] text-slate-400 font-bold tracking-widest mb-4 uppercase"><i class="fas fa-chart-line text-yellow-500 ml-1"></i> المحاسبة المالية اليومية</div>
+            <div class="royal-finance-box">
+                <div class="text-xs text-yellow-500 font-black tracking-widest mb-5 uppercase text-center border-b border-yellow-500/20 pb-3"><i class="fas fa-crown ml-1"></i> المحاسبة المالية الملكية</div>
                 
-                <div class="flex justify-between items-center text-sm border-b border-slate-700/50 pb-3 mb-3">
-                    <span class="text-slate-300 font-bold">إجمالي العمولات</span>
-                    <span class="font-black text-emerald-400" id="side-total-comm">0.00 <span class="text-sm font-normal text-slate-400">د.أ</span></span>
+                <div class="finance-item">
+                    <span class="finance-label">إجمالي العمولات المكتسبة</span>
+                    <span class="finance-value text-emerald-400" id="side-total-comm">0.00 د.أ</span>
                 </div>
                 
-                <div class="flex justify-between items-center text-sm border-b border-slate-700/50 pb-3 mb-3">
-                    <span class="text-slate-300 font-bold">البروموكود (خصومات)</span>
-                    <span class="font-black text-red-400" id="side-total-disc">0.00 <span class="text-sm font-normal text-slate-400">د.أ</span></span>
+                <div class="finance-item">
+                    <span class="finance-label">كوبونات وخصومات للعملاء</span>
+                    <span class="finance-value text-red-400" id="side-total-disc">0.00 د.أ</span>
                 </div>
                 
-                <div class="flex justify-between items-end mt-4">
-                    <span class="text-xs font-black text-white bg-slate-800 px-3 py-1 rounded-lg">صافي الربح 💎</span>
-                    <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span class="text-xs font-normal text-slate-400">د.أ</span></span>
+                <div class="finance-item" style="margin-top: 15px; border-top: 2px solid rgba(212,175,55,0.3); padding-top: 15px;">
+                    <span class="text-sm font-black text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-600">الصافي النهائي 💎</span>
+                    <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span class="text-sm font-bold text-slate-400">د.أ</span></span>
                 </div>
             </div>
 
@@ -519,7 +541,6 @@
             document.body.addEventListener('click', () => { soundEnabled = true; }, { once: true });
         };
 
-        // البند الأول: تصفير النظام التسلسلي منتصف الليل
         function checkQueueReset() {
             const today = new Date().toDateString();
             if (lastQueueReset !== today) {
@@ -676,7 +697,6 @@
             });
         }
 
-        // ================== الطاقة القصوى للرادار (السجلات والمالية والـ 6 ثواني) ==================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -690,11 +710,6 @@
                     const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                     const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
 
-                    let archiveKey = ord.linkedRadarId || appOrdId;
-                    let masterCompany = activeCompanyName || 'default';
-                    let commission = parseFloat(ord.commission_amount || 0);
-
-                    // --- 1. فحص الاستجابة الذكي (Smart Ping) للنت الضعيف ---
                     if (ord.dispatch_method === 'Auto') {
                         if (ord.status === 'assigned') {
                             if (elapsed > 6000 || isAppClosed) { 
@@ -710,98 +725,47 @@
                                 hasUpdates = true;
                                 continue;
                             }
+                        } else if (ord.status === 'rejected' || ord.status === 'timeout' || ord.status === 'canceled') {
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                            if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                            hasUpdates = true;
+                            continue;
                         }
                     }
 
-                    // --- 2. الرفض أو الإلغاء (الإرجاع العكسي للعمولة لو انخصمت بالقبول) ---
-                    if (ord.status === 'rejected' || ord.status === 'timeout' || ord.status === 'canceled') {
-                        if (ord.is_commission_deducted && assignedCap) {
-                            const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
-                            const newBal = (currentBal + commission).toFixed(2); // ترجيع العمولة
-                            updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
-                            updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
-                        }
-                        updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = null; // مسح من السجل
-                        updates[`assigned_orders/${capKey}/${appOrdId}`] = null; // تفريغ حلقة التوزيع
-                        if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                        hasUpdates = true;
-                        continue;
-                    }
-
-                    // --- 3. التسجيل الفوري وتوثيق السجل والمالية من لحظة القبول (الطاقة القصوى) ---
-                    if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'completed', 'delivered'].includes(ord.status)) {
-                        
-                        // تحديث حالة الطلب الأصلية عند المطعم
-                        if (ord.linkedRadarId && !ord.is_accepted_marked) {
-                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = assignedCap ? (assignedCap.Cap_Phone || assignedCap.phone) : '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap ? (assignedCap.Cap_CarType || assignedCap.Cap_Car) : '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap ? assignedCap.Cap_CarCode : '';
+                    if (ord.status === 'accepted' && !ord.is_accepted_marked) {
+                        if(assignedCap && ord.linkedRadarId) {
+                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = assignedCap.Cap_Name || assignedCap.name || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = assignedCap.Cap_Phone || assignedCap.phone || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap.Cap_CarType || assignedCap.Cap_Car || '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap.Cap_CarCode || '';
                             updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
+                        }
+                        updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
+                        hasUpdates = true;
+                    }
+                    
+                    if ((ord.status === 'completed' || ord.status === 'delivered') && !ord.is_completed_processed) { 
+                        
+                        const commission = parseFloat(ord.commission_amount || 0);
+
+                        if (ord.linkedRadarId) {
+                            updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
                             updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
                             updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
-                            updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
                         }
 
-                        // خصم العمولة من الكابتن (مرة واحدة فقط)
-                        if (!ord.is_commission_deducted) {
-                            if(assignedCap && commission > 0) {
+                        if(assignedCap) {
+                            if(commission > 0) {
                                 const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
                                 const newBal = (currentBal - commission).toFixed(2);
                                 updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                 updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
                             }
-                            updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
                         }
 
-                        // ترحيل الطلب وتوثيقه في أرشيف الإمبراطورية (يظهر فوراً في الديكور)
-                        const fee = parseFloat(ord.fee || 0);
-                        const value = parseFloat(ord.value || 0);
-                        let discountAmount = 0;
-                        let promoCode = "---";
-                        let shopName = ord.restaurant || "";
-
-                        if (ord.linkedRadarId) {
-                            const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
-                            if (radOrd) {
-                                discountAmount = parseFloat(radOrd.Shop_Discount || radOrd.discount || 0);
-                                promoCode = radOrd.Shop_Promo || radOrd.promo || "---";
-                                shopName = radOrd.Shop_Name || radOrd.restaurant || shopName;
-                            }
-                        }
-
-                        let capName = ord.cap_name || (assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : "كابتن");
-                        
-                        const entry = {
-                            orderId: archiveKey,
-                            appOrdId: appOrdId,
-                            time: new Date(ord.timestamp || Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                            date: new Date(ord.timestamp || Date.now()).toISOString(),
-                            cap: capName,
-                            capKey: capKey,
-                            rest: shopName,
-                            value: value,
-                            fee: fee,
-                            comm: commission,
-                            discount: discountAmount,
-                            promo: promoCode,
-                            net: fee - commission,
-                            live_status: (ord.status === 'completed' || ord.status === 'delivered') ? 'delivered' : ord.status,
-                            via: ord.dispatch_method || 'App',
-                            companyId: masterCompany
-                        };
-                        
-                        updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = entry;
-
-                        // --- 4. التثبيت والتنظيف بعد الإنهاء (تم التسليم) ---
-                        if (ord.status === 'completed' || ord.status === 'delivered') {
-                            if (ord.linkedRadarId) {
-                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
-                            }
-                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null; // تفريغ حلقة الكابتن ليصبح متاح لطلب جديد
-                        }
-
-                        hasUpdates = true;
+                        updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
+                        hasUpdates = true; 
                     }
                 }
             }
@@ -821,7 +785,6 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                // القفل الفولاذي ضد الشبح: أي حالة بتدل إن الطلب انمسك بنشيله من الرادار
                 if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
@@ -926,7 +889,7 @@
         };
 
         window.triggerAutoRadarMaster = async function(silent = false) {
-            checkQueueReset(); // تحديث الدور اليومي
+            checkQueueReset();
             
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             let activeLinkedIds = new Set(), busyCaptains = new Set();
@@ -934,7 +897,6 @@
             for(let capKey in allAssignedOrders) {
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
-                    // القفل الفولاذي: إذا مش مرفوض أو خلص وقته، يعني الكابتن مشغول والطلب محجوز
                     if (!['rejected', 'timeout', 'canceled', 'completed'].includes(st)) {
                         busyCaptains.add(capKey);
                         if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
@@ -951,7 +913,6 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId) || activeLinkedIds.has(ordId)) return false;
-                // القفل الفولاذي ضد الشبح: أي حالة بتدل إن الطلب انمسك بنشيله من الرادار
                 if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
@@ -1030,17 +991,19 @@
             }
         };
 
-        // ================== عرض السجلات المكتملة والمرحلية لايف ==================
+        // ================== تحديث السجلات المالية والمكتملة بشكل فوري ومباشر ==================
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
             
-            // سحب كل الطلبات من الأرشيف السحابي اللي تخص اليوم والشركة الحالية
-            let todayOrders = completedOrders.filter(o => 
-                new Date(o.date).toDateString() === today && 
-                o.cap !== "مرفوض" && 
-                (!o.companyId || o.companyId === (activeCompanyName || 'default'))
-            );
+            // فلترة آمنة 100% لطلبات اليوم فقط وللشركة الحالية
+            const todayOrders = completedOrders.filter(o => {
+                if (!o || !o.date) return false;
+                const isToday = new Date(o.date).toDateString() === today;
+                const isNotRejected = o.cap !== "مرفوض";
+                const isMyCompany = (!o.companyId || o.companyId === (activeCompanyName || 'default'));
+                return isToday && isNotRejected && isMyCompany;
+            });
             
             let totalComm = 0;
             let totalDisc = 0;
@@ -1052,15 +1015,15 @@
             
             let netProfit = totalComm - totalDisc;
 
-            document.getElementById('stat-completed-total').innerText = todayOrders.length;
-            document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
-            
-            document.getElementById('side-total-comm').innerHTML = totalComm.toFixed(2) + ' <span class="text-sm font-normal text-slate-400">د.أ</span>';
-            document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span class="text-sm font-normal text-slate-400">د.أ</span>';
-            document.getElementById('side-net-profit').innerHTML = netProfit.toFixed(2) + ' <span class="text-xs font-normal text-slate-400">د.أ</span>';
+            // تحديث الخوارزمية المحاسبية بالكامل
+            if(document.getElementById('stat-completed-total')) document.getElementById('stat-completed-total').innerText = todayOrders.length;
+            if(document.getElementById('stat-comm-total')) document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
+            if(document.getElementById('side-total-comm')) document.getElementById('side-total-comm').innerText = totalComm.toFixed(2) + " د.أ";
+            if(document.getElementById('side-total-disc')) document.getElementById('side-total-disc').innerText = totalDisc.toFixed(2) + " د.أ";
+            if(document.getElementById('side-net-profit')) document.getElementById('side-net-profit').innerText = netProfit.toFixed(2) + " د.أ";
 
             if (todayOrders.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مكتملة حالياً 🍃</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest">السجل نظيف بانتظار الإنجازات 💎</td></tr>'; 
                 return; 
             }
 
@@ -1082,17 +1045,15 @@
 
                 let rowColor = (o.live_status === 'delivered' || o.live_status === 'completed') ? 'hover:bg-slate-800/30' : 'bg-slate-800/20 opacity-90';
                 let cleanRestName = (o.rest || '').replace(urlRegex, '');
-                let methodIcon = o.via === 'App' ? '📱' : (o.via === 'Auto' ? '🤖' : '💬');
 
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-800 ${rowColor} transition-colors">
                         <td class="p-3 text-xs text-slate-400">${o.time}</td>
-                        <td class="p-3 font-bold text-white flex items-center">${o.cap} ${liveDot}</td>
+                        <td class="p-3 font-bold text-white flex items-center gap-2">${o.cap} ${liveDot}</td>
                         <td class="p-3 whitespace-normal text-yellow-500 font-bold">${cleanRestName}</td>
-                        <td class="p-3"><span class="bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded text-xs font-mono border border-indigo-500/20">${parseFloat(o.comm).toFixed(2)}</span></td>
-                        <td class="p-3 text-xs text-slate-400">${methodIcon}</td>
+                        <td class="p-3"><span class="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-lg text-[10px] font-mono font-bold border border-indigo-500/20">${parseFloat(o.comm).toFixed(2)} د.أ</span></td>
                         <td class="p-3">${liveStatusBadge}</td>
-                        <td class="p-3 text-center"><button class="text-red-400 hover:text-red-300 w-8 h-8 rounded-lg transition-colors border border-transparent hover:border-red-500/30 hover:bg-red-500/10" onclick="deleteFromArchive('${o.orderId}')"><i class="fas fa-trash text-xs"></i></button></td>
+                        <td class="p-3 text-center"><button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 w-8 h-8 rounded-lg transition-colors border border-transparent" onclick="deleteFromArchive('${o.orderId}')" title="حذف الطلب"><i class="fas fa-trash text-xs"></i></button></td>
                     </tr>`;
             });
         };
