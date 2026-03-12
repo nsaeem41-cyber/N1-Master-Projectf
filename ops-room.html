@@ -134,6 +134,9 @@
                     <div class="p-4 md:p-5 border-b border-slate-800 bg-slate-900/40 rounded-t-3xl flex justify-between items-center">
                         <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-satellite-dish text-yellow-500 animate-pulse"></i> طلبات قيد الانتظار</span>
                         <div class="flex gap-2">
+                            <button id="btn-auto-radar" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2" onclick="toggleAutoRadar()">
+                                <i class="fas fa-rocket"></i> تفعيل الرادار
+                            </button>
                             <button class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors" onclick="window.print()"><i class="fas fa-print"></i></button>
                             <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-2 rounded-lg text-xs transition-colors" onclick="clearLiveRadar()" title="تنظيف الرادار"><i class="fas fa-trash"></i></button>
                         </div>
@@ -296,17 +299,17 @@
                 <div class="text-[10px] text-slate-400 font-bold tracking-widest mb-4 uppercase"><i class="fas fa-chart-line text-yellow-500 ml-1"></i> المحاسبة المالية اليومية</div>
                 
                 <div class="flex justify-between items-center text-sm border-b border-slate-700/50 pb-3 mb-3">
-                    <span class="text-slate-300 font-bold">التحصيل الفعلي (العمولات)</span>
+                    <span class="text-slate-300 font-bold">إجمالي العمولات</span>
                     <span class="font-black text-emerald-400" id="side-total-comm">0.00 <span class="text-sm font-normal text-slate-400">د.أ</span></span>
                 </div>
                 
                 <div class="flex justify-between items-center text-sm border-b border-slate-700/50 pb-3 mb-3">
-                    <span class="text-slate-300 font-bold">الخصومات والهدايا</span>
+                    <span class="text-slate-300 font-bold">البروموكود (خصومات)</span>
                     <span class="font-black text-red-400" id="side-total-disc">0.00 <span class="text-sm font-normal text-slate-400">د.أ</span></span>
                 </div>
                 
                 <div class="flex justify-between items-end mt-4">
-                    <span class="text-xs font-black text-white bg-slate-800 px-3 py-1 rounded-lg">الصافي الملكي 💎</span>
+                    <span class="text-xs font-black text-white bg-slate-800 px-3 py-1 rounded-lg">صافي الربح 💎</span>
                     <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span class="text-xs font-normal text-slate-400">د.أ</span></span>
                 </div>
             </div>
@@ -342,7 +345,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] text-slate-400 mb-1">المنشأة والمنطقة</label>
-                        <input type="text" id="man_rest_name" class="vault-input w-full p-2.5 rounded-lg text-sm" placeholder="مثال: مطعم كذا - عمان">
+                        <input type="text" id="man_rest_name" class="vault-input w-full p-2.5 rounded-lg text-sm" placeholder="مثال مطعم كذا - عمان">
                     </div>
                     <div class="flex gap-2">
                         <div class="flex-1">
@@ -447,14 +450,20 @@
         let globalUsers = [];
         let allAssignedOrders = {};
         let captainRatings = {}; 
+        let completedOrders = [];
         
         let captainMemory = {};
+        let captainQueueMemory = JSON.parse(localStorage.getItem('n1_queue_memory') || '{}');
+        let lastQueueReset = localStorage.getItem('n1_queue_reset_date') || new Date().toDateString();
 
         let soundEnabled = false;
         let isAlarmPlaying = false;
         let activeSmartCaptain = null;
         let currentTargetCaptain = null;
         let currentCaptainsFilter = 'active'; 
+        let isAutoRadarActive = false;
+        let remoteOrderTimer = 10000;
+        let radarMemory = {};
 
         window.applyDiamondWakeLock = async function() {
             try { if ('wakeLock' in navigator) { window.nOneWakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {}
@@ -485,7 +494,7 @@
                 activeCompanyName = getActiveCompanyName();
                 document.getElementById('header-company-name').innerText = activeCompanyName || "الإدارة";
                 if(document.getElementById('new_cap_company_id')) { document.getElementById('new_cap_company_id').value = activeCompanyName; }
-                loadCaptainMemory();
+                loadCloudArchive();
                 window.applyDiamondWakeLock(); 
             } else {
                 window.location.replace('index.html');
@@ -494,6 +503,7 @@
             
             document.getElementById('man_ratio').value = localStorage.getItem('n1_commission_ratio') || 10;
             
+            fetchRadarMemory();
             fetchRegionsFromPrices();
             fetchRadarStatus();
             fetchAssignedOrders();
@@ -506,15 +516,33 @@
             document.body.addEventListener('click', () => { soundEnabled = true; }, { once: true });
         };
 
-        function loadCaptainMemory() {
-            const compId = activeCompanyName || 'default';
-            captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
-            renderCompletedOrdersPlaceholder(); 
+        function checkQueueReset() {
+            if (new Date().toDateString() !== lastQueueReset) {
+                captainQueueMemory = {};
+                lastQueueReset = new Date().toDateString();
+                localStorage.setItem('n1_queue_memory', JSON.stringify(captainQueueMemory));
+                localStorage.setItem('n1_queue_reset_date', lastQueueReset);
+            }
         }
 
-        function renderCompletedOrdersPlaceholder() {
-            const tbody = document.getElementById('completed-table-body');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">سجل العمليات مهيأ وجاهز للإطلاق المريخي الجديد 🚀</td></tr>';
+        function loadCloudArchive() {
+            const compId = activeCompanyName || 'default';
+            onValue(ref(db, `company_archives/${compId}/orders`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    completedOrders = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else {
+                    completedOrders = [];
+                }
+                renderCompletedOrders();
+                renderRadar(); 
+            });
+            captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
+        }
+
+        async function saveOrderToCloud(entry) {
+            const compId = activeCompanyName || 'default';
+            await set(ref(db, `company_archives/${compId}/orders/${entry.orderId}`), entry);
         }
 
         function checkCompanyMatch(u, compName) {
@@ -555,6 +583,7 @@
             onValue(ref(db, 'orders'), (snapshot) => {
                 allOrders = snapshot.exists() ? Object.values(snapshot.val()) : [];
                 renderRadar();
+                if(isAutoRadarActive) triggerAutoRadarMaster(true);
             });
         }
 
@@ -580,6 +609,12 @@
             });
         }
         
+        function fetchRadarMemory() {
+            onValue(ref(db, 'radar_memory'), (snapshot) => {
+                radarMemory = snapshot.exists() ? snapshot.val() : {};
+            });
+        }
+
         function fetchRatings() {
             onValue(ref(db, 'ratings/captains'), (snapshot) => {
                 if(snapshot.exists()) {
@@ -598,6 +633,24 @@
         function fetchRadarStatus() {
             if (!currentUser) return;
             const myMaster = currentUser.Client_User || currentUser.user;
+
+            onValue(ref(db, `settings/${myMaster}/order_timer`), (snapshot) => {
+                remoteOrderTimer = snapshot.exists() ? parseInt(snapshot.val()) * 1000 : 10000;
+            });
+
+            onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
+                isAutoRadarActive = snapshot.exists() ? snapshot.val() : false;
+                const btn = document.getElementById('btn-auto-radar');
+                if (isAutoRadarActive) {
+                    btn.classList.add('radar-active');
+                    btn.innerHTML = '<i class="fas fa-satellite-dish"></i> الرادار يعمل';
+                    triggerAutoRadarMaster(true);
+                } else {
+                    btn.classList.remove('radar-active');
+                    btn.innerHTML = '<i class="fas fa-rocket"></i> تفعيل الرادار';
+                }
+            });
+
             onValue(ref(db, `settings/${myMaster}/show_phone_numbers`), (snapshot) => {
                 document.getElementById('global_phone_toggle').checked = snapshot.exists() ? snapshot.val() : false;
             });
@@ -610,6 +663,11 @@
             showAppNotification(isShowing ? "تم إظهار الأرقام" : "تم حجب الأرقام", "success");
         };
 
+        window.toggleAutoRadar = function() {
+            const myMaster = currentUser.Client_User || currentUser.user;
+            set(ref(db, `settings/${myMaster}/autoRadar`), !isAutoRadarActive);
+        };
+
         function fetchAssignedOrders() {
             onValue(ref(db, 'assigned_orders'), (snapshot) => {
                 allAssignedOrders = snapshot.exists() ? snapshot.val() : {};
@@ -619,6 +677,7 @@
         }
 
         function checkAssignedOrdersStatus() {
+            const now = Date.now();
             let hasUpdates = false;
             const updates = {};
 
@@ -626,6 +685,35 @@
                 for (let appOrdId in allAssignedOrders[capKey]) {
                     let ord = allAssignedOrders[capKey][appOrdId];
                     
+                    if (ord.dispatch_method === 'Auto') {
+                        const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                        const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
+                        const elapsed = now - ord.timestamp;
+
+                        if (ord.status === 'assigned') {
+                            if (elapsed > 3000 || isAppClosed) { 
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                hasUpdates = true;
+                                continue;
+                            }
+                        }
+                        else if (ord.status === 'received' || ord.status === 'ringing') {
+                            if (elapsed > remoteOrderTimer || isAppClosed) {
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                                hasUpdates = true;
+                                continue;
+                            }
+                        }
+                        else if (ord.status === 'rejected' || ord.status === 'timeout') {
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                            if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
+                            hasUpdates = true;
+                            continue;
+                        }
+                    }
+
                     if (ord.status === 'accepted' && !ord.is_accepted_marked) {
                         const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         if(capData && ord.linkedRadarId) {
@@ -640,7 +728,9 @@
                     }
                     
                     if (['arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered'].includes(ord.status)) {
-                        
+                        let archiveKey = ord.linkedRadarId || appOrdId;
+                        const isAlreadySaved = completedOrders.some(o => o.orderId === archiveKey);
+
                         if (ord.status === 'delivered' && !ord.is_commission_deducted) {
                             const commission = parseFloat(ord.commission_amount || 0);
                             if(commission > 0) {
@@ -650,8 +740,6 @@
                                     const newBal = (currentBal - commission).toFixed(2);
                                     updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                     updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
-                                    capData.Cap_Balance = parseFloat(newBal);
-                                    capData.balance = parseFloat(newBal);
                                 }
                             }
                             updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
@@ -661,6 +749,34 @@
                                 updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
                             }
                             hasUpdates = true;
+                        }
+
+                        let discountAmount = 0;
+                        if(ord.linkedRadarId) {
+                            const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
+                            if(radOrd) discountAmount = parseFloat(radOrd.Shop_Discount || radOrd.discount || 0);
+                        }
+
+                        if (!isAlreadySaved) {
+                            const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
+                            const actualCapName = ord.cap_name || (capData ? (capData.Cap_Name || capData.name) : "كابتن");
+                            
+                            const entry = {
+                                orderId: archiveKey, appOrdId: appOrdId, time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                                cap: actualCapName, capKey: capKey, rest: ord.restaurant, comm: ord.commission_amount || 0, discount: discountAmount,
+                                date: new Date().toISOString(), via: ord.dispatch_method || "App", live_status: ord.status, companyId: activeCompanyName
+                            };
+                            saveOrderToCloud(entry);
+                            hasUpdates = true;
+                        } else {
+                            let existingEntry = completedOrders.find(o => o.orderId === archiveKey);
+                            if(existingEntry && existingEntry.live_status !== ord.status) {
+                                existingEntry.live_status = ord.status;
+                                existingEntry.discount = discountAmount;
+                                if (ord.linkedRadarId) updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
+                                saveOrderToCloud(existingEntry); 
+                                hasUpdates = true;
+                            }
                         }
 
                         if (ord.status === 'delivered') { 
@@ -676,13 +792,14 @@
         window.renderRadar = function() {
             if (!currentUser) return;
             const tbody = document.getElementById('live-table-body');
+            const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
             const activeName = activeCompanyName.toLowerCase();
             const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
             
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
-                if (!ordId) return false;
+                if (!ordId || completedIDs.has(ordId)) return false;
                 if (['accepted', 'picked_up', 'on_way', 'arrived', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
@@ -753,7 +870,7 @@
                                 <span class="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-[9px] font-bold border border-red-500/30">-${discountAmount.toFixed(2)}</span>
                             </div>
                             <div class="text-sm font-black text-emerald-400">${finalFee.toFixed(2)} د.أ</div>
-                            <div class="text-[10px] text-slate-400 mt-1">فاتورة: <span class="text-white">${invoiceVal}</span></div>
+                            <div class="text-[10px] text-slate-400 mt-1">فاتورة <span class="text-white">${invoiceVal}</span></div>
                         </div>`;
                 } else {
                     financialsHtml = `
@@ -780,6 +897,160 @@
                         <td class="p-3 text-center">${actionHtml}</td>
                     </tr>
                 `;
+            });
+        };
+
+        window.triggerAutoRadarMaster = async function(silent = false) {
+            checkQueueReset();
+            const completedIDs = new Set(completedOrders.map(o => o.orderId));
+            let activeLinkedIds = new Set(), busyCaptains = new Set();
+            
+            for(let capKey in allAssignedOrders) {
+                for(let ordKey in allAssignedOrders[capKey]) {
+                    let st = allAssignedOrders[capKey][ordKey].status;
+                    if(['assigned', 'accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived'].includes(st)) {
+                        busyCaptains.add(capKey);
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                    }
+                }
+            }
+
+            const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
+            const activeName = activeCompanyName.toLowerCase();
+            const activeUser = (currentUser.user || currentUser.Client_User || '').toLowerCase().trim();
+
+            const pendingOrders = allOrders.filter(o => {
+                const ordId = o.Shop_Ord_ID || o.id;
+                if (!ordId || completedIDs.has(ordId) || activeLinkedIds.has(ordId)) return false;
+                if (['accepted', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus)) return false;
+                const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
+                if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
+                const orderUser = String(o.Shop_User || o.user || o.client || '').trim();
+                if (orderUser && myShops.includes(orderUser)) return true;
+                return false;
+            }).reverse();
+
+            if(pendingOrders.length === 0) return;
+
+            let myCaptains = globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName));
+            let availableCaptains = myCaptains.filter(c => c.app_status === 'online' && (c.Cap_Status || c.status) === 'active' && !busyCaptains.has(c.Cap_User || c.user || c.Cap_Phone || c.phone));
+
+            if (availableCaptains.length === 0) {
+                if(!silent) showAppNotification("لا يوجد كابتن متاح حاليا", "warning"); return;
+            }
+
+            let dispatchedCount = 0, updates = {};
+            for (let ord of pendingOrders) {
+                if(availableCaptains.length === 0) break;
+                const ordId = ord.Shop_Ord_ID || ord.id;
+                const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
+                const shopOriginArea = (shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location) : '').trim();
+
+                let eligibleCaptains = availableCaptains.filter(c => (c.Cap_Region || c.Cap_Location || '').trim() === shopOriginArea);
+                if (eligibleCaptains.length === 0) continue;
+
+                let unskippedCaptains = eligibleCaptains.filter(c => {
+                    const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
+                    return !(radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey]);
+                });
+
+                if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
+                     updates[`radar_memory/${ordId}`] = null;
+                     delete radarMemory[ordId]; 
+                     unskippedCaptains = eligibleCaptains;
+                }
+
+                if (unskippedCaptains.length === 0) continue;
+                
+                unskippedCaptains.sort((a, b) => {
+                    const keyA = a.Cap_User || a.user || a.Cap_Phone || a.phone;
+                    const keyB = b.Cap_User || b.user || b.Cap_Phone || b.phone;
+                    const timeA = captainQueueMemory[keyA] || 0;
+                    const timeB = captainQueueMemory[keyB] || 0;
+                    return timeA - timeB;
+                });
+
+                let selectedCaptain = unskippedCaptains[0];
+                const capKey = selectedCaptain.Cap_User || selectedCaptain.user || selectedCaptain.Cap_Phone || selectedCaptain.phone;
+                
+                captainQueueMemory[capKey] = Date.now();
+                localStorage.setItem('n1_queue_memory', JSON.stringify(captainQueueMemory));
+
+                availableCaptains = availableCaptains.filter(c => (c.Cap_User || c.user || c.Cap_Phone || c.phone) !== capKey);
+
+                const ratio = parseFloat(document.getElementById('man_ratio').value) || 10;
+                const fee = parseFloat(ord.Shop_Fee || ord.fee || 0);
+                const commission = (fee * (ratio / 100)).toFixed(2);
+                
+                const appOrderId = "APP_ORD_" + Date.now() + Math.floor(Math.random() * 1000);
+                updates[`assigned_orders/${capKey}/${appOrderId}`] = {
+                    id: appOrderId, restaurant: (ord.Shop_Name || ord.restaurant) + (shopOriginArea ? " - " + shopOriginArea : ""),
+                    location_link: ord.Shop_Location_Link || ord.Shop_Location || "", value: ord.Shop_Val || ord.value,
+                    fee: ord.Shop_Fee || ord.fee, status: 'assigned', timestamp: Date.now(), linkedRadarId: ordId,
+                    commission_amount: commission, cap_name: selectedCaptain.Cap_Name || selectedCaptain.name || "كابتن", dispatch_method: "Auto"
+                };
+                dispatchedCount++;
+            }
+            if(Object.keys(updates).length > 0) {
+                try { await update(ref(db), updates); if(!silent) showAppNotification(`تم إرسال ${dispatchedCount} طلب`); } catch(e) {}
+            }
+        };
+
+        window.renderCompletedOrders = function() {
+            const tbody = document.getElementById('completed-table-body');
+            const today = new Date().toDateString();
+            
+            let uniqueOrders = [];
+            let seenIds = new Set();
+            
+            completedOrders.forEach(o => {
+                if(new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName)) {
+                    if(!seenIds.has(o.orderId)) {
+                        seenIds.add(o.orderId);
+                        uniqueOrders.push(o);
+                    }
+                }
+            });
+            
+            document.getElementById('stat-completed-total').innerText = uniqueOrders.length;
+            
+            let totalComm = 0;
+            let totalDisc = 0;
+
+            uniqueOrders.forEach(o => {
+                totalComm += parseFloat(o.comm || 0);
+                totalDisc += parseFloat(o.discount || 0);
+            });
+            
+            let netProfit = totalComm - totalDisc;
+
+            document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
+            document.getElementById('side-total-comm').innerHTML = totalComm.toFixed(2) + ' <span class="text-sm font-normal text-slate-400">د.أ</span>';
+            document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span class="text-sm font-normal text-slate-400">د.أ</span>';
+            document.getElementById('side-net-profit').innerHTML = netProfit.toFixed(2) + ' <span class="text-xs font-normal text-slate-400">د.أ</span>';
+
+            if (uniqueOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-slate-500 text-sm">لا توجد طلبات مسجلة اليوم</td></tr>'; return; }
+
+            tbody.innerHTML = '';
+            const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
+            
+            uniqueOrders.forEach(o => {
+                let liveStatusBadge = o.live_status === 'delivered' ? '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/30">مكتمل 💎</span>' : '<span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-700">مرحلي ⏳</span>';
+                let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Name === o.cap || u.name === o.cap);
+                let liveDot = cData && cData.app_status === 'online' ? '<span class="text-emerald-400 ml-1 text-xs" title="جاهز للمهمة القادمة"><i class="fas fa-check-circle"></i></span>' : '<span class="text-slate-500 ml-1 text-xs" title="غير متصل"><i class="fas fa-circle"></i></span>';
+
+                let rowColor = o.live_status === 'delivered' ? 'hover:bg-slate-800/30' : 'bg-slate-800/20 opacity-80';
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-800 ${rowColor} transition-colors">
+                        <td class="p-3 text-xs text-slate-400">${o.time}</td>
+                        <td class="p-3 font-bold text-white flex items-center">${o.cap} ${liveDot}</td>
+                        <td class="p-3 whitespace-normal text-yellow-500 font-bold">${(o.rest || '').replace(urlRegex, '')}</td>
+                        <td class="p-3"><span class="bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded text-xs font-mono border border-indigo-500/20">${parseFloat(o.comm).toFixed(2)}</span></td>
+                        <td class="p-3 text-xs text-slate-400">${o.via === 'App' ? 'تطبيق 📱' : (o.via === 'Auto' ? 'آلي 🤖' : 'واتساب 💬')}</td>
+                        <td class="p-3">${liveStatusBadge}</td>
+                        <td class="p-3 text-center"><button class="text-red-400 hover:text-red-300 w-8 h-8 rounded-lg transition-colors border border-transparent hover:border-red-500/30 hover:bg-red-500/10" onclick="deleteFromArchive('${o.orderId}')"><i class="fas fa-trash text-xs"></i></button></td>
+                    </tr>`;
             });
         };
 
@@ -880,8 +1151,44 @@
             } catch (e) { showAppNotification("خطأ", "error"); }
         };
 
-        window.resetDailyStats = function() { showAppNotification("تم التصفير"); };
-        window.clearCompletedOrders = function() { showAppNotification("تم المسح"); };
+        window.resetDailyStats = async function() {
+            if(confirm("تصفير العمولات والطلبات لليوم؟")) {
+                const compId = activeCompanyName || 'default'; const updates = {};
+                completedOrders.forEach(o => { 
+                    if(new Date(o.date).toDateString() === new Date().toDateString()) {
+                        updates[`company_archives/${compId}/orders/${o.orderId}`] = null; 
+                        updates[`orders/${o.orderId}/OrderStatus`] = 'archived_and_deleted';
+                        updates[`orders/${o.orderId}/FinancialStatus`] = 'confirmed';
+                    }
+                });
+                await update(ref(db), updates); showAppNotification("تم التصفير");
+            }
+        };
+
+        window.deleteFromArchive = async function(id) {
+            if(confirm("حذف الطلب نهائيا؟")) { 
+                const updates = {};
+                updates[`company_archives/${activeCompanyName || 'default'}/orders/${id}`] = null;
+                updates[`orders/${id}/OrderStatus`] = 'archived_and_deleted';
+                updates[`orders/${id}/FinancialStatus`] = 'confirmed';
+                await update(ref(db), updates); 
+                showAppNotification("تم الحذف"); 
+            }
+        };
+
+        window.clearCompletedOrders = async function() {
+            if(confirm("مسح الأرشيف كاملا؟")) { 
+                const compId = activeCompanyName || 'default';
+                const updates = {};
+                completedOrders.forEach(o => {
+                    updates[`company_archives/${compId}/orders/${o.orderId}`] = null;
+                    updates[`orders/${o.orderId}/OrderStatus`] = 'archived_and_deleted';
+                    updates[`orders/${o.orderId}/FinancialStatus`] = 'confirmed';
+                });
+                await update(ref(db), updates);
+                showAppNotification("تم المسح"); 
+            }
+        };
 
         window.clearLiveRadar = async function() {
             if(confirm("تنظيف الرادار؟")) {
@@ -1046,6 +1353,7 @@
         function refreshDynamicElements() {
             checkAssignedOrdersStatus();
             renderRadar();
+            if (isAutoRadarActive) triggerAutoRadarMaster(true);
         }
     </script>
 </body>
