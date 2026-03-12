@@ -545,11 +545,6 @@
             captainMemory = JSON.parse(localStorage.getItem('n1_captains_' + compId) || '{}');
         }
 
-        async function saveOrderToCloud(entry) {
-            const compId = activeCompanyName || 'default';
-            await set(ref(db, `company_archives/${compId}/orders/${entry.orderId}`), entry);
-        }
-
         function checkCompanyMatch(u, compName) {
             const activeName = String(compName).toLowerCase().trim();
             const activeUser = currentUser ? String(currentUser.user || currentUser.Client_User || '').toLowerCase().trim() : '';
@@ -681,7 +676,7 @@
             });
         }
 
-        // البند الثالث: خوارزمية فحص الإنترنت 6 ثواني للشبكات الضعيفة + التوثيق المالي
+        // ================== القلب النابض للرادار (حل مشكلة المال والسجلات والـ 6 ثواني) ==================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -696,7 +691,7 @@
                         const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
 
-                        // 1. فحص استجابة الجهاز (زدناها لـ 6 ثواني عشان نعطي مجال حقيقي للنت يشبك)
+                        // 1. فحص استجابة الجهاز (وسّعناها لـ 6 ثواني عشان نعطي مجال حقيقي للنت يشبك براحته)
                         if (ord.status === 'assigned') {
                             if (elapsed > 6000 || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
@@ -723,7 +718,7 @@
                         }
                     }
 
-                    // تحديثات حالة الطلب للمتابعة
+                    // تحديثات حالة الطلب للمتابعة أثناء الرحلة
                     if (ord.status === 'accepted' && !ord.is_accepted_marked) {
                         const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         if(capData && ord.linkedRadarId) {
@@ -737,7 +732,7 @@
                         hasUpdates = true;
                     }
                     
-                    // ================= الدائرة المالية وتسجيل العمليات المكتملة في الرادار =================
+                    // ================= الضربة المالية المحكمة وتسجيل العمليات المكتملة بـ "نبضة واحدة" =================
                     if (ord.status === 'completed' && !ord.is_completed_processed) { 
                         
                         const commission = parseFloat(ord.commission_amount || 0);
@@ -747,7 +742,7 @@
                         let promoCode = "---";
                         let shopName = ord.restaurant || "";
 
-                        // تحديث الطلب الأصلي
+                        // 1. تحديث الطلب الأصلي عند المنشأة
                         if (ord.linkedRadarId) {
                             const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
                             if (radOrd) {
@@ -760,19 +755,20 @@
                             }
                         }
 
-                        // خصم الرصيد من الكابتن
+                        // 2. خصم الرصيد من الكابتن الفعلي
                         const capData = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                         let capName = ord.cap_name || "كابتن";
                         if(capData) {
                             capName = capData.Cap_Name || capData.name || capName;
                             if(commission > 0) {
-                                const newBal = (parseFloat(capData.Cap_Balance || capData.balance || 0) - commission).toFixed(2);
+                                const currentBal = parseFloat(capData.Cap_Balance || capData.balance || 0);
+                                const newBal = (currentBal - commission).toFixed(2);
                                 updates[`${capData._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                 updates[`${capData._node}/${capKey}/balance`] = parseFloat(newBal);
                             }
                         }
 
-                        // توثيق السجل المكتمل
+                        // 3. توثيق السجل المكتمل في أرشيف الإمبراطورية (يظهر فوراً في الديكور)
                         let archiveKey = ord.linkedRadarId || appOrdId;
                         const entry = {
                             orderId: archiveKey,
@@ -792,9 +788,12 @@
                             via: ord.dispatch_method || 'App',
                             companyId: activeCompanyName
                         };
-                        saveOrderToCloud(entry);
+                        
+                        updates[`company_archives/${activeCompanyName || 'default'}/orders/${archiveKey}`] = entry;
 
+                        // 4. حذف الطلب من حلقة التوزيع للكابتن
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
+                        
                         hasUpdates = true; 
                     }
                 }
@@ -829,7 +828,7 @@
             }
 
             if (pendingOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono tracking-widest text-sm">الرادار هادئ حاليا 📡</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest">الرادار هادئ حاليا 📡</td></tr>';
                 return;
             }
 
@@ -922,9 +921,12 @@
             for(let capKey in allAssignedOrders) {
                 for(let ordKey in allAssignedOrders[capKey]) {
                     let st = allAssignedOrders[capKey][ordKey].status;
-                    if(['assigned', 'ringing', 'accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived'].includes(st)) {
+                    // (القفل الفولاذي) نعتبر الكابتن مشغول بكل الحالات إلا لو انرفض أو خلص عشان ما يطلع له طلب وهمي
+                    if (st !== 'completed' && st !== 'timeout' && st !== 'rejected') {
                         busyCaptains.add(capKey);
-                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        if(allAssignedOrders[capKey][ordKey].linkedRadarId) {
+                            activeLinkedIds.add(allAssignedOrders[capKey][ordKey].linkedRadarId);
+                        }
                     }
                 }
             }
@@ -1022,7 +1024,7 @@
             let seenIds = new Set();
             
             completedOrders.forEach(o => {
-                if(new Date(o.date).toDateString() === today && o.cap !== "مرفوض" && (!o.companyId || o.companyId === activeCompanyName)) {
+                if(new Date(o.date).toDateString() === today && o.cap !== "مرفوض") {
                     if(!seenIds.has(o.orderId)) {
                         seenIds.add(o.orderId);
                         uniqueOrders.push(o);
