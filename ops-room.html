@@ -59,13 +59,29 @@
         ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
-        .royal-finance-box { background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(2,6,23,0.95)); border: 1px solid rgba(212,175,55,0.3); border-radius: 24px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        /* ستايل الشمسيات (المظلات التفاعلية) */
+        .umbrella-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .umbrella-content.open { max-height: 1200px; }
+        .rotate-180 { transform: rotate(180deg); }
+
+        .royal-finance-box { background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(2,6,23,0.95)); position: relative; overflow: hidden; }
         .royal-finance-box::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%); animation: rotateGlow 10s linear infinite; z-index: 0; pointer-events: none; }
         @keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .finance-item { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
         .finance-item:last-child { border-bottom: none; padding-bottom: 0; }
         .finance-label { font-size: 13px; color: #94a3b8; font-weight: bold; }
         .finance-value { font-size: 18px; font-weight: 900; font-family: monospace; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+        @media print {
+            body { background: white; color: black; }
+            .navbar, aside, .action-btns, .btn-print, .stats-grid, .nav-tabs, .filter-group { display: none !important; }
+            .main-content { width: 100%; padding: 0; }
+            .glass-panel { box-shadow: none; border: 1px solid #ccc; background: white !important; }
+            table { font-size: 12px; }
+            td, th { color: black !important; border-bottom: 1px solid #ccc !important; }
+            .text-white { color: black !important; }
+            .text-yellow-500 { color: #000 !important; font-weight: bold; }
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
@@ -128,7 +144,7 @@
 
     <div class="flex flex-1 overflow-hidden flex-col lg:flex-row">
         
-        <div class="flex-1 p-4 md:p-6 overflow-y-auto">
+        <div class="flex-1 p-4 md:p-6 overflow-y-auto main-content">
             
             <div id="radar-tab" class="tab-panel active">
                 
@@ -139,7 +155,7 @@
                             <button id="btn-auto-radar" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2" onclick="toggleAutoRadar()">
                                 <i class="fas fa-rocket"></i> تفعيل الرادار
                             </button>
-                            <button class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors" onclick="window.print()"><i class="fas fa-print"></i></button>
+                            <button class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
                             <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-2 rounded-lg text-xs transition-colors" onclick="clearLiveRadar()" title="تنظيف الرادار"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -166,8 +182,9 @@
                     <div class="p-4 md:p-5 border-b border-slate-800 bg-slate-900/40 rounded-t-3xl flex justify-between items-center">
                         <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-check-circle text-emerald-500"></i> سجل العمليات المكتملة</span>
                         <div class="flex gap-2">
+                            <button class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة السجل</button>
                             <button class="bg-orange-500/20 text-orange-400 text-xs font-bold px-4 py-2 rounded-lg border border-orange-500/30 hover:bg-orange-500/40 transition-colors" onclick="resetDailyStats()">🔄 تصفير يومي</button>
-                            <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-2 rounded-lg text-xs transition-colors" onclick="clearCompletedOrders()"><i class="fas fa-trash"></i></button>
+                            <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-2 rounded-lg text-xs transition-colors" onclick="clearCompletedOrders()"><i class="fas fa-trash"></i> حذف الكل</button>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
@@ -295,80 +312,96 @@
 
         <aside class="w-full lg:w-80 border-r border-slate-800 bg-slate-900/30 p-4 md:p-6 overflow-y-auto flex flex-col gap-6">
             
-            <div class="royal-finance-box">
-                <div class="text-xs text-yellow-500 font-black tracking-widest mb-5 uppercase text-center border-b border-yellow-500/20 pb-3"><i class="fas fa-chart-line ml-1"></i> المحاسبة المالية الملكية</div>
-                
-                <div class="finance-item">
-                    <span class="finance-label">إجمالي العمولات المكتسبة</span>
-                    <span class="finance-value text-emerald-400" id="side-total-comm">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+            <div class="glass-panel rounded-3xl overflow-hidden group hover:border-yellow-500/50 transition-colors border-t-4 border-t-yellow-500">
+                <div class="p-4 bg-slate-800/80 cursor-pointer flex justify-between items-center border-b border-slate-700" onclick="toggleUmbrella('umb-finance', this)">
+                    <span class="text-xs text-yellow-500 font-black tracking-widest uppercase"><i class="fas fa-chart-line ml-1"></i> المحاسبة المالية اليومية</span>
+                    <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 transform rotate-180"></i>
                 </div>
-                
-                <div class="finance-item">
-                    <span class="finance-label">كوبونات وخصومات للعملاء</span>
-                    <span class="finance-value text-red-400" id="side-total-disc">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
-                </div>
-                
-                <div class="finance-item" style="margin-top: 15px; border-top: 2px solid rgba(212,175,55,0.3); padding-top: 15px;">
-                    <span class="text-sm font-black text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-600">الصافي النهائي 💎</span>
-                    <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+                <div id="umb-finance" class="umbrella-content open">
+                    <div class="p-5 relative royal-finance-box border-0 rounded-none shadow-none">
+                        <div class="finance-item">
+                            <span class="finance-label">إجمالي العمولات المكتسبة</span>
+                            <span class="finance-value text-emerald-400" id="side-total-comm">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+                        </div>
+                        <div class="finance-item">
+                            <span class="finance-label">كوبونات وخصومات للعملاء</span>
+                            <span class="finance-value text-red-400" id="side-total-disc">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+                        </div>
+                        <div class="finance-item" style="margin-top: 15px; border-top: 2px solid rgba(212,175,55,0.3); padding-top: 15px;">
+                            <span class="text-sm font-black text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-600">الصافي النهائي 💎</span>
+                            <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="glass-panel rounded-2xl p-5 border-l-4 border-l-indigo-500">
-                <div class="text-sm font-black text-white mb-4 flex items-center gap-2"><i class="fas fa-shield-alt text-indigo-400"></i> ريموت الحماية وإخفاء الأرقام</div>
-                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-                    <div>
-                        <div class="text-xs font-bold text-slate-300">إظهار أرقام الهواتف</div>
-                        <div class="text-[9px] text-slate-500 mt-1">يتحكم في ظهور الأرقام للجميع</div>
+            <div class="glass-panel rounded-3xl overflow-hidden border-t-4 border-t-indigo-500">
+                <div class="p-4 bg-slate-800/80 cursor-pointer flex justify-between items-center border-b border-slate-700" onclick="toggleUmbrella('umb-remote', this)">
+                    <span class="text-xs text-indigo-400 font-black tracking-widest uppercase"><i class="fas fa-shield-alt ml-1"></i> ريموت الحماية وإخفاء الأرقام</span>
+                    <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 transform rotate-180"></i>
+                </div>
+                <div id="umb-remote" class="umbrella-content open">
+                    <div class="p-5">
+                        <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                            <div>
+                                <div class="text-xs font-bold text-slate-300">إظهار أرقام الهواتف</div>
+                                <div class="text-[9px] text-slate-500 mt-1">يتحكم في ظهور الأرقام للجميع</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="global_phone_toggle" onchange="toggleGlobalPhones()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                    <label class="switch">
-                        <input type="checkbox" id="global_phone_toggle" onchange="toggleGlobalPhones()">
-                        <span class="slider"></span>
-                    </label>
                 </div>
             </div>
 
-            <div class="glass-panel rounded-3xl p-1 border-t-4 border-t-blue-500 flex-1">
-                <div class="p-4 border-b border-slate-800 bg-slate-900/40 rounded-t-3xl">
-                    <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-paper-plane text-blue-400"></i> توجيه الطلب السريع</span>
+            <div class="glass-panel rounded-3xl overflow-hidden border-t-4 border-t-blue-500 flex-1 flex flex-col">
+                <div class="p-4 bg-slate-800/80 cursor-pointer flex justify-between items-center border-b border-slate-700" onclick="toggleUmbrella('umb-dispatch', this)">
+                    <span class="text-xs text-blue-400 font-black tracking-widest uppercase"><i class="fas fa-paper-plane ml-1"></i> توجيه الطلب السريع</span>
+                    <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 transform rotate-180"></i>
                 </div>
-                <div class="p-4 flex flex-col gap-3">
-                    <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">رقم الكابتن</label>
-                        <input type="tel" id="man_phone" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-left" dir="ltr" placeholder="رقم الهاتف" oninput="checkCaptainMemory()">
-                        <div id="mem_hint" class="text-[10px] text-yellow-500 font-bold mt-1 hidden"><i class="fas fa-user-check"></i> <span id="mem_name"></span></div>
-                        <div id="cap_status_indicator" class="text-[10px] font-bold mt-1 hidden"></div>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">اسم الكابتن</label>
-                        <input type="text" id="man_cap_name" class="vault-input w-full p-2.5 rounded-lg text-sm" placeholder="الاسم الظاهر">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">المنشأة والمنطقة</label>
-                        <input type="text" id="man_rest_name" class="vault-input w-full p-2.5 rounded-lg text-sm" placeholder="مثال: مطعم كذا - عمان">
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label class="block text-[10px] text-slate-400 mb-1">قيمة الفاتورة</label>
-                            <input type="number" id="man_val" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-center" placeholder="0.00">
+                <div id="umb-dispatch" class="umbrella-content open flex-1">
+                    <div class="p-4 flex flex-col gap-3 h-full justify-between">
+                        <div class="flex flex-col gap-3">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">رقم الكابتن</label>
+                                <input type="tel" id="man_phone" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-left" dir="ltr" placeholder="رقم الهاتف" oninput="checkCaptainMemory()">
+                                <div id="mem_hint" class="text-[10px] text-yellow-500 font-bold mt-1 hidden"><i class="fas fa-user-check"></i> <span id="mem_name"></span></div>
+                                <div id="cap_status_indicator" class="text-[10px] font-bold mt-1 hidden"></div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">اسم الكابتن</label>
+                                <input type="text" id="man_cap_name" class="vault-input w-full p-2.5 rounded-lg text-sm" placeholder="الاسم الظاهر">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">المنشأة والمنطقة</label>
+                                <input type="text" id="man_rest_name" class="vault-input w-full p-2.5 rounded-lg text-sm" placeholder="مثال: مطعم كذا - عمان">
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="flex-1">
+                                    <label class="block text-[10px] text-slate-400 mb-1">قيمة الفاتورة</label>
+                                    <input type="number" id="man_val" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-center" placeholder="0.00">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-[10px] text-slate-400 mb-1">التوصيل</label>
+                                    <input type="number" id="man_fee" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-center border-yellow-600/50 text-yellow-400" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 mb-1">نسبة العمولة (%)</label>
+                                <input type="number" id="man_ratio" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-center text-emerald-400" placeholder="10" onchange="saveRatio()">
+                            </div>
+                            
+                            <input type="hidden" id="linked_order_id" value="">
+                            <input type="hidden" id="man_hidden_url" value="">
                         </div>
-                        <div class="flex-1">
-                            <label class="block text-[10px] text-slate-400 mb-1">التوصيل</label>
-                            <input type="number" id="man_fee" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-center border-yellow-600/50 text-yellow-400" placeholder="0.00">
+                        
+                        <div class="flex flex-col gap-2 mt-4">
+                            <button class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-[0_4px_15px_rgba(79,70,229,0.3)] flex items-center justify-center gap-2" onclick="sendOrderViaApp()">
+                                إرسال عبر التطبيق <i class="fas fa-mobile-alt"></i>
+                            </button>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-400 mb-1">نسبة العمولة (%)</label>
-                        <input type="number" id="man_ratio" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-center text-emerald-400" placeholder="10" onchange="saveRatio()">
-                    </div>
-                    
-                    <input type="hidden" id="linked_order_id" value="">
-                    <input type="hidden" id="man_hidden_url" value="">
-                    
-                    <div class="flex flex-col gap-2 mt-2">
-                        <button class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-[0_4px_15px_rgba(79,70,229,0.3)] flex items-center justify-center gap-2" onclick="sendOrderViaApp()">
-                            إرسال عبر التطبيق <i class="fas fa-mobile-alt"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -481,6 +514,19 @@
             else { toast.style.borderRightColor = '#10b981'; }
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        };
+
+        // دالة الشمسيات الملكية
+        window.toggleUmbrella = function(id, headerEl) {
+            const content = document.getElementById(id);
+            const icon = headerEl.querySelector('.fa-chevron-down');
+            if(content.classList.contains('open')) {
+                content.classList.remove('open');
+                icon.classList.remove('rotate-180');
+            } else {
+                content.classList.add('open');
+                icon.classList.add('rotate-180');
+            }
         };
 
         function getActiveCompanyName() {
@@ -672,7 +718,6 @@
             });
         }
 
-        // ================== الطاقة القصوى للرادار (السجلات والمالية والـ 6 ثواني) ==================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -690,7 +735,6 @@
                     let masterCompany = activeCompanyName || 'default';
                     let commission = parseFloat(ord.commission_amount || 0);
 
-                    // --- 1. فحص الاستجابة الذكي (Smart Ping) للنت الضعيف ---
                     if (ord.dispatch_method === 'Auto') {
                         if (ord.status === 'assigned') {
                             if (elapsed > 6000 || isAppClosed) { 
@@ -709,7 +753,6 @@
                         }
                     }
 
-                    // --- 2. الرفض أو الإلغاء (الإرجاع العكسي للعمولة لو انخصمت بالقبول) ---
                     if (ord.status === 'rejected' || ord.status === 'timeout' || ord.status === 'canceled') {
                         if (ord.is_commission_deducted && assignedCap) {
                             const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
@@ -724,7 +767,6 @@
                         continue;
                     }
 
-                    // --- 3. التسجيل الفوري وتوثيق السجل والمالية من لحظة القبول (الطاقة القصوى) ---
                     if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'completed', 'delivered'].includes(ord.status)) {
                         
                         if (ord.linkedRadarId && !ord.is_accepted_marked) {
@@ -786,7 +828,6 @@
                         
                         updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = entry;
 
-                        // --- 4. التثبيت والتنظيف بعد الإنهاء (تم التسليم) ---
                         if (ord.status === 'completed' || ord.status === 'delivered') {
                             if (ord.linkedRadarId) {
                                 updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
@@ -1020,7 +1061,6 @@
             }
         };
 
-        // ================== خوارزمية المسح الضوئي (Double Check) للفلوس والسجلات ==================
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
@@ -1028,7 +1068,6 @@
             const myComp = String(activeCompanyName || '').trim().toLowerCase();
             let uniqueOrdersMap = new Map();
 
-            // 1. السحب من الأرشيف السحابي
             completedOrders.forEach(o => {
                 if (!o || !o.date) return;
                 const isToday = new Date(o.date).toDateString() === today;
@@ -1043,7 +1082,6 @@
 
             const finalOrders = Array.from(uniqueOrdersMap.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            // الحسبة المالية الدقيقة بالمليم
             let totalComm = 0;
             let totalDisc = 0;
 
@@ -1056,7 +1094,6 @@
             
             let netProfit = totalComm - totalDisc;
 
-            // تحديث الواجهة الملكية بأرقام صلبة
             if(document.getElementById('stat-completed-total')) document.getElementById('stat-completed-total').innerText = finalOrders.length;
             if(document.getElementById('side-total-comm')) document.getElementById('side-total-comm').innerHTML = totalComm.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
             if(document.getElementById('side-total-disc')) document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
