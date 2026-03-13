@@ -7,368 +7,125 @@
     
     <meta property="og:title" content="سجل منشأتك في أسطول N One 💎">
     <meta property="og:description" content="انضم لشبكة المزودين المعتمدين وارتقِ بتجربة التوصيل لعملائك 🚀">
-    <meta property="og:image" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/logo_shop.jpg">
-    <meta property="og:url" content="https://nsaeem41-cyber.github.io/N1-Master-Projectf/shop.html"> 
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
     <link rel="manifest" href="manifest_shop.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Shop Portal">
-    <link rel="apple-touch-icon" href="logo_shop.jpg">
-
+    <meta name="theme-color" content="#020617">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --primary: #0f172a;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --gold: #d4af37;
-            --text-main: #334155;
-            --text-light: #64748b;
+            --royal-navy: #020617;
+            --luxury-gold: #D4AF37;
+            --gold-glow: rgba(212, 175, 55, 0.4);
+            --glass-bg: rgba(15, 23, 42, 0.7);
             --success: #10b981;
             --danger: #ef4444;
-            --border: #e2e8f0;
-            --input-bg: #f1f5f9;
-            --info: #0288d1;
-            --night: #311b92;
+            --info: #0ea5e9;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+        
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--bg); margin: 0; padding: 0; 
-            color: var(--text-main); user-select: none; padding-bottom: 80px;
+            font-family: 'Cairo', sans-serif; 
+            background-color: var(--royal-navy); 
+            color: #e2e8f0; 
+            overflow-x: hidden; 
+            background-image: radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.05) 0%, transparent 50%), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); 
+            user-select: none;
+            padding-bottom: 50px;
         }
-
-        /* ================= بوابات الدخول والتسجيل ================= */
-        .auth-wrapper {
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; padding: 20px; background: linear-gradient(135deg, var(--primary), #1e293b);
-        }
-        .auth-card {
-            background: white; width: 100%; max-width: 420px; padding: 40px 30px;
-            border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-align: center; position: relative; border-top: 5px solid var(--gold);
-            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .auth-logo { width: 70px; height: 70px; border-radius: 15px; margin-bottom: 15px; border: 2px solid var(--gold); }
-        .auth-title { font-size: 24px; font-weight: 900; color: var(--primary); margin-bottom: 5px; }
-        .auth-subtitle { font-size: 13px; color: var(--text-light); margin-bottom: 30px; font-weight: bold; }
         
-        .auth-link {
-            display: inline-block; margin-top: 20px; font-size: 13px; font-weight: 800;
-            color: var(--info); cursor: pointer; transition: 0.3s;
+        * { -webkit-tap-highlight-color: transparent; }
+
+        .glass-card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid rgba(212, 175, 55, 0.15); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         }
-        .auth-link:active { transform: scale(0.95); }
-
-        /* ================= واجهة الإيقاف ================= */
-        .suspended-card {
-            background: white; width: 100%; max-width: 400px; padding: 40px 30px;
-            border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-align: center; border-top: 6px solid var(--danger);
-        }
-        .suspended-icon { font-size: 60px; margin-bottom: 15px; }
-        .suspended-title { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
-        .suspended-desc { font-size: 14px; font-weight: bold; color: var(--text-light); line-height: 1.6; margin-bottom: 25px; }
-
-        /* ================= التطبيق الرئيسي ================= */
-        #app-container { display: none; }
-
-        .header {
-            background: var(--primary);
-            padding: 25px 20px 15px;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
-            text-align: center; position: relative; z-index: 10;
-            border-bottom: 3px solid var(--gold);
-        }
-
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .brand { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 900; color: white; }
-        .brand-logo { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold); }
-        .gold-text { color: var(--gold); }
         
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.15); color: #fecaca; 
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            padding: 8px 16px; border-radius: 12px; 
-            font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s;
-            display: flex; align-items: center; gap: 5px;
+        .gold-glow-text { color: var(--luxury-gold); text-shadow: 0 0 12px var(--gold-glow); }
+        
+        .btn-diamond { 
+            background: linear-gradient(135deg, #D4AF37 0%, #F9E27D 50%, #D4AF37 100%); 
+            color: #020617; font-weight: 900; transition: all 0.3s ease; position: relative; overflow: hidden; 
         }
-        .btn-logout:active { transform: scale(0.95); background: var(--danger); color: white; }
+        .btn-diamond:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--gold-glow); }
+        .btn-diamond:active { transform: scale(0.98); }
+        .btn-diamond::after { 
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; 
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.4), transparent); 
+            transform: rotate(45deg); transition: 0.5s; pointer-events: none; 
+        }
+        .btn-diamond:hover::after { left: 100%; top: 100%; }
+        
+        .nav-tab { transition: all 0.3s ease; position: relative; cursor: pointer; }
+        .nav-tab::after { 
+            content: ''; position: absolute; bottom: -2px; left: 50%; width: 0; height: 2px; 
+            background: var(--luxury-gold); transition: all 0.3s ease; transform: translateX(-50%); 
+        }
+        .nav-tab:hover::after, .nav-tab.active::after { width: 100%; }
+        .nav-tab.active { color: var(--luxury-gold); text-shadow: 0 0 12px var(--gold-glow); }
+        
+        .input-luxury { 
+            background: rgba(2, 6, 23, 0.5); border: 1px solid rgba(212, 175, 55, 0.2); 
+            color: white; transition: all 0.3s ease; width: 100%; box-sizing: border-box;
+        }
+        .input-luxury:focus { border-color: var(--luxury-gold); outline: none; box-shadow: 0 0 10px var(--gold-glow); }
+        .input-luxury[readonly] { opacity: 0.7; cursor: not-allowed; }
+        select.input-luxury option { background: var(--royal-navy); color: white; }
 
-        .badges-wrapper {
-            display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; width: 100%; padding: 0 10px;
-        }
-        .badges-row-top { display: flex; justify-content: center; width: 100%; }
-        .badges-row-bottom { display: flex; justify-content: center; gap: 8px; width: 100%; }
-        .shop-info-badge { 
-            background: rgba(255, 255, 255, 0.08); color: var(--gold);
-            padding: 8px 15px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-            font-size: 12px; font-weight: bold; border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .badges-row-bottom .shop-info-badge { max-width: 50%; }
-
-        .nav-tabs {
-            display: flex; justify-content: center; gap: 8px; margin-top: 15px;
-            background: rgba(255,255,255,0.05); padding: 6px; border-radius: 20px; overflow-x: auto;
-        }
-        .nav-tab {
-            flex: 1; padding: 12px 15px; border: none; border-radius: 15px;
-            font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.3s;
-            background: transparent; color: #94a3b8; white-space: nowrap; min-width: max-content;
-        }
-        .nav-tab.active { 
-            background: var(--gold); color: var(--primary); 
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transform: translateY(-2px);
-        }
-
-        .container { max-width: 500px; margin: 20px auto; padding: 0 20px; }
-
-        .section { display: none; animation: slideUp 0.4s ease-out; }
+        .section { display: none; animation: slideUp 0.4s ease; }
         .section.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card {
-            background: var(--card-bg); padding: 25px; border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border);
-            margin-bottom: 20px; position: relative; overflow: hidden;
-        }
-
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .stat-box {
-            background: white; padding: 20px; border-radius: 20px; text-align: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03); border: 1px solid var(--border);
-            position: relative; overflow: hidden;
-        }
-        .stat-box::before { content:''; position: absolute; top:0; left:0; width:100%; height:4px; background:var(--primary); }
-        .stat-box.gold-top::before { background:var(--gold); }
-        
-        .stat-label { font-size: 12px; font-weight:bold; color: var(--text-light); display:block; margin-bottom:5px; }
-        .stat-val { font-size: 24px; font-weight: 900; color: var(--primary); }
-        .stat-val.gold { color: var(--gold); }
-
-        .input-group { margin-bottom: 18px; position: relative; text-align: right; }
-        label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--text-light); }
-        input, select {
-            width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
-            font-size: 15px; background: var(--input-bg); outline: none; transition: 0.3s;
-            color: var(--primary); font-weight: 700; box-sizing: border-box;
-        }
-        input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
-        input[readonly] { background: #e2e8f0; color: #64748b; cursor: not-allowed; border-color: #cbd5e1; }
-        textarea {
-            width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 16px;
-            font-size: 15px; background: var(--input-bg); outline: none; transition: 0.3s;
-            color: var(--primary); font-weight: 700; box-sizing: border-box; font-family: inherit; resize: vertical;
-        }
-        textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); }
-
-        .night-fee-badge {
-            display: none; background: var(--night); color: white;
-            font-size: 11px; font-weight: bold; padding: 4px 8px;
-            border-radius: 12px; box-shadow: 0 2px 5px rgba(49, 27, 146, 0.3);
-            animation: slideUp 0.3s ease;
-        }
-        
-        .star-feature-badge {
-            display: none; background: #fffbeb; color: #d97706;
-            font-size: 11px; font-weight: bold; padding: 4px 8px;
-            border-radius: 12px; border: 1px solid #fde68a;
-            box-shadow: 0 2px 5px rgba(217, 119, 6, 0.1);
-            animation: slideUp 0.3s ease; margin-right: 5px;
-        }
-
-        .btn-main {
-            width: 100%; padding: 18px; border: none; border-radius: 16px;
-            font-size: 16px; font-weight: 800; cursor: pointer; color: white;
-            transition: 0.2s; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn-main:active { transform: scale(0.98); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn-send { background: var(--primary); }
-        .btn-check { background: var(--text-light); margin-bottom: 10px; }
-        .btn-confirm { background: var(--success); display: none; }
-
-        #cap-check-result {
-            display: none; background: #ecfdf5; padding: 15px; border-radius: 15px;
-            border: 1px solid #a7f3d0; margin-bottom: 15px; text-align: center;
-            animation: slideUp 0.3s;
-        }
-        .check-info { font-size: 14px; color: #064e3b; margin-bottom: 5px; }
-        .check-balance { font-size: 18px; font-weight: 900; color: var(--success); }
-
-        .history-list { margin-top: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
-        
-        .btn-call-cap {
-            background: #ecfdf5; color: var(--success); border: 1px solid #a7f3d0; 
-            width: 30px; height: 30px; border-radius: 50%; 
-            display: inline-flex; align-items: center; justify-content: center; 
-            text-decoration: none; transition: 0.3s; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
-            flex-shrink: 0; margin-right: 5px;
-        }
-        .btn-call-cap:hover { transform: scale(1.1); background: #d1fae5; }
-        .hidden-phone-badge { font-size: 10px; color: var(--danger); background: #fef2f2; padding: 2px 6px; border-radius: 8px; border: 1px solid #fecaca; margin-right: 5px;}
-
-        /* نافذة تقييم الجواهر للمنشأة */
-        .rating-modal-box {
-            background: white; padding: 30px; border-radius: 20px; text-align: center; 
-            max-width: 350px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
-            border-top: 6px solid var(--info); animation: slideUp 0.4s ease-out;
-        }
-        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
-        .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
-        .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
-        .rating-feedback { display: none; margin-top: 15px; text-align: right; }
-        .rating-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
-        .quick-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-        .tag { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; color: var(--text-light); transition: 0.3s; }
-        .tag.active { background: var(--info); color: white; border-color: var(--info); }
-        
-        #loader { 
-            position: fixed; top: 0; left: 0; width: 0%; height: 5px; 
-            background: var(--gold); z-index: 3000; transition: width 0.3s; 
-            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
-        }
-
-        /* ================= تصميم الإعلانات والتنبيهات ================= */
-        .app-ad-container { 
-            display: none; align-items: center; background: white; 
-            margin: 20px auto 0; max-width: 500px; padding: 12px 15px; 
-            border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
-            border-right: 5px solid var(--primary); animation: slideDown 0.5s ease; 
-        }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .ad-sender-badge { 
-            background: var(--gold); color: white; padding: 5px 12px; 
-            border-radius: 8px; font-size: 11px; font-weight: bold; 
-            margin-left: 10px; white-space: nowrap; letter-spacing: 0.5px;
-            box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
-        }
-        
-        .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
-        .ad-text-scroll { font-weight: bold; font-size: 14px; width: 100%; }
-
-        .ad-type-normal { border-right-color: #555; }
-        .ad-type-news { border-right-color: var(--info); }
-        .ad-type-news .ad-text-scroll { color: var(--info); }
-        .ad-type-warning { border-right-color: var(--danger); background-color: #ffebee; }
-        .ad-type-warning .ad-text-scroll { color: var(--danger); }
-        .ad-type-offer { border-right-color: var(--success); }
-        .ad-type-offer .ad-text-scroll { color: var(--success); }
-
-        .app-popup-overlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; 
-            backdrop-filter: blur(5px); 
-        }
-        .app-popup-box { 
-            background: white; padding: 30px; border-radius: 20px; text-align: center; 
-            max-width: 400px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
-            border-top: 6px solid var(--danger); animation: slideUp 0.4s ease-out; 
-        }
-        .app-popup-icon { font-size: 50px; margin-bottom: 15px; }
-        .app-popup-msg { font-size: 18px; font-weight: bold; color: var(--text-main); line-height: 1.5; margin-bottom: 25px; }
-        .app-popup-btn { 
-            background: var(--danger); color: white; border: none; padding: 12px 30px; 
-            border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.3s;
-        }
-        .app-popup-btn:active { transform: scale(0.95); }
-
-        /* ================= النوافذ المنبثقة الملكية للتأكيد ================= */
-        .custom-dialog-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center; z-index: 60000;
-        }
-        .custom-dialog-box {
-            background: white; width: 85%; max-width: 350px; border-radius: 20px;
-            padding: 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            border-top: 5px solid var(--gold); animation: popIn 0.3s ease-out;
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .custom-dialog-icon { font-size: 40px; margin-bottom: 15px; }
-        .custom-dialog-msg { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 25px; line-height: 1.5; }
-        .custom-dialog-actions { display: flex; gap: 10px; justify-content: center; }
-        .btn-dialog { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; color: white; font-size: 14px; }
-        .btn-dialog:active { transform: scale(0.95); }
-        .btn-dialog-ok { background: var(--success); }
-        .btn-dialog-cancel { background: var(--danger); }
-
-        /* ================= شاشة التثبيت PWA ================= */
-        .pwa-splash {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95); z-index: 99999;
-            display: flex; justify-content: center; align-items: center;
-            backdrop-filter: blur(10px); transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .pwa-content {
-            background: white; padding: 40px 30px; border-radius: 30px; text-align: center;
-            width: 85%; max-width: 380px; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-            border-top: 5px solid var(--gold); animation: popIn 0.5s ease-out;
-        }
-        .pwa-logo { width: 100px; height: 100px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3); border: 2px solid var(--gold); }
-        .pwa-title { margin: 0 0 15px 0; font-size: 28px; font-weight: 900; color: var(--primary); }
-        .pwa-text { color: var(--text-main); font-size: 15px; font-weight: bold; line-height: 1.6; margin-bottom: 30px; }
-        .btn-install-app {
-            width: 100%; padding: 18px; background: linear-gradient(135deg, var(--gold), #b48608);
-            color: var(--primary); border: none; border-radius: 15px; font-size: 18px; font-weight: 900;
-            cursor: pointer; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4); transition: all 0.3s ease;
-        }
-        .btn-install-app:active { transform: scale(0.95); }
-        .btn-continue-app { background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: underline; }
-
-        /* نظام الإشعارات المنسدلة الذكي */
+        /* Toasts & Modals */
         #toast-container { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; align-items: center; }
-        .app-toast { background: linear-gradient(135deg, #1e293b, #0f172a); color: #f8fafc; border-left: 4px solid var(--gold); padding: 15px 25px; border-radius: 12px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(-120%); animation: slideDownToast 0.4s forwards, fadeOutToast 0.4s forwards 3.6s; font-size: 14px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #334155; border-top: 1px solid #334155; border-bottom: 1px solid #334155; max-width: 90%; text-align: right; }
-        @keyframes slideDownToast { to { transform: translateY(0); } }
+        .app-toast { background: var(--glass-bg); backdrop-filter: blur(10px); color: white; border-right: 4px solid var(--luxury-gold); border-left: 1px solid rgba(212,175,55,0.3); border-top: 1px solid rgba(212,175,55,0.3); border-bottom: 1px solid rgba(212,175,55,0.3); padding: 15px 25px; border-radius: 12px; font-weight: bold; font-size: 14px; animation: slideDownToast 0.4s forwards, fadeOutToast 0.4s forwards 3.6s; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        @keyframes slideDownToast { from { transform: translateY(-120%); } to { transform: translateY(0); } }
         @keyframes fadeOutToast { to { opacity: 0; transform: translateY(-20px); } }
+
+        .custom-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 60000; }
+        .custom-dialog-box { background: linear-gradient(135deg, #0f172a, #1e293b); width: 85%; max-width: 350px; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-top: 2px solid var(--luxury-gold); border-bottom: 2px solid var(--luxury-gold); animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        #loader { position: fixed; top: 0; left: 0; height: 3px; background: var(--luxury-gold); z-index: 3000; width: 0%; transition: 0.3s; box-shadow: 0 0 10px var(--luxury-gold); }
+
+        /* Badges */
+        .night-fee-badge, .star-feature-badge { display: none; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 12px; margin-right: 5px; }
+        .night-fee-badge { background: #311b92; color: white; border: 1px solid #4527a0; }
+        .star-feature-badge { background: rgba(212,175,55,0.1); color: var(--luxury-gold); border: 1px solid var(--luxury-gold); }
+
+        /* Rating Modal Elements */
+        .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
+        .gem { font-size: 35px; color: #334155; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
+        .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
+        .quick-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; justify-content: center; }
+        .tag { background: rgba(15,23,42,0.8); border: 1px solid rgba(212,175,55,0.3); padding: 6px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; color: #94a3b8; transition: 0.3s; }
+        .tag.active { background: var(--info); color: white; border-color: var(--info); }
     </style>
 </head>
-<body>
+<body class="p-0 md:p-8">
 
     <div id="toast-container"></div>
-
-    <div id="pwa-splash" class="pwa-splash">
-        <div class="pwa-content">
-            <img src="logo_shop.jpg" alt="Logo" class="pwa-logo" onerror="this.src='https://via.placeholder.com/100?text=Shop'">
-            <h2 class="pwa-title">N <span style="color:var(--gold)">One</span></h2>
-            <p class="pwa-text">لضمان وصول الطلبات والتحديثات الفورية يرجى تثبيت التطبيق الخاص بالمنشآت التجارية</p>
-            <button id="btn-install-app" class="btn-install-app">تثبيت التطبيق 🚀</button>
-            <button id="btn-continue-app" class="btn-continue-app">الاستمرار عبر المتصفح</button>
-        </div>
-    </div>
-
     <div id="loader"></div>
-
-    <div id="app-popup-overlay" class="app-popup-overlay">
-        <div class="app-popup-box">
-            <div class="app-popup-icon">🚨</div>
-            <div id="app-popup-msg" class="app-popup-msg">رسالة إدارية هامة</div>
-            <button class="app-popup-btn" onclick="closeAppPopup()">تأكيد القراءة</button>
-        </div>
-    </div>
 
     <div id="custom-confirm-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
-            <div class="custom-dialog-icon">❓</div>
-            <div id="custom-confirm-msg" class="custom-dialog-msg">هل أنت متأكد</div>
-            <div class="custom-dialog-actions">
-                <button class="btn-dialog btn-dialog-ok" onclick="executeAppConfirm()">تأكيد ✅</button>
-                <button class="btn-dialog btn-dialog-cancel" onclick="closeAppConfirm()">إلغاء ❌</button>
+            <div class="text-4xl mb-4">❓</div>
+            <div id="custom-confirm-msg" class="text-sm font-bold text-white mb-6 leading-relaxed">هل أنت متأكد؟</div>
+            <div class="flex justify-center gap-3">
+                <button class="flex-1 py-3 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors" onclick="executeAppConfirm()">تأكيد ✅</button>
+                <button class="flex-1 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-500 text-white transition-colors" onclick="closeAppConfirm()">إلغاء ❌</button>
             </div>
         </div>
     </div>
 
     <div id="rating-modal" class="custom-dialog-overlay">
-        <div class="rating-modal-box">
-            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px;">تقييم الكابتن 💎</div>
-            <div id="rating_title_desc" style="font-size: 13px; color: #64748b; font-weight: bold;">كيف كان أداء الكابتن في هذا الطلب؟</div>
+        <div class="custom-dialog-box">
+            <div class="text-lg font-black gold-glow-text mb-2">تقييم الكابتن 💎</div>
+            <div id="rating_title_desc" class="text-xs text-slate-400 font-bold">كيف كان أداء الكابتن في هذا الطلب؟</div>
             
             <div class="gems-container" id="gems-container">
                 <span class="gem" onclick="setRating(1)">💎</span>
@@ -378,424 +135,209 @@
                 <span class="gem" onclick="setRating(5)">💎</span>
             </div>
             
-            <div id="rating-feedback" class="rating-feedback">
-                <div id="dynamic-question" class="rating-title">ما هي المشكلة التي واجهتك؟</div>
+            <div id="rating-feedback" style="display:none; text-align:right;">
+                <div id="dynamic-question" class="text-sm font-bold text-white mb-3 text-center">ما هي المشكلة التي واجهتك؟</div>
                 <div class="quick-tags" id="quick-tags"></div>
-                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)"></textarea>
+                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)" class="input-luxury p-3 rounded-xl text-sm mt-2"></textarea>
             </div>
 
             <input type="hidden" id="current_rating_val" value="0">
             <input type="hidden" id="rating_cap_id" value="">
             <input type="hidden" id="selected_tag" value="">
             
-            <button class="btn-main btn-send" style="background: var(--info); color: white; margin-top: 15px; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer;" onclick="submitRating()">إرسال التقييم 🚀</button>
-            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px; cursor: pointer;" onclick="closeRatingModal()">تخطي</button>
+            <button class="w-full mt-4 py-3 rounded-xl font-bold bg-sky-600 hover:bg-sky-500 text-white transition-colors flex items-center justify-center gap-2" onclick="submitRating()">إرسال التقييم <i class="fas fa-paper-plane"></i></button>
+            <button class="w-full mt-2 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors" onclick="closeRatingModal()">تخطي</button>
         </div>
     </div>
 
     <div id="auth-section" class="auth-wrapper">
-        <div id="login-card" class="auth-card">
-            <img src="logo_shop.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
-            <div class="auth-title">بوابة المنشآت</div>
-            <div class="auth-subtitle">نظام الإدارة اللوجستية</div>
+        <div id="login-card" class="glass-card w-full max-w-md p-8 rounded-3xl text-center border-t-4 border-t-yellow-500">
+            <div class="w-20 h-20 mx-auto rounded-2xl bg-slate-900 border border-yellow-500/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                <i class="fas fa-gem text-4xl gold-glow-text"></i>
+            </div>
+            <div class="text-2xl font-black text-white mb-1 tracking-widest">N <span class="gold-glow-text">ONE</span></div>
+            <div class="text-xs text-slate-400 font-bold mb-8 tracking-wider uppercase">بوابة المنشآت التجارية</div>
             
             <div class="input-group">
-                <input type="text" id="login-user" placeholder="اسم المستخدم (User ID)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                <input type="text" id="login-user" placeholder="معرف الدخول (User ID)" class="input-luxury p-4 rounded-xl text-center font-mono tracking-widest" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
             </div>
-            <div class="input-group">
-                <input type="password" id="login-pass" placeholder="كلمة المرور">
+            <div class="input-group mb-8">
+                <input type="password" id="login-pass" placeholder="كلمة المرور" class="input-luxury p-4 rounded-xl text-center tracking-widest">
             </div>
             
-            <button class="btn-main btn-send" id="btn-login" onclick="executeLogin()">تسجيل الدخول 🔒</button>
-            <div class="auth-link" onclick="openRegisterPage()">تقديم طلب تسجيل منشأة جديدة </div>
+            <button class="btn-diamond w-full py-4 rounded-xl text-sm" id="btn-login" onclick="executeLogin()">تسجيل الدخول <i class="fas fa-sign-in-alt ml-1"></i></button>
+            <div class="mt-6 text-xs font-bold text-yellow-500/80 hover:text-yellow-400 cursor-pointer transition-colors" onclick="openRegisterPage()">تقديم طلب انضمام كمنشأة جديدة</div>
         </div>
 
-        <div id="register-card" class="auth-card" style="display: none; border-top-color: var(--success);">
-            <img src="logo_shop.jpg" alt="Logo" class="auth-logo" onerror="this.style.display='none'">
-            <div class="auth-title">طلب تسجيل منشأة</div>
-            <div class="auth-subtitle">الانضمام لشبكة المزودين المعتمدين</div>
+        <div id="register-card" class="glass-card w-full max-w-md p-8 rounded-3xl text-center border-t-4 border-t-emerald-500" style="display: none;">
+            <div class="text-xl font-black text-white mb-1">طلب تسجيل منشأة</div>
+            <div class="text-xs text-slate-400 font-bold mb-6">الانضمام لشبكة المزودين المعتمدين</div>
             
-            <div class="input-group">
-                <input type="text" id="reg-name" placeholder="الاسم التجاري للمنشأة">
-            </div>
-            <div class="input-group">
-                <input type="text" id="reg-user" placeholder="اسم المستخدم المطلوب (أحرف إنجليزية)" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
-            </div>
-            <div class="input-group">
-                <input type="password" id="reg-pass" placeholder="كلمة المرور المطلوبة">
-            </div>
-            <div class="input-group">
-                <input type="tel" id="reg-phone" placeholder="رقم الهاتف للتواصل (7xxxxxxxx)" maxlength="9" style="direction:ltr; text-align:right;">
-            </div>
-            
-            <div class="input-group">
-                <select id="reg-master" style="cursor: pointer; text-align: right; direction: rtl;">
+            <div class="space-y-4 mb-8">
+                <input type="text" id="reg-name" placeholder="الاسم التجاري للمنشأة" class="input-luxury p-3 rounded-xl text-sm">
+                <input type="text" id="reg-user" placeholder="اسم المستخدم المطلوب (أحرف إنجليزية)" class="input-luxury p-3 rounded-xl text-sm font-mono text-left" dir="ltr" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                <input type="password" id="reg-pass" placeholder="كلمة المرور المطلوبة" class="input-luxury p-3 rounded-xl text-sm font-mono text-left" dir="ltr">
+                <input type="tel" id="reg-phone" placeholder="رقم الهاتف (7xxxxxxxx)" class="input-luxury p-3 rounded-xl text-sm font-mono text-left" dir="ltr" maxlength="9">
+                
+                <select id="reg-master" class="input-luxury p-3 rounded-xl text-sm" style="cursor: pointer;">
                     <option value="">-- يرجى اختيار الشركة المرجعية --</option>
-                    <option value="loading">جاري تحميل قائمة الشركات المعتمدة...</option>
+                    <option value="loading">جاري التحميل...</option>
                 </select>
             </div>
             
-            <button class="btn-main" id="btn-register" style="background: var(--success);" onclick="executeRegister()">إرسال الطلب 🚀</button>
-            <div class="auth-link" style="color:var(--text-light);" onclick="toggleAuth('login')">العودة لصفحة الدخول 🔙</div>
+            <button class="w-full py-4 rounded-xl font-black text-slate-900 text-sm transition-all hover:scale-[1.02]" style="background: linear-gradient(135deg, #10b981, #34d399);" id="btn-register" onclick="executeRegister()">إرسال الطلب <i class="fas fa-rocket ml-1"></i></button>
+            <div class="mt-6 text-xs font-bold text-slate-400 hover:text-white cursor-pointer transition-colors" onclick="toggleAuth('login')"><i class="fas fa-arrow-right"></i> العودة للدخول</div>
         </div>
 
-        <div id="suspended-card" class="suspended-card" style="display: none;">
-            <div class="suspended-icon">🛑</div>
-            <div class="suspended-title">إشعار إيقاف الحساب</div>
-            <div class="suspended-desc">تم تعليق حساب المنشأة لأسباب إدارية. يرجى مراجعة الشركة المرجعية لتسوية الوضع المالي أو الإداري لإعادة التفعيل.</div>
-            <button class="btn-logout" style="width:100%; justify-content:center; padding:15px; font-size:15px;" onclick="location.reload()">العودة للرئيسية</button>
+        <div id="suspended-card" class="glass-card w-full max-w-md p-8 rounded-3xl text-center border-t-4 border-t-red-500" style="display: none;">
+            <div class="text-6xl mb-4">🛑</div>
+            <div class="text-xl font-black text-white mb-2">حساب موقوف</div>
+            <div class="text-sm text-slate-400 font-bold mb-8 leading-relaxed">تم تعليق حساب المنشأة. يرجى مراجعة الشركة المرجعية لتسوية الوضع وإعادة التفعيل.</div>
+            <button class="w-full py-3 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-white transition-colors" onclick="location.reload()">تحديث الحالة</button>
         </div>
     </div>
 
     <div id="app-container">
-        <header class="header">
-            <div class="header-top">
-                <div class="brand" id="parent-company-brand">
-                    <img src="logo_shop.jpg" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
-                    جاري التحميل...
+        <header class="flex justify-between items-center mb-6 glass-card p-4 md:p-6 rounded-none md:rounded-3xl border-x-0 md:border-x border-t-0 md:border-t">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-900 border border-yellow-600/30 flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                    <i class="fas fa-gem text-xl md:text-2xl gold-glow-text"></i>
                 </div>
-                <button class="btn-logout" onclick="logout()">
-                    <span>🔒</span> تسجيل خروج
-                </button>
+                <div>
+                    <h2 class="text-sm md:text-lg font-black tracking-widest gold-glow-text" id="hdr-shop-name">جاري التحميل...</h2>
+                    <p class="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fas fa-shield-alt text-emerald-500"></i> معتمد لدى <span id="parent-company-brand" class="text-white font-bold">N One</span>
+                    </p>
+                </div>
             </div>
             
-            <div class="badges-wrapper">
-                <div class="badges-row-top">
-                    <div class="shop-info-badge">
-                        👤 <span id="hdr-shop-user">...</span>
-                    </div>
+            <div class="flex items-center gap-4">
+                <div class="flex flex-col items-end">
+                    <span class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-widest">الرصيد التشغيلي</span>
+                    <span class="text-lg md:text-2xl font-black text-emerald-400" style="text-shadow: 0 0 10px rgba(16,185,129,0.3);"><span id="my-shop-balance">0.00</span> <span class="text-[10px] md:text-xs">د.أ</span></span>
                 </div>
-                <div class="badges-row-bottom">
-                    <div class="shop-info-badge">
-                        📍 <span id="hdr-shop-area">غير محدد</span>
-                    </div>
-                    <div class="shop-info-badge">
-                        🏪 <span id="hdr-shop-name">...</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="nav-tabs">
-                <button class="nav-tab active" onclick="switchTab('orders')">📦 تقديم طلب</button>
-                <button class="nav-tab" onclick="switchTab('charging')">⚡ عمليات الشحن</button>
-                <button class="nav-tab" onclick="switchTab('settings')">⚙️ الإعدادات</button>
+                <button class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center transition-colors" onclick="logout()" title="تسجيل خروج">
+                    <i class="fas fa-sign-out-alt text-red-400"></i>
+                </button>
             </div>
         </header>
 
-        <div style="padding: 0 20px;">
-            <div id="smart-ad-container" class="app-ad-container">
-                <div class="ad-sender-badge" id="ad-sender-badge">إشعار 👑</div>
-                <div class="ad-content-wrapper">
-                    <marquee id="smart-ad-text" class="ad-text-scroll" direction="right" scrollamount="6"></marquee>
-                </div>
-            </div>
+        <div class="flex justify-center gap-2 md:gap-4 mb-8 px-2 overflow-x-auto">
+            <button class="nav-tab active px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('orders')">
+                <i class="fas fa-paper-plane"></i> تقديم طلب
+            </button>
+            <button class="nav-tab px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('history')">
+                <i class="fas fa-history"></i> السجل
+            </button>
+            <button class="nav-tab px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('charging')">
+                <i class="fas fa-bolt"></i> الشحن
+            </button>
         </div>
 
-        <div class="container">
+        <main class="max-w-4xl mx-auto px-4">
             
-            <div id="orders" class="section active">
-                
-                <div class="stats-grid">
-                    <div class="stat-box gold-top">
-                        <span class="stat-label">طلبات اليوم 📋</span>
-                        <span class="stat-val gold" id="orders-today">0</span>
+            <section id="orders" class="section active glass-card rounded-3xl p-6 md:p-8">
+                <div class="flex items-center justify-between mb-8 border-b border-slate-700/50 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center"><i class="fas fa-motorcycle text-yellow-500"></i></div>
+                        <h3 class="text-lg md:text-xl font-black text-white">توجيه طلب جديد</h3>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">إجمالي الطلبات 📊</span>
-                        <span class="stat-val" id="orders-total">0</span>
+                    <div class="text-[10px] font-bold text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
+                        <i class="fas fa-map-marker-alt text-indigo-400"></i> فرع <span id="hdr-shop-area">...</span>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="input-group">
-                        <label>📍 منطقة الوجهة (اختر من القائمة المعتمدة)</label>
-                        <input type="text" id="destination" list="areas-list" placeholder="أدخل الوجهة المطلوبة..." oninput="calculateFee()" onchange="calculateFee()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-400 mb-2">📍 منطقة الوجهة (يجب اختيارها من القائمة)</label>
+                        <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة المعتمدة..." class="input-luxury p-4 rounded-xl" oninput="calculateFee()" onchange="calculateFee()">
                         <datalist id="areas-list"></datalist>
                     </div>
 
-                    <div class="input-group">
-                        <label>💰 قيمة الفاتورة المطلوب تحصيلها (دينار)</label>
-                        <input type="number" id="order_val" placeholder="0.00">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2">💰 قيمة الفاتورة المطلوب تحصيلها</label>
+                        <div class="relative">
+                            <input type="number" id="order_val" placeholder="0.00" class="input-luxury p-4 pl-12 rounded-xl font-mono">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">د.أ</span>
+                        </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>
+                    <div>
+                        <label class="flex justify-between items-center text-xs font-bold text-slate-400 mb-2">
                             <span>🛵 تكلفة التوصيل المحتسبة</span>
-                            <div>
-                                <span id="star-feature-badge" class="star-feature-badge">⭐ عرض خاص</span>
-                                <span id="night-fee-badge" class="night-fee-badge">🌙 تعرفة مسائية</span>
+                            <div class="flex gap-1">
+                                <span id="star-feature-badge" class="star-feature-badge">⭐ عرض</span>
+                                <span id="night-fee-badge" class="night-fee-badge">🌙 مسائي</span>
                             </div>
                         </label>
-                        <input type="text" id="delivery_fee" placeholder="يتم الاحتساب تلقائياً..." readonly style="font-weight:900; font-size:18px;">
+                        <input type="text" id="delivery_fee" placeholder="تلقائي..." readonly class="input-luxury p-4 rounded-xl font-black text-yellow-500 text-lg text-center bg-slate-900/80">
                         
-                        <div id="offer-details-box" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:12px; margin-top:10px; text-align:center; animation: slideUp 0.3s ease;">
-                            <div style="font-size:13px; color:#166534; font-weight:bold; margin-bottom:5px;">السعر الأساسي للخدمة: <del id="original-price-display" style="color:#ef4444; margin:0 5px;"></del> د.أ</div>
-                            <div id="offer-timer-display" style="font-size:12px; font-weight:900; color:#059669; background:#dcfce7; padding:4px 10px; border-radius:8px; display:inline-block;">⏳ جاري حساب الوقت</div>
+                        <div id="offer-details-box" class="mt-2 text-center" style="display:none;">
+                            <span class="text-[10px] text-slate-400">الأساسي: <del id="original-price-display" class="text-red-400"></del></span>
+                            <span id="offer-timer-display" class="text-[10px] font-bold text-emerald-400 ml-2 bg-emerald-500/10 px-2 py-0.5 rounded">⏳</span>
                         </div>
                     </div>
-
-                    <button class="btn-main btn-send" id="btn-send" onclick="sendOrder()">
-                        إرسال الطلب للعمليات 🚀
-                    </button>
                 </div>
 
-                <div class="card" style="padding: 20px;">
-                    <div style="font-size:13px; font-weight:800; color:var(--text-light); margin-bottom:10px;">🕒 سجل الطلبات الحديثة</div>
-                    <div id="history-list" class="history-list">
-                        <div style="text-align:center; color:#cbd5e1; padding:10px;">جاري المزامنة مع الخادم...</div>
+                <button class="w-full mt-8 btn-diamond py-4 md:py-5 rounded-2xl text-sm md:text-lg flex items-center justify-center gap-3 shadow-[0_10px_20px_rgba(0,0,0,0.3)]" id="btn-send" onclick="sendOrder()">
+                    <span>تأكيد وتسليم للرادار المريخي</span> <i class="fas fa-space-shuttle"></i>
+                </button>
+            </section>
+
+            <section id="history" class="section glass-card rounded-3xl p-6 md:p-8">
+                <div class="flex items-center justify-between mb-6 border-b border-slate-700/50 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center"><i class="fas fa-history text-indigo-400"></i></div>
+                        <h3 class="text-lg md:text-xl font-black text-white">سجل العمليات المباشر</h3>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="text-[10px] font-bold text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-700 text-center leading-tight">طلبات اليوم<br><span id="orders-today" class="text-yellow-500 text-sm">0</span></div>
+                        <div class="text-[10px] font-bold text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-700 text-center leading-tight">الإجمالي<br><span id="orders-total" class="text-white text-sm">0</span></div>
                     </div>
                 </div>
+
+                <div id="history-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">جاري مزامنة السجلات <i class="fas fa-spinner fa-spin ml-2 text-yellow-500"></i></div>
+                </div>
+            </section>
+
+            <section id="charging" class="section glass-card rounded-3xl p-6 md:p-8 border-t-4 border-t-emerald-500">
+                <div class="flex items-center gap-3 mb-8 border-b border-slate-700/50 pb-4">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center"><i class="fas fa-bolt text-emerald-400"></i></div>
+                    <h3 class="text-lg md:text-xl font-black text-white">نقطة شحن معتمدة</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2">🔍 معرف الكابتن المستلم</label>
+                        <input type="text" id="cap_id" placeholder="رقم الهاتف أو المعرف" class="input-luxury p-4 rounded-xl text-left font-mono" dir="ltr">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-2">💵 قيمة الشحن (د.أ)</label>
+                        <input type="number" id="charge_amount" placeholder="0.00" class="input-luxury p-4 rounded-xl font-mono text-center text-emerald-400">
+                    </div>
+                </div>
+
+                <button class="w-full mt-6 py-4 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-white transition-colors border border-slate-600" id="btn-check" onclick="verifyCaptain()">التحقق من بيانات الكابتن 🔍</button>
+
+                <div id="cap-check-result" style="display:none;" class="mt-6 p-4 rounded-2xl bg-emerald-900/20 border border-emerald-500/30 text-center">
+                    <div class="text-sm text-slate-300 mb-2">المستلم: <span id="found-cap-name" class="font-bold text-white">---</span></div>
+                    <div class="text-xs text-slate-400 mb-4">الرصيد الحالي: <span id="found-cap-balance" class="font-mono">---</span></div>
+                    <div class="text-sm font-bold text-emerald-400 border-t border-emerald-500/20 pt-3">الرصيد بعد التحويل: <span id="future-cap-balance" class="font-black text-lg">---</span> د.أ</div>
+                </div>
+
+                <button class="w-full mt-4 py-4 rounded-xl font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-[0_5px_15px_rgba(16,185,129,0.3)]" id="btn-charge" style="display:none;" onclick="executeTransfer()">تأكيد عملية التحويل المالية ✅</button>
+            </section>
+            
+        </main>
+
+        <footer class="mt-12 text-center pb-6">
+            <div class="inline-flex items-center gap-2 px-6 py-2 glass-card rounded-full text-[10px] text-slate-500 uppercase tracking-[0.3em]">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></span> بروتوكول الأمان نشط 
             </div>
-
-            <div id="charging" class="section">
-                <div class="card" style="border-top: 4px solid var(--success);">
-                    <div style="text-align:center; margin-bottom:25px;">
-                        <h3 style="margin:0; color:var(--primary); font-size:18px;">نقطة شحن معتمدة ⚡</h3>
-                        <p style="font-size:13px; color:var(--text-light); margin-top:5px;">
-                            الرصيد المتاح للتحويل <b style="color:var(--success); font-size:18px;" id="my-shop-balance">...</b> د.أ
-                        </p>
-                    </div>
-
-                    <div class="input-group">
-                        <label>🔍 المعرف الخاص بالمستلم (الكابتن)</label>
-                        <input type="text" id="cap_id" placeholder="رقم الهاتف أو المعرف الوظيفي">
-                    </div>
-
-                    <div class="input-group">
-                        <label>💵 قيمة الرصيد المطلوب تحويله</label>
-                        <input type="number" id="charge_amount" placeholder="0.00">
-                    </div>
-
-                    <button class="btn-main btn-check" id="btn-check" onclick="verifyCaptain()">
-                        التحقق من بيانات المستلم 🔍
-                    </button>
-
-                    <div id="cap-check-result">
-                        <div class="check-info">الاسم المسجل: <b id="found-cap-name">---</b></div>
-                        <div class="check-info">الرصيد الحالي: <b id="found-cap-balance">---</b> د.أ</div>
-                        <hr style="border:0; border-top:1px dashed #a7f3d0; margin:10px 0;">
-                        <div style="font-size:12px; font-weight:bold; color:var(--primary);">
-                            الرصيد المتوقع بعد التحويل: <span id="future-cap-balance" style="color:var(--success);">---</span>
-                        </div>
-                    </div>
-
-                    <button class="btn-main btn-confirm" id="btn-charge" onclick="executeTransfer()">
-                        تنفيذ عملية التحويل ✅
-                    </button>
-                </div>
-            </div>
-
-            <div id="settings" class="section">
-                <div class="card" style="border-top: 4px solid var(--gold);">
-                    <div style="text-align:center; margin-bottom:20px;">
-                        <h3 style="margin:0; color:var(--primary); font-size:18px;">⚙️ إعدادات حساب المنشأة</h3>
-                        <p style="font-size:12px; color:var(--text-light); margin-top:5px;">إدارة بيانات الوصول</p>
-                    </div>
-
-                    <div class="input-group">
-                        <label>معرف المستخدم (User ID)</label>
-                        <input type="text" id="profile_user" readonly title="بيانات المعرف غير قابلة للتعديل للحفاظ على استقرار العمليات المالية">
-                        <div style="font-size: 11px; color: var(--danger); font-weight: bold; margin-top: 6px;">🛡️ هذا المعرف محمي ومغلق لضمان سلامة السجلات المالية.</div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>كلمة مرور الوصول للنظام</label>
-                        <div style="position: relative; display: flex; align-items: center;">
-                            <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور الجديدة" style="width: 100%; padding-left: 45px;">
-                            <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" style="position: absolute; left: 15px; cursor: pointer; font-size: 18px; color: #64748b;" title="إظهار/إخفاء">👁️</span>
-                        </div>
-                    </div>
-
-                    <button class="btn-main" id="btn-save-settings" style="background: var(--gold); color: var(--primary);" onclick="updateShopProfile()">
-                        تحديث البيانات 💾
-                    </button>
-                </div>
-            </div>
-
-        </div>
+            <p class="mt-4 text-[10px] text-slate-600 font-bold uppercase tracking-widest">N ONE EMPIRE © 2026</p>
+        </footer>
     </div>
-
-    <script>
-        let deferredPrompt;
-        const splash = document.getElementById('pwa-splash');
-        const btnInstall = document.getElementById('btn-install-app');
-        const btnContinue = document.getElementById('btn-continue-app');
-
-        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
-            splash.style.display = 'none';
-        }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        btnInstall.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') splash.style.display = 'none';
-                deferredPrompt = null;
-            } else {
-                showAppToast('يرجى استخدام خيار التثبيت المتوفر في قائمة المتصفح', true);
-            }
-        });
-
-        btnContinue.addEventListener('click', () => {
-            splash.style.opacity = '0';
-            setTimeout(() => { splash.style.visibility = 'hidden'; }, 500);
-        });
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw_shop.js').catch(err => console.log('SW registration failed'));
-            });
-        }
-        
-        window.closeAppPopup = function() {
-            document.getElementById('app-popup-overlay').style.display = 'none';
-        };
-
-        let confirmCallback = null;
-        window.showCustomConfirm = function(msg, callback) {
-            document.getElementById('custom-confirm-msg').innerText = msg;
-            confirmCallback = callback;
-            document.getElementById('custom-confirm-overlay').style.display = 'flex';
-        };
-        window.closeAppConfirm = function() {
-            document.getElementById('custom-confirm-overlay').style.display = 'none';
-            confirmCallback = null;
-        };
-        window.executeAppConfirm = function() {
-            document.getElementById('custom-confirm-overlay').style.display = 'none';
-            if(confirmCallback) confirmCallback();
-            confirmCallback = null;
-        };
-
-        window.showAppToast = function(msg, isError = false) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'app-toast';
-            if(isError) toast.style.borderLeftColor = '#ef4444';
-            toast.innerHTML = (isError ? '⚠️ ' : '💎 ') + msg;
-            container.appendChild(toast);
-            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
-        };
-        
-        window.openRatingModal = function(capId) {
-            document.getElementById('rating_cap_id').value = capId;
-            document.getElementById('current_rating_val').value = "0";
-            document.getElementById('selected_tag').value = "";
-            document.getElementById('rating_notes').value = "";
-            document.querySelectorAll('.gem').forEach(g => g.classList.remove('active'));
-            document.getElementById('rating-feedback').style.display = 'none';
-            document.getElementById('rating_title_desc').innerText = "كيف كان أداء الكابتن في هذا الطلب؟";
-            document.getElementById('rating-modal').style.display = 'flex';
-        };
-        
-        window.closeRatingModal = function() {
-            document.getElementById('rating-modal').style.display = 'none';
-        };
-        
-        window.setRating = function(val) {
-            document.getElementById('current_rating_val').value = val;
-            const gems = document.querySelectorAll('.gem');
-            gems.forEach((g, index) => {
-                if(index < val) g.classList.add('active');
-                else g.classList.remove('active');
-            });
-            
-            const feedbackSection = document.getElementById('rating-feedback');
-            const question = document.getElementById('dynamic-question');
-            const tagsContainer = document.getElementById('quick-tags');
-            const desc = document.getElementById('rating_title_desc');
-            
-            feedbackSection.style.display = 'block';
-            document.getElementById('selected_tag').value = "";
-            
-            if (val === 1) {
-                desc.innerText = "ضعيف جداً ⚠️";
-                desc.style.color = "var(--danger)";
-                question.innerText = "نأسف لسماع ذلك. ما هي المشكلة؟";
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">تأخير كبير</span>
-                    <span class="tag" onclick="selectTag(this)">أسلوب غير لائق</span>
-                    <span class="tag" onclick="selectTag(this)">لم يستلم الطلب</span>
-                    <span class="tag" onclick="selectTag(this)">الطلب تضرر</span>
-                `;
-            } else if (val === 2) {
-                desc.innerText = "سيء 😟";
-                desc.style.color = "#d97706";
-                question.innerText = "ما الذي أزعجك في أداء الكابتن؟";
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">بطء في الوصول</span>
-                    <span class="tag" onclick="selectTag(this)">عدم الرد على الهاتف</span>
-                    <span class="tag" onclick="selectTag(this)">تصرفات غير مهنية</span>
-                `;
-            } else if (val === 3) {
-                desc.innerText = "متوسط - مقبول 😐";
-                desc.style.color = "#8b5cf6";
-                question.innerText = "كيف يمكن للكابتن التحسن؟";
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">السرعة</span>
-                    <span class="tag" onclick="selectTag(this)">التعامل</span>
-                    <span class="tag" onclick="selectTag(this)">الاهتمام بالطلب</span>
-                `;
-            } else if (val === 4) {
-                desc.innerText = "جيد جداً 🙂";
-                desc.style.color = "var(--info)";
-                question.innerText = "هل هناك ملاحظة بسيطة؟";
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">كل شيء جيد</span>
-                    <span class="tag" onclick="selectTag(this)">أسرع قليلاً المرة القادمة</span>
-                `;
-            } else if (val === 5) {
-                desc.innerText = "أداء ممتاز 🌟";
-                desc.style.color = "var(--success)";
-                question.innerText = "شكراً لتعاونكم مع أبطالنا";
-                tagsContainer.innerHTML = `
-                    <span class="tag" onclick="selectTag(this)">سريع جداً</span>
-                    <span class="tag" onclick="selectTag(this)">أسلوب راقي</span>
-                    <span class="tag" onclick="selectTag(this)">كابتن مميز</span>
-                `;
-            }
-        };
-
-        window.selectTag = function(element) {
-            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('selected_tag').value = element.innerText;
-        };
-
-        window.togglePasswordVisibility = function() {
-            const passInput = document.getElementById('profile_pass');
-            const passIcon = document.getElementById('toggle_pass_icon');
-            if (passInput.type === 'password') {
-                passInput.type = 'text'; passIcon.innerText = '🙈';
-            } else {
-                passInput.type = 'password'; passIcon.innerText = '👁️';
-            }
-        };
-
-        window.setLoading = function(btnId, isLoading, originalText) {
-            const btn = document.getElementById(btnId);
-            const loader = document.getElementById('loader');
-            if (isLoading) {
-                btn.dataset.text = btn.innerText; btn.innerText = "جاري المعالجة...";
-                btn.style.opacity = 0.7; btn.disabled = true; loader.style.width = "100%";
-            } else {
-                btn.innerText = originalText || btn.dataset.text;
-                btn.style.opacity = 1; btn.disabled = false; loader.style.width = "0%";
-            }
-        };
-
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
-        };
-    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -817,299 +359,311 @@
         const snd_deliver = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         let orderStatesHistory = {}, askedToRate = {};
 
-        window.onload = async function() {
-            const savedUser = localStorage.getItem('n1_shop_session');
-            if (savedUser) { currentUser = JSON.parse(savedUser); initializePortal(); } 
-            else { document.getElementById('auth-section').style.display = 'flex'; document.getElementById('app-container').style.display = 'none'; }
+        // === UI Helpers ===
+        window.showAppToast = (msg, isError = false) => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'app-toast';
+            if(isError) toast.style.borderRightColor = '#ef4444';
+            toast.innerHTML = (isError ? '<i class="fas fa-exclamation-triangle text-red-400"></i> ' : '<i class="fas fa-gem text-yellow-500"></i> ') + msg;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.remove(); }, 4000);
         };
 
-        window.openRegisterPage = async function() {
+        window.setLoading = (btnId, isLoading, originalText) => {
+            const btn = document.getElementById(btnId);
+            const loader = document.getElementById('loader');
+            if (isLoading) { btn.dataset.text = btn.innerText; btn.innerText = "جاري المعالجة..."; btn.style.opacity = 0.7; btn.disabled = true; loader.style.width = "100%"; } 
+            else { btn.innerText = originalText || btn.dataset.text; btn.style.opacity = 1; btn.disabled = false; loader.style.width = "0%"; }
+        };
+
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        };
+
+        let confirmCallback = null;
+        window.showCustomConfirm = (msg, cb) => { document.getElementById('custom-confirm-msg').innerText = msg; confirmCallback = cb; document.getElementById('custom-confirm-overlay').style.display = 'flex'; };
+        window.closeAppConfirm = () => { document.getElementById('custom-confirm-overlay').style.display = 'none'; confirmCallback = null; };
+        window.executeAppConfirm = () => { document.getElementById('custom-confirm-overlay').style.display = 'none'; if(confirmCallback) confirmCallback(); confirmCallback = null; };
+
+        // === Auth Logic ===
+        window.onload = () => {
+            const savedUser = localStorage.getItem('n1_shop_session');
+            if (savedUser) { currentUser = JSON.parse(savedUser); initializePortal(); } 
+            else { document.getElementById('auth-section').style.display = 'flex'; }
+        };
+
+        window.toggleAuth = (mode) => {
+            ['login-card', 'register-card', 'suspended-card'].forEach(id => document.getElementById(id).style.display = 'none');
+            document.getElementById(`${mode}-card`).style.display = 'block';
+        };
+
+        window.openRegisterPage = async () => {
             toggleAuth('register');
-            const masterSelect = document.getElementById('reg-master');
-            masterSelect.innerHTML = '<option value="loading">جاري سحب بيانات الشركات المرجعية...</option>';
+            const select = document.getElementById('reg-master');
+            select.innerHTML = '<option value="">جاري سحب الشركات المرجعية...</option>';
             try {
-                const usersSnap = await get(child(ref(db), 'users'));
-                let optionsHtml = '<option value="">-- يرجى اختيار الشركة المرجعية --</option>';
-                if (usersSnap.exists()) {
-                    Object.values(usersSnap.val()).forEach(u => {
-                        // فلترة لأسماء الشركات وإخفاء الإدارة
-                        if ((u.role === 'client' || u.type === 'client') || (u.external_reg_enabled && u.external_reg_id && u.role !== 'admin')) {
-                            const dispName = u.name || u.Client_Name || u.user;
-                            const valId = u.user || u.Client_User || u.external_reg_id;
-                            if (valId && dispName) optionsHtml += `<option value="${valId}">${dispName}</option>`;
+                const snap = await get(child(ref(db), 'users'));
+                let html = '<option value="">-- اختر الشركة المرجعية --</option>';
+                if (snap.exists()) {
+                    Object.values(snap.val()).forEach(u => {
+                        if (u.role !== 'admin' && (u.role === 'client' || u.type === 'client' || u.external_reg_enabled)) {
+                            const dispName = u.Client_Name || u.name;
+                            const valId = u.Client_User || u.user || u.external_reg_id;
+                            if(dispName && valId) html += `<option value="${valId}">${dispName}</option>`;
                         }
                     });
                 }
-                masterSelect.innerHTML = optionsHtml;
-            } catch (error) {
-                masterSelect.innerHTML = '<option value="">حدث خطأ في تحميل القائمة.</option>';
-                showAppToast("تعذر جلب قائمة الشركات", true);
-            }
+                select.innerHTML = html;
+            } catch (e) { select.innerHTML = '<option value="">خطأ في التحميل</option>'; }
         };
 
-        window.executeLogin = async function() {
+        window.executeLogin = async () => {
             const user = document.getElementById('login-user').value.trim(), pass = document.getElementById('login-pass').value;
-            if(!user || !pass) { showAppToast("البيانات المدخلة غير مكتملة", true); return; }
+            if(!user || !pass) return showAppToast("أكمل بيانات الدخول", true);
             setLoading('btn-login', true);
             try {
-                let userSnap = await get(child(ref(db), `shops/${user}`)); let foundNode = 'shops';
-                if(!userSnap.exists()) { userSnap = await get(child(ref(db), `users/${user}`)); foundNode = 'users'; }
-                if(userSnap.exists()) {
-                    const userData = userSnap.val();
-                    if((userData.Shop_Pass || userData.Client_Pass || userData.pass) === pass) {
-                        const status = userData.Client_Status || userData.status || 'active';
-                        if(status === 'paused') { document.getElementById('login-card').style.display = 'none'; document.getElementById('suspended-card').style.display = 'block'; setLoading('btn-login', false, "تسجيل الدخول 🔒"); return; }
-                        if (status === 'pending') { showAppToast("الحساب قيد المراجعة"); setLoading('btn-login', false, "تسجيل الدخول 🔒"); return; }
-                        userData._node = foundNode; currentUser = userData;
+                let snap = await get(child(ref(db), `shops/${user}`)); let node = 'shops';
+                if(!snap.exists()) { snap = await get(child(ref(db), `users/${user}`)); node = 'users'; }
+                if(snap.exists()) {
+                    const data = snap.val();
+                    if((data.Shop_Pass || data.Client_Pass || data.pass) === pass) {
+                        const status = data.Client_Status || data.status || 'active';
+                        if(status === 'paused') return toggleAuth('suspended');
+                        if(status === 'pending') return showAppToast("الحساب قيد المراجعة والمصادقة");
+                        data._node = node; currentUser = data;
                         localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                         initializePortal();
                     } else showAppToast("بيانات الاعتماد غير مطابقة", true);
-                } else showAppToast("المعرف المدخل غير مسجل", true);
-            } catch (e) { showAppToast("انقطع الاتصال بالخادم", true); } finally { setLoading('btn-login', false, "تسجيل الدخول 🔒"); }
+                } else showAppToast("المعرف غير مسجل", true);
+            } catch (e) { showAppToast("خطأ بالاتصال بالسيرفر", true); } 
+            finally { setLoading('btn-login', false, "تسجيل الدخول <i class='fas fa-sign-in-alt ml-1'></i>"); }
         };
 
-        window.executeRegister = async function() {
-            const name = document.getElementById('reg-name').value.trim(), user = document.getElementById('reg-user').value.trim(), pass = document.getElementById('reg-pass').value, phone = document.getElementById('reg-phone').value.trim(), masterId = document.getElementById('reg-master').value;
-            if(!name || !user || !pass || !phone || !masterId) { showAppToast("يجب إكمال كافة الحقول الإلزامية", true); return; }
+        window.executeRegister = async () => {
+            const n=document.getElementById('reg-name').value.trim(), u=document.getElementById('reg-user').value.trim(), p=document.getElementById('reg-pass').value, ph=document.getElementById('reg-phone').value.trim(), m=document.getElementById('reg-master').value;
+            if(!n || !u || !p || !ph || !m) return showAppToast("أكمل كافة الحقول", true);
             setLoading('btn-register', true);
             try {
-                const check1 = await get(child(ref(db), `shops/${user}`)), check2 = await get(child(ref(db), `users/${user}`));
-                if (check1.exists() || check2.exists()) { showAppToast("هذا المعرف محجوز", true); setLoading('btn-register', false, "إرسال الطلب 🚀"); return; }
-                const newShop = { Client_ID: "REQ_" + Date.now(), Client_User: user, Client_Pass: pass, Client_Name: name, Client_Role: "shop", Client_Type: "shop", Client_Master: masterId, Client_Status: "pending", Client_Phone: phone, name: name, user: user, pass: pass, role: "shop", type: "shop", status: "pending", requestDate: new Date().toISOString(), hide_phone: false };
-                await set(ref(db, `shops/${user}`), newShop);
-                showAppToast("تم إرسال طلب الانضمام"); toggleAuth('login');
-                ['reg-name', 'reg-user', 'reg-pass', 'reg-phone', 'reg-master'].forEach(id => document.getElementById(id).value = '');
-            } catch(e) { showAppToast("تعذر تقديم الطلب", true); } finally { setLoading('btn-register', false, "إرسال الطلب 🚀"); }
+                const check = await get(child(ref(db), `shops/${u}`));
+                if (check.exists()) return showAppToast("المعرف مستخدم مسبقاً", true);
+                await set(ref(db, `shops/${u}`), { Client_ID: "REQ_"+Date.now(), Client_User: u, Client_Pass: p, Client_Name: n, Client_Role: "shop", Client_Type: "shop", Client_Master: m, Client_Status: "pending", Client_Phone: ph, name: n, user: u, pass: p, role: "shop", type: "shop", status: "pending", requestDate: new Date().toISOString(), hide_phone: false });
+                showAppToast("تم إرسال الطلب بنجاح"); toggleAuth('login');
+            } catch(e) { showAppToast("تعذر الإرسال", true); } 
+            finally { setLoading('btn-register', false, "إرسال الطلب <i class='fas fa-rocket ml-1'></i>"); }
         };
 
+        window.logout = () => showCustomConfirm("تأكيد الخروج من الحساب؟", () => { localStorage.removeItem('n1_shop_session'); location.reload(); });
+
+        // === App Logic ===
         async function initializePortal() {
-            document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-container').style.display = 'block';
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            
             document.getElementById('hdr-shop-name').innerText = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "المنشأة";
             document.getElementById('hdr-shop-user').innerText = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "N/A";
-            document.getElementById('hdr-shop-area').innerText = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "البيانات غير متوفرة";
-            document.getElementById('profile_user').value = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
-            document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
-            
-            fetchMasterInfo(); setupAdsAndAlerts(); listenToSystemSettings(); setupLiveOrders(); setupLivePrices(); await fetchAllData(); attachBalanceListener();
+            document.getElementById('hdr-shop-area').innerText = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "المنطقة غير محددة";
+
+            fetchMasterInfo(); listenToSystemSettings(); setupLivePrices(); setupLiveOrders(); await fetchAllData(); attachBalanceListener();
         }
 
-        function extractPrices(obj) {
-            let arr = []; if(!obj) return arr;
-            Object.values(obj).forEach(val => { if(val && typeof val === 'object') { if(val.Price_Area) arr.push(val); else arr = arr.concat(extractPrices(val)); } });
-            return arr;
-        }
-
-        function setupLivePrices() {
-            onValue(ref(db, 'prices'), (snapshot) => {
-                if(snapshot.exists()) { dbPrices = extractPrices(snapshot.val()); if(currentUser) { loadShopPrices(); calculateFee(); } }
+        function fetchMasterInfo() {
+            const masterId = currentUser.Client_Master || currentUser.master;
+            if (!masterId) return;
+            get(child(ref(db), `users/${masterId}`)).then(snap => {
+                if(snap.exists()) { document.getElementById('parent-company-brand').innerText = snap.val().name || snap.val().Client_Name; }
+                else { get(child(ref(db), `shops/${masterId}`)).then(s => { if(s.exists()) document.getElementById('parent-company-brand').innerText = s.val().Client_Name || s.val().name; }); }
             });
         }
 
         function listenToSystemSettings() {
-            const masterId = currentUser.Client_Master || currentUser.master || "الإدارة العامة";
-            if (masterId) onValue(ref(db, `settings/${masterId}/show_phone_numbers`), (snap) => { systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false; });
-            else onValue(ref(db, `settings/global_show_phone_numbers`), (snap) => { systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false; });
-            const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
-            onValue(ref(db, `${window.myNode}/${shopKey}/hide_phone`), (snap) => { if(snap.exists()) currentUser.hide_phone = snap.val(); });
+            const m = currentUser.Client_Master || currentUser.master || "الإدارة العامة";
+            onValue(ref(db, `settings/${m}/show_phone_numbers`), snap => { systemSettings.show_phone_numbers = snap.exists() ? snap.val() : false; });
+            const k = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+            onValue(ref(db, `${window.myNode}/${k}/hide_phone`), snap => { if(snap.exists()) currentUser.hide_phone = snap.val(); });
         }
-
-        function fetchMasterInfo() {
-            const myMaster = currentUser.Client_Master || currentUser.master;
-            if (myMaster) {
-                onValue(ref(db, `users/${myMaster}`), snap => {
-                    if(snap.exists()) { masterName = snap.val().name || snap.val().Client_Name || myMaster; document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`; } 
-                    else { get(child(ref(db), `shops/${myMaster}`)).then(shopSnap => { if(shopSnap.exists()){ masterName = shopSnap.val().Client_Name || shopSnap.val().name || myMaster; document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> ${masterName}`; } else { document.getElementById('parent-company-brand').innerText = myMaster; } }); }
-                });
-            } else document.getElementById('parent-company-brand').innerHTML = `<img src="logo_shop.jpg" class="brand-logo" onerror="this.style.display='none'"> الإدارة المركزية`;
-        }
-
-        function setupAdsAndAlerts() {
-            const master = currentUser.Client_Master || currentUser.master; const myUser = currentUser.Shop_User || currentUser.user || currentUser.Client_User;
-            let activeAds = { admin: null, client: null }, activeAlerts = { admin: null, client: null };
-
-            const renderAd = () => {
-                const now = Date.now(); let displayAd = null, senderLabel = "الإدارة";
-                if (activeAds.client && (!activeAds.client.expireAt || activeAds.client.expireAt > now)) { displayAd = activeAds.client; senderLabel = activeAds.client.sender || masterName; } 
-                else if (activeAds.admin && (!activeAds.admin.expireAt || activeAds.admin.expireAt > now)) { displayAd = activeAds.admin; senderLabel = activeAds.admin.sender || masterName; }
-                const adContainer = document.getElementById('smart-ad-container'), adMarquee = document.getElementById('smart-ad-text'), adBadge = document.getElementById('ad-sender-badge');
-                if (displayAd && displayAd.text) { adMarquee.innerText = displayAd.text; adBadge.innerText = `تعميم من ${senderLabel} 👑`; adContainer.className = 'app-ad-container ad-type-' + (displayAd.type || 'normal'); adContainer.style.display = 'flex'; } 
-                else adContainer.style.display = 'none';
-            };
-
-            const extractAd = (adsObj) => { if (!adsObj) return null; if (adsObj.users && adsObj.users[myUser]) return adsObj.users[myUser]; if (adsObj.global) return adsObj.global; return null; };
-
-            const renderAlert = () => {
-                let displayAlert = activeAlerts.client || activeAlerts.admin; let senderLabel = activeAlerts.client ? (activeAlerts.client.sender || masterName) : (activeAlerts.admin ? (activeAlerts.admin.sender || masterName) : masterName);
-                if (displayAlert && displayAlert.message) {
-                    const lastSeen = localStorage.getItem('last_seen_alert_shop_' + myUser) || 0;
-                    if (displayAlert.timestamp > lastSeen) {
-                        document.getElementById('app-popup-msg').innerHTML = `<div style="font-size:14px; color:var(--danger); margin-bottom:10px;">رسالة رسمية - ${senderLabel}</div>${displayAlert.message}`;
-                        document.getElementById('app-popup-overlay').style.display = 'flex';
-                        localStorage.setItem('last_seen_alert_shop_' + myUser, displayAlert.timestamp);
-                    }
-                }
-            };
-
-            onValue(ref(db, 'announcements'), snap => { activeAds.admin = extractAd(snap.val()); renderAd(); });
-            onValue(ref(db, 'alerts'), snap => { activeAlerts.admin = extractAd(snap.val()); renderAlert(); });
-            if(master) { onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); }); onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); }); }
-        }
-
-        window.cancelOrder = function(orderId) { showCustomConfirm("تأكيد أمر الإلغاء. لن تتمكن من التراجع بعد التنفيذ.", async () => { try { await update(ref(db, `orders/${orderId}`), { Shop_Status: 'cancelled', OrderStatus: 'cancelled' }); showAppToast("تم إلغاء الطلب وسحبه من النظام"); } catch (e) { showAppToast("خطأ في تنفيذ أمر الإلغاء.", true); } }); };
-
-        function isMyOrder(ord) { const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase(); const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase(); return (myUser !== "" && myUser === ordUser); }
-
-        function setupLiveOrders() {
-            onValue(ref(db, 'orders'), (snapshot) => {
-                const list = document.getElementById('history-list'); let listHtml = ''; 
-                if(snapshot.exists()) {
-                    const allOrders = Object.values(snapshot.val()), myOrders = allOrders.filter(o => isMyOrder(o));
-                    document.getElementById('orders-today').innerText = myOrders.filter(o => new Date(o.Shop_Date || Date.now()).toDateString() === new Date().toDateString()).length;
-                    document.getElementById('orders-total').innerText = myOrders.length;
-                    const recentOrders = myOrders.reverse().slice(0, 20);
-                    if(recentOrders.length === 0) listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد عمليات مسجلة حديثاً</div>';
-                    else {
-                        const statusMap = { 'new': { text: 'قيد الانتظار', color: '#d97706', bg: '#fef3c7' }, 'accepted': { text: 'قيد التجهيز', color: '#2563eb', bg: '#dbeafe' }, 'picked_up': { text: 'في عهدة الكابتن', color: '#7c3aed', bg: '#ede9fe' }, 'on_way': { text: 'في الطريق', color: '#7c3aed', bg: '#ede9fe' }, 'arrived': { text: 'الكابتن بالموقع', color: '#db2777', bg: '#fce7f3' }, 'delivered': { text: 'تم التسليم بنجاح', color: '#059669', bg: '#d1fae5' }, 'cancelled': { text: 'ملغي', color: '#dc2626', bg: '#fee2e2' } };
-                        recentOrders.forEach(item => {
-                            const fullDateObj = new Date(item.Shop_Date || Date.now()), timeStr = fullDateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), dateStr = fullDateObj.toLocaleDateString('en-GB'); 
-                            const currentStatus = item.OrderStatus || item.Shop_Status || 'new', statusInfo = statusMap[currentStatus] || { text: currentStatus, color: '#94a3b8', bg: '#f1f5f9' };
-                            if (orderStatesHistory[item.Shop_Ord_ID] && orderStatesHistory[item.Shop_Ord_ID] !== currentStatus) {
-                                if (currentStatus === 'accepted') { snd_accept.play().catch(e=>{}); showAppToast('تم استلام الطلب من قبل المندوب'); }
-                                if (currentStatus === 'picked_up') { snd_pickup.play().catch(e=>{}); showAppToast('المندوب في طريقه للعميل'); }
-                                if (currentStatus === 'arrived') { snd_arrive.play().catch(e=>{}); showAppToast('المندوب وصل لموقع التسليم'); }
-                                if (currentStatus === 'delivered') { snd_deliver.play().catch(e=>{}); showAppToast('تم إغلاق الطلب بنجاح'); if(!askedToRate[item.Shop_Ord_ID] && item.Cap_Phone) { setTimeout(() => { openRatingModal(item.Cap_Phone); }, 1500); askedToRate[item.Shop_Ord_ID] = true; } }
-                            }
-                            orderStatesHistory[item.Shop_Ord_ID] = currentStatus;
-                            let isPhoneHidden = currentUser.hide_phone === true || !systemSettings.show_phone_numbers;
-                            let phoneHtml = '';
-                            if (item.Cap_Phone) phoneHtml = isPhoneHidden ? `<span class="hidden-phone-badge">مخفي للخصوصية 🛡️</span>` : `<span style="direction:ltr; text-align:right; font-size:12px; font-weight:bold; color:var(--text-main); margin-left:8px;">${item.Cap_Phone}</span><a href="tel:${item.Cap_Phone}" class="btn-call-cap" title="اتصال بالكابتن">📞</a>`;
-                            let capDetailsHtml = (currentStatus !== 'new' && currentStatus !== 'cancelled' && item.Cap_Name) ? `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><div><div style="font-size:13px; font-weight:bold; color:var(--primary); margin-bottom:4px;">👤 ${item.Cap_Name}</div><div style="font-size:11px; color:var(--text-light);">🚗 ${item.Cap_CarType || 'مركبة'} - ${item.Cap_CarCode || '-'}</div></div><div style="display:flex; align-items:center;">${phoneHtml}</div></div>` : '';
-                            let cancelBtnHtml = (currentStatus === 'new' || currentStatus === 'accepted') ? `<button onclick="cancelOrder('${item.Shop_Ord_ID}')" style="background:#fee2e2; color:#ef4444; border:1px solid #fca5a5; padding:8px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; margin-top:12px; width:100%; transition:0.3s;">إلغاء الطلب ❌</button>` : '';
-
-                            listHtml += `<div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #cbd5e1; padding-bottom:10px; margin-bottom:12px;"><div style="font-size:11px; color:#64748b; font-weight:bold;">📅 ${dateStr} &nbsp; 🕐 ${timeStr}</div><div style="background:${statusInfo.bg}; color:${statusInfo.color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${statusInfo.text}</div></div><div style="font-size:14px; font-weight:900; color:var(--primary); margin-bottom:15px;">📍 الوجهة <span style="color:var(--info);">${item.Shop_Pickup}</span></div>${capDetailsHtml}<div style="display:flex; justify-content:space-between; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9; margin-top:10px;"><div style="text-align:center; flex:1; border-left:1px solid #e2e8f0;"><div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">قيمة الفاتورة</div><div style="font-size:14px; font-weight:900; color:var(--primary);">${item.Shop_Val} د.أ</div></div><div style="text-align:center; flex:1;"><div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">تكلفة التوصيل</div><div style="font-size:14px; font-weight:900; color:var(--success);">${item.Shop_Fee || item.fee || '0.00'} د.أ</div></div></div>${cancelBtnHtml}</div>`;
-                        });
-                    }
-                } else { document.getElementById('orders-today').innerText = 0; document.getElementById('orders-total').innerText = 0; listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد عمليات مسجلة حديثاً</div>'; }
-                list.innerHTML = listHtml;
-            });
-        }
-
-        window.submitRating = async function() {
-            const val = parseInt(document.getElementById('current_rating_val').value), capId = document.getElementById('rating_cap_id').value, selectedTag = document.getElementById('selected_tag').value, notes = document.getElementById('rating_notes').value.trim();
-            if(val === 0) return showAppToast("الرجاء اختيار التقييم أولاً", true);
-            try { await set(push(ref(db, `ratings/captains/${capId}`)), { shopId: currentUser.Shop_User || currentUser.Client_User || currentUser.user, rating: val, reason: selectedTag, notes: notes, timestamp: Date.now() }); showAppToast("تم تسجيل التقييم في النظام. شكراً لمساهمتك."); closeRatingModal(); } catch(e) { showAppToast("فشل إرسال التقييم.", true); closeRatingModal(); }
-        };
 
         window.fetchAllData = async function() {
             try {
-                const snapshot = await get(ref(db));
-                if(snapshot.exists()) {
-                    const data = snapshot.val(); let flatData = [];
-                    const addWithNode = (obj, nodeName) => { if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); }); };
-                    addWithNode(data.users, 'users'); addWithNode(data.shops, 'shops'); addWithNode(data.captains, 'captains'); dbPrices = extractPrices(data.prices);
-                    const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
-                    const me = flatData.find(u => String(u.Shop_User || "").trim() === shopKey || String(u.Client_User || "").trim() === shopKey || String(u.user || "").trim() === shopKey || String(u.Shop_Phone || "").trim() === shopKey || String(u.Client_Phone || "").trim() === shopKey || String(u.phone || "").trim() === shopKey);
+                const snap = await get(ref(db));
+                if(snap.exists()) {
+                    const data = snap.val(); let flat = [];
+                    const add = (obj, n) => { if(obj) Object.values(obj).forEach(i => { i._node = n; flat.push(i); }); };
+                    add(data.users, 'users'); add(data.shops, 'shops'); add(data.captains, 'captains'); dbPrices = extractPrices(data.prices);
+                    const key = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
+                    const me = flat.find(u => String(u.Shop_User||"")===key || String(u.Client_User||"")===key || String(u.user||"")===key || String(u.phone||"")===key);
                     if (me) { window.myNode = me._node || 'shops'; myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0); document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2); loadShopPrices(); }
                 }
-            } catch (e) { console.error("خطأ في المزامنة", e); }
+            } catch (e) {}
         }
 
-        window.attachBalanceListener = function() {
-            const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
-            onValue(ref(db, `${window.myNode}/${shopKey}`), (snap) => {
-                if(snap.exists()){
-                    const me = snap.val(); myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0); document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
-                    if ((me.Client_Status || me.status || 'active') === 'paused') { document.getElementById('app-container').style.display = 'none'; document.getElementById('auth-section').style.display = 'flex'; toggleAuth('suspended'); }
-                } else logout();
+        function attachBalanceListener() {
+            const k = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+            onValue(ref(db, `${window.myNode}/${k}`), snap => {
+                if(snap.exists()) {
+                    myBalance = parseFloat(snap.val().Shop_Balance || snap.val().Client_Balance || snap.val().balance || 0);
+                    document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                    if((snap.val().Client_Status || snap.val().status) === 'paused') { localStorage.removeItem('n1_shop_session'); location.reload(); }
+                }
+            });
+        }
+
+        function extractPrices(obj) {
+            let arr = []; if(!obj) return arr;
+            Object.values(obj).forEach(v => { if(v && typeof v==='object') { if(v.Price_Area) arr.push(v); else arr = arr.concat(extractPrices(v)); } });
+            return arr;
+        }
+
+        function setupLivePrices() {
+            onValue(ref(db, 'prices'), snap => {
+                if(snap.exists() && currentUser) { dbPrices = extractPrices(snap.val()); loadShopPrices(); calculateFee(); }
             });
         }
 
         window.loadShopPrices = function() {
-            pricingMatrix = {}; featureMatrix = {}; window.offerMatrix = {}; const datalist = document.getElementById('areas-list'); datalist.innerHTML = '';
-            const myArea = currentUser.Client_PricingArea || currentUser.pricing_area || currentUser.Shop_Location; if (!myArea) return;
-            dbPrices.filter(p => String(p.Price_Source).trim() === String(myArea).trim()).forEach(p => {
-                const currentPrice = parseFloat(p.Price_Current || p.Price_Base || 0), areaName = String(p.Price_Area).trim();
-                pricingMatrix[areaName] = currentPrice;
-                if(p.Price_Offer === 'true') { featureMatrix[areaName] = '⭐'; if (p.Price_Original && p.Offer_End_Time) window.offerMatrix[areaName] = { original: parseFloat(p.Price_Original), endTime: parseInt(p.Offer_End_Time) }; }
-                const opt = document.createElement('option'); opt.value = areaName; datalist.appendChild(opt);
+            pricingMatrix = {}; featureMatrix = {}; window.offerMatrix = {}; 
+            const dl = document.getElementById('areas-list'); dl.innerHTML = '';
+            const area = currentUser.Client_PricingArea || currentUser.pricing_area || currentUser.Shop_Location; if (!area) return;
+            dbPrices.filter(p => String(p.Price_Source).trim() === String(area).trim()).forEach(p => {
+                const n = String(p.Price_Area).trim(); pricingMatrix[n] = parseFloat(p.Price_Current || p.Price_Base || 0);
+                if(p.Price_Offer === 'true') { featureMatrix[n] = '⭐'; if (p.Price_Original && p.Offer_End_Time) window.offerMatrix[n] = { original: parseFloat(p.Price_Original), endTime: parseInt(p.Offer_End_Time) }; }
+                dl.appendChild(new Option(n));
             });
         }
 
-        window.calculateFee = function() {
-            const dest = String(document.getElementById('destination').value).trim(), nightBadge = document.getElementById('night-fee-badge'), starBadge = document.getElementById('star-feature-badge'), offerBox = document.getElementById('offer-details-box'), originalDisplay = document.getElementById('original-price-display'), timerDisplay = document.getElementById('offer-timer-display');
-            if (window.currentOfferInterval) clearInterval(window.currentOfferInterval);
-            if (pricingMatrix[dest] !== undefined) {
-                let baseFee = pricingMatrix[dest]; const isNightTime = (new Date().getHours() >= 23 || new Date().getHours() < 6);
-                if (isNightTime) { baseFee += 0.50; nightBadge.style.display = 'inline-block'; } else nightBadge.style.display = 'none';
-                if(featureMatrix[dest] === '⭐') {
-                    starBadge.style.display = 'inline-block'; const offer = window.offerMatrix && window.offerMatrix[dest];
-                    if (offer && offer.endTime > Date.now()) {
-                        offerBox.style.display = 'block'; let origPrice = offer.original; if (isNightTime) origPrice += 0.50; originalDisplay.innerText = origPrice.toFixed(2);
-                        const updateTimer = () => { const diff = offer.endTime - Date.now(); if (diff <= 0) { timerDisplay.innerText = "انتهى العرض ⏳"; timerDisplay.style.color = "#dc2626"; clearInterval(window.currentOfferInterval); } else { const h = Math.floor(diff / (1000 * 60 * 60)); const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); timerDisplay.innerText = `⏳ ينتهي العرض خلال ${h}س و ${m}د`; timerDisplay.style.color = "#059669"; } };
-                        updateTimer(); window.currentOfferInterval = setInterval(updateTimer, 60000);
-                    } else offerBox.style.display = 'none';
-                } else { starBadge.style.display = 'none'; offerBox.style.display = 'none'; }
-                document.getElementById('delivery_fee').value = baseFee.toFixed(2) + ' د.أ';
-            } else { document.getElementById('delivery_fee').value = ''; nightBadge.style.display = 'none'; starBadge.style.display = 'none'; offerBox.style.display = 'none'; }
-        }
+        window.calculateFee = () => {
+            const d = document.getElementById('destination').value.trim();
+            if (pricingMatrix[d] !== undefined) {
+                let f = pricingMatrix[d]; if(new Date().getHours() >= 23 || new Date().getHours() < 6) { f+=0.50; document.getElementById('night-fee-badge').style.display='inline-block'; } else document.getElementById('night-fee-badge').style.display='none';
+                document.getElementById('star-feature-badge').style.display = featureMatrix[d] ? 'inline-block' : 'none';
+                const offBox = document.getElementById('offer-details-box');
+                if (featureMatrix[d] && window.offerMatrix[d] && window.offerMatrix[d].endTime > Date.now()) {
+                    offBox.style.display = 'block'; document.getElementById('original-price-display').innerText = window.offerMatrix[d].original.toFixed(2);
+                } else offBox.style.display = 'none';
+                document.getElementById('delivery_fee').value = f.toFixed(2) + ' د.أ';
+            } else { document.getElementById('delivery_fee').value = ''; document.getElementById('night-fee-badge').style.display='none'; document.getElementById('star-feature-badge').style.display='none'; document.getElementById('offer-details-box').style.display='none'; }
+        };
 
-        window.sendOrder = async function() {
-            const dest = String(document.getElementById('destination').value).trim(), val = document.getElementById('order_val').value;
-            if (!dest || !val) return showAppToast("البيانات المدخلة للطلب غير مكتملة", true);
-            if (pricingMatrix[dest] === undefined) return showAppToast("الوجهة المدخلة غير مدعومة ضمن نطاقكم", true);
-            let secureFee = pricingMatrix[dest]; const offer = window.offerMatrix && window.offerMatrix[dest]; if (offer && offer.endTime < Date.now()) secureFee = offer.original;
-            if (new Date().getHours() >= 23 || new Date().getHours() < 6) secureFee += 0.50;
+        window.sendOrder = async () => {
+            const d = document.getElementById('destination').value.trim(), v = document.getElementById('order_val').value;
+            if(!d || !v || pricingMatrix[d] === undefined) return showAppToast("البيانات غير صحيحة", true);
             setLoading('btn-send', true);
-            const orderId = "SHOP_ORD_" + Date.now();
+            const id = "SHOP_ORD_" + Date.now();
+            let fee = pricingMatrix[d]; if(new Date().getHours() >= 23 || new Date().getHours() < 6) fee += 0.50;
             try {
-                await set(ref(db, `orders/${orderId}`), { Shop_Ord_ID: orderId, Shop_Type: "shop_order", Shop_User: currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone, Shop_Name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name, Shop_Pickup: dest, Shop_Location_Link: currentUser.Shop_Location || currentUser.Client_Location || currentUser.pickup || "", Shop_Val: val, Shop_Fee: secureFee.toFixed(2), Shop_Date: new Date().toISOString(), Shop_IsEmergency: "false", Shop_Status: "new", OrderStatus: "new", Master_ID: currentUser.Client_Master || currentUser.master || "الإدارة العامة", shop_phone: currentUser.Shop_Phone || currentUser.phone || '' });
-                showAppToast("تم تسليم الطلب لمنظومة التوجيه بنجاح"); document.getElementById('destination').value = ''; document.getElementById('order_val').value = ''; document.getElementById('delivery_fee').value = ''; document.getElementById('night-fee-badge').style.display = 'none'; document.getElementById('star-feature-badge').style.display = 'none'; document.getElementById('offer-details-box').style.display = 'none'; if (window.currentOfferInterval) clearInterval(window.currentOfferInterval);
-            } catch (e) { showAppToast("حدث خطأ تقني في توجيه الطلب", true); } finally { setLoading('btn-send', false, "إرسال الطلب للعمليات 🚀"); }
+                await set(ref(db, `orders/${id}`), { Shop_Ord_ID: id, Shop_Type: "shop_order", Shop_User: currentUser.Shop_User || currentUser.Client_User || currentUser.user, Shop_Name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name, Shop_Pickup: d, Shop_Location_Link: currentUser.Shop_Location || "", Shop_Val: v, Shop_Fee: fee.toFixed(2), Shop_Date: new Date().toISOString(), Shop_Status: "new", OrderStatus: "new", Master_ID: currentUser.Client_Master || currentUser.master || "الإدارة العامة", shop_phone: currentUser.Shop_Phone || currentUser.phone || '' });
+                showAppToast("تم إطلاق الطلب بنجاح 🚀"); document.getElementById('destination').value=''; document.getElementById('order_val').value=''; calculateFee(); switchTab('history');
+            } catch(e) { showAppToast("خطأ بالإرسال", true); } finally { setLoading('btn-send', false, "<span>تأكيد وتسليم للرادار المريخي</span> <i class='fas fa-space-shuttle'></i>"); }
+        };
+
+        function isMyOrder(ord) { const my = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase(), ou = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase(); return (my !== "" && my === ou); }
+
+        function setupLiveOrders() {
+            onValue(ref(db, 'orders'), snap => {
+                const list = document.getElementById('history-list');
+                if(snap.exists()) {
+                    const myOrds = Object.values(snap.val()).filter(o => isMyOrder(o));
+                    document.getElementById('orders-total').innerText = myOrds.length;
+                    document.getElementById('orders-today').innerText = myOrds.filter(o => new Date(o.Shop_Date || Date.now()).toDateString() === new Date().toDateString()).length;
+                    const recent = myOrds.reverse().slice(0, 20);
+                    if(recent.length === 0) { list.innerHTML = '<div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">لا توجد عمليات</div>'; return; }
+                    
+                    let html = '';
+                    const sm = { 'new': { t: 'قيد الانتظار', c: 'text-yellow-500 border-yellow-500/30 bg-yellow-500/10' }, 'accepted': { t: 'قيد التجهيز', c: 'text-blue-400 border-blue-400/30 bg-blue-500/10' }, 'picked_up': { t: 'مع الكابتن', c: 'text-indigo-400 border-indigo-400/30 bg-indigo-500/10' }, 'on_way': { t: 'في الطريق', c: 'text-indigo-400 border-indigo-400/30 bg-indigo-500/10' }, 'arrived': { t: 'بالموقع', c: 'text-pink-400 border-pink-400/30 bg-pink-500/10' }, 'delivered': { t: 'تم التسليم', c: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' }, 'cancelled': { t: 'ملغي', c: 'text-red-400 border-red-500/30 bg-red-500/10' } };
+                    
+                    recent.forEach(o => {
+                        const st = o.OrderStatus || o.Shop_Status || 'new', info = sm[st] || sm['new'];
+                        if(orderStatesHistory[o.Shop_Ord_ID] && orderStatesHistory[o.Shop_Ord_ID] !== st) { if(st==='accepted') snd_accept.play().catch(e=>{}); if(st==='delivered') { snd_deliver.play().catch(e=>{}); if(!askedToRate[o.Shop_Ord_ID] && o.Cap_Phone) { setTimeout(()=>openRatingModal(o.Cap_Phone), 1500); askedToRate[o.Shop_Ord_ID]=true; } } }
+                        orderStatesHistory[o.Shop_Ord_ID] = st;
+                        
+                        let phHtml = o.Cap_Phone ? ((currentUser.hide_phone || !systemSettings.show_phone_numbers) ? `<span class="text-[10px] text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20">مخفي 🛡️</span>` : `<span class="font-mono text-xs ml-2">${o.Cap_Phone}</span><a href="tel:${o.Cap_Phone}" class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="fas fa-phone"></i></a>`) : '';
+                        let capHtml = o.Cap_Name && st!=='cancelled' && st!=='new' ? `<div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl mt-3 border border-slate-700"><div><div class="text-xs font-bold text-white mb-1">👤 ${o.Cap_Name}</div><div class="text-[10px] text-slate-400">🚗 ${o.Cap_CarType||''} - ${o.Cap_CarCode||''}</div></div><div class="flex items-center">${phHtml}</div></div>` : '';
+                        let cnlBtn = (st==='new' || st==='accepted') ? `<button onclick="cancelOrder('${o.Shop_Ord_ID}')" class="w-full mt-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs border border-red-500/30 transition-colors">إلغاء الطلب ❌</button>` : '';
+
+                        html += `<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 mb-4 hover:border-yellow-500/30 transition-colors">
+                                    <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
+                                        <div class="text-[10px] text-slate-400 font-mono"><i class="far fa-clock"></i> ${new Date(o.Shop_Date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+                                        <div class="border px-3 py-1 rounded-full text-[10px] font-bold ${info.c}">${info.t}</div>
+                                    </div>
+                                    <div class="text-sm font-black text-white mb-1"><i class="fas fa-map-marker-alt text-indigo-400 ml-1"></i> ${o.Shop_Pickup}</div>
+                                    ${capHtml}
+                                    <div class="flex gap-2 mt-3">
+                                        <div class="flex-1 bg-slate-900/80 rounded-xl p-2 text-center border border-slate-700/50"><div class="text-[9px] text-slate-500 mb-1">فاتورة</div><div class="text-xs font-black text-white">${o.Shop_Val} <span class="text-[8px] font-normal text-slate-400">د.أ</span></div></div>
+                                        <div class="flex-1 bg-emerald-900/20 rounded-xl p-2 text-center border border-emerald-500/20"><div class="text-[9px] text-emerald-500/70 mb-1">توصيل</div><div class="text-xs font-black text-emerald-400">${o.Shop_Fee} <span class="text-[8px] font-normal text-emerald-600">د.أ</span></div></div>
+                                    </div>
+                                    ${cnlBtn}
+                                 </div>`;
+                    });
+                    list.innerHTML = html;
+                } else list.innerHTML = '<div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">لا توجد عمليات</div>';
+            });
         }
 
-        window.verifyCaptain = async function() {
-            const capId = String(document.getElementById('cap_id').value).trim(), amount = parseFloat(document.getElementById('charge_amount').value);
-            if (!capId || !amount) return showAppToast("يجب إدخال المعرف والمبلغ للمتابعة", true);
-            if (amount <= 0) return showAppToast("قيمة الرصيد المدخلة غير مقبولة", true);
-            if (myBalance < amount) return showAppToast(`الرصيد التشغيلي غير كافٍ لإتمام العملية`, true);
+        // === Charging ===
+        window.verifyCaptain = async () => {
+            const id = document.getElementById('cap_id').value.trim(), amt = parseFloat(document.getElementById('charge_amount').value);
+            if(!id || !amt || amt<=0) return showAppToast("البيانات غير صحيحة", true);
+            if(myBalance < amt) return showAppToast("رصيدك غير كاف", true);
             setLoading('btn-check', true);
             try {
-                const snapshot = await get(ref(db));
-                if (snapshot.exists()) {
-                    const data = snapshot.val(); let flatData = [];
-                    const addWithNode = (obj, nodeName) => { if(obj) Object.values(obj).forEach(item => { item._node = nodeName; flatData.push(item); }); };
-                    addWithNode(data.users, 'users'); addWithNode(data.shops, 'shops'); addWithNode(data.captains, 'captains');
-                    const cap = flatData.find(c => (String(c.Cap_User || "").trim() === capId || String(c.user || "").trim() === capId || String(c.Cap_Phone || "").trim() === capId || String(c.Client_Phone || "").trim() === capId || String(c.phone || "").trim() === capId));
-                    if (!cap) { showAppToast("لا توجد قيود للمستلم. يرجى مراجعة المعرف المدخل", true); verifiedCaptain = null; document.getElementById('cap-check-result').style.display = 'none'; document.getElementById('btn-charge').style.display = 'none'; } 
-                    else { verifiedCaptain = cap; document.getElementById('found-cap-name').innerText = cap.Cap_Name || cap.name || "مستلم معتمد"; const capBal = parseFloat(cap.Cap_Balance || cap.balance || 0); document.getElementById('found-cap-balance').innerText = capBal.toFixed(2); document.getElementById('future-cap-balance').innerText = (capBal + amount).toFixed(2); document.getElementById('cap-check-result').style.display = 'block'; document.getElementById('btn-charge').style.display = 'block'; }
+                const snap = await get(ref(db));
+                if(snap.exists()) {
+                    let f = null; const check = (obj, node) => { if(obj) Object.values(obj).forEach(c=>{ if((c.Cap_Phone===id || c.Cap_User===id || c.phone===id || c.user===id) && (c.role==='captain'||c.type==='captain')) {c._node=node; f=c;} }) };
+                    check(snap.val().users, 'users'); check(snap.val().shops, 'shops'); check(snap.val().captains, 'captains');
+                    if(f) {
+                        verifiedCaptain = f; document.getElementById('found-cap-name').innerText = f.Cap_Name || f.name;
+                        document.getElementById('future-cap-balance').innerText = (parseFloat(f.Cap_Balance||f.balance||0) + amt).toFixed(2);
+                        document.getElementById('cap-check-result').style.display='block'; document.getElementById('btn-charge').style.display='block';
+                    } else showAppToast("المستلم غير موجود", true);
                 }
-            } catch (e) { showAppToast("تعذر إتمام طلب التحقق المالي", true); } finally { setLoading('btn-check', false, "التحقق من بيانات المستلم 🔍"); }
-        }
+            } catch(e) { showAppToast("خطأ فحص", true); } finally { setLoading('btn-check', false, "التحقق من بيانات الكابتن 🔍"); }
+        };
 
-        window.executeTransfer = async function() {
-            if (!verifiedCaptain) return; const amount = parseFloat(document.getElementById('charge_amount').value);
-            if (myBalance < amount) return showAppToast("عملية مرفوضة: رصيد العمليات غير كافٍ", true);
-            showCustomConfirm("تحذير: سيتم خصم الرصيد وتوثيقه في السجلات المعتمدة. استمرار؟", async () => {
-                setLoading('btn-charge', true);
-                try {
-                    const newCapBal = parseFloat(verifiedCaptain.Cap_Balance || verifiedCaptain.balance || 0) + amount, newShopBal = myBalance - amount, capKey = String(verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone || verifiedCaptain.phone).trim(), shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim(), capNode = verifiedCaptain._node || 'users', updates = {};
-                    updates[`${capNode}/${capKey}/Cap_Balance`] = newCapBal; updates[`${capNode}/${capKey}/balance`] = newCapBal; updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal; updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal; updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
-                    const txId = "TX_" + Date.now() + Math.floor(Math.random() * 1000); updates[`financial_logs/${shopKey}/${txId}`] = { type: 'deposit_to_captain', amount: amount, captain_phone: capKey, captain_name: verifiedCaptain.Cap_Name || verifiedCaptain.name || "مستلم معتمد", shop_user: shopKey, shop_name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "نقطة شحن", description: `تغذية رصيد من نقطة معتمدة`, timestamp: Date.now(), date_string: new Date().toISOString() };
-                    await update(ref(db), updates); myBalance = newShopBal; document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2); showAppToast(`اكتملت المعاملة المالية وتم تقييد الأرصدة`); ['cap_id', 'charge_amount'].forEach(id => document.getElementById(id).value = ''); document.getElementById('cap-check-result').style.display = 'none'; document.getElementById('btn-charge').style.display = 'none'; verifiedCaptain = null;
-                } catch (e) { showAppToast("فشلت عملية التوثيق المالي. يرجى مراجعة الدعم.", true); } finally { setLoading('btn-charge', false, "تنفيذ عملية التحويل ✅"); }
-            });
-        }
-
-        window.updateShopProfile = async function() {
-            const oldUser = currentUser.Shop_User || currentUser.Client_User || currentUser.user, newPass = document.getElementById('profile_pass').value;
-            if(!newPass) return showAppToast("لم يتم اكتشاف تغييرات جديدة للتحديث", true);
-            setLoading('btn-save-settings', true);
+        window.executeTransfer = () => showCustomConfirm("تأكيد خصم الرصيد وتحويله للكابتن؟", async () => {
+            if(!verifiedCaptain) return; const amt = parseFloat(document.getElementById('charge_amount').value);
+            setLoading('btn-charge', true);
             try {
-                await update(ref(db), { [`${window.myNode}/${oldUser}/Shop_Pass`]: newPass, [`${window.myNode}/${oldUser}/pass`]: newPass, [`${window.myNode}/${oldUser}/Client_Pass`]: newPass });
-                currentUser.Shop_Pass = newPass; currentUser.Client_Pass = newPass; currentUser.pass = newPass; localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
-                showAppToast("تم تحديث مفتاح التشفير ورفع مستوى الأمان");
-            } catch(e) { showAppToast("تعذر توثيق التحديثات", true); } finally { setLoading('btn-save-settings', false, "تحديث البيانات 💾"); }
-        }
+                const capK = verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone, shopK = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+                const nCB = parseFloat(verifiedCaptain.Cap_Balance||verifiedCaptain.balance||0) + amt, nSB = myBalance - amt;
+                const up = { [`${verifiedCaptain._node}/${capK}/Cap_Balance`]: nCB, [`${verifiedCaptain._node}/${capK}/balance`]: nCB, [`${window.myNode}/${shopK}/Shop_Balance`]: nSB, [`${window.myNode}/${shopK}/balance`]: nSB };
+                const txId = "TX_" + Date.now(); up[`financial_logs/${shopK}/${txId}`] = { type: 'deposit_to_captain', amount: amt, captain_phone: capK, captain_name: verifiedCaptain.Cap_Name || verifiedCaptain.name, shop_user: shopK, timestamp: Date.now() };
+                await update(ref(db), up); myBalance = nSB; document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                showAppToast("تمت الحوالة بنجاح 💎"); ['cap_id', 'charge_amount'].forEach(id => document.getElementById(id).value='');
+                document.getElementById('cap-check-result').style.display='none'; document.getElementById('btn-charge').style.display='none'; verifiedCaptain=null;
+            } catch(e) { showAppToast("خطأ بالتنفيذ", true); } finally { setLoading('btn-charge', false, "تأكيد عملية التحويل المالية ✅"); }
+        });
+
+        // === Rating ===
+        window.openRatingModal = (capId) => {
+            document.getElementById('rating_cap_id').value = capId; document.getElementById('current_rating_val').value = "0"; document.getElementById('selected_tag').value = ""; document.getElementById('rating_notes').value = "";
+            document.querySelectorAll('.gem').forEach(g => g.classList.remove('active')); document.getElementById('rating-feedback').style.display = 'none';
+            document.getElementById('rating_title_desc').innerText = "كيف كان أداء الكابتن في هذا الطلب؟"; document.getElementById('rating-modal').style.display = 'flex';
+        };
+        window.closeRatingModal = () => document.getElementById('rating-modal').style.display = 'none';
+        window.setRating = (val) => {
+            document.getElementById('current_rating_val').value = val;
+            document.querySelectorAll('.gem').forEach((g, i) => { if(i < val) g.classList.add('active'); else g.classList.remove('active'); });
+            const fb = document.getElementById('rating-feedback'), q = document.getElementById('dynamic-question'), tc = document.getElementById('quick-tags'), d = document.getElementById('rating_title_desc');
+            fb.style.display = 'block'; document.getElementById('selected_tag').value = "";
+            const tMap = {
+                1: { d: "ضعيف جداً ⚠️", c: "var(--danger)", q: "نأسف لذلك. ما هي المشكلة؟", tg: ["تأخير", "أسلوب سيء", "لم يستلم", "تضرر"] },
+                2: { d: "سيء 😟", c: "#d97706", q: "ما الذي أزعجك؟", tg: ["بطء", "عدم رد", "غير مهني"] },
+                3: { d: "مقبول 😐", c: "#8b5cf6", q: "كيف يتحسن؟", tg: ["السرعة", "التعامل", "الاهتمام"] },
+                4: { d: "جيد جداً 🙂", c: "var(--info)", q: "ملاحظة بسيطة؟", tg: ["كل شيء جيد", "أسرع قليلاً"] },
+                5: { d: "ممتاز 🌟", c: "var(--success)", q: "شكراً لتعاونكم", tg: ["سريع", "راقي", "مميز"] }
+            };
+            d.innerText = tMap[val].d; d.style.color = tMap[val].c; q.innerText = tMap[val].q;
+            tc.innerHTML = tMap[val].tg.map(t => `<span class="tag" onclick="selectTag(this)">${t}</span>`).join('');
+        };
+        window.selectTag = (el) => { document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); el.classList.add('active'); document.getElementById('selected_tag').value = el.innerText; };
+        window.submitRating = async () => {
+            const v = parseInt(document.getElementById('current_rating_val').value), c = document.getElementById('rating_cap_id').value, t = document.getElementById('selected_tag').value, n = document.getElementById('rating_notes').value.trim();
+            if(v===0) return showAppToast("اختر التقييم أولاً", true);
+            try { await set(push(ref(db, `ratings/captains/${c}`)), { shopId: currentUser.Shop_User || currentUser.user, rating: v, reason: t, notes: n, timestamp: Date.now() }); showAppToast("تم تسجيل التقييم"); closeRatingModal(); } catch(e) { showAppToast("فشل الإرسال", true); closeRatingModal(); }
+        };
     </script>
 </body>
 </html>
