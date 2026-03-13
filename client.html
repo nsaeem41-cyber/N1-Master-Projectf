@@ -106,7 +106,7 @@
             <div class="h-px w-full bg-slate-800/50 my-3"></div>
 
             <button onclick="switchTab('settings', this)" class="menu-item w-full flex items-center gap-3 p-3 rounded-xl text-slate-400 text-sm font-bold">
-                <i class="fas fa-user-shield w-5"></i> <span>الإعدادات</span>
+                <i class="fas fa-user-shield w-5"></i> <span>الإعدادات والريموت</span>
             </button>
         </nav>
         
@@ -337,6 +337,60 @@
 
                     <div class="lg:col-span-8 flex flex-col gap-6">
                         
+                        <div class="glass-panel rounded-3xl p-6 border-t-4 border-t-red-500 relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-5 border-b border-red-500/20 pb-3">
+                                <div>
+                                    <h2 class="text-lg font-black text-red-400 mb-1 tracking-wide">ريموت سياسة الإلغاء</h2>
+                                    <div class="flex items-center gap-2 text-[9px] text-slate-500 font-mono tracking-widest"><span class="status-dot w-1.5 h-1.5 bg-red-500 shadow-[0_0_5px_#ef4444]"></span> CANCEL PROTOCOL</div>
+                                </div>
+                                <i class="fas fa-ban text-2xl text-red-500/30"></i>
+                            </div>
+
+                            <div class="space-y-5">
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
+                                    <label class="block text-[11px] font-bold text-slate-300 mb-3">تطبيق السياسة على:</label>
+                                    <select id="cancel_policy_target" onchange="loadCancelPolicyForTarget()" class="w-full vault-input p-3 rounded-lg text-sm border-red-500/30 bg-slate-800">
+                                        <option value="global">🌐 جميع المنشآت التابعة (تعميم عام)</option>
+                                        </select>
+                                </div>
+
+                                <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
+                                    <div>
+                                        <div class="text-sm font-bold text-white">السماح بالإلغاء</div>
+                                        <div class="text-[10px] text-slate-400 mt-1">تفعيل أو إيقاف زر الإلغاء عند المنشأة</div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="policy_allow_cancel" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
+                                        <label class="block text-[11px] font-bold text-red-300 mb-2">رسوم الإلغاء (المرحلة الأولى)</label>
+                                        <div class="text-[9px] text-slate-500 mb-3">تطبق إذا كان الكابتن (بالطريق) ولم يصل بعد.</div>
+                                        <div class="relative">
+                                            <input type="number" id="policy_fee_1" class="w-full vault-input p-3 pl-10 rounded-lg text-sm text-center text-red-400 font-bold" placeholder="0.00" step="0.05">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">د.أ</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
+                                        <label class="block text-[11px] font-bold text-red-300 mb-2">رسوم الإلغاء (المرحلة الثانية)</label>
+                                        <div class="text-[9px] text-slate-500 mb-3">تطبق إذا كان الكابتن (بالموقع) أو وصل.</div>
+                                        <div class="relative">
+                                            <input type="number" id="policy_fee_2" class="w-full vault-input p-3 pl-10 rounded-lg text-sm text-center text-red-400 font-bold" placeholder="0.00" step="0.05">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">د.أ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button onclick="saveCancelPolicy()" class="w-full bg-red-600/90 hover:bg-red-500 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)]">
+                                    حفظ وتطبيق السياسة ⚡
+                                </button>
+                            </div>
+                        </div>
+
                         <div id="integrated-ad-center" class="hidden flex-1 glass-panel rounded-3xl p-6 relative border-t-4 border-t-indigo-500">
                             <div class="flex justify-between items-start mb-5 border-b border-indigo-500/20 pb-3">
                                 <div>
@@ -482,10 +536,13 @@
 
         window.switchTab = function(tabId, element) { 
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); 
-            document.querySelectorAll('.menu-item').forEach(el => { el.classList.remove('active'); }); 
+            document.querySelectorAll('.menu-item, .tab-btn').forEach(el => { el.classList.remove('active'); el.classList.remove('bg-slate-800/50'); }); 
             document.getElementById(tabId).classList.add('active'); 
-            if(element) element.classList.add('active');
-            if(window.innerWidth < 768) toggleSidebar(); 
+            if(element) {
+                element.classList.add('active');
+                if(element.classList.contains('tab-btn')) element.classList.add('bg-slate-800/50');
+            }
+            if(window.innerWidth < 768 && document.getElementById('sidebar').classList.contains('sidebar-open')) toggleSidebar(); 
         };
 
         window.onload = function() {
@@ -499,7 +556,7 @@
             
             checkRemotePermission(); checkAdPermission(); updateCountdownTimer(); 
             setupRealtimeFreezeListener(); setupSmartAdsListener(); setupAlertsListener(); 
-            fetchData(); fetchCyberSettings(); 
+            fetchData();
         };
 
         function checkRemotePermission() {
@@ -507,30 +564,103 @@
             onValue(ref(db, `users/${username}`), (snapshot) => {
                 if (snapshot.exists()) { 
                     const data = snapshot.val(); 
-                    const canUse = (data.can_use_remote === true || data.can_use_remote === "true");
+                    // يمكن استخدام هذا لفحص الصلاحيات لاحقاً
                 }
             });
         }
 
-        window.fetchCyberSettings = function() {
-            if(!currentUser) return; const myMaster = currentUser.Client_User || currentUser.user; if(!myMaster) return;
-            onValue(ref(db, `settings/${myMaster}`), (snap) => {
-                if(snap.exists()) {
-                    const s = snap.val();
+        // 🛑 دوال التحكم بريموت الإلغاء
+        window.loadCancelPolicyForTarget = async function() {
+            const target = document.getElementById('cancel_policy_target').value;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            let path = `settings/cancel_policy/${myMaster}`; // مسار التعميم العام
+            if (target !== 'global') {
+                path = `settings/cancel_policy/shops/${target}`; // مسار مخصص لمنشأة
+            }
+
+            try {
+                const snap = await get(ref(db, path));
+                if (snap.exists()) {
+                    const policy = snap.val();
+                    document.getElementById('policy_allow_cancel').checked = policy.allow_cancel !== false;
+                    document.getElementById('policy_fee_1').value = policy.fee_stage_1 || 0;
+                    document.getElementById('policy_fee_2').value = policy.fee_stage_2 || 0;
+                } else {
+                    document.getElementById('policy_allow_cancel').checked = true;
+                    document.getElementById('policy_fee_1').value = 0;
+                    document.getElementById('policy_fee_2').value = 0;
                 }
-            });
+            } catch(e) {
+                showAppToast("فشل استرجاع السياسة", true);
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
         };
 
-        window.saveClientRemote = async function() {
-            const myMaster = currentUser.Client_User || currentUser.user; if(!myMaster) return;
-            let antiVpn = false, showPhones = false, hotspotsActive = false, orderTimer = 10;
+        window.saveCancelPolicy = async function() {
+            const target = document.getElementById('cancel_policy_target').value;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            const allowCancel = document.getElementById('policy_allow_cancel').checked;
+            const fee1 = parseFloat(document.getElementById('policy_fee_1').value) || 0;
+            const fee2 = parseFloat(document.getElementById('policy_fee_2').value) || 0;
+
+            const policyData = {
+                allow_cancel: allowCancel,
+                fee_stage_1: fee1,
+                fee_stage_2: fee2,
+                updated_at: Date.now()
+            };
+
             document.getElementById('loader-overlay').style.display = 'flex';
+            
             try {
-                await update(ref(db, `settings/${myMaster}`), { anti_vpn: antiVpn, show_phone_numbers: showPhones, hotspots_active: hotspotsActive, order_timer: orderTimer, last_updated: Date.now() });
-                const alertData = { message: "UPDATE_SETTINGS_CMD", timestamp: Date.now(), type: "system", sender: "System" };
-                await update(ref(db, `client_alerts/${myMaster}/captains/global`), alertData); await update(ref(db, `client_alerts/${myMaster}/shops/global`), alertData);
-                document.getElementById('loader-overlay').style.display = 'none'; showAppToast("تم إرسال الأوامر بنجاح 🚀");
-            } catch (e) { document.getElementById('loader-overlay').style.display = 'none'; showAppToast("تعطل نظام الإرسال", true); }
+                if (target === 'global') {
+                    // تحديث التعميم العام
+                    await update(ref(db, `settings/cancel_policy/${myMaster}`), policyData);
+                    
+                    // تحديث تنبيهات للمنشآت لتحديث إعداداتهم فوراً
+                    const alertData = { message: "UPDATE_CANCEL_POLICY", timestamp: Date.now(), type: "system", sender: "System" };
+                    await update(ref(db, `client_alerts/${myMaster}/shops/global`), alertData);
+                    
+                    showAppToast("تم تعميم سياسة الإلغاء على جميع المنشآت ⚡");
+                } else {
+                    // تحديث مخصص لمنشأة واحدة
+                    await update(ref(db, `settings/cancel_policy/shops/${target}`), policyData);
+                    
+                    // إرسال تنبيه للمنشأة المحددة
+                    const alertData = { message: "UPDATE_CANCEL_POLICY", timestamp: Date.now(), type: "system", sender: "System" };
+                    await update(ref(db, `client_alerts/${myMaster}/shops/users/${target}`), alertData);
+
+                    showAppToast("تم تخصيص سياسة الإلغاء للمنشأة المحددة ⚡");
+                }
+            } catch (e) {
+                showAppToast("تعطل نظام الإرسال", true);
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
+        };
+
+        window.populateCancelPolicyDropdown = function() {
+            const select = document.getElementById('cancel_policy_target');
+            if(!select) return;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+            
+            // الاحتفاظ بخيار الـ Global
+            let optionsHtml = '<option value="global">🌐 جميع المنشآت التابعة (تعميم عام)</option>';
+            
+            allData.filter(i => (i.Client_Type == 'shop' || i.type == 'shop' || i.role == 'shop') && i.Client_Master === currentUserRef).forEach(s => {
+                optionsHtml += `<option value="${s.Client_User || s.user}">🏪 ${s.Client_Name || s.name}</option>`;
+            });
+            
+            const currentVal = select.value;
+            select.innerHTML = optionsHtml;
+            // محاولة إرجاع القيمة المحددة مسبقاً إذا كانت لسه موجودة
+            if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+                select.value = currentVal;
+            }
         };
 
         function checkAdPermission() {
@@ -612,8 +742,16 @@
 
         window.fetchData = function() {
             window.fetchPricingAreas();
-            onValue(ref(db, 'shops'), (snapshot) => { allData = snapshot.exists() ? Object.values(snapshot.val()) : []; renderShops(); updateClientAdTargets(); });
+            onValue(ref(db, 'shops'), (snapshot) => { 
+                allData = snapshot.exists() ? Object.values(snapshot.val()) : []; 
+                renderShops(); 
+                updateClientAdTargets(); 
+                populateCancelPolicyDropdown(); // تحديث القائمة المنسدلة في الريموت
+            });
             onValue(ref(db, 'captains'), (snapshot) => { allCaptains = snapshot.exists() ? Object.values(snapshot.val()) : []; updateClientAdTargets(); });
+            
+            // تحميل الريموت لأول مرة (Global)
+            loadCancelPolicyForTarget();
         };
 
         window.updateClientAdTargets = function() {
