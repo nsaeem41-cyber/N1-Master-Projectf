@@ -59,38 +59,13 @@
         ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
-        /* ستايل الواجهات الجديدة للسجلات والمالية */
-        .royal-finance-box {
-            background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(2,6,23,0.95));
-            border: 1px solid rgba(212,175,55,0.3);
-            border-radius: 24px;
-            padding: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            position: relative;
-            overflow: hidden;
-        }
-        .royal-finance-box::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%);
-            animation: rotateGlow 10s linear infinite; z-index: 0; pointer-events: none;
-        }
+        .royal-finance-box { background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(2,6,23,0.95)); border: 1px solid rgba(212,175,55,0.3); border-radius: 24px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        .royal-finance-box::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%); animation: rotateGlow 10s linear infinite; z-index: 0; pointer-events: none; }
         @keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .finance-item { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
         .finance-item:last-child { border-bottom: none; padding-bottom: 0; }
         .finance-label { font-size: 13px; color: #94a3b8; font-weight: bold; }
         .finance-value { font-size: 18px; font-weight: 900; font-family: monospace; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        
-        .completed-badge { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; }
-        .money-badge { background: rgba(212,175,55,0.1); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-weight: 900; font-family: monospace; }
-
-        @media print {
-            body { background: white; color: black; }
-            .navbar, .side-content, .action-btns, .btn-print, .stats-grid, .nav-tabs, .filter-group { display: none !important; }
-            .main-content { width: 100%; padding: 0; }
-            .card { box-shadow: none; border: 1px solid #000; }
-            table { font-size: 12px; }
-            td, th { color: black !important; border-bottom: 1px solid #ccc !important; }
-        }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
@@ -239,7 +214,7 @@
                                 <input type="text" id="new_cap_car_code" class="vault-input w-full p-2.5 rounded-lg text-sm font-mono text-left" dir="ltr" placeholder="50-12345">
                             </div>
                             <div class="sm:col-span-2">
-                                <label class="block text-[10px] text-slate-400 mb-1">المصدر المعتمد</label>
+                                <label class="block text-[10px] text-slate-400 mb-1">المصدر المعتمد (للتخصيص الجغرافي)</label>
                                 <select id="new_cap_region" class="vault-input w-full p-2.5 rounded-lg text-sm appearance-none bg-slate-800">
                                     <option value="">جاري تحميل المصادر...</option>
                                 </select>
@@ -321,21 +296,21 @@
         <aside class="w-full lg:w-80 border-r border-slate-800 bg-slate-900/30 p-4 md:p-6 overflow-y-auto flex flex-col gap-6">
             
             <div class="royal-finance-box">
-                <div class="text-xs text-yellow-500 font-black tracking-widest mb-5 uppercase text-center border-b border-yellow-500/20 pb-3"><i class="fas fa-crown ml-1"></i> المحاسبة المالية الملكية</div>
+                <div class="text-xs text-yellow-500 font-black tracking-widest mb-5 uppercase text-center border-b border-yellow-500/20 pb-3"><i class="fas fa-chart-line ml-1"></i> المحاسبة المالية الملكية</div>
                 
                 <div class="finance-item">
                     <span class="finance-label">إجمالي العمولات المكتسبة</span>
-                    <span class="finance-value text-emerald-400" id="side-total-comm">0.00 د.أ</span>
+                    <span class="finance-value text-emerald-400" id="side-total-comm">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
                 </div>
                 
                 <div class="finance-item">
                     <span class="finance-label">كوبونات وخصومات للعملاء</span>
-                    <span class="finance-value text-red-400" id="side-total-disc">0.00 د.أ</span>
+                    <span class="finance-value text-red-400" id="side-total-disc">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
                 </div>
                 
                 <div class="finance-item" style="margin-top: 15px; border-top: 2px solid rgba(212,175,55,0.3); padding-top: 15px;">
                     <span class="text-sm font-black text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-600">الصافي النهائي 💎</span>
-                    <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span class="text-sm font-bold text-slate-400">د.أ</span></span>
+                    <span class="text-2xl font-black text-yellow-500" id="side-net-profit">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
                 </div>
             </div>
 
@@ -697,6 +672,7 @@
             });
         }
 
+        // ================== الطاقة القصوى للرادار (السجلات والمالية والـ 6 ثواني) ==================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -710,6 +686,11 @@
                     const assignedCap = globalUsers.find(u => (u.Cap_User === capKey || u.user === capKey || u.Cap_Phone === capKey || u.phone === capKey));
                     const isAppClosed = assignedCap ? (assignedCap.app_status === 'offline') : true;
 
+                    let archiveKey = ord.linkedRadarId || appOrdId;
+                    let masterCompany = activeCompanyName || 'default';
+                    let commission = parseFloat(ord.commission_amount || 0);
+
+                    // --- 1. فحص الاستجابة الذكي (Smart Ping) للنت الضعيف ---
                     if (ord.dispatch_method === 'Auto') {
                         if (ord.status === 'assigned') {
                             if (elapsed > 6000 || isAppClosed) { 
@@ -725,47 +706,95 @@
                                 hasUpdates = true;
                                 continue;
                             }
-                        } else if (ord.status === 'rejected' || ord.status === 'timeout' || ord.status === 'canceled') {
-                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                            if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                            hasUpdates = true;
-                            continue;
                         }
                     }
 
-                    if (ord.status === 'accepted' && !ord.is_accepted_marked) {
-                        if(assignedCap && ord.linkedRadarId) {
-                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = assignedCap.Cap_Name || assignedCap.name || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = assignedCap.Cap_Phone || assignedCap.phone || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap.Cap_CarType || assignedCap.Cap_Car || '';
-                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap.Cap_CarCode || '';
-                            updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
+                    // --- 2. الرفض أو الإلغاء (الإرجاع العكسي للعمولة لو انخصمت بالقبول) ---
+                    if (ord.status === 'rejected' || ord.status === 'timeout' || ord.status === 'canceled') {
+                        if (ord.is_commission_deducted && assignedCap) {
+                            const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
+                            const newBal = (currentBal + commission).toFixed(2);
+                            updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
+                            updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
                         }
-                        updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
+                        updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = null;
+                        updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                        if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                         hasUpdates = true;
+                        continue;
                     }
-                    
-                    if ((ord.status === 'completed' || ord.status === 'delivered') && !ord.is_completed_processed) { 
-                        
-                        const commission = parseFloat(ord.commission_amount || 0);
 
-                        if (ord.linkedRadarId) {
-                            updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
+                    // --- 3. التسجيل الفوري وتوثيق السجل والمالية من لحظة القبول (الطاقة القصوى) ---
+                    if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'completed', 'delivered'].includes(ord.status)) {
+                        
+                        if (ord.linkedRadarId && !ord.is_accepted_marked) {
+                            updates[`orders/${ord.linkedRadarId}/Cap_Name`] = assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = assignedCap ? (assignedCap.Cap_Phone || assignedCap.phone) : '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap ? (assignedCap.Cap_CarType || assignedCap.Cap_Car) : '';
+                            updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap ? assignedCap.Cap_CarCode : '';
+                            updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'accepted';
                             updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
                             updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
+                            updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
                         }
 
-                        if(assignedCap) {
-                            if(commission > 0) {
+                        if (!ord.is_commission_deducted) {
+                            if(assignedCap && commission > 0) {
                                 const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
                                 const newBal = (currentBal - commission).toFixed(2);
                                 updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                 updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
                             }
+                            updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
                         }
 
-                        updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
-                        hasUpdates = true; 
+                        const fee = parseFloat(ord.fee || 0);
+                        const value = parseFloat(ord.value || 0);
+                        let discountAmount = 0;
+                        let promoCode = "---";
+                        let shopName = ord.restaurant || "";
+
+                        if (ord.linkedRadarId) {
+                            const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
+                            if (radOrd) {
+                                discountAmount = parseFloat(radOrd.Shop_Discount || radOrd.discount || 0);
+                                promoCode = radOrd.Shop_Promo || radOrd.promo || "---";
+                                shopName = radOrd.Shop_Name || radOrd.restaurant || shopName;
+                            }
+                        }
+
+                        let capName = ord.cap_name || (assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : "كابتن");
+                        
+                        const entry = {
+                            orderId: archiveKey,
+                            appOrdId: appOrdId,
+                            time: new Date(ord.timestamp || Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                            date: new Date(ord.timestamp || Date.now()).toISOString(),
+                            cap: capName,
+                            capKey: capKey,
+                            rest: shopName,
+                            value: value,
+                            fee: fee,
+                            comm: commission,
+                            discount: discountAmount,
+                            promo: promoCode,
+                            net: fee - commission,
+                            live_status: (ord.status === 'completed' || ord.status === 'delivered') ? 'delivered' : ord.status,
+                            via: ord.dispatch_method || 'App',
+                            companyId: masterCompany
+                        };
+                        
+                        updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = entry;
+
+                        // --- 4. التثبيت والتنظيف بعد الإنهاء (تم التسليم) ---
+                        if (ord.status === 'completed' || ord.status === 'delivered') {
+                            if (ord.linkedRadarId) {
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
+                            }
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
+                        }
+
+                        hasUpdates = true;
                     }
                 }
             }
@@ -991,38 +1020,49 @@
             }
         };
 
-        // ================== تحديث السجلات المالية والمكتملة بشكل فوري ومباشر ==================
+        // ================== خوارزمية المسح الضوئي (Double Check) للفلوس والسجلات ==================
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
             
-            // فلترة آمنة 100% لطلبات اليوم فقط وللشركة الحالية
-            const todayOrders = completedOrders.filter(o => {
-                if (!o || !o.date) return false;
+            const myComp = String(activeCompanyName || '').trim().toLowerCase();
+            let uniqueOrdersMap = new Map();
+
+            // 1. السحب من الأرشيف السحابي
+            completedOrders.forEach(o => {
+                if (!o || !o.date) return;
                 const isToday = new Date(o.date).toDateString() === today;
-                const isNotRejected = o.cap !== "مرفوض";
-                const isMyCompany = (!o.companyId || o.companyId === (activeCompanyName || 'default'));
-                return isToday && isNotRejected && isMyCompany;
+                const isNotRejected = o.cap !== "مرفوض" && o.live_status !== 'rejected' && o.live_status !== 'canceled';
+                const orderComp = String(o.companyId || '').trim().toLowerCase();
+                const isMyCompany = (!orderComp || orderComp === 'default' || orderComp === myComp);
+                
+                if (isToday && isNotRejected && isMyCompany) {
+                    uniqueOrdersMap.set(o.orderId || o.appOrdId, o);
+                }
             });
-            
+
+            const finalOrders = Array.from(uniqueOrdersMap.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            // الحسبة المالية الدقيقة بالمليم
             let totalComm = 0;
             let totalDisc = 0;
 
-            todayOrders.forEach(o => {
-                totalComm += parseFloat(o.comm || 0);
-                totalDisc += parseFloat(o.discount || 0);
+            finalOrders.forEach(o => {
+                let commVal = parseFloat(o.comm);
+                let discVal = parseFloat(o.discount);
+                if(!isNaN(commVal)) totalComm += commVal;
+                if(!isNaN(discVal)) totalDisc += discVal;
             });
             
             let netProfit = totalComm - totalDisc;
 
-            // تحديث الخوارزمية المحاسبية بالكامل
-            if(document.getElementById('stat-completed-total')) document.getElementById('stat-completed-total').innerText = todayOrders.length;
-            if(document.getElementById('stat-comm-total')) document.getElementById('stat-comm-total').innerText = totalComm.toFixed(2);
-            if(document.getElementById('side-total-comm')) document.getElementById('side-total-comm').innerText = totalComm.toFixed(2) + " د.أ";
-            if(document.getElementById('side-total-disc')) document.getElementById('side-total-disc').innerText = totalDisc.toFixed(2) + " د.أ";
-            if(document.getElementById('side-net-profit')) document.getElementById('side-net-profit').innerText = netProfit.toFixed(2) + " د.أ";
+            // تحديث الواجهة الملكية بأرقام صلبة
+            if(document.getElementById('stat-completed-total')) document.getElementById('stat-completed-total').innerText = finalOrders.length;
+            if(document.getElementById('side-total-comm')) document.getElementById('side-total-comm').innerHTML = totalComm.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
+            if(document.getElementById('side-total-disc')) document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
+            if(document.getElementById('side-net-profit')) document.getElementById('side-net-profit').innerHTML = netProfit.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
 
-            if (todayOrders.length === 0) { 
+            if (finalOrders.length === 0) { 
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest">السجل نظيف بانتظار الإنجازات 💎</td></tr>'; 
                 return; 
             }
@@ -1030,7 +1070,7 @@
             tbody.innerHTML = '';
             const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}\/[^\s]*)/ig;
             
-            todayOrders.forEach(o => {
+            finalOrders.forEach(o => {
                 let liveStatusBadge = '';
                 if (o.live_status === 'delivered' || o.live_status === 'completed') liveStatusBadge = '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/30">مكتمل 💎</span>';
                 else if (o.live_status === 'accepted') liveStatusBadge = '<span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-blue-500/30">تمت الموافقة ⚡</span>';
