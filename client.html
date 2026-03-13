@@ -184,7 +184,7 @@
                     </div>
                     <div class="glass-panel p-6 rounded-3xl border border-emerald-500/20 relative overflow-hidden hover:border-emerald-500/40 transition-colors">
                         <h3 class="text-slate-400 text-[11px] font-bold mb-2 tracking-widest uppercase flex items-center justify-between">
-                            الرصيد التشغيلي (موجب) <i class="fas fa-wallet text-emerald-500/50 text-lg"></i>
+                            الرصيد التشغيلي الموجب <i class="fas fa-wallet text-emerald-500/50 text-lg"></i>
                         </h3>
                         <div class="text-3xl font-black text-emerald-400" id="total-balance">0.00 <span class="text-xs">د.أ</span></div>
                     </div>
@@ -206,7 +206,7 @@
                         <div class="text-2xl font-black text-white" id="dash-total-penalties">0.00 <span class="text-[10px] text-slate-400">د.أ</span></div>
                     </div>
                     <div class="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-900/10">
-                        <h3 class="text-rose-400 text-[10px] font-bold mb-1 uppercase tracking-widest"><i class="fas fa-hand-holding-usd mr-1"></i> إجمالي الديون (السالب)</h3>
+                        <h3 class="text-rose-400 text-[10px] font-bold mb-1 uppercase tracking-widest"><i class="fas fa-hand-holding-usd mr-1"></i> إجمالي ديون الإلغاء</h3>
                         <div class="text-2xl font-black text-white" id="dash-total-debt">0.00 <span class="text-[10px] text-slate-400">د.أ</span></div>
                     </div>
                 </section>
@@ -282,7 +282,7 @@
 
                         <div class="grid grid-cols-2 gap-4 md:col-span-2">
                             <div>
-                                <label class="block text-[11px] font-bold text-yellow-500/80 mb-2">الرصيد المبدئي (د.أ)</label>
+                                <label class="block text-[11px] font-bold text-yellow-500/80 mb-2">الرصيد التشغيلي (د.أ)</label>
                                 <input type="number" id="shop_balance" class="vault-input w-full p-3 rounded-lg text-sm" placeholder="0.00" step="0.5">
                             </div>
                             <div>
@@ -328,7 +328,7 @@
                                 <tr>
                                     <th class="rounded-tr-xl">المنشأة التجارية</th>
                                     <th>بيانات الربط</th>
-                                    <th>الرصيد المتاح</th>
+                                    <th>الرصيد التشغيلي</th>
                                     <th class="text-red-400">الإلغاءات 🚫</th>
                                     <th class="text-orange-400">الغرامات 💰</th>
                                     <th class="text-rose-400">المديونية 📉</th>
@@ -442,8 +442,19 @@
                                         </select>
                                     </div>
                                 </div>
+                                
+                                <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-red-500/10 mt-4">
+                                    <div>
+                                        <div class="text-sm font-bold text-white">خصم الغرامة من الرصيد التشغيلي</div>
+                                        <div class="text-[9px] text-slate-400 mt-1">إذا كان مغلقاً ستسجل كمديونية في محفظة الغرامات المستقلة</div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="policy_deduct_main" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
                                         <label class="block text-[11px] font-bold text-red-300 mb-2">غرامة المرحلة الأولى (بالطريق)</label>
                                         <div class="relative">
@@ -461,7 +472,7 @@
                                     </div>
                                 </div>
 
-                                <button onclick="saveCancelPolicy()" class="w-full bg-red-600/90 hover:bg-red-500 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)]">
+                                <button onclick="saveCancelPolicy()" class="w-full bg-red-600/90 hover:bg-red-500 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)] mt-4">
                                     حفظ وتطبيق السياسة ⚡
                                 </button>
                             </div>
@@ -646,7 +657,7 @@
             });
         }
 
-        // 🛑 دالة حساب إحصائيات الإلغاء لكل مطعم
+        // 🛑 حساب إحصائيات الإلغاء لكل مطعم وقراءة محفظة الغرامات
         function getShopCancelStats(shopKey, shopPhone) {
             let count = 0;
             let totalPenalty = 0;
@@ -674,14 +685,14 @@
 
             let debt = 0;
             let shopData = allData.find(s => s.Client_User === shopKey || s.user === shopKey);
-            if(shopData && parseFloat(shopData.Client_Balance || shopData.Shop_Balance || 0) < 0) {
-                debt = Math.abs(parseFloat(shopData.Client_Balance || shopData.Shop_Balance || 0));
+            if(shopData) {
+                // قراءة المديونية من محفظة الغرامات المستقلة
+                debt = Math.abs(parseFloat(shopData.Penalty_Balance || 0));
             }
 
             return { count, totalPenalty, debt };
         }
 
-        // تحديث إحصائيات الداشبورد الجديدة
         function updateDashboardCancelStats() {
             let globalCount = 0;
             let globalPenalty = 0;
@@ -702,7 +713,7 @@
             document.getElementById('dash-total-debt').innerHTML = `${globalDebt.toFixed(2)} <span class="text-[10px] text-slate-400">د.أ</span>`;
         }
 
-        // 🛑 دوال التحكم بريموت الإلغاء
+        // 🛑 دوال التحكم بريموت الإلغاء وتوجيه الخصم
         window.searchShopForCancelPolicy = function() {
             const phoneSearch = document.getElementById('cancel_search_phone').value.trim();
             const select = document.getElementById('cancel_policy_target');
@@ -748,11 +759,13 @@
                     document.getElementById('policy_grace_period').value = policy.grace_period || 0;
                     document.getElementById('policy_fee_1').value = policy.fee_stage_1 || 0;
                     document.getElementById('policy_fee_2').value = policy.fee_stage_2 || 0;
+                    document.getElementById('policy_deduct_main').checked = policy.deduct_from_main !== false; // المفتاح الجديد
                 } else {
                     document.getElementById('policy_allow_cancel').checked = true;
                     document.getElementById('policy_grace_period').value = 0;
                     document.getElementById('policy_fee_1').value = 0;
                     document.getElementById('policy_fee_2').value = 0;
+                    document.getElementById('policy_deduct_main').checked = true;
                 }
             } catch(e) {
                 showAppToast("فشل استرجاع السياسة", true);
@@ -768,12 +781,14 @@
             const grace = parseInt(document.getElementById('policy_grace_period').value) || 0;
             const fee1 = parseFloat(document.getElementById('policy_fee_1').value) || 0;
             const fee2 = parseFloat(document.getElementById('policy_fee_2').value) || 0;
+            const deductMain = document.getElementById('policy_deduct_main').checked;
 
             const policyData = {
                 allow_cancel: allowCancel,
                 grace_period: grace,
                 fee_stage_1: fee1,
                 fee_stage_2: fee2,
+                deduct_from_main: deductMain,
                 updated_at: Date.now()
             };
 
@@ -784,12 +799,12 @@
                     await update(ref(db, `settings/cancel_policy/${myMaster}`), policyData);
                     const alertData = { message: "UPDATE_CANCEL_POLICY", timestamp: Date.now(), type: "system", sender: "System" };
                     await update(ref(db, `client_alerts/${myMaster}/shops/global`), alertData);
-                    showAppToast("تم تعميم سياسة الإلغاء على جميع المنشآت ⚡");
+                    showAppToast("تم تعميم سياسة الإلغاء والمحفظة على جميع المنشآت ⚡");
                 } else {
                     await update(ref(db, `settings/cancel_policy/shops/${target}`), policyData);
                     const alertData = { message: "UPDATE_CANCEL_POLICY", timestamp: Date.now(), type: "system", sender: "System" };
                     await update(ref(db, `client_alerts/${myMaster}/shops/users/${target}`), alertData);
-                    showAppToast("تم تخصيص سياسة الإلغاء للمنشأة المحددة ⚡");
+                    showAppToast("تم تخصيص السياسة للمنشأة المحددة ⚡");
                 }
             } catch (e) {
                 showAppToast("تعطل نظام الإرسال", true);
@@ -832,12 +847,10 @@
                     const dateObj = new Date(o.Cancel_Date || o.Shop_Date || Date.now());
                     const dt = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
                     
-                    // حساب الغرامة من السجلات المالية لو أمكن، أو عرض 0 كافتراضي
                     let feeStr = '<span class="text-slate-500">بدون رسوم</span>';
                     const sKey = o.Shop_User || o.user;
                     if (allFinancialLogs[sKey]) {
                         const logs = Object.values(allFinancialLogs[sKey]);
-                        // بحث تقريبي عن اللوج المرتبط بالإلغاء في نفس الوقت
                         const relatedLog = logs.find(l => l.type === 'cancel_penalty' && Math.abs(l.timestamp - (o.Cancel_Date || o.Shop_Date)) < 60000);
                         if (relatedLog) feeStr = `<span class="text-orange-400 font-bold">${parseFloat(relatedLog.amount).toFixed(2)} د.أ</span>`;
                     }
@@ -958,7 +971,6 @@
         window.fetchData = function() {
             window.fetchPricingAreas();
             
-            // جلب السجلات المالية لحساب الإلغاءات
             onValue(ref(db, 'financial_logs'), (snapshot) => {
                 allFinancialLogs = snapshot.exists() ? snapshot.val() : {};
                 if(allData.length > 0) { renderShops(); updateDashboardCancelStats(); }
@@ -994,7 +1006,7 @@
             let totalBalance = 0, totalComm = 0; const allMyActiveShops = allData.filter(i => (i.Client_Type == 'shop' || i.Client_Role == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === currentUserRef) && ((i.Client_Status || i.status) !== 'pending'));
             allMyActiveShops.forEach(s => { 
                 let bal = Number(s.Client_Balance || s.Shop_Balance || 0);
-                if(bal > 0) totalBalance += bal; // الرصيد الموجب فقط للتشغيلي
+                if(bal > 0) totalBalance += bal; 
                 totalComm += Number(s.Client_Comm || s.company_share || 0); 
             });
             
@@ -1015,14 +1027,12 @@
                 let daysLeft = "مفتوح"; if (shop.Client_Expiry || shop.expiry) { const exp = new Date(shop.Client_Expiry || shop.expiry); exp.setHours(23, 59, 59, 999); const d = Math.ceil((exp.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); daysLeft = d > 0 ? `<span class="text-emerald-400 font-mono">${d} يوم</span>` : `<span class="text-red-400 font-mono">منتهي</span>`; }
                 let locDisplay = (shop.Client_Location || shop.pickup) ? `<br><a href="${shop.Client_Location || shop.pickup}" target="_blank" class="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 inline-block"><i class="fas fa-map-marker-alt"></i> إحداثيات الموقع</a>` : '';
                 
-                // 🛑 إحصائيات الإلغاء للمنشأة
                 const cancelStats = getShopCancelStats(shop.Client_User || shop.user, shop.Client_Phone || shop.phone);
 
                 tbody.innerHTML += `<tr class="border-b border-yellow-600/5 hover:bg-yellow-600/5 transition-colors">
                     <td class="p-3"><div class="font-bold text-yellow-500">${shop.Client_Name || shop.name}</div><div class="text-[10px] text-slate-500 mt-1">${shop.Client_PricingArea || shop.pricing_area || 'لا يوجد مصفوفة'}</div></td>
                     <td dir="ltr" class="p-3 text-right text-xs font-mono text-slate-300">ID: ${shop.Client_User || shop.user}<br><span class="text-slate-500">Key: ${shop.Client_Pass || shop.pass || '***'}</span></td>
                     <td dir="ltr" class="p-3 text-right text-xs font-mono text-slate-300">${shop.Client_Phone || shop.cap_phone || '-'}${locDisplay}</td>
-                    <td class="p-3">${subBadge}</td>
                     <td class="p-3 font-black text-emerald-400 text-sm">${Number(shop.Client_Balance || shop.Shop_Balance || 0).toFixed(2)}</td>
                     <td class="p-3 font-bold text-red-400 text-center">${cancelStats.count}</td>
                     <td class="p-3 font-bold text-orange-400 text-center">${cancelStats.totalPenalty.toFixed(2)}</td>
@@ -1072,7 +1082,7 @@
             document.getElementById('loader-overlay').style.display = 'flex';
             if ((await get(child(ref(db), `shops/${user}`))).exists() || (await get(child(ref(db), `users/${user}`))).exists()) { document.getElementById('loader-overlay').style.display = 'none'; showAppToast("المعرف موجود مسبقاً", true); return; }
             const expDate = new Date(); expDate.setDate(expDate.getDate() + parseInt(days));
-            const newShop = { Client_ID: "SH_" + Date.now(), Client_User: user, Client_Pass: pass, Client_Name: name, Client_Role: "shop", Client_Type: "shop", Client_Master: currentUser.Client_User || currentUser.user, Client_Status: "active", Client_Phone: phone, Client_PricingArea: pricingArea, pricing_area: pricingArea, Client_Location: locLink, Client_Comm: commission, Client_Expiry: expDate.toISOString().split('T')[0], Client_PlanDays: days, Client_Balance: balance, Shop_Balance: balance, name: name, user: user, pass: pass, role: "shop", type: "shop", status: "active" };
+            const newShop = { Client_ID: "SH_" + Date.now(), Client_User: user, Client_Pass: pass, Client_Name: name, Client_Role: "shop", Client_Type: "shop", Client_Master: currentUser.Client_User || currentUser.user, Client_Status: "active", Client_Phone: phone, Client_PricingArea: pricingArea, pricing_area: pricingArea, Client_Location: locLink, Client_Comm: commission, Client_Expiry: expDate.toISOString().split('T')[0], Client_PlanDays: days, Client_Balance: balance, Shop_Balance: balance, Penalty_Balance: 0, name: name, user: user, pass: pass, role: "shop", type: "shop", status: "active" };
             try {
                 await set(ref(db, 'shops/' + user), newShop); document.getElementById('loader-overlay').style.display = 'none'; showAppToast("تم إدراج المنشأة بنجاح 💎");
                 ['shop_name', 'shop_user', 'shop_pass', 'shop_phone', 'shop_pricing_area', 'shop_location_link', 'shop_balance', 'fixed_commission'].forEach(id => document.getElementById(id).value = '');
