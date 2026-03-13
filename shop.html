@@ -8,15 +8,14 @@
     <meta property="og:title" content="سجل منشأتك في أسطول N One 💎">
     <meta property="og:description" content="انضم لشبكة المزودين المعتمدين وارتقِ بتجربة التوصيل لعملائك 🚀">
     <link rel="manifest" href="manifest_shop.json">
-    <meta name="theme-color" content="#020617">
+    <meta name="theme-color" content="#0f172a">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --royal-navy: #020617;
+            --royal-navy: #0f172a;
             --luxury-gold: #D4AF37;
             --gold-glow: rgba(212, 175, 55, 0.4);
             --glass-bg: rgba(15, 23, 42, 0.7);
@@ -25,8 +24,15 @@
             --info: #0ea5e9;
         }
         
+        html, body {
+            /* سر إحساس التطبيق الأصلي: منع السحب للتحديث (Pull-to-refresh) */
+            overscroll-behavior-y: none;
+            touch-action: pan-x pan-y;
+        }
+
         body { 
-            font-family: 'Cairo', sans-serif; 
+            /* الخط الأصلي الرسمي */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--royal-navy); 
             color: #e2e8f0; 
             overflow-x: hidden; 
@@ -49,7 +55,7 @@
         
         .btn-diamond { 
             background: linear-gradient(135deg, #D4AF37 0%, #F9E27D 50%, #D4AF37 100%); 
-            color: #020617; font-weight: 900; transition: all 0.3s ease; position: relative; overflow: hidden; 
+            color: #0f172a; font-weight: 900; transition: all 0.3s ease; position: relative; overflow: hidden; 
         }
         .btn-diamond:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--gold-glow); }
         .btn-diamond:active { transform: scale(0.98); }
@@ -69,11 +75,11 @@
         .nav-tab.active { color: var(--luxury-gold); text-shadow: 0 0 12px var(--gold-glow); }
         
         .input-luxury { 
-            background: rgba(2, 6, 23, 0.5); border: 1px solid rgba(212, 175, 55, 0.2); 
+            background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); 
             color: white; transition: all 0.3s ease; width: 100%; box-sizing: border-box;
         }
         .input-luxury:focus { border-color: var(--luxury-gold); outline: none; box-shadow: 0 0 10px var(--gold-glow); }
-        .input-luxury[readonly] { opacity: 0.7; cursor: not-allowed; }
+        .input-luxury[readonly] { opacity: 0.7; cursor: not-allowed; background: rgba(0,0,0,0.3); }
         select.input-luxury option { background: var(--royal-navy); color: white; }
 
         .section { display: none; animation: slideUp 0.4s ease; }
@@ -86,7 +92,7 @@
         @keyframes slideDownToast { from { transform: translateY(-120%); } to { transform: translateY(0); } }
         @keyframes fadeOutToast { to { opacity: 0; transform: translateY(-20px); } }
 
-        .custom-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 60000; }
+        .custom-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 60000; }
         .custom-dialog-box { background: linear-gradient(135deg, #0f172a, #1e293b); width: 85%; max-width: 350px; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-top: 2px solid var(--luxury-gold); border-bottom: 2px solid var(--luxury-gold); animation: popIn 0.3s ease; }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
@@ -97,7 +103,7 @@
         .night-fee-badge { background: #311b92; color: white; border: 1px solid #4527a0; }
         .star-feature-badge { background: rgba(212,175,55,0.1); color: var(--luxury-gold); border: 1px solid var(--luxury-gold); }
 
-        /* Rating Modal Elements */
+        /* Rating Modal */
         .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
         .gem { font-size: 35px; color: #334155; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
         .gem.active { color: var(--info); filter: none; text-shadow: 0 0 15px rgba(2, 132, 199, 0.5); transform: scale(1.1); }
@@ -224,13 +230,16 @@
 
         <div class="flex justify-center gap-2 md:gap-4 mb-8 px-2 overflow-x-auto">
             <button class="nav-tab active px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('orders')">
-                <i class="fas fa-paper-plane"></i> تقديم طلب
+                <i class="fas fa-paper-plane"></i> الطلب
             </button>
             <button class="nav-tab px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('history')">
                 <i class="fas fa-history"></i> السجل
             </button>
             <button class="nav-tab px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('charging')">
                 <i class="fas fa-bolt"></i> الشحن
+            </button>
+            <button class="nav-tab px-4 md:px-6 py-2 text-slate-500 font-bold text-xs md:text-sm uppercase flex items-center gap-2 whitespace-nowrap" onclick="switchTab('settings')">
+                <i class="fas fa-cog"></i> الإعدادات
             </button>
         </div>
 
@@ -328,6 +337,35 @@
 
                 <button class="w-full mt-4 py-4 rounded-xl font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-[0_5px_15px_rgba(16,185,129,0.3)]" id="btn-charge" style="display:none;" onclick="executeTransfer()">تأكيد عملية التحويل المالية ✅</button>
             </section>
+
+            <section id="settings" class="section glass-card rounded-3xl p-6 md:p-8 border-t-4 border-t-yellow-500 min-h-[65vh] flex flex-col">
+                <div class="flex items-center gap-3 mb-8 border-b border-slate-700/50 pb-4">
+                    <div class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center"><i class="fas fa-cog text-yellow-500"></i></div>
+                    <h3 class="text-lg md:text-xl font-black text-white">إعدادات المنشأة والأمان</h3>
+                </div>
+
+                <div class="flex-1 flex flex-col gap-6 max-w-md mx-auto w-full">
+                    <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-700">
+                        <label class="block text-xs font-bold text-slate-400 mb-2">معرف الدخول المرجعي (User ID)</label>
+                        <input type="text" id="profile_user" readonly class="input-luxury p-4 rounded-xl text-center font-mono tracking-widest text-slate-400 cursor-not-allowed">
+                        <div class="text-[10px] text-yellow-500 mt-2 text-center"><i class="fas fa-lock"></i> محمي للحفاظ على الاستقرار المالي</div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-5 rounded-2xl border border-slate-700">
+                        <label class="block text-xs font-bold text-slate-400 mb-2">تحديث كلمة المرور</label>
+                        <div class="relative">
+                            <input type="password" id="profile_pass" placeholder="أدخل كلمة المرور الجديدة" class="input-luxury p-4 pl-12 rounded-xl text-left font-mono tracking-widest" dir="ltr">
+                            <span id="toggle_pass_icon" onclick="togglePasswordVisibility()" class="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-white transition-colors p-2"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-4 border-t border-slate-700/50 max-w-md mx-auto w-full">
+                    <button class="btn-diamond w-full py-4 rounded-xl text-sm md:text-lg flex items-center justify-center gap-2" id="btn-save-settings" onclick="updateShopProfile()">
+                        حفظ التحديثات <i class="fas fa-save"></i>
+                    </button>
+                </div>
+            </section>
             
         </main>
 
@@ -373,8 +411,8 @@
         window.setLoading = (btnId, isLoading, originalText) => {
             const btn = document.getElementById(btnId);
             const loader = document.getElementById('loader');
-            if (isLoading) { btn.dataset.text = btn.innerText; btn.innerText = "جاري المعالجة..."; btn.style.opacity = 0.7; btn.disabled = true; loader.style.width = "100%"; } 
-            else { btn.innerText = originalText || btn.dataset.text; btn.style.opacity = 1; btn.disabled = false; loader.style.width = "0%"; }
+            if (isLoading) { btn.dataset.text = btn.innerHTML; btn.innerHTML = "جاري المعالجة... <i class='fas fa-spinner fa-spin ml-2'></i>"; btn.style.opacity = 0.7; btn.disabled = true; loader.style.width = "100%"; } 
+            else { btn.innerHTML = originalText || btn.dataset.text; btn.style.opacity = 1; btn.disabled = false; loader.style.width = "0%"; }
         };
 
         window.switchTab = (tabId) => {
@@ -388,6 +426,16 @@
         window.showCustomConfirm = (msg, cb) => { document.getElementById('custom-confirm-msg').innerText = msg; confirmCallback = cb; document.getElementById('custom-confirm-overlay').style.display = 'flex'; };
         window.closeAppConfirm = () => { document.getElementById('custom-confirm-overlay').style.display = 'none'; confirmCallback = null; };
         window.executeAppConfirm = () => { document.getElementById('custom-confirm-overlay').style.display = 'none'; if(confirmCallback) confirmCallback(); confirmCallback = null; };
+
+        window.togglePasswordVisibility = function() {
+            const passInput = document.getElementById('profile_pass');
+            const passIcon = document.getElementById('toggle_pass_icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text'; passIcon.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passInput.type = 'password'; passIcon.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        };
 
         // === Auth Logic ===
         window.onload = () => {
@@ -448,10 +496,11 @@
             if(!n || !u || !p || !ph || !m) return showAppToast("أكمل كافة الحقول", true);
             setLoading('btn-register', true);
             try {
-                const check = await get(child(ref(db), `shops/${u}`));
-                if (check.exists()) return showAppToast("المعرف مستخدم مسبقاً", true);
+                const check1 = await get(child(ref(db), `shops/${u}`)), check2 = await get(child(ref(db), `users/${u}`));
+                if (check1.exists() || check2.exists()) { showAppToast("المعرف مستخدم مسبقاً", true); setLoading('btn-register', false, "إرسال الطلب <i class='fas fa-rocket ml-1'></i>"); return; }
                 await set(ref(db, `shops/${u}`), { Client_ID: "REQ_"+Date.now(), Client_User: u, Client_Pass: p, Client_Name: n, Client_Role: "shop", Client_Type: "shop", Client_Master: m, Client_Status: "pending", Client_Phone: ph, name: n, user: u, pass: p, role: "shop", type: "shop", status: "pending", requestDate: new Date().toISOString(), hide_phone: false });
                 showAppToast("تم إرسال الطلب بنجاح"); toggleAuth('login');
+                ['reg-name', 'reg-user', 'reg-pass', 'reg-phone', 'reg-master'].forEach(id => document.getElementById(id).value = '');
             } catch(e) { showAppToast("تعذر الإرسال", true); } 
             finally { setLoading('btn-register', false, "إرسال الطلب <i class='fas fa-rocket ml-1'></i>"); }
         };
@@ -460,13 +509,13 @@
 
         // === App Logic ===
         async function initializePortal() {
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
-            
+            document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-container').style.display = 'block';
             document.getElementById('hdr-shop-name').innerText = currentUser.Shop_Name || currentUser.Client_Name || currentUser.name || "المنشأة";
             document.getElementById('hdr-shop-user').innerText = currentUser.Shop_User || currentUser.Client_User || currentUser.user || "N/A";
             document.getElementById('hdr-shop-area').innerText = currentUser.Shop_Location || currentUser.Client_PricingArea || currentUser.pricing_area || "المنطقة غير محددة";
-
+            document.getElementById('profile_user').value = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+            document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
+            
             fetchMasterInfo(); listenToSystemSettings(); setupLivePrices(); setupLiveOrders(); await fetchAllData(); attachBalanceListener();
         }
 
@@ -474,8 +523,8 @@
             const masterId = currentUser.Client_Master || currentUser.master;
             if (!masterId) return;
             get(child(ref(db), `users/${masterId}`)).then(snap => {
-                if(snap.exists()) { document.getElementById('parent-company-brand').innerText = snap.val().name || snap.val().Client_Name; }
-                else { get(child(ref(db), `shops/${masterId}`)).then(s => { if(s.exists()) document.getElementById('parent-company-brand').innerText = s.val().Client_Name || s.val().name; }); }
+                if(snap.exists()) { document.getElementById('parent-company-brand').innerHTML = `<i class="fas fa-shield-alt text-emerald-500 ml-1"></i> ${snap.val().name || snap.val().Client_Name}`; }
+                else { get(child(ref(db), `shops/${masterId}`)).then(s => { if(s.exists()) document.getElementById('parent-company-brand').innerHTML = `<i class="fas fa-shield-alt text-emerald-500 ml-1"></i> ${s.val().Client_Name || s.val().name}`; }); }
             });
         }
 
@@ -507,7 +556,7 @@
                     myBalance = parseFloat(snap.val().Shop_Balance || snap.val().Client_Balance || snap.val().balance || 0);
                     document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                     if((snap.val().Client_Status || snap.val().status) === 'paused') { localStorage.removeItem('n1_shop_session'); location.reload(); }
-                }
+                } else logout();
             });
         }
 
@@ -535,26 +584,28 @@
         }
 
         window.calculateFee = () => {
-            const d = document.getElementById('destination').value.trim();
+            const d = document.getElementById('destination').value.trim(), nightBadge = document.getElementById('night-fee-badge'), starBadge = document.getElementById('star-feature-badge'), offerBox = document.getElementById('offer-details-box'), originalDisplay = document.getElementById('original-price-display'), timerDisplay = document.getElementById('offer-timer-display');
+            if (window.currentOfferInterval) clearInterval(window.currentOfferInterval);
             if (pricingMatrix[d] !== undefined) {
-                let f = pricingMatrix[d]; if(new Date().getHours() >= 23 || new Date().getHours() < 6) { f+=0.50; document.getElementById('night-fee-badge').style.display='inline-block'; } else document.getElementById('night-fee-badge').style.display='none';
+                let f = pricingMatrix[d]; if(new Date().getHours() >= 23 || new Date().getHours() < 6) { f+=0.50; nightBadge.style.display='inline-block'; } else nightBadge.style.display='none';
                 document.getElementById('star-feature-badge').style.display = featureMatrix[d] ? 'inline-block' : 'none';
-                const offBox = document.getElementById('offer-details-box');
                 if (featureMatrix[d] && window.offerMatrix[d] && window.offerMatrix[d].endTime > Date.now()) {
-                    offBox.style.display = 'block'; document.getElementById('original-price-display').innerText = window.offerMatrix[d].original.toFixed(2);
-                } else offBox.style.display = 'none';
+                    offerBox.style.display = 'block'; document.getElementById('original-price-display').innerText = window.offerMatrix[d].original.toFixed(2);
+                    const updateTimer = () => { const diff = window.offerMatrix[d].endTime - Date.now(); if (diff <= 0) { timerDisplay.innerText = "انتهى العرض ⏳"; timerDisplay.className = "text-[10px] font-bold text-red-400 ml-2 bg-red-500/10 px-2 py-0.5 rounded"; clearInterval(window.currentOfferInterval); } else { const h = Math.floor(diff / (1000 * 60 * 60)); const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); timerDisplay.innerText = `⏳ ينتهي العرض خلال ${h}س و ${m}د`; timerDisplay.className = "text-[10px] font-bold text-emerald-400 ml-2 bg-emerald-500/10 px-2 py-0.5 rounded"; } };
+                    updateTimer(); window.currentOfferInterval = setInterval(updateTimer, 60000);
+                } else offerBox.style.display = 'none';
                 document.getElementById('delivery_fee').value = f.toFixed(2) + ' د.أ';
-            } else { document.getElementById('delivery_fee').value = ''; document.getElementById('night-fee-badge').style.display='none'; document.getElementById('star-feature-badge').style.display='none'; document.getElementById('offer-details-box').style.display='none'; }
+            } else { document.getElementById('delivery_fee').value = ''; nightBadge.style.display='none'; document.getElementById('star-feature-badge').style.display='none'; offerBox.style.display='none'; }
         };
 
         window.sendOrder = async () => {
             const d = document.getElementById('destination').value.trim(), v = document.getElementById('order_val').value;
-            if(!d || !v || pricingMatrix[d] === undefined) return showAppToast("البيانات غير صحيحة", true);
+            if(!d || !v || pricingMatrix[d] === undefined) return showAppToast("البيانات غير صحيحة أو المنطقة غير مدعومة", true);
             setLoading('btn-send', true);
             const id = "SHOP_ORD_" + Date.now();
             let fee = pricingMatrix[d]; if(new Date().getHours() >= 23 || new Date().getHours() < 6) fee += 0.50;
             try {
-                await set(ref(db, `orders/${id}`), { Shop_Ord_ID: id, Shop_Type: "shop_order", Shop_User: currentUser.Shop_User || currentUser.Client_User || currentUser.user, Shop_Name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name, Shop_Pickup: d, Shop_Location_Link: currentUser.Shop_Location || "", Shop_Val: v, Shop_Fee: fee.toFixed(2), Shop_Date: new Date().toISOString(), Shop_Status: "new", OrderStatus: "new", Master_ID: currentUser.Client_Master || currentUser.master || "الإدارة العامة", shop_phone: currentUser.Shop_Phone || currentUser.phone || '' });
+                await set(ref(db, `orders/${id}`), { Shop_Ord_ID: id, Shop_Type: "shop_order", Shop_User: currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone, Shop_Name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name, Shop_Pickup: d, Shop_Location_Link: currentUser.Shop_Location || currentUser.Client_Location || currentUser.pickup || "", Shop_Val: v, Shop_Fee: fee.toFixed(2), Shop_Date: new Date().toISOString(), Shop_IsEmergency: "false", Shop_Status: "new", OrderStatus: "new", Master_ID: currentUser.Client_Master || currentUser.master || "الإدارة العامة", shop_phone: currentUser.Shop_Phone || currentUser.phone || '' });
                 showAppToast("تم إطلاق الطلب بنجاح 🚀"); document.getElementById('destination').value=''; document.getElementById('order_val').value=''; calculateFee(); switchTab('history');
             } catch(e) { showAppToast("خطأ بالإرسال", true); } finally { setLoading('btn-send', false, "<span>تأكيد وتسليم للرادار المريخي</span> <i class='fas fa-space-shuttle'></i>"); }
         };
@@ -569,7 +620,7 @@
                     document.getElementById('orders-total').innerText = myOrds.length;
                     document.getElementById('orders-today').innerText = myOrds.filter(o => new Date(o.Shop_Date || Date.now()).toDateString() === new Date().toDateString()).length;
                     const recent = myOrds.reverse().slice(0, 20);
-                    if(recent.length === 0) { list.innerHTML = '<div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">لا توجد عمليات</div>'; return; }
+                    if(recent.length === 0) { list.innerHTML = '<div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">لا توجد عمليات مسجلة</div>'; return; }
                     
                     let html = '';
                     const sm = { 'new': { t: 'قيد الانتظار', c: 'text-yellow-500 border-yellow-500/30 bg-yellow-500/10' }, 'accepted': { t: 'قيد التجهيز', c: 'text-blue-400 border-blue-400/30 bg-blue-500/10' }, 'picked_up': { t: 'مع الكابتن', c: 'text-indigo-400 border-indigo-400/30 bg-indigo-500/10' }, 'on_way': { t: 'في الطريق', c: 'text-indigo-400 border-indigo-400/30 bg-indigo-500/10' }, 'arrived': { t: 'بالموقع', c: 'text-pink-400 border-pink-400/30 bg-pink-500/10' }, 'delivered': { t: 'تم التسليم', c: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' }, 'cancelled': { t: 'ملغي', c: 'text-red-400 border-red-500/30 bg-red-500/10' } };
@@ -579,11 +630,11 @@
                         if(orderStatesHistory[o.Shop_Ord_ID] && orderStatesHistory[o.Shop_Ord_ID] !== st) { if(st==='accepted') snd_accept.play().catch(e=>{}); if(st==='delivered') { snd_deliver.play().catch(e=>{}); if(!askedToRate[o.Shop_Ord_ID] && o.Cap_Phone) { setTimeout(()=>openRatingModal(o.Cap_Phone), 1500); askedToRate[o.Shop_Ord_ID]=true; } } }
                         orderStatesHistory[o.Shop_Ord_ID] = st;
                         
-                        let phHtml = o.Cap_Phone ? ((currentUser.hide_phone || !systemSettings.show_phone_numbers) ? `<span class="text-[10px] text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20">مخفي 🛡️</span>` : `<span class="font-mono text-xs ml-2">${o.Cap_Phone}</span><a href="tel:${o.Cap_Phone}" class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="fas fa-phone"></i></a>`) : '';
+                        let phHtml = o.Cap_Phone ? ((currentUser.hide_phone || !systemSettings.show_phone_numbers) ? `<span class="text-[10px] text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20">مخفي 🛡️</span>` : `<span class="font-mono text-xs ml-2">${o.Cap_Phone}</span><a href="tel:${o.Cap_Phone}" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/40 transition-colors flex items-center justify-center"><i class="fas fa-phone"></i></a>`) : '';
                         let capHtml = o.Cap_Name && st!=='cancelled' && st!=='new' ? `<div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl mt-3 border border-slate-700"><div><div class="text-xs font-bold text-white mb-1">👤 ${o.Cap_Name}</div><div class="text-[10px] text-slate-400">🚗 ${o.Cap_CarType||''} - ${o.Cap_CarCode||''}</div></div><div class="flex items-center">${phHtml}</div></div>` : '';
                         let cnlBtn = (st==='new' || st==='accepted') ? `<button onclick="cancelOrder('${o.Shop_Ord_ID}')" class="w-full mt-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs border border-red-500/30 transition-colors">إلغاء الطلب ❌</button>` : '';
 
-                        html += `<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 mb-4 hover:border-yellow-500/30 transition-colors">
+                        html += `<div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 hover:border-yellow-500/30 transition-colors">
                                     <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
                                         <div class="text-[10px] text-slate-400 font-mono"><i class="far fa-clock"></i> ${new Date(o.Shop_Date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
                                         <div class="border px-3 py-1 rounded-full text-[10px] font-bold ${info.c}">${info.t}</div>
@@ -598,7 +649,7 @@
                                  </div>`;
                     });
                     list.innerHTML = html;
-                } else list.innerHTML = '<div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">لا توجد عمليات</div>';
+                } else list.innerHTML = '<div class="text-center p-10 text-slate-500 font-mono text-sm tracking-widest bg-slate-900/50 rounded-2xl border border-slate-800">لا توجد عمليات مسجلة</div>';
             });
         }
 
@@ -617,9 +668,9 @@
                         verifiedCaptain = f; document.getElementById('found-cap-name').innerText = f.Cap_Name || f.name;
                         document.getElementById('future-cap-balance').innerText = (parseFloat(f.Cap_Balance||f.balance||0) + amt).toFixed(2);
                         document.getElementById('cap-check-result').style.display='block'; document.getElementById('btn-charge').style.display='block';
-                    } else showAppToast("المستلم غير موجود", true);
+                    } else showAppToast("المستلم غير موجود بالنظام", true);
                 }
-            } catch(e) { showAppToast("خطأ فحص", true); } finally { setLoading('btn-check', false, "التحقق من بيانات الكابتن 🔍"); }
+            } catch(e) { showAppToast("خطأ بالبحث", true); } finally { setLoading('btn-check', false, "التحقق من بيانات الكابتن 🔍"); }
         };
 
         window.executeTransfer = () => showCustomConfirm("تأكيد خصم الرصيد وتحويله للكابتن؟", async () => {
@@ -628,7 +679,7 @@
             try {
                 const capK = verifiedCaptain.Cap_User || verifiedCaptain.user || verifiedCaptain.Cap_Phone, shopK = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
                 const nCB = parseFloat(verifiedCaptain.Cap_Balance||verifiedCaptain.balance||0) + amt, nSB = myBalance - amt;
-                const up = { [`${verifiedCaptain._node}/${capK}/Cap_Balance`]: nCB, [`${verifiedCaptain._node}/${capK}/balance`]: nCB, [`${window.myNode}/${shopK}/Shop_Balance`]: nSB, [`${window.myNode}/${shopK}/balance`]: nSB };
+                const up = { [`${verifiedCaptain._node}/${capK}/Cap_Balance`]: nCB, [`${verifiedCaptain._node}/${capK}/balance`]: nCB, [`${window.myNode}/${shopK}/Shop_Balance`]: nSB, [`${window.myNode}/${shopK}/Client_Balance`]: nSB, [`${window.myNode}/${shopK}/balance`]: nSB };
                 const txId = "TX_" + Date.now(); up[`financial_logs/${shopK}/${txId}`] = { type: 'deposit_to_captain', amount: amt, captain_phone: capK, captain_name: verifiedCaptain.Cap_Name || verifiedCaptain.name, shop_user: shopK, timestamp: Date.now() };
                 await update(ref(db), up); myBalance = nSB; document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
                 showAppToast("تمت الحوالة بنجاح 💎"); ['cap_id', 'charge_amount'].forEach(id => document.getElementById(id).value='');
@@ -663,6 +714,18 @@
             const v = parseInt(document.getElementById('current_rating_val').value), c = document.getElementById('rating_cap_id').value, t = document.getElementById('selected_tag').value, n = document.getElementById('rating_notes').value.trim();
             if(v===0) return showAppToast("اختر التقييم أولاً", true);
             try { await set(push(ref(db, `ratings/captains/${c}`)), { shopId: currentUser.Shop_User || currentUser.user, rating: v, reason: t, notes: n, timestamp: Date.now() }); showAppToast("تم تسجيل التقييم"); closeRatingModal(); } catch(e) { showAppToast("فشل الإرسال", true); closeRatingModal(); }
+        };
+
+        // === Settings ===
+        window.updateShopProfile = async () => {
+            const np = document.getElementById('profile_pass').value; if(!np) return showAppToast("لم يتم إدخال تغييرات", true);
+            setLoading('btn-save-settings', true);
+            try {
+                const u = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
+                await update(ref(db), { [`${window.myNode}/${u}/Shop_Pass`]: np, [`${window.myNode}/${u}/pass`]: np, [`${window.myNode}/${u}/Client_Pass`]: np });
+                currentUser.Shop_Pass = np; currentUser.pass = np; currentUser.Client_Pass = np; localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
+                showAppToast("تم تحديث كلمة المرور بنجاح 💾"); document.getElementById('profile_pass').value = '';
+            } catch(e) { showAppToast("تعذر التحديث", true); } finally { setLoading('btn-save-settings', false, "حفظ التحديثات <i class='fas fa-save ml-1'></i>"); }
         };
     </script>
 </body>
