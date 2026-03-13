@@ -516,7 +516,6 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         };
 
-        // دالة الشمسيات الملكية
         window.toggleUmbrella = function(id, headerEl) {
             const content = document.getElementById(id);
             const icon = headerEl.querySelector('.fa-chevron-down');
@@ -718,6 +717,7 @@
             });
         }
 
+        // ================== الخوارزمية الجديدة للمداورة الذكية ==================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -735,16 +735,20 @@
                     let masterCompany = activeCompanyName || 'default';
                     let commission = parseFloat(ord.commission_amount || 0);
 
+                    // تفاعل الإلغاء اللحظي
+                    if(ord.linkedRadarId) {
+                        const originalOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
+                        if (originalOrd && (originalOrd.OrderStatus === 'cancelled' || originalOrd.OrderStatus === 'archived_and_deleted')) {
+                            updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                            hasUpdates = true;
+                            continue;
+                        }
+                    }
+
                     if (ord.dispatch_method === 'Auto') {
-                        if (ord.status === 'assigned') {
-                            if (elapsed > 6000 || isAppClosed) { 
-                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                                if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                                hasUpdates = true;
-                                continue;
-                            }
-                        } else if (ord.status === 'ringing') {
-                            if (elapsed > remoteOrderTimer || isAppClosed) {
+                        // المداورة الذكية: إذا خلص الوقت أو رفض الكابتن
+                        if (ord.status === 'assigned' || ord.status === 'ringing') {
+                            if (elapsed > remoteOrderTimer || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                                 if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                 hasUpdates = true;
@@ -843,6 +847,7 @@
                 update(ref(db), updates).catch(e=>{});
             }
         }
+        // ====================================================================
 
         window.renderRadar = function() {
             if (!currentUser) return;
@@ -855,7 +860,7 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
+                if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'cancelled', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
@@ -983,7 +988,7 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId) || activeLinkedIds.has(ordId)) return false;
-                if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
+                if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'cancelled', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
