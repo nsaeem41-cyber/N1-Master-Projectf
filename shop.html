@@ -24,21 +24,18 @@
             --info: #0ea5e9;
         }
 
-        /* تحويل الموقع لتطبيق موبايل متكامل يملأ الشاشة بالضبط */
         html, body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0f172a;
             color: #e2e8f0;
             margin: 0;
             padding: 0;
-            height: 100dvh;
-            width: 100vw;
-            overflow: hidden;
+            overflow-x: hidden;
             overscroll-behavior-y: none;
-            touch-action: pan-x pan-y;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             background-image: radial-gradient(circle at 20% 30%, rgba(223, 183, 62, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(223, 183, 62, 0.05) 0%, transparent 50%), url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            padding-bottom: 50px;
         }
 
         .royal-navy-bg { background-color: var(--royal-navy); }
@@ -97,7 +94,6 @@
         .section.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Toasts & Loaders */
         #toast-container { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; align-items: center; }
         .app-toast { background: white; color: var(--royal-navy); border-right: 4px solid var(--luxury-gold); padding: 15px 25px; border-radius: 12px; font-weight: bold; font-size: 14px; animation: slideDownToast 0.4s forwards, fadeOutToast 0.4s forwards 3.6s; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; border: 1px solid #e2e8f0; }
         @keyframes slideDownToast { from { transform: translateY(-120%); } to { transform: translateY(0); } }
@@ -105,12 +101,10 @@
 
         #loader { position: fixed; top: 0; left: 0; height: 4px; background: var(--luxury-gold); z-index: 3000; width: 0%; transition: 0.3s; box-shadow: 0 0 10px var(--luxury-gold); }
 
-        /* Overlays */
         .custom-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 60000; }
         .custom-dialog-box { background: white; width: 85%; max-width: 350px; border-radius: 24px; padding: 25px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); border-top: 4px solid var(--luxury-gold); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* Rating Modal */
         .gems-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; direction: ltr; }
         .gem { font-size: 35px; color: #cbd5e1; cursor: pointer; transition: 0.2s; filter: grayscale(100%); }
         .gem.active { color: var(--luxury-gold); filter: none; text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); transform: scale(1.1); }
@@ -118,11 +112,11 @@
         .tag { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; color: #64748b; transition: 0.3s; font-weight: bold;}
         .tag.active { background: var(--royal-navy); color: white; border-color: var(--royal-navy); }
 
-        .auth-container { display: flex; justify-content: center; align-items: center; height: 100%; width: 100%; padding: 20px; background: #f8fafc; }
+        .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background: #f8fafc; }
         .auth-box { background: white; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid var(--luxury-gold); animation: slideUp 0.5s ease; }
     </style>
 </head>
-<body>
+<body class="flex flex-col">
 
     <div id="toast-container"></div>
     <div id="loader"></div>
@@ -130,7 +124,7 @@
     <div id="custom-confirm-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
             <div class="text-4xl mb-4 luxury-gold-text"><i class="fas fa-question-circle"></i></div>
-            <div id="custom-confirm-msg" class="text-sm font-bold text-slate-700 mb-6 leading-relaxed">هل أنت متأكد؟</div>
+            <div id="custom-confirm-msg" class="text-sm font-bold text-slate-700 mb-6 leading-relaxed">هل أنت متأكد</div>
             <div class="flex justify-center gap-3">
                 <button class="flex-1 py-3 rounded-xl font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors" onclick="executeAppConfirm()">تأكيد ✅</button>
                 <button class="flex-1 py-3 rounded-xl font-bold bg-red-100 text-red-700 hover:bg-red-200 transition-colors" onclick="closeAppConfirm()">إلغاء ❌</button>
@@ -141,7 +135,7 @@
     <div id="rating-modal" class="custom-dialog-overlay">
         <div class="custom-dialog-box">
             <div class="text-lg font-black royal-navy-text mb-2">تقييم الكابتن 💎</div>
-            <div id="rating_title_desc" class="text-xs text-slate-500 font-bold">كيف كان أداء الكابتن في هذا الطلب؟</div>
+            <div id="rating_title_desc" class="text-xs text-slate-500 font-bold">كيف كان أداء الكابتن في هذا الطلب</div>
             
             <div class="gems-container" id="gems-container">
                 <span class="gem" onclick="setRating(1)">💎</span>
@@ -152,9 +146,9 @@
             </div>
             
             <div id="rating-feedback" style="display:none;">
-                <div id="dynamic-question" class="text-sm font-bold royal-navy-text mb-3">ما هي المشكلة التي واجهتك؟</div>
+                <div id="dynamic-question" class="text-sm font-bold royal-navy-text mb-3">ما هي المشكلة التي واجهتك</div>
                 <div class="quick-tags" id="quick-tags"></div>
-                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية (اختياري)" class="w-full input-field p-3 rounded-xl text-sm mt-2"></textarea>
+                <textarea id="rating_notes" rows="2" placeholder="تفاصيل إضافية" class="w-full input-field p-3 rounded-xl text-sm mt-2"></textarea>
             </div>
 
             <input type="hidden" id="current_rating_val" value="0">
@@ -162,7 +156,7 @@
             <input type="hidden" id="selected_tag" value="">
             
             <button class="w-full mt-4 royal-navy-bg text-white py-3 rounded-xl font-bold transition-all hover:opacity-90 flex items-center justify-center gap-2" onclick="submitRating()">إرسال التقييم <i class="fas fa-star"></i></button>
-            <button class="w-full mt-3 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors" onclick="closeRatingModal()">إغلاق</button>
+            <button class="w-full mt-3 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors" onclick="closeRatingModal()">تخطي التقييم الآن</button>
         </div>
     </div>
 
@@ -175,7 +169,7 @@
             <p class="text-xs text-slate-400 font-bold mb-8 uppercase tracking-widest">بوابة المنشآت الموحدة</p>
             
             <div class="mb-5 text-right">
-                <label class="block text-xs font-bold text-slate-500 mb-2">معرف الدخول (User ID)</label>
+                <label class="block text-xs font-bold text-slate-500 mb-2">معرف الدخول</label>
                 <div class="relative">
                     <input type="text" id="login-user" placeholder="أدخل المعرف الخاص بالمنشأة" class="input-field p-4 rounded-xl text-left font-mono tracking-widest pr-12" dir="ltr" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
                     <i class="fas fa-user absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -190,7 +184,7 @@
             </div>
             
             <button class="w-full royal-navy-bg text-white py-4 rounded-xl font-black text-sm hover:bg-slate-800 transition-colors shadow-md" id="btn-login" onclick="executeLogin()">تسجيل الدخول <i class="fas fa-sign-in-alt ml-2"></i></button>
-            <div class="mt-6 text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer transition-colors" onclick="openRegisterPage()">ليس لديك حساب؟ تقديم طلب انضمام</div>
+            <div class="mt-6 text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer transition-colors" onclick="openRegisterPage()">ليس لديك حساب تقديم طلب انضمام</div>
         </div>
 
         <div id="register-card" class="auth-box border-t-emerald-500" style="display: none;">
@@ -203,8 +197,8 @@
                     <input type="text" id="reg-name" placeholder="الاسم الرسمي" class="input-field p-3 rounded-xl text-sm">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 mb-1">اسم المستخدم (أحرف إنجليزية)</label>
-                    <input type="text" id="reg-user" placeholder="مثال: restaurant_one" class="input-field p-3 rounded-xl text-sm font-mono text-left" dir="ltr" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">اسم المستخدم</label>
+                    <input type="text" id="reg-user" placeholder="مثال restaurant_one" class="input-field p-3 rounded-xl text-sm font-mono text-left" dir="ltr" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-1">كلمة المرور المطلوبة</label>
@@ -217,8 +211,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-1">الشركة المرجعية</label>
                     <select id="reg-master" class="input-field p-3 rounded-xl text-sm font-bold bg-white" style="cursor: pointer;">
-                        <option value="">-- يرجى اختيار الشركة --</option>
-                        <option value="loading">جاري التحميل...</option>
+                        <option value="">رجاء اختيار الشركة</option>
+                        <option value="loading">جاري التحميل</option>
                     </select>
                 </div>
             </div>
@@ -230,21 +224,21 @@
         <div id="suspended-card" class="auth-box border-t-red-500" style="display: none;">
             <div class="text-6xl mb-6 text-red-100"><i class="fas fa-ban text-red-500"></i></div>
             <div class="text-xl font-black royal-navy-text mb-2">حساب موقوف</div>
-            <div class="text-sm text-slate-500 font-bold mb-8 leading-relaxed">تم تعليق حساب المنشأة. يرجى مراجعة الشركة المرجعية لتسوية الوضع المالي أو الإداري.</div>
+            <div class="text-sm text-slate-500 font-bold mb-8 leading-relaxed">تم تعليق حساب المنشأة يرجى مراجعة الشركة المرجعية لتسوية الوضع المالي أو الإداري</div>
             <button class="w-full py-3 rounded-xl font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors" onclick="location.reload()">تحديث حالة الحساب <i class="fas fa-sync-alt ml-1"></i></button>
         </div>
     </div>
 
-    <div id="app-container" class="hidden h-full flex-col w-full overflow-hidden">
+    <div id="app-container" class="hidden flex-col w-full min-h-screen">
         
-        <header class="bg-white border-b border-slate-100 p-4 flex justify-between items-center z-50 flex-shrink-0">
+        <header class="bg-white border-b border-slate-100 p-4 flex justify-between items-center z-50">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 royal-navy-bg rounded-lg flex items-center justify-center shadow-sm">
                     <i class="fas fa-crown luxury-gold-text"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-black royal-navy-text tracking-tighter leading-none">N One</h1>
-                    <p class="text-[9px] text-slate-400 font-bold" id="parent-company-brand">جاري التحميل...</p>
+                    <p class="text-[9px] text-slate-400 font-bold" id="parent-company-brand">جاري التحميل</p>
                 </div>
             </div>
             <button class="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors border border-red-100" onclick="logout()">
@@ -252,7 +246,7 @@
             </button>
         </header>
 
-        <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex flex-wrap gap-2 items-center justify-center flex-shrink-0">
+        <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex flex-wrap gap-2 items-center justify-center">
             <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-full border border-slate-200 text-[9px] font-bold text-slate-600 shadow-sm">
                 <i class="fas fa-user-shield text-blue-500"></i> <span id="hdr-shop-user">...</span>
             </div>
@@ -264,24 +258,21 @@
             </div>
         </div>
 
-        <nav class="bg-white px-2 flex gap-4 border-b border-slate-100 overflow-x-auto no-scrollbar justify-start md:justify-center flex-shrink-0">
-            <button onclick="switchTab('order', this)" id="tab-order" class="nav-button active py-3 px-2 text-xs md:text-sm font-black flex items-center gap-1 whitespace-nowrap">
+        <nav class="bg-white px-2 flex justify-around border-b border-slate-100 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('order', this)" id="tab-order" class="nav-button active py-3 px-4 text-xs font-black flex items-center gap-1 whitespace-nowrap">
                 <i class="fas fa-paper-plane"></i> الطلب
             </button>
-            <button onclick="switchTab('history', this)" id="tab-history" class="nav-button py-3 px-2 text-xs md:text-sm font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap">
-                <i class="fas fa-history"></i> السجل
-            </button>
-            <button onclick="switchTab('charging', this)" id="tab-charging" class="nav-button py-3 px-2 text-xs md:text-sm font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap">
+            <button onclick="switchTab('charging', this)" id="tab-charging" class="nav-button py-3 px-4 text-xs font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap">
                 <i class="fas fa-bolt"></i> الشحن
             </button>
-            <button onclick="switchTab('settings', this)" id="tab-settings" class="nav-button py-3 px-2 text-xs md:text-sm font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap">
+            <button onclick="switchTab('settings', this)" id="tab-settings" class="nav-button py-3 px-4 text-xs font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap">
                 <i class="fas fa-cog"></i> الإعدادات
             </button>
         </nav>
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar bg-slate-50 w-full">
+        <main class="flex-1 p-4 md:p-8 bg-slate-50 w-full">
             
-            <div id="content-order" class="section active max-w-4xl mx-auto pb-6">
+            <div id="content-order" class="section active max-w-4xl mx-auto">
                 <div class="grid grid-cols-2 gap-3 mb-6">
                     <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col items-center text-center shadow-sm">
                         <span class="text-[10px] font-bold text-slate-400 uppercase mb-1">الرصيد التشغيلي</span>
@@ -293,7 +284,7 @@
                     </div>
                 </div>
 
-                <div class="glass-card rounded-3xl p-5 md:p-8 border-t-4 border-t-luxury-gold">
+                <div class="glass-card rounded-3xl p-5 md:p-8 border-t-4 border-t-luxury-gold mb-6">
                     <div class="flex items-center gap-3 mb-6">
                         <i class="fas fa-car text-xl luxury-gold-text"></i>
                         <h3 class="text-lg md:text-xl font-black royal-navy-text">توجيه طلب للعمليات</h3>
@@ -303,7 +294,7 @@
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 mb-1 mr-1">المنطقة المعتمدة</label>
                             <div class="relative">
-                                <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة..." class="w-full input-field p-3.5 pr-10 rounded-xl font-bold" oninput="calculateFee()" onchange="calculateFee()">
+                                <input type="text" id="destination" list="areas-list" placeholder="ابحث عن المنطقة" class="w-full input-field p-3.5 pr-10 rounded-xl font-bold" oninput="calculateFee()" onchange="calculateFee()">
                                 <i class="fas fa-map-pin absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             </div>
                             <datalist id="areas-list"></datalist>
@@ -327,10 +318,10 @@
                                     </div>
                                 </label>
                                 <div class="relative">
-                                    <input type="text" id="delivery_fee" placeholder="تلقائي..." readonly class="w-full input-field p-3.5 rounded-xl text-center font-black text-emerald-600 text-lg" dir="ltr">
+                                    <input type="text" id="delivery_fee" placeholder="تلقائي" readonly class="w-full input-field p-3.5 rounded-xl text-center font-black text-emerald-600 text-lg" dir="ltr">
                                 </div>
                                 <div id="offer-details-box" class="mt-1 text-center" style="display:none;">
-                                    <span class="text-[9px] text-slate-400 font-bold">الأساسي: <del id="original-price-display" class="text-red-400"></del></span>
+                                    <span class="text-[9px] text-slate-400 font-bold">الأساسي <del id="original-price-display" class="text-red-400"></del></span>
                                     <span id="offer-timer-display" class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded ml-1">⏳</span>
                                 </div>
                             </div>
@@ -341,24 +332,27 @@
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <div id="content-history" class="section max-w-5xl mx-auto pb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-black royal-navy-text"><i class="fas fa-list-alt text-slate-400 ml-1"></i> السجل</h3>
-                    <div class="text-[9px] font-bold text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-sm">
-                        إجمالي السجل: <span id="orders-total-history" class="royal-navy-text text-xs">0</span>
+                <div class="glass-card rounded-3xl p-5 md:p-8 border-t-4 border-t-indigo-500 mt-8">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-list-alt text-xl text-indigo-400"></i>
+                            <h3 class="text-lg md:text-xl font-black royal-navy-text">سجل العمليات</h3>
+                        </div>
+                        <div class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                            الإجمالي <span id="orders-total-history" class="royal-navy-text">0</span>
+                        </div>
+                    </div>
+                    
+                    <div id="history-list" class="space-y-4">
+                        <div class="text-center p-10 text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl border border-slate-200">
+                            جاري سحب السجلات <i class="fas fa-spinner fa-spin mr-1"></i>
+                        </div>
                     </div>
                 </div>
-                
-                <div id="history-list" class="space-y-3 pb-10">
-                    <div class="text-center p-10 text-slate-400 font-bold text-xs bg-white rounded-2xl border border-slate-200 shadow-sm">
-                        جاري سحب السجلات <i class="fas fa-spinner fa-spin mr-1"></i>
-                    </div>
-                </div>
             </div>
 
-            <div id="content-charging" class="section max-w-3xl mx-auto pb-6">
+            <div id="content-charging" class="section max-w-3xl mx-auto">
                 <div class="text-center mb-6">
                     <h3 class="text-xl font-black royal-navy-text">نقطة شحن معتمدة ⚡</h3>
                     <p class="text-slate-500 text-xs mt-1 font-bold">تحويل الرصيد التشغيلي للكباتن</p>
@@ -374,12 +368,12 @@
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 mb-1 mr-1">معرف المستلم أو رقم الهاتف</label>
                             <div class="relative">
-                                <input type="text" id="cap_id" placeholder="مثال: 079xxxxxxx" class="w-full input-field p-3.5 pr-10 rounded-xl text-left font-mono tracking-widest" dir="ltr">
+                                <input type="text" id="cap_id" placeholder="مثال 079xxxxxxx" class="w-full input-field p-3.5 pr-10 rounded-xl text-left font-mono tracking-widest" dir="ltr">
                                 <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-500 mb-1 mr-1">قيمة الشحن (د.أ)</label>
+                            <label class="block text-[11px] font-bold text-slate-500 mb-1 mr-1">قيمة الشحن</label>
                             <div class="relative">
                                 <input type="number" id="charge_amount" placeholder="0.00" class="w-full input-field p-3.5 pl-10 rounded-xl font-mono text-center text-lg font-black text-emerald-600" dir="ltr">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">د.أ</span>
@@ -391,9 +385,9 @@
                         </button>
 
                         <div id="cap-check-result" style="display:none;" class="mt-4 bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
-                            <div class="text-xs font-bold text-slate-600 mb-1">المستلم: <span id="found-cap-name" class="font-black text-emerald-700 mx-1">---</span></div>
-                            <div class="text-[9px] text-slate-500 font-bold mb-3 bg-white inline-block px-2 py-0.5 rounded border border-slate-200">رصيده: <span id="found-cap-balance" class="font-mono">---</span></div>
-                            <div class="text-xs font-bold text-emerald-600 border-t border-emerald-200/50 pt-2 mt-1">الرصيد بعد الشحن: <span id="future-cap-balance" class="font-black text-lg mx-1">---</span> د.أ</div>
+                            <div class="text-xs font-bold text-slate-600 mb-1">المستلم <span id="found-cap-name" class="font-black text-emerald-700 mx-1">---</span></div>
+                            <div class="text-[9px] text-slate-500 font-bold mb-3 bg-white inline-block px-2 py-0.5 rounded border border-slate-200">رصيده <span id="found-cap-balance" class="font-mono">---</span></div>
+                            <div class="text-xs font-bold text-emerald-600 border-t border-emerald-200/50 pt-2 mt-1">الرصيد بعد الشحن <span id="future-cap-balance" class="font-black text-lg mx-1">---</span> د.أ</div>
                         </div>
 
                         <button class="w-full bg-emerald-500 text-white py-4 rounded-xl text-sm font-black mt-2 flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all shadow-md shadow-emerald-200" id="btn-charge" style="display:none;" onclick="executeTransfer()">
@@ -458,7 +452,6 @@
         const snd_deliver = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         let orderStatesHistory = {}, askedToRate = {};
 
-        // === UI Helpers ===
         window.showAppToast = (msg, isError = false) => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -478,7 +471,7 @@
             const loader = document.getElementById('loader');
             if (isLoading) { 
                 btn.dataset.text = btn.innerHTML; 
-                btn.innerHTML = "جاري المعالجة... <i class='fas fa-circle-notch fa-spin ml-2'></i>"; 
+                btn.innerHTML = "جاري المعالجة <i class='fas fa-circle-notch fa-spin ml-2'></i>"; 
                 btn.style.opacity = 0.7; 
                 btn.disabled = true; 
                 loader.style.width = "100%"; 
@@ -513,7 +506,6 @@
             else { passInput.type = 'password'; passIcon.innerHTML = '<i class="fas fa-eye"></i>'; }
         };
 
-        // === Auth Logic ===
         window.onload = () => {
             const savedUser = localStorage.getItem('n1_shop_session');
             if (savedUser) { currentUser = JSON.parse(savedUser); initializePortal(); } 
@@ -528,10 +520,10 @@
         window.openRegisterPage = async () => {
             toggleAuth('register');
             const select = document.getElementById('reg-master');
-            select.innerHTML = '<option value="">جاري سحب الشركات المرجعية...</option>';
+            select.innerHTML = '<option value="">جاري سحب الشركات المرجعية</option>';
             try {
                 const snap = await get(child(ref(db), 'users'));
-                let html = '<option value="" class="text-slate-500">-- اختر الشركة المرجعية --</option>';
+                let html = '<option value="" class="text-slate-500">اختر الشركة المرجعية</option>';
                 if (snap.exists()) {
                     Object.values(snap.val()).forEach(u => {
                         if (u.role !== 'admin' && (u.role === 'client' || u.type === 'client' || u.external_reg_enabled)) {
@@ -562,7 +554,7 @@
                         localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                         initializePortal();
                     } else showAppToast("بيانات غير مطابقة", true);
-                } else showAppToast("المعرف غير مسجل", true);
+                } else showAppToast("المعرف غير مسجل لدينا", true);
             } catch (e) { showAppToast("خطأ بالاتصال", true); } 
             finally { setLoading('btn-login', false, "تسجيل الدخول <i class='fas fa-sign-in-alt ml-2'></i>"); }
         };
@@ -575,15 +567,14 @@
                 const check1 = await get(child(ref(db), `shops/${u}`)), check2 = await get(child(ref(db), `users/${u}`));
                 if (check1.exists() || check2.exists()) { showAppToast("المعرف مستخدم مسبقاً", true); setLoading('btn-register', false, "إرسال الطلب <i class='fas fa-paper-plane ml-2'></i>"); return; }
                 await set(ref(db, `shops/${u}`), { Client_ID: "REQ_"+Date.now(), Client_User: u, Client_Pass: p, Client_Name: n, Client_Role: "shop", Client_Type: "shop", Client_Master: m, Client_Status: "pending", Client_Phone: ph, name: n, user: u, pass: p, role: "shop", type: "shop", status: "pending", requestDate: new Date().toISOString(), hide_phone: false });
-                showAppToast("تم إرسال طلب الانضمام بنجاح 🚀"); toggleAuth('login');
+                showAppToast("تم إرسال طلب الانضمام بنجاح"); toggleAuth('login');
                 ['reg-name', 'reg-user', 'reg-pass', 'reg-phone', 'reg-master'].forEach(id => document.getElementById(id).value = '');
             } catch(e) { showAppToast("تعذر الإرسال", true); } 
             finally { setLoading('btn-register', false, "إرسال الطلب <i class='fas fa-paper-plane ml-2'></i>"); }
         };
 
-        window.logout = () => showCustomConfirm("تأكيد الخروج من النظام؟", () => { localStorage.removeItem('n1_shop_session'); location.reload(); });
+        window.logout = () => showCustomConfirm("تأكيد الخروج من النظام", () => { localStorage.removeItem('n1_shop_session'); location.reload(); });
 
-        // === App Logic ===
         async function initializePortal() {
             document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-container').style.display = 'flex';
             
@@ -623,8 +614,8 @@
                     const add = (obj, n) => { if(obj) Object.values(obj).forEach(i => { i._node = n; flat.push(i); }); };
                     add(data.users, 'users'); add(data.shops, 'shops'); add(data.captains, 'captains'); dbPrices = extractPrices(data.prices);
                     
-                    const myKeys = [String(currentUser.Shop_User||""), String(currentUser.Client_User||""), String(currentUser.user||""), String(currentUser.Shop_Phone||""), String(currentUser.phone||"")].map(k=>k.trim().toLowerCase()).filter(k=>k!=="");
-                    const me = flat.find(u => myKeys.includes(String(u.Shop_User||"").trim().toLowerCase()) || myKeys.includes(String(u.Client_User||"").trim().toLowerCase()) || myKeys.includes(String(u.user||"").trim().toLowerCase()) || myKeys.includes(String(u.phone||"").trim().toLowerCase()));
+                    const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
+                    const me = flat.find(u => String(u.Shop_User || u.Client_User || u.user || "").trim().toLowerCase() === myUser);
                     
                     if (me) { window.myNode = me._node || 'shops'; myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0); updateAllBalances(myBalance); loadShopPrices(); }
                 }
@@ -667,7 +658,7 @@
                 sb.style.display = featureMatrix[d] ? 'inline-block' : 'none';
                 if (featureMatrix[d] && window.offerMatrix[d] && window.offerMatrix[d].endTime > Date.now()) {
                     ob.style.display = 'block'; op.innerText = window.offerMatrix[d].original.toFixed(2);
-                    const updateTimer = () => { const diff = window.offerMatrix[d].endTime - Date.now(); if (diff <= 0) { td.innerText = "انتهى العرض ⏳"; td.className = "text-[9px] font-bold text-red-500 bg-red-50 px-1 py-0.5 rounded ml-1"; clearInterval(window.currentOfferInterval); } else { const h = Math.floor(diff / (1000 * 60 * 60)); const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); td.innerText = `⏳ ينتهي خلال ${h}س و ${m}د`; td.className = "text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded ml-1"; } };
+                    const updateTimer = () => { const diff = window.offerMatrix[d].endTime - Date.now(); if (diff <= 0) { td.innerText = "انتهى العرض"; td.className = "text-[9px] font-bold text-red-500 bg-red-50 px-1 py-0.5 rounded ml-1"; clearInterval(window.currentOfferInterval); } else { const h = Math.floor(diff / (1000 * 60 * 60)); const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)); td.innerText = `ينتهي خلال ${h}س و ${m}د`; td.className = "text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded ml-1"; } };
                     updateTimer(); window.currentOfferInterval = setInterval(updateTimer, 60000);
                 } else ob.style.display = 'none';
                 document.getElementById('delivery_fee').value = f.toFixed(2);
@@ -681,14 +672,14 @@
             const id = "SHOP_ORD_" + Date.now(); let fee = pricingMatrix[d]; if(new Date().getHours() >= 23 || new Date().getHours() < 6) fee += 0.50;
             try {
                 await set(ref(db, `orders/${id}`), { Shop_Ord_ID: id, Shop_Type: "shop_order", Shop_User: currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone, Shop_Name: currentUser.Shop_Name || currentUser.Client_Name || currentUser.name, Shop_Pickup: d, Shop_Location_Link: currentUser.Shop_Location || currentUser.Client_Location || currentUser.pickup || "", Shop_Val: v, Shop_Fee: fee.toFixed(2), Shop_Date: new Date().toISOString(), Shop_IsEmergency: "false", Shop_Status: "new", OrderStatus: "new", Master_ID: currentUser.Client_Master || currentUser.master || "الإدارة العامة", shop_phone: currentUser.Shop_Phone || currentUser.phone || '' });
-                showAppToast("تم إرسال الطلب للعمليات بنجاح 🚀"); document.getElementById('destination').value=''; document.getElementById('order_val').value=''; calculateFee(); switchTab('history', document.getElementById('tab-history'));
-            } catch(e) { showAppToast("خطأ بالإرسال", true); } finally { setLoading('btn-send', false, "إرسال الطلب للعمليات <i class='fas fa-paper-plane'></i>"); }
+                showAppToast("تم إرسال الطلب للعمليات بنجاح"); document.getElementById('destination').value=''; document.getElementById('order_val').value=''; calculateFee(); 
+            } catch(e) { showAppToast("خطأ بالإرسال", true); } finally { setLoading('btn-send', false, "إرسال الطلب للعمليات 🚀"); }
         };
 
         function isMyOrder(ord) { 
-            const myKeys = [String(currentUser.Shop_User||""), String(currentUser.Client_User||""), String(currentUser.user||""), String(currentUser.Shop_Phone||""), String(currentUser.phone||"")].map(k=>k.trim().toLowerCase()).filter(k=>k!=="");
-            const ordKeys = [String(ord.Shop_User||""), String(ord.user||""), String(ord.client||""), String(ord.shop_phone||"")].map(k=>k.trim().toLowerCase());
-            return myKeys.some(k => ordKeys.includes(k));
+            const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase(); 
+            const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase(); 
+            return (myUser !== "" && myUser === ordUser); 
         }
 
         function setupLiveOrders() {
@@ -767,7 +758,7 @@
             } catch(e) { showAppToast("حدث خطأ أثناء البحث", true); } finally { setLoading('btn-check', false, "التحقق من المستلم 🔍"); }
         };
 
-        window.executeTransfer = () => showCustomConfirm("تأكيد خصم الرصيد وتحويله للكابتن المذكور؟", async () => {
+        window.executeTransfer = () => showCustomConfirm("تأكيد خصم الرصيد وتحويله للكابتن المذكور", async () => {
             if(!verifiedCaptain) return; const amt = parseFloat(document.getElementById('charge_amount').value);
             setLoading('btn-charge', true);
             try {
@@ -785,7 +776,7 @@
         window.openRatingModal = (capId) => {
             document.getElementById('rating_cap_id').value = capId; document.getElementById('current_rating_val').value = "0"; document.getElementById('selected_tag').value = ""; document.getElementById('rating_notes').value = "";
             document.querySelectorAll('.gem').forEach(g => g.classList.remove('active')); document.getElementById('rating-feedback').style.display = 'none';
-            document.getElementById('rating_title_desc').innerText = "كيف كان أداء الكابتن في هذا الطلب؟"; document.getElementById('rating-modal').style.display = 'flex';
+            document.getElementById('rating_title_desc').innerText = "كيف كان أداء الكابتن في هذا الطلب"; document.getElementById('rating-modal').style.display = 'flex';
         };
         window.closeRatingModal = () => document.getElementById('rating-modal').style.display = 'none';
         window.setRating = (val) => {
@@ -794,10 +785,10 @@
             const fb = document.getElementById('rating-feedback'), q = document.getElementById('dynamic-question'), tc = document.getElementById('quick-tags'), d = document.getElementById('rating_title_desc');
             fb.style.display = 'block'; document.getElementById('selected_tag').value = "";
             const tMap = {
-                1: { d: "ضعيف جداً ⚠️", c: "var(--danger)", q: "نأسف لذلك. ما هي المشكلة؟", tg: ["تأخير", "أسلوب سيء", "لم يستلم", "تضرر"] },
-                2: { d: "سيء 😟", c: "#d97706", q: "ما الذي أزعجك؟", tg: ["بطء", "عدم رد", "غير مهني"] },
-                3: { d: "مقبول 😐", c: "#8b5cf6", q: "كيف يتحسن؟", tg: ["السرعة", "التعامل", "الاهتمام"] },
-                4: { d: "جيد جداً 🙂", c: "var(--info)", q: "ملاحظة بسيطة؟", tg: ["كل شيء جيد", "أسرع قليلاً"] },
+                1: { d: "ضعيف جداً ⚠️", c: "var(--danger)", q: "نأسف لذلك ما هي المشكلة", tg: ["تأخير", "أسلوب سيء", "لم يستلم", "تضرر"] },
+                2: { d: "سيء 😟", c: "#d97706", q: "ما الذي أزعجك", tg: ["بطء", "عدم رد", "غير مهني"] },
+                3: { d: "مقبول 😐", c: "#8b5cf6", q: "كيف يتحسن", tg: ["السرعة", "التعامل", "الاهتمام"] },
+                4: { d: "جيد جداً 🙂", c: "var(--info)", q: "ملاحظة بسيطة", tg: ["كل شيء جيد", "أسرع قليلاً"] },
                 5: { d: "ممتاز 🌟", c: "var(--success)", q: "شكراً لتعاونكم", tg: ["سريع", "راقي", "مميز"] }
             };
             d.innerText = tMap[val].d; d.style.color = tMap[val].c; q.innerText = tMap[val].q;
@@ -807,7 +798,7 @@
         window.submitRating = async () => {
             const v = parseInt(document.getElementById('current_rating_val').value), c = document.getElementById('rating_cap_id').value, t = document.getElementById('selected_tag').value, n = document.getElementById('rating_notes').value.trim();
             if(v===0) return showAppToast("اختر التقييم أولاً", true);
-            try { await set(push(ref(db, `ratings/captains/${c}`)), { shopId: currentUser.Shop_User || currentUser.user, rating: v, reason: t, notes: n, timestamp: Date.now() }); showAppToast("تم تسجيل التقييم، شكراً لك"); closeRatingModal(); } catch(e) { showAppToast("فشل الإرسال", true); closeRatingModal(); }
+            try { await set(push(ref(db, `ratings/captains/${c}`)), { shopId: currentUser.Shop_User || currentUser.user, rating: v, reason: t, notes: n, timestamp: Date.now() }); showAppToast("تم تسجيل التقييم شكراً لك"); closeRatingModal(); } catch(e) { showAppToast("فشل الإرسال", true); closeRatingModal(); }
         };
 
         // === Settings ===
@@ -819,7 +810,7 @@
                 await update(ref(db), { [`${window.myNode}/${u}/Shop_Pass`]: np, [`${window.myNode}/${u}/pass`]: np, [`${window.myNode}/${u}/Client_Pass`]: np });
                 currentUser.Shop_Pass = np; currentUser.pass = np; currentUser.Client_Pass = np; localStorage.setItem('n1_shop_session', JSON.stringify(currentUser));
                 showAppToast("تم تحديث كلمة المرور بنجاح 💾"); document.getElementById('profile_pass').value = '';
-            } catch(e) { showAppToast("تعذر التحديث، يرجى المحاولة لاحقاً", true); } finally { setLoading('btn-save-settings', false, "حفظ البيانات 💾"); }
+            } catch(e) { showAppToast("تعذر التحديث يرجى المحاولة لاحقاً", true); } finally { setLoading('btn-save-settings', false, "حفظ البيانات 💾"); }
         };
     </script>
 </body>
