@@ -409,14 +409,19 @@
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-2 flex-col md:flex-row">
                                         <button onclick="zeroDebt()" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-500/30 py-2.5 rounded-xl font-bold text-xs transition-colors shadow-sm">
-                                            <i class="fas fa-hand-holding-usd"></i> تصفير المديونية
+                                            <i class="fas fa-eraser"></i> تصفير المديونية للمنشأة (بدون دفع)
                                         </button>
-                                        <button onclick="zeroCancelCount()" class="flex-1 bg-sky-600/20 hover:bg-sky-600/40 text-sky-400 border border-sky-500/30 py-2.5 rounded-xl font-bold text-xs transition-colors shadow-sm">
-                                            <i class="fas fa-history"></i> تصفير عداد الإلغاء
+                                        
+                                        <button onclick="liquidateDebt()" class="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 py-2.5 rounded-xl font-bold text-xs transition-colors shadow-sm">
+                                            <i class="fas fa-hand-holding-usd"></i> خصم المديونية من الرصيد التشغيلي
                                         </button>
                                     </div>
+                                    
+                                    <button onclick="zeroCancelCount()" class="w-full mt-2 bg-sky-600/20 hover:bg-sky-600/40 text-sky-400 border border-sky-500/30 py-2.5 rounded-xl font-bold text-xs transition-colors shadow-sm">
+                                        <i class="fas fa-history"></i> تصفير عداد الإلغاء
+                                    </button>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -446,11 +451,22 @@
                                 
                                 <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
                                     <div>
-                                        <div class="text-sm font-bold text-white">خصم الغرامة من الرصيد التشغيلي</div>
-                                        <div class="text-[9px] text-slate-400 mt-1">إذا كان مغلقاً ستسجل كمديونية في الكرت الأحمر</div>
+                                        <div class="text-sm font-bold text-white">الخصم التلقائي (Auto Deduct)</div>
+                                        <div class="text-[9px] text-slate-400 mt-1">إذا كان مغلقاً ستسجل كمديونية متراكمة</div>
                                     </div>
                                     <label class="switch">
                                         <input type="checkbox" id="policy_deduct_main" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
+                                    <div>
+                                        <div class="text-sm font-bold text-white">إظهار المربع الأحمر للمنشأة 👁️</div>
+                                        <div class="text-[9px] text-slate-400 mt-1">إظهار/إخفاء تنبيه المديونية المتراكمة في تطبيقهم</div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="policy_show_penalty_box" checked>
                                         <span class="slider"></span>
                                     </label>
                                 </div>
@@ -663,7 +679,6 @@
             });
         }
 
-        // 🛑 حساب إحصائيات الإلغاء بدقة (باستخدام وقت التصفير)
         function getShopCancelStats(shopKey, shopPhone) {
             let count = 0;
             let totalPenalty = 0;
@@ -722,7 +737,6 @@
             document.getElementById('dash-total-debt').innerHTML = `${globalDebt.toFixed(2)} <span class="text-[10px] text-slate-400">د.أ</span>`;
         }
 
-        // 🛑 دوال الريموت والتصفير
         window.searchShopForCancelPolicy = function() {
             const phoneSearch = document.getElementById('cancel_search_phone').value.trim();
             const select = document.getElementById('cancel_policy_target');
@@ -768,11 +782,13 @@
                     document.getElementById('policy_grace_period').value = policy.grace_period || 0;
                     document.getElementById('policy_fee_1').value = policy.fee_stage_1 || 0;
                     document.getElementById('policy_deduct_main').checked = policy.deduct_from_main !== false;
+                    document.getElementById('policy_show_penalty_box').checked = policy.show_penalty_box !== false;
                 } else {
                     document.getElementById('policy_allow_cancel').checked = true;
                     document.getElementById('policy_grace_period').value = 0;
                     document.getElementById('policy_fee_1').value = 0;
                     document.getElementById('policy_deduct_main').checked = true;
+                    document.getElementById('policy_show_penalty_box').checked = true;
                 }
             } catch(e) {
                 showAppToast("فشل استرجاع السياسة", true);
@@ -788,12 +804,14 @@
             const grace = parseInt(document.getElementById('policy_grace_period').value) || 0;
             const fee1 = parseFloat(document.getElementById('policy_fee_1').value) || 0;
             const deductMain = document.getElementById('policy_deduct_main').checked;
+            const showPenaltyBox = document.getElementById('policy_show_penalty_box').checked;
 
             const policyData = {
                 allow_cancel: allowCancel,
                 grace_period: grace,
                 fee_stage_1: fee1,
                 deduct_from_main: deductMain,
+                show_penalty_box: showPenaltyBox,
                 updated_at: Date.now()
             };
 
@@ -804,7 +822,7 @@
                     await update(ref(db, `settings/cancel_policy/${myMaster}`), policyData);
                     const alertData = { message: "تحديث من الإدارة: تم تعديل سياسة الإلغاء", timestamp: Date.now(), type: "system", sender: "الإدارة" };
                     await update(ref(db, `client_alerts/${myMaster}/shops/global`), alertData);
-                    showAppToast("تم تعميم سياسة الإلغاء على جميع المنشآت ⚡");
+                    showAppToast("تم تعميم سياسة الإلغاء والمحفظة ⚡");
                 } else {
                     await update(ref(db, `settings/cancel_policy/shops/${target}`), policyData);
                     const alertData = { message: "تحديث من الإدارة: تم تعديل سياسة الإلغاء", timestamp: Date.now(), type: "system", sender: "الإدارة" };
@@ -818,12 +836,12 @@
             }
         };
 
-        // 🛑 تصفير المديونية (تسوية)
+        // 🛑 تصفير المديونية (تسوية بدون دفع)
         window.zeroDebt = async function() {
             const target = document.getElementById('cancel_policy_target').value;
             const myMaster = currentUser.Client_User || currentUser.user;
             
-            showCustomConfirm("هل أنت متأكد من تصفير مديونية الإلغاء وإرسال إشعار بذلك؟", async () => {
+            showCustomConfirm("هل أنت متأكد من تصفير مديونية الإلغاء (إعفاء) وإرسال إشعار بذلك؟", async () => {
                 document.getElementById('loader-overlay').style.display = 'flex';
                 try {
                     let updates = {};
@@ -845,8 +863,82 @@
                     }
                     await update(ref(db), updates);
                     loadCancelPolicyForTarget();
+                    renderShops();
                 } catch(e) {
                     showAppToast("حدث خطأ أثناء التصفير", true);
+                } finally {
+                    document.getElementById('loader-overlay').style.display = 'none';
+                }
+            });
+        };
+
+        // 🛑 الاقتطاع الفوري (الهجوم المالي) لسداد الدين من الرصيد التشغيلي
+        window.liquidateDebt = async function() {
+            const target = document.getElementById('cancel_policy_target').value;
+            const myMaster = currentUser.Client_User || currentUser.user;
+
+            showCustomConfirm("تحذير: سيتم سحب كامل المديونية المتراكمة وخصمها من الرصيد التشغيلي الأساسي. هل ترغب بالاستمرار؟", async () => {
+                document.getElementById('loader-overlay').style.display = 'flex';
+                try {
+                    let updates = {};
+                    let successCount = 0;
+                    const now = Date.now();
+
+                    const processLiquidation = (shopUser) => {
+                        const shopData = allData.find(s => s.Client_User === shopUser || s.user === shopUser);
+                        if (!shopData) return;
+                        
+                        let penaltyBal = parseFloat(shopData.Penalty_Balance || 0);
+                        if (penaltyBal >= 0) return; // لا يوجد دين
+
+                        let currentBal = parseFloat(shopData.Shop_Balance || shopData.Client_Balance || shopData.balance || 0);
+                        let debtAmount = Math.abs(penaltyBal);
+                        
+                        let newBal = currentBal - debtAmount;
+                        
+                        updates[`shops/${shopUser}/Shop_Balance`] = newBal;
+                        updates[`shops/${shopUser}/Client_Balance`] = newBal;
+                        updates[`shops/${shopUser}/balance`] = newBal;
+                        updates[`users/${shopUser}/Shop_Balance`] = newBal;
+                        
+                        updates[`shops/${shopUser}/Penalty_Balance`] = 0;
+                        updates[`users/${shopUser}/Penalty_Balance`] = 0;
+
+                        const txId = "TX_LIQUIDATE_" + now + "_" + Math.floor(Math.random()*1000);
+                        updates[`financial_logs/${shopUser}/${txId}`] = { 
+                            type: 'penalty_settlement', 
+                            amount: debtAmount, 
+                            description: `تم اقتطاع ${debtAmount.toFixed(2)} د.أ من الرصيد التشغيلي لتسديد مديونية إلغاء متراكمة`, 
+                            timestamp: now, 
+                            date_string: new Date().toISOString()
+                        };
+
+                        updates[`client_alerts/${myMaster}/shops/users/${shopUser}`] = {
+                            message: `إشعار مالي: تم اقتطاع مبلغ ${debtAmount.toFixed(2)} د.أ من رصيدكم التشغيلي لتسديد مديونية رسوم الإلغاء.`,
+                            timestamp: now, type: "system", sender: "الإدارة المالية"
+                        };
+                        successCount++;
+                    };
+
+                    if (target === 'global') {
+                        allData.filter(i => (i.Client_Type == 'shop' || i.type == 'shop' || i.role == 'shop') && i.Client_Master === myMaster).forEach(s => {
+                            processLiquidation(s.Client_User || s.user);
+                        });
+                    } else {
+                        processLiquidation(target);
+                    }
+
+                    if (successCount > 0) {
+                        await update(ref(db), updates);
+                        showAppToast(`تم اقتطاع وتسديد الديون بنجاح لـ (${successCount}) منشأة 💸`);
+                    } else {
+                        showAppToast("لا توجد مديونيات متراكمة للسداد.", true);
+                    }
+                    
+                    loadCancelPolicyForTarget();
+                    renderShops();
+                } catch(e) {
+                    showAppToast("حدث خطأ أثناء الاقتطاع المالي", true);
                 } finally {
                     document.getElementById('loader-overlay').style.display = 'none';
                 }
@@ -881,7 +973,7 @@
                     }
                     await update(ref(db), updates);
                     loadCancelPolicyForTarget();
-                    renderShops(); // لتحديث الجدول
+                    renderShops();
                 } catch(e) {
                     showAppToast("حدث خطأ أثناء التصفير", true);
                 } finally {
