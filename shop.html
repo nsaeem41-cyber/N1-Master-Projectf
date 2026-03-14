@@ -139,16 +139,17 @@
             margin-bottom: 20px; position: relative; overflow: hidden;
         }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
         .stat-box {
-            background: white; padding: 15px 10px; border-radius: 20px; text-align: center;
+            background: white; padding: 15px; border-radius: 20px; text-align: center;
             box-shadow: 0 8px 20px rgba(0,0,0,0.03); border: 1px solid var(--border);
-            position: relative; overflow: hidden;
+            position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center;
         }
         .stat-box::before { content:''; position: absolute; top:0; left:0; width:100%; height:4px; background:var(--primary); }
         .stat-box.gold-top::before { background:var(--gold); }
+        .stat-box.info-top::before { background:var(--info); }
         
-        .stat-label { font-size: 11px; font-weight:bold; color: var(--text-light); display:block; margin-bottom:5px; white-space: nowrap; }
+        .stat-label { font-size: 12px; font-weight:bold; color: var(--text-light); display:block; margin-bottom:5px; white-space: nowrap; }
         .stat-val { font-size: 22px; font-weight: 900; color: var(--primary); }
         .stat-val.gold { color: var(--gold); }
 
@@ -521,23 +522,32 @@
                 
                 <div class="stats-grid">
                     <div class="stat-box gold-top">
-                        <span class="stat-label">طلبات اليوم 📋</span>
-                        <span class="stat-val gold" id="orders-today">0</span>
-                    </div>
-                    <div class="stat-box">
                         <span class="stat-label">إجمالي الطلبات 📊</span>
                         <span class="stat-val" id="orders-total">0</span>
                     </div>
-                    <div class="stat-box" style="border-top: 4px solid var(--danger);">
-                        <span class="stat-label">إلغاءات اليوم 🚫</span>
-                        <span class="stat-val" style="color: var(--danger);" id="cancels-today">0</span>
+                    <div class="stat-box info-top" style="grid-column: span 1;">
+                        <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
+                            <div style="text-align: center;">
+                                <span class="stat-label">طلبات اليوم</span>
+                                <span class="stat-val gold" id="orders-today">0</span>
+                            </div>
+                            <div style="width: 1px; height: 30px; background: var(--border);"></div>
+                            <div style="text-align: center;">
+                                <span class="stat-label">إلغاءات 🚫</span>
+                                <span class="stat-val" style="color: var(--danger);" id="cancels-today">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="penalty-wallet-card" class="card" style="display:none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 20px; text-align: center; padding: 15px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.1);">
-                    <div style="font-size: 14px; font-weight: 900; color: #ef4444; margin-bottom: 5px;">مديونية الإلغاء 📉</div>
-                    <div style="font-size: 24px; font-weight: 900; color: #dc2626;"><span id="penalty-balance-amount">0.00</span> <span style="font-size: 12px;">د.أ</span></div>
-                    <div style="font-size: 11px; color: #b91c1c; margin-top: 5px; font-weight: bold;">محفظة الغرامات المعلقة</div>
+                <div id="penalty-wallet-card" style="display:none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 16px; padding: 12px 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.1); justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: bold; color: #ef4444; margin-bottom: 2px;">مديونية الإلغاء 📉</div>
+                        <div style="font-size: 16px; font-weight: 900; color: #dc2626;"><span id="penalty-balance-amount">0.00</span> <span style="font-size: 10px;">د.أ</span></div>
+                    </div>
+                    <button onclick="manualSettlePenaltyDebt()" style="background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">
+                        تسديد من المحفظة 💳
+                    </button>
                 </div>
 
                 <div class="card">
@@ -853,7 +863,6 @@
         const snd_deliver = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         let orderStatesHistory = {}, askedToRate = {};
 
-        // 🛑 متغير سياسة الإلغاء القادم من الريموت السري
         let cancelPolicy = {
             allow_cancel: true,
             fee_stage_1: 0,
@@ -869,47 +878,59 @@
 
         window.checkPenaltyVisibility = function() {
             const wallet = document.getElementById('penalty-wallet-card');
-            if (cancelPolicy.deduct_from_main === false || myPenaltyBalance > 0) {
-                wallet.style.display = 'block';
+            if (myPenaltyBalance > 0) {
+                wallet.style.display = 'flex';
             } else {
                 wallet.style.display = 'none';
             }
-            
-            if (cancelPolicy.deduct_from_main !== false && myPenaltyBalance > 0 && myBalance > 0) {
-                window.autoSettlePenaltyDebt();
-            }
         };
 
-        window.autoSettlePenaltyDebt = async function() {
+        window.manualSettlePenaltyDebt = async function() {
             if (window.isSettlingDebt) return;
+            if (myPenaltyBalance <= 0) return;
+            if (myBalance <= 0) {
+                showAppToast("رصيد الشحن لا يكفي للتسديد من المحفظة", true);
+                return;
+            }
+
             window.isSettlingDebt = true;
             try {
                 const amountToSettle = Math.min(myPenaltyBalance, myBalance);
-                if (amountToSettle > 0) {
-                    const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
-                    const newShopBal = myBalance - amountToSettle;
-                    const newPenaltyBal = myPenaltyBalance - amountToSettle;
-                    
-                    const updates = {};
-                    updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
-                    updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
-                    updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
-                    updates[`${window.myNode}/${shopKey}/Penalty_Balance`] = newPenaltyBal;
-                    
-                    const txId = "TX_SETTLE_" + Date.now();
-                    updates[`financial_logs/${shopKey}/${txId}`] = { 
-                        type: 'penalty_settlement', 
-                        amount: amountToSettle, 
-                        description: `تسديد ذكي لمديونية الإلغاء من الرصيد التشغيلي 💎`, 
-                        timestamp: Date.now(), 
-                        date_string: new Date().toISOString() 
-                    };
-                    
-                    await update(ref(db), updates);
-                    showAppToast(`تم تسديد ${amountToSettle.toFixed(2)} د.أ من المديونية تلقائياً بذكاء الألماس 💎`);
+                const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone).trim();
+                const newShopBal = myBalance - amountToSettle;
+                const newPenaltyBal = myPenaltyBalance - amountToSettle;
+                
+                const updates = {};
+                updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
+                updates[`${window.myNode}/${shopKey}/Penalty_Balance`] = newPenaltyBal;
+                
+                const txId = "TX_SETTLE_" + Date.now();
+                updates[`financial_logs/${shopKey}/${txId}`] = { 
+                    type: 'penalty_settlement', 
+                    amount: amountToSettle, 
+                    description: `تسوية مديونية الإلغاء يدوياً من الرصيد التشغيلي 💎`, 
+                    timestamp: Date.now(), 
+                    date_string: new Date().toISOString() 
+                };
+                
+                await update(ref(db), updates);
+                
+                myBalance = newShopBal;
+                myPenaltyBalance = newPenaltyBal;
+                document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
+                document.getElementById('penalty-balance-amount').innerText = myPenaltyBalance.toFixed(2);
+                window.checkPenaltyVisibility();
+                
+                if (newPenaltyBal === 0) {
+                    showAppToast(`تم تصفية المديونية بالكامل بذكاء 💎`);
+                } else {
+                    showAppToast(`تم تسديد ${amountToSettle.toFixed(2)} د.أ من المديونية`);
                 }
             } catch (e) {
                 console.error("Settlement error", e);
+                showAppToast("حدث خطأ أثناء التسديد", true);
             } finally {
                 window.isSettlingDebt = false;
             }
