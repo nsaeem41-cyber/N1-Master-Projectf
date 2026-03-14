@@ -61,6 +61,7 @@
         ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
+        /* ستايل الشمسيات (المظلات التفاعلية) */
         .umbrella-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .umbrella-content.open { max-height: 1200px; }
         .rotate-180 { transform: rotate(180deg); }
@@ -503,6 +504,7 @@
         let isAutoRadarActive = false;
         let remoteOrderTimer = 6000;
         let radarMemory = {};
+        let allFinancialLogs = {}; // 🛑 لجلب الغرامات والتعويضات
 
         window.applyDiamondWakeLock = async function() {
             try { if ('wakeLock' in navigator) { window.nOneWakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {}
@@ -562,6 +564,15 @@
             fetchGlobalUsers();
             fetchRatings();
             setupRealtimeFreezeListener();
+            
+            // 🛑 جلب السجلات المالية للرادار عشان يقدر يسحب الغرامات منها
+            onValue(ref(db, `financial_logs`), (snapshot) => {
+                if(snapshot.exists()) {
+                    allFinancialLogs = snapshot.val();
+                } else {
+                    allFinancialLogs = {};
+                }
+            });
             
             setInterval(refreshDynamicElements, 1000);
             document.body.addEventListener('click', () => { soundEnabled = true; }, { once: true });
@@ -723,7 +734,6 @@
             });
         }
 
-        // ================== الخوارزمية الجديدة للمداورة الذكية والمراقبة الحية ==================
         function checkAssignedOrdersStatus() {
             const now = Date.now();
             let hasUpdates = false;
@@ -741,18 +751,15 @@
                     let masterCompany = activeCompanyName || 'default';
                     let commission = parseFloat(ord.commission_amount || 0);
 
-                    // 🛑 تفاعل الإلغاء المتأخر: إذا المطعم لغى الطلب والكابتن مستلمه
                     if(ord.linkedRadarId) {
                         const originalOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
                         if (originalOrd && (originalOrd.OrderStatus === 'cancelled' || originalOrd.OrderStatus === 'archived_and_deleted' || originalOrd.OrderStatus === 'canceled')) {
-                            // إرجاع العمولة للكابتن
                             if (ord.is_commission_deducted && assignedCap) {
                                 const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
                                 const newBal = (currentBal + commission).toFixed(2);
                                 updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                 updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
                             }
-                            // سحب الطلب من عند الكابتن لأنه التغى
                             updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                             hasUpdates = true;
                             continue;
@@ -760,7 +767,6 @@
                     }
 
                     if (ord.dispatch_method === 'Auto') {
-                        // المداورة الذكية: تخطي الطلب إذا خلص الوقت (6 ثواني) أو الكابتن أوفلاين
                         if (ord.status === 'assigned' || ord.status === 'ringing') {
                             if (elapsed > remoteOrderTimer || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
@@ -787,14 +793,12 @@
 
                     if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'completed', 'delivered'].includes(ord.status)) {
                         
-                        // 🛑 تحديث حالة البث المباشر في الرادار
                         if (ord.linkedRadarId) {
                             updates[`orders/${ord.linkedRadarId}/Cap_Name`] = assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : '';
                             updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = assignedCap ? (assignedCap.Cap_Phone || assignedCap.phone) : '';
                             updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap ? (assignedCap.Cap_CarType || assignedCap.Cap_Car) : '';
                             updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap ? assignedCap.Cap_CarCode : '';
                             
-                            // 🛑 إذا ما كان ملغي، بنحدث حالته لتظهر بالرادار كبث مباشر
                             const originalOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
                             if (originalOrd && originalOrd.OrderStatus !== 'cancelled' && originalOrd.OrderStatus !== 'canceled') {
                                 updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
@@ -814,7 +818,6 @@
                             updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
                         }
 
-                        // 🛑 الأرشفة فقط عند اكتمال الطلب تماماً
                         if (ord.status === 'completed' || ord.status === 'delivered') {
                             const fee = parseFloat(ord.fee || 0);
                             const value = parseFloat(ord.value || 0);
@@ -869,9 +872,7 @@
                 update(ref(db), updates).catch(e=>{});
             }
         }
-        // ====================================================================
 
-        // 🛑 الزحليقة الآلية للإلغاء المبكر والمتأخر
         window.autoArchiveCancelledOrders = async function() {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
@@ -882,8 +883,7 @@
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) continue;
 
-                // إذا الطلب انلغى بنزحلقه فوراً للأرشيف
-                if (o.OrderStatus === 'cancelled' || o.OrderStatus === 'canceled') {
+                if ((o.OrderStatus === 'cancelled' || o.OrderStatus === 'canceled') && !o.Cap_Name) {
                     const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                     if ((orderComp && (orderComp === activeName || orderComp === activeUser)) || myShops.includes(o.Shop_User || o.user || o.client)) { 
                         await archiveCancelledOrder(ordId, true);
@@ -904,10 +904,7 @@
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
                 
-                // 🛑 هسا الطلب بيضل بالرادار حتى لو كان 'accepted' عشان المراقبة الحية
                 if (['delivered', 'archived_and_deleted'].includes(o.OrderStatus)) return false;
-                
-                // إذا تم تأكيده مالياً بنشيله (عدا الملغي)
                 if(o.FinancialStatus === 'confirmed' && o.OrderStatus !== 'cancelled' && o.OrderStatus !== 'canceled') return false;
 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
@@ -954,7 +951,7 @@
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
                 const shopOriginArea = shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
                 const destinationArea = ord.Shop_Pickup || ord.pickup || 'غير محدد';
-                // 🛑 قراءة رقم العميل (المنشأة) للظهور المباشر
+                // 🛑 سحب رقم هاتف المنشأة ليظهر بالرادار
                 const phone = ord.shop_phone || ord.Client_Phone || ord.Customer_Phone || (shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---');
                 const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
                 
@@ -980,7 +977,6 @@
                     </div>`;
                 }
 
-                // 🛑 حالة البث المباشر
                 let liveStatusLabel = '';
                 if (isCancelled) liveStatusLabel = '<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-lg border border-red-500/30">ملغي 🚫</span>';
                 else if (ord.OrderStatus === 'new') liveStatusLabel = '<span class="bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded-lg border border-yellow-500/30">جديد ⏳</span>';
@@ -1036,7 +1032,6 @@
             });
         };
 
-        // 🛑 دالة إنهاء يدوي للطلب الحي
         window.archiveManualOrder = async function(orderId) {
             if(confirm("هل تريد إنهاء الطلب يدوياً ونقله للأرشيف المكتمل؟")) {
                 const updates = {};
@@ -1047,7 +1042,7 @@
             }
         };
 
-        // 🛑 دالة أرشفة الطلب الملغي (تعمل بصمت للزحليقة)
+        // 🛑 دالة أرشفة الطلب الملغي مع جلب قيمة الغرامة من السجل المالي
         window.archiveCancelledOrder = async function(orderId, silent = false) {
             const ord = allOrders.find(o => o.Shop_Ord_ID === orderId || o.id === orderId);
             if (!ord) return;
@@ -1059,7 +1054,16 @@
                 let cancelReason = ord.Cancel_Reason || "غير محدد";
                 let cancelDateStr = ord.Cancel_Date ? new Date(ord.Cancel_Date).toISOString() : new Date().toISOString();
 
-                let compensationFee = 0; // التعويض لو موجود بالداتا
+                // 🛑 البحث عن قيمة الغرامة المسجلة في السجل المالي للمنشأة
+                let compensationFee = 0; 
+                let shopUserKey = ord.Shop_User || ord.user || ord.client || '';
+                if(shopUserKey && allFinancialLogs[shopUserKey]) {
+                    // رح نبحث عن أحدث غرامة تم تسجيلها عشان نعتمدها كتعويض للكابتن
+                    let logsArray = Object.values(allFinancialLogs[shopUserKey]).filter(l => l.type === 'cancel_penalty').sort((a,b) => b.timestamp - a.timestamp);
+                    if(logsArray.length > 0) {
+                        compensationFee = parseFloat(logsArray[0].amount || 0);
+                    }
+                }
 
                 const entry = {
                     orderId: orderId,
@@ -1070,7 +1074,7 @@
                     capKey: ord.Cap_Phone || ord.Cap_User || "cancelled",
                     rest: ord.Shop_Name || ord.restaurant || "منشأة",
                     value: ord.Shop_Val || 0,
-                    fee: compensationFee,
+                    fee: compensationFee, // 🛑 تسجيل قيمة الغرامة كتعويض
                     comm: 0,
                     discount: 0,
                     promo: "",
@@ -1618,7 +1622,7 @@
 
         function refreshDynamicElements() {
             checkAssignedOrdersStatus();
-            autoArchiveCancelledOrders(); // 🛑 تشغيل الزحليقة الآلية للإلغاء
+            autoArchiveCancelledOrders(); 
             renderRadar();
             if (isAutoRadarActive) triggerAutoRadarMaster(true);
         }
