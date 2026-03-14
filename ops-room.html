@@ -40,7 +40,6 @@
         .order-row-new { animation: pulseBorder 2s infinite; border-right: 4px solid var(--gold); }
         .order-row-urgent { border-right: 4px solid var(--danger); background: rgba(239,68,68,0.05); }
         .order-row-waiting { border-right: 4px solid #f59e0b; background: rgba(245,158,11,0.05); }
-        /* ستايل صف الإلغاء وصف المتابعة الحية */
         .order-row-cancelled { border-right: 4px solid var(--danger); background: rgba(239,68,68,0.1); opacity: 0.8; }
         .order-row-live { border-right: 4px solid var(--info); background: rgba(14,165,233,0.05); }
 
@@ -62,7 +61,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
-        /* ستايل الشمسيات (المظلات التفاعلية) */
         .umbrella-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .umbrella-content.open { max-height: 1200px; }
         .rotate-180 { transform: rotate(180deg); }
@@ -153,7 +151,7 @@
                 
                 <div class="glass-panel rounded-3xl p-1 mb-6">
                     <div class="p-4 md:p-5 border-b border-slate-800 bg-slate-900/40 rounded-t-3xl flex justify-between items-center">
-                        <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-satellite-dish text-yellow-500 animate-pulse"></i> الرادار المركزى والمراقبة החية</span>
+                        <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-satellite-dish text-yellow-500 animate-pulse"></i> الرادار المركزي والمراقبة الحية</span>
                         <div class="flex gap-2">
                             <button id="btn-auto-radar" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2" onclick="toggleAutoRadar()">
                                 <i class="fas fa-rocket"></i> تفعيل الرادار
@@ -169,7 +167,7 @@
                                     <th class="w-[15%] rounded-tr-2xl">الوقت والتاريخ</th>
                                     <th class="w-[25%]">المصدر</th>
                                     <th class="w-[15%]">الوجهة</th>
-                                    <th class="w-[15%]">حالة الطلب (البث المباشر) 📡</th>
+                                    <th class="w-[15%]">حالة الطلب (مباشر) 📡</th>
                                     <th class="w-[15%]">المالية الذكية 💰</th>
                                     <th class="w-[15%] rounded-tl-2xl text-center">التحكم</th>
                                 </tr>
@@ -491,7 +489,7 @@
         let allAssignedOrders = {};
         let captainRatings = {}; 
         let completedOrders = [];
-        let hiddenLocalOrders = new Set(); // 🛑 لتخزين الطلبات اللي مسحناها مؤقتاً من الشاشة
+        let hiddenLocalOrders = new Set(); 
         
         let captainMemory = {};
         let captainQueueMemory = JSON.parse(localStorage.getItem('n1_queue_memory') || '{}');
@@ -747,14 +745,13 @@
                     if(ord.linkedRadarId) {
                         const originalOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
                         if (originalOrd && (originalOrd.OrderStatus === 'cancelled' || originalOrd.OrderStatus === 'archived_and_deleted' || originalOrd.OrderStatus === 'canceled')) {
-                            // إذا كان في عمولة مخصومة من الكابتن بنرجعله إياها
+                            // إرجاع العمولة للكابتن
                             if (ord.is_commission_deducted && assignedCap) {
                                 const currentBal = parseFloat(assignedCap.Cap_Balance || assignedCap.balance || 0);
                                 const newBal = (currentBal + commission).toFixed(2);
                                 updates[`${assignedCap._node}/${capKey}/Cap_Balance`] = parseFloat(newBal);
                                 updates[`${assignedCap._node}/${capKey}/balance`] = parseFloat(newBal);
                             }
-                            
                             // سحب الطلب من عند الكابتن لأنه التغى
                             updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
                             hasUpdates = true;
@@ -763,7 +760,7 @@
                     }
 
                     if (ord.dispatch_method === 'Auto') {
-                        // المداورة الذكية: إذا خلص الوقت (6 ثواني)
+                        // المداورة الذكية: تخطي الطلب إذا خلص الوقت (6 ثواني) أو الكابتن أوفلاين
                         if (ord.status === 'assigned' || ord.status === 'ringing') {
                             if (elapsed > remoteOrderTimer || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
@@ -797,13 +794,12 @@
                             updates[`orders/${ord.linkedRadarId}/Cap_CarType`] = assignedCap ? (assignedCap.Cap_CarType || assignedCap.Cap_Car) : '';
                             updates[`orders/${ord.linkedRadarId}/Cap_CarCode`] = assignedCap ? assignedCap.Cap_CarCode : '';
                             
-                            // 🛑 إذا ما كان ملغي، بنحدث حالته لتظهر بالرادار
+                            // 🛑 إذا ما كان ملغي، بنحدث حالته لتظهر بالرادار كبث مباشر
                             const originalOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
                             if (originalOrd && originalOrd.OrderStatus !== 'cancelled' && originalOrd.OrderStatus !== 'canceled') {
-                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status; // نقل الحالة المباشرة للرادار
+                                updates[`orders/${ord.linkedRadarId}/OrderStatus`] = ord.status;
                             }
                             
-                            updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
                             updates[`orders/${ord.linkedRadarId}/Cap_Commission`] = commission;
                             if(!ord.is_accepted_marked) updates[`assigned_orders/${capKey}/${appOrdId}/is_accepted_marked`] = true;
                         }
@@ -818,48 +814,49 @@
                             updates[`assigned_orders/${capKey}/${appOrdId}/is_commission_deducted`] = true;
                         }
 
-                        const fee = parseFloat(ord.fee || 0);
-                        const value = parseFloat(ord.value || 0);
-                        let discountAmount = 0;
-                        let promoCode = "---";
-                        let shopName = ord.restaurant || "";
-
-                        if (ord.linkedRadarId) {
-                            const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
-                            if (radOrd) {
-                                discountAmount = parseFloat(radOrd.Shop_Discount || radOrd.discount || 0);
-                                promoCode = radOrd.Shop_Promo || radOrd.promo || "---";
-                                shopName = radOrd.Shop_Name || radOrd.restaurant || shopName;
-                            }
-                        }
-
-                        let capName = ord.cap_name || (assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : "كابتن");
-                        
-                        const entry = {
-                            orderId: archiveKey,
-                            appOrdId: appOrdId,
-                            time: new Date(ord.timestamp || Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-                            date: new Date(ord.timestamp || Date.now()).toISOString(),
-                            cap: capName,
-                            capKey: capKey,
-                            rest: shopName,
-                            value: value,
-                            fee: fee,
-                            comm: commission,
-                            discount: discountAmount,
-                            promo: promoCode,
-                            net: fee - commission,
-                            live_status: (ord.status === 'completed' || ord.status === 'delivered') ? 'delivered' : ord.status,
-                            via: ord.dispatch_method || 'App',
-                            companyId: masterCompany
-                        };
-                        
-                        // 🛑 تحديث السجل المكتمل بصمت
-                        updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = entry;
-
+                        // 🛑 الأرشفة فقط عند اكتمال الطلب تماماً
                         if (ord.status === 'completed' || ord.status === 'delivered') {
+                            const fee = parseFloat(ord.fee || 0);
+                            const value = parseFloat(ord.value || 0);
+                            let discountAmount = 0;
+                            let promoCode = "---";
+                            let shopName = ord.restaurant || "";
+
+                            if (ord.linkedRadarId) {
+                                const radOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
+                                if (radOrd) {
+                                    discountAmount = parseFloat(radOrd.Shop_Discount || radOrd.discount || 0);
+                                    promoCode = radOrd.Shop_Promo || radOrd.promo || "---";
+                                    shopName = radOrd.Shop_Name || radOrd.restaurant || shopName;
+                                }
+                            }
+
+                            let capName = ord.cap_name || (assignedCap ? (assignedCap.Cap_Name || assignedCap.name) : "كابتن");
+                            
+                            const entry = {
+                                orderId: archiveKey,
+                                appOrdId: appOrdId,
+                                time: new Date(ord.timestamp || Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                                date: new Date(ord.timestamp || Date.now()).toISOString(),
+                                cap: capName,
+                                capKey: capKey,
+                                rest: shopName,
+                                value: value,
+                                fee: fee,
+                                comm: commission,
+                                discount: discountAmount,
+                                promo: promoCode,
+                                net: fee - commission,
+                                live_status: 'delivered',
+                                via: ord.dispatch_method || 'App',
+                                companyId: masterCompany
+                            };
+                            
+                            updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = entry;
+                            
                             if (ord.linkedRadarId) {
                                 updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'delivered';
+                                updates[`orders/${ord.linkedRadarId}/FinancialStatus`] = 'confirmed';
                             }
                             updates[`assigned_orders/${capKey}/${appOrdId}`] = null; 
                         }
@@ -874,7 +871,7 @@
         }
         // ====================================================================
 
-        // 🛑 الزحليقة الآلية للإلغاء المبكر
+        // 🛑 الزحليقة الآلية للإلغاء المبكر والمتأخر
         window.autoArchiveCancelledOrders = async function() {
             const completedIDs = new Set(completedOrders.map(o => o.orderId));
             const myShops = globalUsers.filter(u => checkCompanyMatch(u, activeCompanyName)).map(u => u.Client_User || u.user || u.Shop_User);
@@ -885,8 +882,8 @@
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) continue;
 
-                // إذا الطلب انلغى وما حدا مستلمه (يعني ما إله Cap_Name) بنزحلقه فوراً
-                if ((o.OrderStatus === 'cancelled' || o.OrderStatus === 'canceled') && !o.Cap_Name) {
+                // إذا الطلب انلغى بنزحلقه فوراً للأرشيف
+                if (o.OrderStatus === 'cancelled' || o.OrderStatus === 'canceled') {
                     const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                     if ((orderComp && (orderComp === activeName || orderComp === activeUser)) || myShops.includes(o.Shop_User || o.user || o.client)) { 
                         await archiveCancelledOrder(ordId, true);
@@ -907,11 +904,11 @@
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
                 
-                // 🛑 هسا الطلب بيضل بالرادار حتى لو كان 'accepted' أو 'picked_up' عشان المراقبة الحية
+                // 🛑 هسا الطلب بيضل بالرادار حتى لو كان 'accepted' عشان المراقبة الحية
                 if (['delivered', 'archived_and_deleted'].includes(o.OrderStatus)) return false;
                 
-                // إذا تم تأكيده مالياً (يعني خلص) بنشيله
-                if(o.FinancialStatus === 'confirmed' && o.OrderStatus !== 'cancelled') return false;
+                // إذا تم تأكيده مالياً بنشيله (عدا الملغي)
+                if(o.FinancialStatus === 'confirmed' && o.OrderStatus !== 'cancelled' && o.OrderStatus !== 'canceled') return false;
 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
@@ -957,7 +954,8 @@
                 const shopData = globalUsers.find(u => (u.Shop_User === ord.Shop_User || u.Client_User === ord.Shop_User || u.user === ord.Shop_User));
                 const shopOriginArea = shopData ? (shopData.Client_PricingArea || shopData.pricing_area || shopData.Shop_Location || shopData.Client_Location || 'غير محدد') : 'غير محدد';
                 const destinationArea = ord.Shop_Pickup || ord.pickup || 'غير محدد';
-                const phone = shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---';
+                // 🛑 قراءة رقم العميل (المنشأة) للظهور المباشر
+                const phone = ord.shop_phone || ord.Client_Phone || ord.Customer_Phone || (shopData ? (shopData.Shop_Phone || shopData.Client_Phone || '---') : '---');
                 const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
                 
                 let isWaiting = !!assignedInfoMap[ordId];
@@ -968,7 +966,6 @@
                 
                 let actionHtml = '';
                 
-                // 🛑 زر الأرشفة لو كان الطلب ملغي عشان ينزل عالسجلات
                 if (isCancelled) {
                     actionHtml = `<button class="bg-red-600/80 hover:bg-red-500 text-white w-full py-1.5 rounded-lg transition-colors border border-red-400 text-xs font-bold shadow-[0_0_10px_rgba(239,68,68,0.5)]" onclick="archiveCancelledOrder('${ordId}')">أرشفة الإلغاء 📥</button>`;
                 } else if (isLiveTracking) {
@@ -1050,7 +1047,7 @@
             }
         };
 
-        // 🛑 دالة أرشفة الطلب الملغي وإنزاله للسجلات (تدعم الوضع الصامت للزحليقة)
+        // 🛑 دالة أرشفة الطلب الملغي (تعمل بصمت للزحليقة)
         window.archiveCancelledOrder = async function(orderId, silent = false) {
             const ord = allOrders.find(o => o.Shop_Ord_ID === orderId || o.id === orderId);
             if (!ord) return;
@@ -1062,9 +1059,7 @@
                 let cancelReason = ord.Cancel_Reason || "غير محدد";
                 let cancelDateStr = ord.Cancel_Date ? new Date(ord.Cancel_Date).toISOString() : new Date().toISOString();
 
-                // قراءة التعويض إذا كان مسجل مسبقاً
-                let compensationFee = 0;
-                // يمكن سحب القيمة من الفايربيز إذا تم تخزينها بـ ord
+                let compensationFee = 0; // التعويض لو موجود بالداتا
 
                 const entry = {
                     orderId: orderId,
@@ -1075,7 +1070,7 @@
                     capKey: ord.Cap_Phone || ord.Cap_User || "cancelled",
                     rest: ord.Shop_Name || ord.restaurant || "منشأة",
                     value: ord.Shop_Val || 0,
-                    fee: compensationFee, // تسجيل قيمة الغرامة كتعويض
+                    fee: compensationFee,
                     comm: 0,
                     discount: 0,
                     promo: "",
@@ -1088,10 +1083,9 @@
 
                 const updates = {};
                 updates[`company_archives/${masterCompany}/orders/${orderId}`] = entry;
-                updates[`orders/${orderId}/OrderStatus`] = 'archived_and_deleted'; // 🛑 عشان يختفي من الرادار نهائياً
+                updates[`orders/${orderId}/OrderStatus`] = 'archived_and_deleted'; 
                 updates[`orders/${orderId}/FinancialStatus`] = 'confirmed';
 
-                // تنظيف الطلب من عند الكابتن إذا كان معلق عنده
                 for(let capKey in allAssignedOrders) {
                     for(let appOrdId in allAssignedOrders[capKey]) {
                         if(allAssignedOrders[capKey][appOrdId].linkedRadarId === orderId) {
@@ -1134,7 +1128,6 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId) || activeLinkedIds.has(ordId)) return false;
-                // 🛑 استثناء الطلبات الملغاة أو المكتملة من المداورة الآلية
                 if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'cancelled', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
@@ -1166,7 +1159,6 @@
                 let eligibleCaptains = availableCaptains.filter(c => (c.Cap_Region || c.Cap_Location || '').trim() === shopOriginArea);
                 if (eligibleCaptains.length === 0) continue;
 
-                // 🛑 تكتيك الهروب: استثناء الكباتن اللي موجودين بقائمة التجاهل لهاد الطلب بالذات
                 let unskippedCaptains = eligibleCaptains.filter(c => {
                     const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
                     return !(radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey]);
@@ -1214,7 +1206,6 @@
             }
         };
 
-        // 🛑 التعديل الشامل لسجل المكتمل (مع زر المسح المؤقت)
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
@@ -1224,7 +1215,6 @@
 
             completedOrders.forEach(o => {
                 if (!o || !o.date) return;
-                // 🛑 إذا الطلب مسحناه محلياً لا تعرضه
                 if (hiddenLocalOrders.has(o.orderId || o.appOrdId)) return;
 
                 const isToday = new Date(o.date).toDateString() === today;
@@ -1241,14 +1231,13 @@
 
             let totalComm = 0;
             let totalDisc = 0;
-            let totalCancelPayout = 0; // 🛑 حسبة التعويضات
+            let totalCancelPayout = 0; 
 
             finalOrders.forEach(o => {
                 let commVal = parseFloat(o.comm);
                 let discVal = parseFloat(o.discount);
                 
                 if (o.live_status === 'cancelled_by_shop') {
-                     // 🛑 حساب تعويض الكابتن من الإلغاء إذا كان موجود
                      if(!isNaN(o.fee)) totalCancelPayout += parseFloat(o.fee);
                 } else {
                     if(!isNaN(commVal)) totalComm += commVal;
@@ -1276,7 +1265,6 @@
                 let liveStatusBadge = '';
                 let rowColor = 'bg-slate-800/20 opacity-90';
                 
-                // 🛑 عرض الإلغاءات في السجل المكتمل
                 if (o.live_status === 'cancelled_by_shop') {
                     liveStatusBadge = `<div class="bg-red-500/10 border border-red-500/30 p-1.5 rounded-lg text-right w-48">
                                           <div class="text-[10px] font-bold text-red-400 mb-1">ألغي بواسطة المطعم</div>
@@ -1318,13 +1306,11 @@
             });
         };
 
-        // 🛑 دالة الإخفاء المحلي (من الشاشة فقط)
         window.hideFromLocalUI = function(id) {
             hiddenLocalOrders.add(id);
             renderCompletedOrders();
         };
 
-        // 🛑 المسح المؤقت الشامل للواجهة فقط
         window.hideCompletedOrdersUI = function() {
             if(confirm("مسح السجل من الشاشة فقط (سيبقى محفوظاً في الفايربيز وسجلات المنشآت)؟")) {
                 completedOrders.forEach(o => {
@@ -1432,14 +1418,13 @@
             } catch (e) { showAppNotification("خطأ", "error"); }
         };
 
-        // 🛑 ترميم أزرار الحذف لتمسح من الجذور في الفايربيز
         window.resetDailyStats = async function() {
             if(confirm("تصفير العمولات والطلبات لليوم؟")) {
                 const compId = activeCompanyName || 'default'; const updates = {};
                 completedOrders.forEach(o => { 
                     if(new Date(o.date).toDateString() === new Date().toDateString()) {
                         updates[`company_archives/${compId}/orders/${o.orderId}`] = null; 
-                        updates[`orders/${o.orderId}`] = null; // 🛑 مسح كلي
+                        updates[`orders/${o.orderId}`] = null; 
                     }
                 });
                 await update(ref(db), updates); showAppNotification("تم التصفير والحذف من الجذور");
@@ -1447,10 +1432,10 @@
         };
 
         window.deleteFromArchive = async function(id) {
-            if(confirm("حذف الطل نهائيا من السجلات والفايربيز؟")) { 
+            if(confirm("حذف الطلب نهائيا من السجلات والفايربيز؟")) { 
                 const updates = {};
                 updates[`company_archives/${activeCompanyName || 'default'}/orders/${id}`] = null;
-                updates[`orders/${id}`] = null; // 🛑 مسح كلي من العصب
+                updates[`orders/${id}`] = null; 
                 await update(ref(db), updates); 
                 showAppNotification("تم الحذف الجذري"); 
             }
@@ -1462,7 +1447,7 @@
                 const updates = {};
                 completedOrders.forEach(o => {
                     updates[`company_archives/${compId}/orders/${o.orderId}`] = null;
-                    updates[`orders/${o.orderId}`] = null; // 🛑 مسح كلي
+                    updates[`orders/${o.orderId}`] = null; 
                 });
                 await update(ref(db), updates);
                 showAppNotification("تم المسح الشامل من الجذور"); 
@@ -1477,7 +1462,7 @@
                 allOrders.forEach(o => {
                     const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                     if ((orderComp && (orderComp === activeName || orderComp === activeUser)) || myShops.includes(o.Shop_User || o.user || o.client)) { 
-                        if(o.Shop_Ord_ID || o.id) updates[`orders/${o.Shop_Ord_ID || o.id}`] = null; // 🛑 مسح كلي
+                        if(o.Shop_Ord_ID || o.id) updates[`orders/${o.Shop_Ord_ID || o.id}`] = null; 
                     }
                 });
                 if (Object.keys(updates).length > 0) { await update(ref(db), updates); showAppNotification("تم تنظيف الرادار من الجذور"); }
