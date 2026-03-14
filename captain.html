@@ -1131,12 +1131,7 @@
                     if(snap.exists()) {
                         let cnt=0, totalFee=0, totalOrderVal=0; const today = new Date().toDateString();
                         Object.values(snap.val()).forEach(o => {
-                            // 🛑 استثناء الطلبات الملغاة من حسبة الدخل والإنجاز
-                            if(new Date(o.date).toDateString() === today && o.live_status !== 'cancelled_by_shop') { 
-                                cnt++; 
-                                totalFee += parseFloat(o.fee||0); 
-                                totalOrderVal += parseFloat(o.value||0); 
-                            }
+                            if(new Date(o.date).toDateString() === today) { cnt++; totalFee += parseFloat(o.fee||0); totalOrderVal += parseFloat(o.value||0); }
                         });
                         document.getElementById('ui_today_count').innerText = cnt;
                         document.getElementById('ui_today_fee').innerText = totalFee.toFixed(2);
@@ -1297,28 +1292,6 @@
                         const oDate = new Date(o.date); const dStr = oDate.toLocaleDateString(); const tStr = oDate.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
                         const pCodeHtml = o.promo && o.promo !== "---" ? `<span style="background:#e0e7ff; color:#4338ca; padding:4px 8px; border-radius:8px;">كوبون ${o.promo}</span>` : '';
                         const discHtml = parseFloat(o.discount) > 0 ? `<span style="color:var(--danger); background:#fef2f2; padding:4px 8px; border-radius:8px;">خصم ${parseFloat(o.discount).toFixed(2)} د.أ</span>` : '';
-                        
-                        // 🛑 طباعة تفاصيل الإلغاء إذا كان الطلب ملغي
-                        if (o.live_status === 'cancelled_by_shop') {
-                            return `
-                            <div class="history-item" style="border-color: #fca5a5; background: #fef2f2;">
-                                <div class="h-row">
-                                    <span style="font-size:16px; color:var(--danger); font-weight:900;">🚫 إلغاء من المنشأة</span>
-                                    <div style="display:flex; flex-direction:column; text-align:left;">
-                                        <span style="color:#ef4444;font-size:11px;">${dStr}</span>
-                                        <span style="color:#b91c1c;font-size:13px;font-weight:900;">${tStr} ⏰</span>
-                                    </div>
-                                </div>
-                                <div class="h-row" style="margin-top:10px; font-size:13px; background:white; padding:8px 12px; border-radius:10px; border:1px dashed #fca5a5;">
-                                    <span style="color:var(--text); width: 100%; display: block; text-align: right;">سبب الإلغاء: <b>${o.cancel_reason || 'غير محدد'}</b></span>
-                                </div>
-                                ${parseFloat(o.fee||0) > 0 ? `
-                                <div class="h-row" style="margin-top:12px; border-top:1px dashed #fca5a5; padding-top:12px;">
-                                    <span style="font-size:14px; color:#b91c1c;">تم تعويضك بمبلغ</span>
-                                    <span style="color:var(--danger); font-weight:900; font-size:18px;">${parseFloat(o.fee||0).toFixed(2)} د.أ</span>
-                                </div>` : ''}
-                            </div>`;
-                        }
 
                         return `
                         <div class="history-item">
