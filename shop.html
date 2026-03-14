@@ -279,28 +279,28 @@
         </div>
     </div>
 
-    <div id="cancel-fee-modal" class="custom-dialog-overlay">
+    <div id="cancel-modal" class="custom-dialog-overlay">
         <div class="custom-dialog-box" style="border-top-color: var(--danger);">
             <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px;">إلغاء الطلب 🛑</div>
             
             <div id="cancel-fee-warning" style="display:none; font-size:12px; font-weight:bold; color:white; padding:10px; border-radius:8px; margin-bottom:15px; text-align:center; line-height: 1.5;">
-                </div>
-
-            <div style="font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 10px;">ما هو سبب الإلغاء؟</div>
-            <div class="quick-tags" id="shop-cancel-reasons">
-                <span class="tag" onclick="selectShopCancelReason(this)">طلب الزبون</span>
-                <span class="tag" onclick="selectShopCancelReason(this)">تأخر الكابتن</span>
-                <span class="tag" onclick="selectShopCancelReason(this)">خطأ بالطلب</span>
-                <span class="tag" onclick="selectShopCancelReason(this)">أسباب أخرى</span>
             </div>
 
-            <input type="hidden" id="cancel_target_order" value="">
-            <input type="hidden" id="cancel_target_fee" value="0">
-            <input type="hidden" id="cancel_target_reason" value="">
-            <input type="hidden" id="cancel_target_cap" value="">
+            <div style="font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 10px;">ما هو سبب الإلغاء؟</div>
+            <div class="quick-tags" id="cancel-reasons">
+                <span class="tag" onclick="selectCancelReason(this)">طلب الزبون</span>
+                <span class="tag" onclick="selectCancelReason(this)">تأخر الكابتن</span>
+                <span class="tag" onclick="selectCancelReason(this)">خطأ بالطلب</span>
+                <span class="tag" onclick="selectCancelReason(this)">أسباب أخرى</span>
+            </div>
+
+            <input type="hidden" id="selected_cancel_reason" value="">
+            <input type="hidden" id="cancel_order_id" value="">
+            <input type="hidden" id="cancel_fee_amount" value="0">
+            <input type="hidden" id="cancel_cap_id" value="">
             
             <button class="btn-main" id="btn-confirm-cancel" style="background: var(--danger); margin-top: 15px; width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer;" onclick="executeCancelOrder()">تأكيد وإلغاء فوري</button>
-            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px; cursor: pointer;" onclick="closeCancelFeeModal()">تراجع</button>
+            <button class="auth-link" style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 10px; cursor: pointer;" onclick="closeCancelModal()">تراجع</button>
         </div>
     </div>
 
@@ -772,7 +772,7 @@
         const snd_arrive = new Audio('https://assets.mixkit.co/active_storage/sfx/2868/2868-preview.mp3');
         const snd_deliver = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         let orderStatesHistory = {}, askedToRate = {};
-        let allFinancialLogs = {}; // لتخزين السجلات المالية
+        let allFinancialLogs = {}; // لتخزين السجلات المالية وتوثيق التسديد
 
         window.onload = async function() {
             const savedUser = localStorage.getItem('n1_shop_session');
@@ -863,7 +863,7 @@
             document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
             
             fetchCancelPolicy();
-            fetchMasterInfo(); setupAdsAndAlerts(); listenToSystemSettings(); setupLivePrices(); await fetchAllData(); attachBalanceListener(); setupLiveOrders();
+            fetchMasterInfo(); setupAdsAndAlerts(); listenToSystemSettings(); setupLiveOrders(); setupLivePrices(); await fetchAllData(); attachBalanceListener();
         }
 
         // 🛑 جلب سياسة الإلغاء
@@ -946,7 +946,7 @@
             if(master) { onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); }); onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); }); }
         }
 
-        // 🛑 دالة الإلغاء الذكية الجديدة اللي بتفحص الوقت قبل ما تحذر
+        // 🛑 دالة الإلغاء الذكية والمطورة
         window.cancelOrder = function(orderId, currentStatus, capPhone, acceptTimeStr) {
             if(cancelPolicy.allow_cancel === false) {
                 showAppToast("ميزة الإلغاء غير مفعلة لمنشأتك حالياً.", true);
@@ -957,16 +957,16 @@
             let isGracePeriod = false;
 
             if (['accepted', 'picked_up', 'on_way', 'arrived', 'arrived_at_shop', 'arrived_at_customer'].includes(currentStatus)) {
-                // فحص فترة السماح فقط في حال كان الكابتن (موافق) أو بالطريق
                 if (['accepted', 'picked_up', 'on_way'].includes(currentStatus) && acceptTimeStr && cancelPolicy.grace_period > 0) {
                     const acceptTime = new Date(acceptTimeStr).getTime();
-                    const now = Date.now();
-                    const diffMins = (now - acceptTime) / 60000;
-                    if (diffMins <= cancelPolicy.grace_period) {
-                        isGracePeriod = true;
+                    if (!isNaN(acceptTime)) {
+                        const now = Date.now();
+                        const diffMins = (now - acceptTime) / 60000;
+                        if (diffMins <= cancelPolicy.grace_period) {
+                            isGracePeriod = true;
+                        }
                     }
                 }
-                
                 if (!isGracePeriod) penaltyFee = parseFloat(cancelPolicy.fee_stage_1 || 0);
             }
 
@@ -974,7 +974,7 @@
             document.getElementById('cancel_fee_amount').value = penaltyFee;
             document.getElementById('cancel_cap_id').value = capPhone || '';
             document.getElementById('selected_cancel_reason').value = '';
-            document.querySelectorAll('#shop-cancel-reasons .tag').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#cancel-reasons .tag').forEach(t => t.classList.remove('active'));
 
             const warningDiv = document.getElementById('cancel-fee-warning');
             if (isGracePeriod) {
@@ -993,21 +993,21 @@
             document.getElementById('cancel-modal').style.display = 'flex';
         };
 
-        window.closeCancelFeeModal = function() {
+        window.closeCancelModal = function() {
             document.getElementById('cancel-modal').style.display = 'none';
         };
 
-        window.selectShopCancelReason = function(element) {
-            document.querySelectorAll('#shop-cancel-reasons .tag').forEach(t => t.classList.remove('active'));
+        window.selectCancelReason = function(element) {
+            document.querySelectorAll('#cancel-reasons .tag').forEach(t => t.classList.remove('active'));
             element.classList.add('active');
-            document.getElementById('cancel_target_reason').value = element.innerText;
+            document.getElementById('selected_cancel_reason').value = element.innerText;
         };
 
-        // 🛑 دالة تنفيذ الإلغاء والتسوية
+        // 🛑 دالة تنفيذ الإلغاء
         window.executeCancelOrder = async function() {
             const orderId = document.getElementById('cancel_order_id').value;
             const fee = parseFloat(document.getElementById('cancel_fee_amount').value) || 0;
-            const reason = document.getElementById('cancel_target_reason').value;
+            const reason = document.getElementById('selected_cancel_reason').value;
             const capPhone = document.getElementById('cancel_cap_id').value;
 
             if(!reason) { showAppToast("يرجى اختيار سبب الإلغاء", true); return; }
@@ -1074,7 +1074,7 @@
 
                 await update(ref(db), updates);
                 showAppToast("تم إلغاء وسحب الطلب بنجاح");
-                closeCancelFeeModal();
+                closeCancelModal();
             } catch (e) {
                 showAppToast("تعذر تنفيذ الإلغاء", true);
             } finally {
@@ -1082,17 +1082,14 @@
             }
         };
 
-        // 🛑 دالة فلترة الطلبات الأصلية القوية
         function isMyOrder(ord) { 
             if (!currentUser || !ord) return false;
-            const myId = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
-            const myPhone = String(currentUser.Shop_Phone || currentUser.phone || "").trim().toLowerCase();
-            const ordId = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase();
-            const ordPhone = String(ord.shop_phone || ord.phone || "").trim().toLowerCase();
-            return (myId !== "" && myId === ordId) || (myPhone !== "" && myPhone === ordPhone) || (myId !== "" && myId === ordPhone) || (myPhone !== "" && myPhone === ordId);
+            const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase(); 
+            const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase(); 
+            return (myUser !== "" && myUser === ordUser); 
         }
 
-        // 🛑 تحديث السجلات وعداد الإلغاء والتوثيق
+        // 🛑 تحديث السجلات وعداد الإلغاء وطباعة التوثيق المالي
         function setupLiveOrders() {
             onValue(ref(db, 'orders'), (snapshot) => {
                 const list = document.getElementById('history-list'); let listHtml = ''; 
