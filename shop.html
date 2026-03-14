@@ -139,7 +139,7 @@
             margin-bottom: 20px; position: relative; overflow: hidden;
         }
 
-        /* 🛑 تحديث الإحصائيات المدمجة */
+        /* 🛑 الإحصائيات المدمجة */
         .smart-stats-card {
             background: white; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); 
             border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px;
@@ -210,13 +210,6 @@
         .ad-sender-badge { background: var(--gold); color: white; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-left: 10px; white-space: nowrap; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3); }
         .ad-content-wrapper { flex: 1; overflow: hidden; display: flex; align-items: center; }
         .ad-text-scroll { font-weight: bold; font-size: 14px; width: 100%; }
-
-        .ad-type-normal { border-right-color: #555; }
-        .ad-type-news { border-right-color: var(--info); }
-        .ad-type-warning { border-right-color: var(--danger); background-color: #ffebee; }
-        .ad-type-warning .ad-text-scroll { color: var(--danger); }
-        .ad-type-offer { border-right-color: var(--success); }
-        .ad-type-offer .ad-text-scroll { color: var(--success); }
 
         .app-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .app-popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-top: 6px solid var(--danger); animation: slideUp 0.4s ease-out; }
@@ -290,7 +283,7 @@
         <div class="custom-dialog-box" style="border-top-color: var(--danger);">
             <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 5px;">إلغاء الطلب 🛑</div>
             
-            <div id="cancel-fee-warning" style="display:none; font-size:12px; font-weight:bold; color:white; background:var(--danger); padding:8px; border-radius:8px; margin-bottom:15px; text-align:center;">
+            <div id="cancel-fee-warning" style="display:none; font-size:12px; font-weight:bold; color:white; padding:10px; border-radius:8px; margin-bottom:15px; text-align:center; line-height: 1.5;">
                 </div>
 
             <div style="font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 10px;">ما هو سبب الإلغاء؟</div>
@@ -779,6 +772,7 @@
         const snd_arrive = new Audio('https://assets.mixkit.co/active_storage/sfx/2868/2868-preview.mp3');
         const snd_deliver = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         let orderStatesHistory = {}, askedToRate = {};
+        let allFinancialLogs = {}; // لتخزين السجلات المالية
 
         window.onload = async function() {
             const savedUser = localStorage.getItem('n1_shop_session');
@@ -869,7 +863,7 @@
             document.getElementById('profile_pass').value = currentUser.Shop_Pass || currentUser.Client_Pass || currentUser.pass || "";
             
             fetchCancelPolicy();
-            fetchMasterInfo(); setupAdsAndAlerts(); listenToSystemSettings(); setupLiveOrders(); setupLivePrices(); await fetchAllData(); attachBalanceListener();
+            fetchMasterInfo(); setupAdsAndAlerts(); listenToSystemSettings(); setupLivePrices(); await fetchAllData(); attachBalanceListener(); setupLiveOrders();
         }
 
         // 🛑 جلب سياسة الإلغاء
@@ -1088,11 +1082,14 @@
             }
         };
 
+        // 🛑 دالة فلترة الطلبات الأصلية القوية
         function isMyOrder(ord) { 
             if (!currentUser || !ord) return false;
-            const myUser = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase(); 
-            const ordUser = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase(); 
-            return (myUser !== "" && myUser === ordUser); 
+            const myId = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || "").trim().toLowerCase();
+            const myPhone = String(currentUser.Shop_Phone || currentUser.phone || "").trim().toLowerCase();
+            const ordId = String(ord.Shop_User || ord.user || ord.client || "").trim().toLowerCase();
+            const ordPhone = String(ord.shop_phone || ord.phone || "").trim().toLowerCase();
+            return (myId !== "" && myId === ordId) || (myPhone !== "" && myPhone === ordPhone) || (myId !== "" && myId === ordPhone) || (myPhone !== "" && myPhone === ordId);
         }
 
         // 🛑 تحديث السجلات وعداد الإلغاء والتوثيق
@@ -1100,7 +1097,8 @@
             onValue(ref(db, 'orders'), (snapshot) => {
                 const list = document.getElementById('history-list'); let listHtml = ''; 
                 if(snapshot.exists()) {
-                    const allOrders = Object.values(snapshot.val()), myOrders = allOrders.filter(o => isMyOrder(o));
+                    const allOrders = Object.values(snapshot.val());
+                    const myOrders = allOrders.filter(o => isMyOrder(o));
                     
                     let cancelsToday = 0;
                     myOrders.forEach(o => {
@@ -1114,8 +1112,9 @@
                     document.getElementById('cancels-today').innerText = cancelsToday;
 
                     const recentOrders = myOrders.reverse().slice(0, 20);
-                    if(recentOrders.length === 0) listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد عمليات مسجلة حديثاً</div>';
-                    else {
+                    if(recentOrders.length === 0) {
+                        listHtml = '<div style="text-align:center; color:#cbd5e1; padding:10px;">لا توجد عمليات مسجلة حديثاً</div>';
+                    } else {
                         const statusMap = { 'new': { text: 'قيد الانتظار', color: '#d97706', bg: '#fef3c7' }, 'accepted': { text: 'قيد التجهيز', color: '#2563eb', bg: '#dbeafe' }, 'picked_up': { text: 'في عهدة الكابتن', color: '#7c3aed', bg: '#ede9fe' }, 'on_way': { text: 'في الطريق', color: '#7c3aed', bg: '#ede9fe' }, 'arrived_at_shop': { text: 'الكابتن بالمطعم', color: '#db2777', bg: '#fce7f3' }, 'arrived': { text: 'الكابتن بالموقع', color: '#db2777', bg: '#fce7f3' }, 'delivered': { text: 'تم التسليم بنجاح', color: '#059669', bg: '#d1fae5' }, 'cancelled': { text: 'ملغي', color: '#dc2626', bg: '#fee2e2' } };
                         recentOrders.forEach(item => {
                             const fullDateObj = new Date(item.Shop_Date || Date.now()), timeStr = fullDateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), dateStr = fullDateObj.toLocaleDateString('en-GB'); 
@@ -1140,9 +1139,10 @@
                             listHtml += `<div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #cbd5e1; padding-bottom:10px; margin-bottom:12px;"><div style="font-size:11px; color:#64748b; font-weight:bold;">📅 ${dateStr} &nbsp; 🕐 ${timeStr}</div><div style="background:${statusInfo.bg}; color:${statusInfo.color}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${statusInfo.text}</div></div><div style="font-size:14px; font-weight:900; color:var(--primary); margin-bottom:15px;">📍 الوجهة <span style="color:var(--info);">${item.Shop_Pickup}</span></div>${capDetailsHtml}<div style="display:flex; justify-content:space-between; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9; margin-top:10px;"><div style="text-align:center; flex:1; border-left:1px solid #e2e8f0;"><div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">قيمة الفاتورة</div><div style="font-size:14px; font-weight:900; color:var(--primary);">${item.Shop_Val} د.أ</div></div><div style="text-align:center; flex:1;"><div style="font-size:10px; color:#94a3b8; margin-bottom:4px;">تكلفة التوصيل</div><div style="font-size:14px; font-weight:900; color:var(--success);">${item.Shop_Fee || item.fee || '0.00'} د.أ</div></div></div>${cancelBtnHtml}</div>`;
                         });
 
-                        // إضافة سجل التوثيق الخاص بتسديد المديونية
-                        if (allFinancialLogs[currentUser.Shop_User || currentUser.user]) {
-                            const logs = Object.values(allFinancialLogs[currentUser.Shop_User || currentUser.user]).filter(l => l.type === 'penalty_settlement').sort((a,b) => b.timestamp - a.timestamp).slice(0, 3);
+                        // 🛑 إضافة سجل التوثيق الخاص بتسديد المديونية
+                        const myShopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
+                        if (allFinancialLogs && myShopKey && allFinancialLogs[myShopKey]) {
+                            const logs = Object.values(allFinancialLogs[myShopKey]).filter(l => l.type === 'penalty_settlement').sort((a,b) => b.timestamp - a.timestamp).slice(0, 3);
                             logs.forEach(l => {
                                 const dt = new Date(l.timestamp).toLocaleDateString('en-GB') + ' ' + new Date(l.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                                 listHtml += `<div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(22, 163, 74, 0.1);">
@@ -1178,7 +1178,9 @@
                 // جلب السجلات المالية لطباعتها
                 const logsSnap = await get(ref(db, `financial_logs`));
                 if(logsSnap.exists()) {
-                    allFinancialLogs = logsSnap.val();
+                    allFinancialLogs = logsSnap.val() || {};
+                } else {
+                    allFinancialLogs = {};
                 }
             } catch (e) {}
         }
