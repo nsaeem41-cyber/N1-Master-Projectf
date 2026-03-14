@@ -766,7 +766,7 @@
         window.myNode = 'shops'; 
         
         let systemSettings = { show_phone_numbers: false };
-        let cancelPolicy = { allow_cancel: true, grace_period: 0, fee_stage_1: 0, deduct_from_main: true };
+        let cancelPolicy = { allow_cancel: true, grace_period: 0, fee_stage_1: 0, deduct_from_main: true, show_penalty_box: true };
         
         const snd_accept = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
         const snd_pickup = new Audio('https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3');
@@ -867,7 +867,7 @@
             fetchMasterInfo(); setupAdsAndAlerts(); listenToSystemSettings(); setupLiveOrders(); setupLivePrices(); await fetchAllData(); attachBalanceListener();
         }
 
-        // 🛑 جلب سياسة الإلغاء
+        // 🛑 جلب سياسة الإلغاء الشاملة
         function fetchCancelPolicy() {
             const masterId = currentUser.Client_Master || currentUser.master || "الإدارة العامة";
             const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user;
@@ -947,7 +947,7 @@
             if(master) { onValue(ref(db, `client_announcements/${master}/shops`), snap => { activeAds.client = extractAd(snap.val()); renderAd(); }); onValue(ref(db, `client_alerts/${master}/shops`), snap => { activeAlerts.client = extractAd(snap.val()); renderAlert(); }); }
         }
 
-        // 🛑 دالة الإلغاء الذكية والمطورة
+        // 🛑 دالة الإلغاء الذكية والمطورة بالكامل
         window.cancelOrder = function(orderId, currentStatus, capPhone, acceptTimeStr) {
             if(cancelPolicy.allow_cancel === false) {
                 showAppToast("ميزة الإلغاء غير مفعلة لمنشأتك حالياً.", true);
@@ -983,7 +983,7 @@
                 warningDiv.style.background = 'var(--success)';
                 warningDiv.style.display = 'block';
             } else if (penaltyFee > 0) {
-                let deductTarget = cancelPolicy.deduct_from_main !== false ? "الرصيد التشغيلي" : "محفظة الديون";
+                let deductTarget = cancelPolicy.deduct_from_main !== false ? "الرصيد التشغيلي" : "محفظة الديون المتراكمة";
                 warningDiv.innerHTML = `انتهى وقت الإلغاء المجاني، سيتم خصم رسوم بقيمة ${penaltyFee} د.أ من (${deductTarget}) تعويضاً للكابتن.`;
                 warningDiv.style.background = 'var(--danger)';
                 warningDiv.style.display = 'block';
@@ -1007,8 +1007,8 @@
 
             if(!reason) { showAppToast("يرجى اختيار سبب الإلغاء", true); return; }
             if (fee > 0 && cancelPolicy.deduct_from_main !== false && myBalance < fee) { 
-                showAppToast("الرصيد التشغيلي غير كافٍ للخصم.", true); 
-                return; 
+                showAppToast("الرصيد التشغيلي غير كافٍ للخصم. سيتم تسجيله كدين.", true); 
+                // لا نوقف العملية، بل نسجلها كدين
             }
 
             setLoading('btn-confirm-cancel', true, "تأكيد وإلغاء فوري");
@@ -1024,12 +1024,14 @@
                 if (fee > 0) {
                     const shopKey = currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone;
                     
+                    // الخصم التلقائي المباشر من الرصيد
                     if (cancelPolicy.deduct_from_main !== false) {
                         const newShopBal = myBalance - fee;
                         updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newShopBal;
                         updates[`${window.myNode}/${shopKey}/Client_Balance`] = newShopBal;
                         updates[`${window.myNode}/${shopKey}/balance`] = newShopBal;
                     } else {
+                        // التسجيل كمحفظة تراكمية سالبة
                         const newPenaltyBal = penaltyBalance - fee;
                         updates[`${window.myNode}/${shopKey}/Penalty_Balance`] = newPenaltyBal;
                     }
@@ -1084,7 +1086,7 @@
             return (myUser !== "" && myUser === ordUser); 
         }
 
-        // 🛑 تحديث السجلات وعداد الإلغاء وطباعة التوثيق المالي
+        // 🛑 تحديث السجلات وطباعة التوثيق المالي
         function setupLiveOrders() {
             onValue(ref(db, 'orders'), (snapshot) => {
                 const list = document.getElementById('history-list'); let listHtml = ''; 
@@ -1177,7 +1179,7 @@
             } catch (e) {}
         }
 
-        // 🛑 مستمع المحفظة والتسديد الآلي
+        // 🛑 مستمع المحفظة
         window.attachBalanceListener = function() {
             const shopKey = String(currentUser.Shop_User || currentUser.Client_User || currentUser.user || currentUser.Shop_Phone || currentUser.phone || "").trim();
             onValue(ref(db, `${window.myNode}/${shopKey}`), (snap) => {
@@ -1186,51 +1188,22 @@
                     myBalance = parseFloat(me.Shop_Balance || me.Client_Balance || me.balance || 0); 
                     penaltyBalance = parseFloat(me.Penalty_Balance || 0);
                     
-                    // التسديد الذكي
-                    if (cancelPolicy.deduct_from_main !== false && penaltyBalance < 0 && myBalance > 0) {
-                        autoSettleDebt(shopKey);
-                    } else {
-                        updateBalanceUI();
-                    }
+                    updateBalanceUI();
 
                     if ((me.Client_Status || me.status || 'active') === 'paused') { document.getElementById('app-container').style.display = 'none'; document.getElementById('auth-section').style.display = 'flex'; toggleAuth('suspended'); }
                 } else logout();
             });
         }
 
-        // 🛑 دالة التسديد الآلي مع التوثيق
-        async function autoSettleDebt(shopKey) {
-            let debt = Math.abs(penaltyBalance);
-            let deduction = Math.min(debt, myBalance);
-            
-            const newBal = myBalance - deduction;
-            const newPen = penaltyBalance + deduction;
-
-            try {
-                const updates = {};
-                updates[`${window.myNode}/${shopKey}/Shop_Balance`] = newBal;
-                updates[`${window.myNode}/${shopKey}/Client_Balance`] = newBal;
-                updates[`${window.myNode}/${shopKey}/balance`] = newBal;
-                updates[`${window.myNode}/${shopKey}/Penalty_Balance`] = newPen;
-                
-                const txId = "TX_SETTLE_" + Date.now();
-                updates[`financial_logs/${shopKey}/${txId}`] = { 
-                    type: 'penalty_settlement', amount: deduction, 
-                    description: `تم تسوية مديونية الإلغاء بقيمة ${deduction.toFixed(2)} د.أ ✅`, 
-                    timestamp: Date.now(), date_string: new Date().toISOString()
-                };
-
-                await update(ref(db), updates);
-            } catch(e) {}
-        }
-
+        // 🛑 ربط المربع الأحمر بزر الرؤية في الريموت
         function updateBalanceUI() {
             document.getElementById('my-shop-balance').innerText = myBalance.toFixed(2);
             
             const penaltyCard = document.getElementById('penalty-card');
             const penaltyVal = document.getElementById('penalty-balance');
             
-            if (cancelPolicy.deduct_from_main === false && penaltyBalance < 0) {
+            // المربع الأحمر بيظهر بس إذا: (عليهم دين سالب) + (مفتاح الرؤية شغال من الريموت)
+            if (penaltyBalance < 0 && cancelPolicy.show_penalty_box !== false) {
                 penaltyVal.innerText = Math.abs(penaltyBalance).toFixed(2);
                 penaltyCard.classList.remove('hidden');
                 penaltyCard.style.display = 'block';
