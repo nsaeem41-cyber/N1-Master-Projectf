@@ -185,8 +185,8 @@
                         <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-check-circle text-emerald-500"></i> سجل العمليات المكتملة</span>
                         <div class="flex gap-2">
                             <button class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة السجل</button>
-                            <button class="bg-orange-500/20 text-orange-400 text-xs font-bold px-4 py-2 rounded-lg border border-orange-500/30 hover:bg-orange-500/40 transition-colors" onclick="resetDailyStats()">🔄 تصفير يومي</button>
-                            <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-2 rounded-lg text-xs transition-colors" onclick="clearCompletedOrders()"><i class="fas fa-trash"></i> حذف الكل</button>
+                            <button class="bg-sky-500/20 text-sky-400 text-xs font-bold px-4 py-2 rounded-lg border border-sky-500/30 hover:bg-sky-500/40 transition-colors" onclick="hideCompletedOrdersUI()">🧹 مسح مؤقت</button>
+                            <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 px-3 py-2 rounded-lg text-xs transition-colors border border-red-500/30" onclick="clearCompletedOrders()"><i class="fas fa-trash"></i> حذف جذري</button>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
@@ -194,9 +194,9 @@
                             <thead class="bg-black/20">
                                 <tr>
                                     <th>الوقت</th>
-                                    <th>الكابتن المنفذ</th>
+                                    <th>الكابتن / الجهة</th>
                                     <th>المنشأة التجارية</th>
-                                    <th>العمولة المستقطعة</th>
+                                    <th>العمولة / التعويض</th>
                                     <th>حالة الطلب</th>
                                     <th class="text-center">إدارة</th>
                                 </tr>
@@ -326,8 +326,12 @@
                             <span class="finance-value text-emerald-400" id="side-total-comm">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
                         </div>
                         <div class="finance-item">
+                            <span class="finance-label">تعويضات الكباتن (إلغاءات) 🚫</span>
+                            <span class="finance-value text-red-400" id="side-total-cancel-payout">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+                        </div>
+                        <div class="finance-item">
                             <span class="finance-label">كوبونات وخصومات للعملاء</span>
-                            <span class="finance-value text-red-400" id="side-total-disc">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
+                            <span class="finance-value text-orange-400" id="side-total-disc">0.00 <span style="font-size:12px; color:#94a3b8;">د.أ</span></span>
                         </div>
                         <div class="finance-item" style="margin-top: 15px; border-top: 2px solid rgba(212,175,55,0.3); padding-top: 15px;">
                             <span class="text-sm font-black text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-600">الصافي النهائي 💎</span>
@@ -471,37 +475,9 @@
         </div>
     </div>
 
-    <div id="cancel-details-modal" class="modal-overlay">
-        <div class="modal-box border-t-4 border-t-red-500" style="max-width: 400px;">
-            <div class="flex justify-between items-center border-b border-slate-700/50 pb-4 mb-5">
-                <div class="text-lg font-black text-red-400 flex items-center gap-2"><i class="fas fa-ban"></i> تفاصيل الإلغاء</div>
-                <button class="bg-slate-800 text-slate-400 hover:text-white w-8 h-8 rounded-full font-bold transition-colors" onclick="closeCancelDetailsModal()">✕</button>
-            </div>
-            
-            <div class="space-y-4 text-right">
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-                    <div class="text-[10px] text-slate-400 mb-1">سبب الإلغاء</div>
-                    <div id="cancel_detail_reason" class="text-sm font-bold text-white">---</div>
-                </div>
-                
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-                    <div class="text-[10px] text-slate-400 mb-1">وقت الإلغاء الدقيق</div>
-                    <div id="cancel_detail_time" class="text-sm font-bold text-yellow-500 font-mono">---</div>
-                </div>
-                
-                <div class="bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center mt-2">
-                    <div class="text-[10px] text-red-400 mb-1">قيمة التعويض للكابتن</div>
-                    <div id="cancel_detail_fee" class="text-xl font-black text-red-500">0.00 د.أ</div>
-                </div>
-            </div>
-            
-            <button class="bg-slate-700 hover:bg-slate-600 text-white w-full py-3 rounded-xl font-bold text-sm mt-6 transition-colors" onclick="closeCancelDetailsModal()">إغلاق النافذة</button>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update, set, remove, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get, update, set, remove, push, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyC2dqEdbq5cN49leWIcjsTAq6l6KavN_sQ", authDomain: "n-one-global.firebaseapp.com", databaseURL: "https://n-one-global-default-rtdb.firebaseio.com", projectId: "n-one-global" };
         const app = initializeApp(firebaseConfig);
@@ -514,6 +490,7 @@
         let allAssignedOrders = {};
         let captainRatings = {}; 
         let completedOrders = [];
+        let hiddenLocalOrders = new Set(); // 🛑 لتخزين الطلبات اللي مسحناها مؤقتاً من الشاشة
         
         let captainMemory = {};
         let captainQueueMemory = JSON.parse(localStorage.getItem('n1_queue_memory') || '{}');
@@ -525,7 +502,7 @@
         let currentTargetCaptain = null;
         let currentCaptainsFilter = 'active'; 
         let isAutoRadarActive = false;
-        let remoteOrderTimer = 6000; // 🛑 تعديل لـ 6 ثواني كما طلبتِ
+        let remoteOrderTimer = 6000;
         let radarMemory = {};
 
         window.applyDiamondWakeLock = async function() {
@@ -706,7 +683,7 @@
             const myMaster = currentUser.Client_User || currentUser.user;
 
             onValue(ref(db, `settings/${myMaster}/order_timer`), (snapshot) => {
-                remoteOrderTimer = snapshot.exists() ? parseInt(snapshot.val()) * 1000 : 6000; // 🛑 6 ثواني
+                remoteOrderTimer = snapshot.exists() ? parseInt(snapshot.val()) * 1000 : 6000;
             });
 
             onValue(ref(db, `settings/${myMaster}/autoRadar`), (snapshot) => {
@@ -765,7 +742,6 @@
                     let masterCompany = activeCompanyName || 'default';
                     let commission = parseFloat(ord.commission_amount || 0);
 
-                    // تفاعل الإلغاء اللحظي (في حال المنشأة لغته)
                     if(ord.linkedRadarId) {
                         const originalOrd = allOrders.find(o => o.Shop_Ord_ID === ord.linkedRadarId || o.id === ord.linkedRadarId);
                         if (originalOrd && (originalOrd.OrderStatus === 'cancelled' || originalOrd.OrderStatus === 'archived_and_deleted')) {
@@ -776,11 +752,9 @@
                     }
 
                     if (ord.dispatch_method === 'Auto') {
-                        // 🛑 المداورة الذكية: إذا خلص الوقت (6 ثواني) أو كان أوفلاين
                         if (ord.status === 'assigned' || ord.status === 'ringing') {
                             if (elapsed > remoteOrderTimer || isAppClosed) { 
                                 updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                                // 🛑 تكتيك الهروب: تسجيل الكابتن في قائمة الممنوعين من هاد الطلب عشان ما يرجعله
                                 if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                                 hasUpdates = true;
                                 continue;
@@ -797,7 +771,6 @@
                         }
                         updates[`company_archives/${masterCompany}/orders/${archiveKey}`] = null;
                         updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
-                        // 🛑 تسجيل الكابتن في قائمة الممنوعين لأنه رفض أو خلص وقته
                         if(ord.linkedRadarId) updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
                         hasUpdates = true;
                         continue;
@@ -892,8 +865,9 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId)) return false;
-                // 🛑 تم إزالة 'cancelled' من الاستثناء عشان يظهر بالرادار وينعرف إنه التغى
-                if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
+                
+                // 🛑 إظهار الملغي في الرادار
+                if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
                 if (orderComp && (orderComp === activeName || orderComp === activeUser)) return true;
@@ -943,14 +917,15 @@
                 const diffSec = Math.floor((Date.now() - orderDate.getTime()) / 1000);
                 
                 let isWaiting = !!assignedInfoMap[ordId];
-                let isCancelled = ord.OrderStatus === 'cancelled'; // 🛑 فحص الإلغاء
+                let isCancelled = ord.OrderStatus === 'cancelled' || ord.OrderStatus === 'canceled'; 
 
                 let rowStatusClass = isCancelled ? 'order-row-cancelled' : (isWaiting ? 'order-row-waiting' : (diffSec > 120 ? 'order-row-urgent' : 'order-row-new'));
                 
                 let actionHtml = '';
-                // 🛑 زر عرض تفاصيل الإلغاء
+                
+                // 🛑 زر الأرشفة لو كان الطلب ملغي عشان ينزل عالسجلات
                 if (isCancelled) {
-                    actionHtml = `<button class="bg-red-600/80 hover:bg-red-500 text-white w-full py-1.5 rounded-lg transition-colors border border-red-400 text-xs font-bold shadow-[0_0_10px_rgba(239,68,68,0.5)]" onclick="showCancelDetails('${ordId}')">تفاصيل الإلغاء 🚫</button>`;
+                    actionHtml = `<button class="bg-red-600/80 hover:bg-red-500 text-white w-full py-1.5 rounded-lg transition-colors border border-red-400 text-xs font-bold shadow-[0_0_10px_rgba(239,68,68,0.5)]" onclick="archiveCancelledOrder('${ordId}')">أرشفة الإلغاء 📥</button>`;
                 } else if (isWaiting) {
                     actionHtml = `<span class="bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-lg text-[10px] font-bold border border-yellow-500/30">⏳ معلق مع ${assignedInfoMap[ordId]}</span>`;
                 } else {
@@ -994,7 +969,7 @@
                             <div class="text-[10px] text-slate-400 mt-1">${dateStr}</div>
                         </td>
                         <td class="p-3 whitespace-normal">
-                            <div class="font-bold text-yellow-500">${cleanShopName} ${isCancelled ? '<span class="text-[9px] bg-red-500 text-white px-1 rounded ml-1">ملغي</span>' : ''}</div>
+                            <div class="font-bold text-yellow-500">${cleanShopName} ${isCancelled ? '<span class="text-[9px] bg-red-500 text-white px-1 rounded ml-1">ملغي🚫</span>' : ''}</div>
                             <div class="text-[10px] text-slate-400 mt-1"><i class="fas fa-map-marker-alt text-indigo-400"></i> فرع ${shopOriginArea}</div>
                         </td>
                         <td class="p-3"><span class="bg-slate-800 text-indigo-300 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-700">${destinationArea}</span></td>
@@ -1006,26 +981,56 @@
             });
         };
 
-        // 🛑 دالة إظهار تفاصيل الإلغاء
-        window.showCancelDetails = function(orderId) {
+        // 🛑 دالة أرشفة الطلب الملغي وإنزاله للسجلات
+        window.archiveCancelledOrder = async function(orderId) {
             const ord = allOrders.find(o => o.Shop_Ord_ID === orderId || o.id === orderId);
             if (!ord) return;
-            
-            const cancelReason = ord.Cancel_Reason || "غير محدد";
-            const cancelTime = ord.Cancel_Date ? new Date(ord.Cancel_Date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "---";
-            
-            // سحب قيمة التعويض من السجلات المالية إذا أمكن، أو وضع قيمة تقريبية (يمكن تطويرها للبحث باللوج)
-            document.getElementById('cancel_detail_reason').innerText = cancelReason;
-            document.getElementById('cancel_detail_time').innerText = cancelTime;
-            
-            // في حال وجود قيمة غرامة مخزنة
-            document.getElementById('cancel_detail_fee').innerText = "تم تسجيله بالسجلات المالية"; 
-            
-            document.getElementById('cancel-details-modal').style.display = 'flex';
-        };
 
-        window.closeCancelDetailsModal = function() {
-            document.getElementById('cancel-details-modal').style.display = 'none';
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                let masterCompany = activeCompanyName || 'default';
+                let cancelReason = ord.Cancel_Reason || "سبب غير محدد";
+                let cancelDateStr = ord.Cancel_Date ? new Date(ord.Cancel_Date).toISOString() : new Date().toISOString();
+                
+                // محاولة جلب مبلغ التعويض من السجل اللحظي (في حال تم الدفع)
+                let compensationFee = 0;
+                if(allFinancialLogs[ord.Cap_Phone] || allFinancialLogs[ord.Cap_User]) {
+                     // هذه الجزئية قابلة للتوسيع لربط الـ ID الدقيق للعملية
+                     compensationFee = "تم الفحص"; 
+                }
+
+                const entry = {
+                    orderId: orderId,
+                    appOrdId: orderId,
+                    time: new Date(cancelDateStr).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+                    date: cancelDateStr,
+                    cap: "المنشأة ألغت الطلب 🚫",
+                    capKey: "cancelled",
+                    rest: ord.Shop_Name || ord.restaurant || "منشأة",
+                    value: ord.Shop_Val || 0,
+                    fee: 0,
+                    comm: 0,
+                    discount: 0,
+                    promo: "",
+                    net: 0,
+                    cancel_reason: cancelReason,
+                    live_status: 'cancelled_by_shop',
+                    via: 'Radar',
+                    companyId: masterCompany
+                };
+
+                const updates = {};
+                updates[`company_archives/${masterCompany}/orders/${orderId}`] = entry;
+                updates[`orders/${orderId}/OrderStatus`] = 'archived_and_deleted'; // 🛑 عشان يختفي من الرادار
+
+                await update(ref(db), updates);
+                showAppNotification("تمت الأرشفة بالسجلات");
+            } catch (e) {
+                showAppNotification("حدث خطأ", "error");
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
         };
 
         window.triggerAutoRadarMaster = async function(silent = false) {
@@ -1053,7 +1058,6 @@
             const pendingOrders = allOrders.filter(o => {
                 const ordId = o.Shop_Ord_ID || o.id;
                 if (!ordId || completedIDs.has(ordId) || activeLinkedIds.has(ordId)) return false;
-                // 🛑 استثناء الطلبات الملغاة من المداورة الآلية
                 if (['accepted', 'arrived_at_shop', 'picked_up', 'on_way', 'arrived', 'arrived_at_customer', 'delivered', 'archived_and_deleted', 'cancelled', 'canceled'].includes(o.OrderStatus) || o.FinancialStatus === 'confirmed') return false;
                 
                 const orderComp = String(o.Master_ID || o.Company_ID || o.Shop_Master || o.master || o.company || o.Client_Master || '').toLowerCase().trim();
@@ -1085,13 +1089,11 @@
                 let eligibleCaptains = availableCaptains.filter(c => (c.Cap_Region || c.Cap_Location || '').trim() === shopOriginArea);
                 if (eligibleCaptains.length === 0) continue;
 
-                // 🛑 تكتيك الهروب: استثناء الكباتن اللي موجودين بقائمة التجاهل لهاد الطلب بالذات
                 let unskippedCaptains = eligibleCaptains.filter(c => {
                     const cKey = c.Cap_User || c.user || c.Cap_Phone || c.phone;
                     return !(radarMemory[ordId] && radarMemory[ordId].skipped && radarMemory[ordId].skipped[cKey]);
                 });
 
-                // إذا خلصوا كل الكباتن وصاروا بالقائمة السوداء لهاد الطلب، بنصفر القائمة عشان نرجع نلف عليهم من جديد
                 if (eligibleCaptains.length > 0 && unskippedCaptains.length === 0) {
                      updates[`radar_memory/${ordId}`] = null;
                      delete radarMemory[ordId]; 
@@ -1134,6 +1136,7 @@
             }
         };
 
+        // 🛑 التعديل الشامل لسجل المكتمل (مع زر المسح المؤقت)
         window.renderCompletedOrders = function() {
             const tbody = document.getElementById('completed-table-body');
             const today = new Date().toDateString();
@@ -1143,6 +1146,9 @@
 
             completedOrders.forEach(o => {
                 if (!o || !o.date) return;
+                // 🛑 إذا الطلب مسحناه محلياً لا تعرضه
+                if (hiddenLocalOrders.has(o.orderId || o.appOrdId)) return;
+
                 const isToday = new Date(o.date).toDateString() === today;
                 const isNotRejected = o.cap !== "مرفوض" && o.live_status !== 'rejected' && o.live_status !== 'canceled';
                 const orderComp = String(o.companyId || '').trim().toLowerCase();
@@ -1157,18 +1163,25 @@
 
             let totalComm = 0;
             let totalDisc = 0;
+            let totalCancelPayout = 0; // 🛑 حسبة التعويضات
 
             finalOrders.forEach(o => {
                 let commVal = parseFloat(o.comm);
                 let discVal = parseFloat(o.discount);
-                if(!isNaN(commVal)) totalComm += commVal;
-                if(!isNaN(discVal)) totalDisc += discVal;
+                
+                if (o.live_status === 'cancelled_by_shop') {
+                     // في حالة كان الطلب ملغي وفي تعويض، ممكن نقرأه من هون مستقبلاً لو ضفنا القيمة لـ o
+                } else {
+                    if(!isNaN(commVal)) totalComm += commVal;
+                    if(!isNaN(discVal)) totalDisc += discVal;
+                }
             });
             
             let netProfit = totalComm - totalDisc;
 
             if(document.getElementById('stat-completed-total')) document.getElementById('stat-completed-total').innerText = finalOrders.length;
             if(document.getElementById('side-total-comm')) document.getElementById('side-total-comm').innerHTML = totalComm.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
+            if(document.getElementById('side-total-cancel-payout')) document.getElementById('side-total-cancel-payout').innerHTML = totalCancelPayout.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
             if(document.getElementById('side-total-disc')) document.getElementById('side-total-disc').innerHTML = totalDisc.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
             if(document.getElementById('side-net-profit')) document.getElementById('side-net-profit').innerHTML = netProfit.toFixed(2) + ' <span style="font-size:12px; color:#94a3b8;">د.أ</span>';
 
@@ -1182,18 +1195,33 @@
             
             finalOrders.forEach(o => {
                 let liveStatusBadge = '';
-                if (o.live_status === 'delivered' || o.live_status === 'completed') liveStatusBadge = '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/30">مكتمل 💎</span>';
-                else if (o.live_status === 'accepted') liveStatusBadge = '<span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-blue-500/30">تمت الموافقة ⚡</span>';
-                else if (o.live_status === 'arrived_at_shop') liveStatusBadge = '<span class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-indigo-500/30">بالمطعم 🏪</span>';
-                else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-orange-500/30">استلم 🥡</span>';
-                else if (o.live_status === 'on_way') liveStatusBadge = '<span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-purple-500/30">بالطريق 🚗</span>';
-                else if (o.live_status === 'arrived_at_customer' || o.live_status === 'arrived') liveStatusBadge = '<span class="bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-cyan-500/30">عند العميل 📍</span>';
-                else liveStatusBadge = '<span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-700">مرحلي ⏳</span>';
+                let rowColor = 'bg-slate-800/20 opacity-90';
                 
-                let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Phone === o.capKey);
-                let liveDot = cData && cData.app_status === 'online' ? '<span class="text-emerald-400 ml-1 text-xs" title="أونلاين"><i class="fas fa-check-circle"></i></span>' : '<span class="text-slate-500 ml-1 text-xs" title="أوفلاين"><i class="fas fa-circle"></i></span>';
+                // 🛑 عرض الإلغاءات في السجل المكتمل
+                if (o.live_status === 'cancelled_by_shop') {
+                    liveStatusBadge = `<div class="bg-red-500/10 border border-red-500/30 p-1.5 rounded-lg text-right w-48">
+                                          <div class="text-[10px] font-bold text-red-400 mb-1">ألغي بواسطة المطعم</div>
+                                          <div class="text-[9px] text-slate-400 truncate">السبب: ${o.cancel_reason || 'غير محدد'}</div>
+                                       </div>`;
+                    rowColor = 'bg-red-900/10 border-red-500/20';
+                } else {
+                    if (o.live_status === 'delivered' || o.live_status === 'completed') liveStatusBadge = '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-emerald-500/30">مكتمل 💎</span>';
+                    else if (o.live_status === 'accepted') liveStatusBadge = '<span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-blue-500/30">تمت الموافقة ⚡</span>';
+                    else if (o.live_status === 'arrived_at_shop') liveStatusBadge = '<span class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-indigo-500/30">بالمطعم 🏪</span>';
+                    else if (o.live_status === 'picked_up') liveStatusBadge = '<span class="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-orange-500/30">استلم 🥡</span>';
+                    else if (o.live_status === 'on_way') liveStatusBadge = '<span class="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-purple-500/30">بالطريق 🚗</span>';
+                    else if (o.live_status === 'arrived_at_customer' || o.live_status === 'arrived') liveStatusBadge = '<span class="bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-lg text-[10px] font-bold border border-cyan-500/30">عند العميل 📍</span>';
+                    else liveStatusBadge = '<span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-700">مرحلي ⏳</span>';
+                    
+                    if (o.live_status === 'delivered' || o.live_status === 'completed') rowColor = 'hover:bg-slate-800/30';
+                }
 
-                let rowColor = (o.live_status === 'delivered' || o.live_status === 'completed') ? 'hover:bg-slate-800/30' : 'bg-slate-800/20 opacity-90';
+                let liveDot = '';
+                if(o.live_status !== 'cancelled_by_shop') {
+                    let cData = globalUsers.find(u => u.Cap_User === o.capKey || u.user === o.capKey || u.Cap_Phone === o.capKey);
+                    liveDot = cData && cData.app_status === 'online' ? '<span class="text-emerald-400 ml-1 text-xs" title="أونلاين"><i class="fas fa-check-circle"></i></span>' : '<span class="text-slate-500 ml-1 text-xs" title="أوفلاين"><i class="fas fa-circle"></i></span>';
+                }
+
                 let cleanRestName = (o.rest || '').replace(urlRegex, '');
 
                 tbody.innerHTML += `
@@ -1201,11 +1229,31 @@
                         <td class="p-3 text-xs text-slate-400">${o.time}</td>
                         <td class="p-3 font-bold text-white flex items-center gap-2">${o.cap} ${liveDot}</td>
                         <td class="p-3 whitespace-normal text-yellow-500 font-bold">${cleanRestName}</td>
-                        <td class="p-3"><span class="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-lg text-[10px] font-mono font-bold border border-indigo-500/20">${parseFloat(o.comm).toFixed(2)} د.أ</span></td>
+                        <td class="p-3"><span class="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-lg text-[10px] font-mono font-bold border border-indigo-500/20">${o.live_status === 'cancelled_by_shop' ? '---' : parseFloat(o.comm).toFixed(2) + ' د.أ'}</span></td>
                         <td class="p-3">${liveStatusBadge}</td>
-                        <td class="p-3 text-center"><button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 w-8 h-8 rounded-lg transition-colors border border-transparent" onclick="deleteFromArchive('${o.orderId}')" title="حذف الطلب"><i class="fas fa-trash text-xs"></i></button></td>
+                        <td class="p-3 text-center">
+                            <button class="bg-red-500/20 text-red-400 hover:bg-red-500/40 w-8 h-8 rounded-lg transition-colors border border-transparent" onclick="hideFromLocalUI('${o.orderId}')" title="مسح من الشاشة"><i class="fas fa-eye-slash text-xs"></i></button>
+                            <button class="bg-slate-700 hover:bg-slate-600 text-slate-300 w-8 h-8 rounded-lg transition-colors border border-slate-600" onclick="deleteFromArchive('${o.orderId}')" title="حذف جذري"><i class="fas fa-trash text-xs"></i></button>
+                        </td>
                     </tr>`;
             });
+        };
+
+        // 🛑 دالة الإخفاء المحلي (من الشاشة فقط)
+        window.hideFromLocalUI = function(id) {
+            hiddenLocalOrders.add(id);
+            renderCompletedOrders();
+        };
+
+        // 🛑 المسح المؤقت الشامل للواجهة فقط
+        window.hideCompletedOrdersUI = function() {
+            if(confirm("مسح السجل من الشاشة فقط (سيبقى محفوظاً في الفايربيز وسجلات المنشآت)؟")) {
+                completedOrders.forEach(o => {
+                    hiddenLocalOrders.add(o.orderId || o.appOrdId);
+                });
+                renderCompletedOrders();
+                showAppNotification("تم تنظيف الشاشة");
+            }
         };
 
         window.fetchRegionsFromPrices = function() {
@@ -1303,20 +1351,6 @@
                 showAppNotification("تم الإرسال للتطبيق 🚀");
                 ['man_rest_name', 'man_hidden_url', 'man_val', 'man_fee', 'linked_order_id'].forEach(id => document.getElementById(id).value = '');
             } catch (e) { showAppNotification("خطأ", "error"); }
-        };
-
-        // 🛑 ترميم أزرار الحذف لتمسح من الجذور في الفايربيز
-        window.resetDailyStats = async function() {
-            if(confirm("تصفير العمولات والطلبات لليوم؟")) {
-                const compId = activeCompanyName || 'default'; const updates = {};
-                completedOrders.forEach(o => { 
-                    if(new Date(o.date).toDateString() === new Date().toDateString()) {
-                        updates[`company_archives/${compId}/orders/${o.orderId}`] = null; 
-                        updates[`orders/${o.orderId}`] = null; // 🛑 مسح كلي
-                    }
-                });
-                await update(ref(db), updates); showAppNotification("تم التصفير والحذف من الجذور");
-            }
         };
 
         window.deleteFromArchive = async function(id) {
