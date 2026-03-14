@@ -201,13 +201,15 @@
                         <h3 class="text-red-400 text-[10px] font-bold mb-1 uppercase tracking-widest"><i class="fas fa-ban mr-1"></i> إجمالي الطلبات الملغاة</h3>
                         <div class="text-2xl font-black text-white" id="dash-total-cancels">0</div>
                     </div>
-                    <div class="glass-panel p-5 rounded-2xl border border-orange-500/30 bg-orange-900/10">
+                    <div class="glass-panel p-5 rounded-2xl border border-orange-500/30 bg-orange-900/10 relative group">
                         <h3 class="text-orange-400 text-[10px] font-bold mb-1 uppercase tracking-widest"><i class="fas fa-coins mr-1"></i> إجمالي غرامات الإلغاء</h3>
                         <div class="text-2xl font-black text-white" id="dash-total-penalties">0.00 <span class="text-[10px] text-slate-400">د.أ</span></div>
+                        <button onclick="resetGlobalPenalty()" class="absolute top-3 left-3 bg-slate-800 text-slate-400 hover:text-white rounded-full w-7 h-7 flex items-center justify-center text-xs border border-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" title="تصفير إجمالي الغرامات"><i class="fas fa-undo"></i></button>
                     </div>
-                    <div class="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-900/10">
+                    <div class="glass-panel p-5 rounded-2xl border border-rose-500/30 bg-rose-900/10 relative group">
                         <h3 class="text-rose-400 text-[10px] font-bold mb-1 uppercase tracking-widest"><i class="fas fa-hand-holding-usd mr-1"></i> إجمالي ديون الإلغاء</h3>
                         <div class="text-2xl font-black text-white" id="dash-total-debt">0.00 <span class="text-[10px] text-slate-400">د.أ</span></div>
+                        <button onclick="resetGlobalDebt()" class="absolute top-3 left-3 bg-slate-800 text-slate-400 hover:text-white rounded-full w-7 h-7 flex items-center justify-center text-xs border border-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" title="تصفير الديون وتصفية كل المنشآت"><i class="fas fa-magic"></i></button>
                     </div>
                 </section>
 
@@ -382,8 +384,8 @@
                         <div class="glass-panel rounded-3xl p-6 border-t-4 border-t-red-500 relative overflow-hidden">
                             <div class="flex justify-between items-start mb-5 border-b border-red-500/20 pb-3">
                                 <div>
-                                    <h2 class="text-lg font-black text-red-400 mb-1 tracking-wide">ريموت سياسة الإلغاء</h2>
-                                    <div class="flex items-center gap-2 text-[9px] text-slate-500 font-mono tracking-widest"><span class="status-dot w-1.5 h-1.5 bg-red-500 shadow-[0_0_5px_#ef4444]"></span> CANCEL PROTOCOL</div>
+                                    <h2 class="text-lg font-black text-red-400 mb-1 tracking-wide">ريموت سياسة الإلغاء الموحدة</h2>
+                                    <div class="flex items-center gap-2 text-[9px] text-slate-500 font-mono tracking-widest"><span class="status-dot w-1.5 h-1.5 bg-red-500 shadow-[0_0_5px_#ef4444]"></span> SMART CANCEL PROTOCOL</div>
                                 </div>
                                 <div class="flex gap-2">
                                     <button onclick="openCancelLedger()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-600 transition-colors"><i class="fas fa-list-ol mr-1"></i> كشف الإلغاءات</button>
@@ -395,14 +397,10 @@
                                 
                                 <div class="flex flex-col md:flex-row gap-4 bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
                                     <div class="flex-1">
-                                        <label class="block text-[11px] font-bold text-slate-300 mb-2">البحث برقم هاتف المنشأة 🔍</label>
-                                        <input type="tel" id="cancel_search_phone" oninput="searchShopForCancelPolicy()" class="w-full vault-input p-2.5 rounded-lg text-sm font-mono text-left" dir="ltr" placeholder="أدخل رقم الهاتف...">
-                                    </div>
-                                    <div class="flex-1">
                                         <label class="block text-[11px] font-bold text-slate-300 mb-2">المنشأة المستهدفة 🎯</label>
                                         <select id="cancel_policy_target" onchange="loadCancelPolicyForTarget()" class="w-full vault-input p-2.5 rounded-lg text-sm border-red-500/30 bg-slate-800">
                                             <option value="global">🌐 جميع المنشآت التابعة (تعميم عام)</option>
-                                            </select>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -454,27 +452,49 @@
                                     </label>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                    <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
-                                        <label class="block text-[11px] font-bold text-red-300 mb-2">غرامة المرحلة الأولى (بالطريق)</label>
-                                        <div class="relative">
-                                            <input type="number" id="policy_fee_1" class="w-full vault-input p-3 pl-10 rounded-lg text-sm text-center text-red-400 font-bold" placeholder="0.00" step="0.05">
-                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">د.أ</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10">
-                                        <label class="block text-[11px] font-bold text-red-300 mb-2">غرامة المرحلة الثانية (بالموقع)</label>
-                                        <div class="relative">
-                                            <input type="number" id="policy_fee_2" class="w-full vault-input p-3 pl-10 rounded-lg text-sm text-center text-red-400 font-bold" placeholder="0.00" step="0.05">
-                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">د.أ</span>
-                                        </div>
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/10 mt-4">
+                                    <label class="block text-[11px] font-bold text-red-300 mb-2">غرامة الإلغاء الموحدة</label>
+                                    <div class="relative">
+                                        <input type="number" id="policy_fee_1" class="w-full vault-input p-3 pl-10 rounded-lg text-sm text-center text-red-400 font-bold" placeholder="0.00" step="0.05">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">د.أ</span>
                                     </div>
                                 </div>
 
                                 <button onclick="saveCancelPolicy()" class="w-full bg-red-600/90 hover:bg-red-500 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-[0_4px_15px_rgba(239,68,68,0.3)] mt-4">
                                     حفظ وتطبيق السياسة ⚡
                                 </button>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel rounded-3xl p-6 border-t-4 border-t-emerald-500 relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-5 border-b border-emerald-500/20 pb-3">
+                                <div>
+                                    <h2 class="text-lg font-black text-emerald-400 mb-1 tracking-wide">تسوية الديون وتصفير الإلغاءات</h2>
+                                    <div class="flex items-center gap-2 text-[9px] text-slate-500 font-mono tracking-widest"><span class="status-dot w-1.5 h-1.5 bg-emerald-500 shadow-[0_0_5px_#10b981]"></span> SMART RESET PROTOCOL</div>
+                                </div>
+                                <i class="fas fa-magic text-2xl text-emerald-500/30 ml-2"></i>
+                            </div>
+
+                            <div class="mb-4 relative">
+                                <label class="block text-[11px] font-bold text-slate-300 mb-2">البحث برقم هاتف المنشأة 🔍</label>
+                                <input type="tel" id="shop_search_for_reset" oninput="searchShopForReset()" class="w-full vault-input p-3 pl-10 rounded-xl text-sm font-mono text-left" dir="ltr" placeholder="أدخل رقم الهاتف للبحث...">
+                                <i class="fas fa-search absolute left-4 top-1/2 translate-y-1 text-slate-500"></i>
+                            </div>
+
+                            <div id="shop_reset_info" class="hidden bg-slate-900/60 p-5 rounded-2xl border border-slate-700 text-center animate-fadeIn">
+                                <div class="text-sm font-black text-white mb-2" id="reset_shop_name">---</div>
+                                <div class="text-xs text-slate-400 mb-5 bg-black/30 p-2 rounded-lg inline-block">
+                                    المديونية الحالية: <span class="text-red-400 font-bold text-sm mx-1" id="reset_shop_debt">0.00 د.أ</span> | 
+                                    الطلبات الملغاة: <span class="text-orange-400 font-bold text-sm mx-1" id="reset_shop_cancels">0</span>
+                                </div>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <button onclick="resetSpecificShopDebt()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(16,185,129,0.3)]">
+                                        <i class="fas fa-hand-holding-usd"></i> تصفير المديونية
+                                    </button>
+                                    <button onclick="resetSpecificShopCancels()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(37,99,235,0.3)]">
+                                        <i class="fas fa-sync-alt"></i> تصفير عداد الإلغاءات
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -608,6 +628,10 @@
         
         let currentUser = null, allData = [], allCaptains = [], currentShopFilter = 'active', availablePricingAreas = [];
         let allOrders = [], allFinancialLogs = {}; 
+        
+        // متغيرات التصفير الذكي
+        let globalTotalPenalty = 0;
+        window.activeSmartShop = null;
 
         window.showAppToast = function(msg, isError = false) {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div');
@@ -686,7 +710,6 @@
             let debt = 0;
             let shopData = allData.find(s => s.Client_User === shopKey || s.user === shopKey);
             if(shopData) {
-                // قراءة المديونية من محفظة الغرامات المستقلة
                 debt = Math.abs(parseFloat(shopData.Penalty_Balance || 0));
             }
 
@@ -695,23 +718,165 @@
 
         function updateDashboardCancelStats() {
             let globalCount = 0;
-            let globalPenalty = 0;
             let globalDebt = 0;
 
-            const currentUserRef = currentUser.Client_User || currentUser.user;
-            const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === currentUserRef));
+            const myMaster = currentUser.Client_User || currentUser.user;
+            const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === myMaster));
 
             myShops.forEach(shop => {
                 const stats = getShopCancelStats(shop.Client_User || shop.user, shop.Client_Phone || shop.phone);
                 globalCount += stats.count;
-                globalPenalty += stats.totalPenalty;
                 globalDebt += stats.debt;
             });
 
             document.getElementById('dash-total-cancels').innerText = globalCount;
-            document.getElementById('dash-total-penalties').innerHTML = `${globalPenalty.toFixed(2)} <span class="text-[10px] text-slate-400">د.أ</span>`;
             document.getElementById('dash-total-debt').innerHTML = `${globalDebt.toFixed(2)} <span class="text-[10px] text-slate-400">د.أ</span>`;
+            
+            // قراءة العداد المركزي للغرامات
+            onValue(ref(db, `settings/${myMaster}/global_collected_penalties`), (snapshot) => {
+                globalTotalPenalty = snapshot.exists() ? parseFloat(snapshot.val()) : 0;
+                document.getElementById('dash-total-penalties').innerHTML = `${globalTotalPenalty.toFixed(2)} <span class="text-[10px] text-slate-400">د.أ</span>`;
+            });
         }
+
+        // ================== دوال التصفير الذكي ==================
+        window.searchShopForReset = function() {
+            const phoneSearch = document.getElementById('shop_search_for_reset').value.trim();
+            const infoBox = document.getElementById('shop_reset_info');
+            
+            if (phoneSearch.length >= 8) {
+                const myMaster = currentUser.Client_User || currentUser.user;
+                const shop = allData.find(s => (s.Client_Phone || s.phone || '').includes(phoneSearch) && s.Client_Master === myMaster);
+                if (shop) {
+                    window.activeSmartShop = shop;
+                    document.getElementById('reset_shop_name').innerText = shop.Client_Name || shop.name || "منشأة تجارية";
+                    const stats = getShopCancelStats(shop.Client_User || shop.user, shop.Client_Phone || shop.phone);
+                    document.getElementById('reset_shop_debt').innerText = stats.debt.toFixed(2) + " د.أ";
+                    document.getElementById('reset_shop_cancels').innerText = stats.count;
+                    infoBox.classList.remove('hidden');
+                } else {
+                    infoBox.classList.add('hidden');
+                    window.activeSmartShop = null;
+                }
+            } else {
+                infoBox.classList.add('hidden');
+                window.activeSmartShop = null;
+            }
+        };
+
+        window.resetSpecificShopDebt = async function() {
+            if(!window.activeSmartShop) return;
+            const shopKey = window.activeSmartShop.Client_User || window.activeSmartShop.user;
+            const stats = getShopCancelStats(shopKey, window.activeSmartShop.Client_Phone || window.activeSmartShop.phone);
+            const debt = stats.debt;
+            
+            if(debt <= 0) { showAppToast("لا توجد مديونية لتصفيرها", true); return; }
+            
+            if(confirm(`تأكيد تصفير المديونية بقيمة ${debt.toFixed(2)} د.أ للمنشأة وترحيلها للأرشيف؟`)) {
+                const myMaster = currentUser.Client_User || currentUser.user;
+                document.getElementById('loader-overlay').style.display = 'flex';
+                try {
+                    await update(ref(db), {
+                        [`shops/${shopKey}/Penalty_Balance`]: 0
+                    });
+                    
+                    let newGlobalPen = globalTotalPenalty + debt;
+                    await update(ref(db), {
+                        [`settings/${myMaster}/global_collected_penalties`]: newGlobalPen
+                    });
+                    
+                    showAppToast("تم تصفير المديونية وترحيلها بنجاح 💎");
+                    searchShopForReset();
+                } catch(e) {
+                    showAppToast("فشل التصفير", true);
+                } finally {
+                    document.getElementById('loader-overlay').style.display = 'none';
+                }
+            }
+        };
+
+        window.resetSpecificShopCancels = async function() {
+            if(!window.activeSmartShop) return;
+            if(confirm("هل تريد تصفير عداد الإلغاءات وإخفاء الطلبات الملغاة لهذه المنشأة؟")) {
+                const shopKey = window.activeSmartShop.Client_User || window.activeSmartShop.user;
+                const updates = {};
+                let count = 0;
+                allOrders.forEach(o => {
+                    const oUser = String(o.Shop_User || o.user || o.client || '').trim();
+                    if(oUser === shopKey && (o.OrderStatus === 'cancelled' || o.Shop_Status === 'cancelled' || o.Cancel_By === 'shop')) {
+                        updates[`orders/${o.Shop_Ord_ID || o.id}/OrderStatus`] = 'archived_and_deleted';
+                        updates[`orders/${o.Shop_Ord_ID || o.id}/FinancialStatus`] = 'confirmed';
+                        count++;
+                    }
+                });
+                
+                if(count > 0) {
+                    document.getElementById('loader-overlay').style.display = 'flex';
+                    try {
+                        await update(ref(db), updates);
+                        showAppToast(`تم تصفير ${count} طلب ملغي 🔄`);
+                        searchShopForReset();
+                    } catch(e) {
+                        showAppToast("خطأ في التصفير", true);
+                    } finally {
+                        document.getElementById('loader-overlay').style.display = 'none';
+                    }
+                } else {
+                    showAppToast("لا توجد طلبات ملغاة لتصفيرها", true);
+                }
+            }
+        };
+
+        window.resetGlobalDebt = async function() {
+            if(confirm("تحذير: سيتم تصفير مديونية الإلغاءات لجميع المنشآت التابعة لك دفعة واحدة وترحيلها للأرشيف، هل أنت متأكد؟")) {
+                let totalCleared = 0;
+                const updates = {};
+                const myMaster = currentUser.Client_User || currentUser.user;
+                const myShops = allData.filter(i => (i.Client_Type == 'shop' || i.type == 'shop' || i.role == 'shop') && (i.Client_Master === myMaster));
+                
+                myShops.forEach(u => {
+                    let debt = Math.abs(parseFloat(u.Penalty_Balance || 0));
+                    if(debt > 0) {
+                        totalCleared += debt;
+                        updates[`shops/${u.Client_User || u.user}/Penalty_Balance`] = 0;
+                    }
+                });
+                
+                if(totalCleared > 0) {
+                    document.getElementById('loader-overlay').style.display = 'flex';
+                    try {
+                        let newGlobalPen = globalTotalPenalty + totalCleared;
+                        updates[`settings/${myMaster}/global_collected_penalties`] = newGlobalPen;
+                        
+                        await update(ref(db), updates);
+                        showAppToast(`تم تصفير مديونيات بقيمة ${totalCleared.toFixed(2)} للجميع 💎`);
+                    } catch(e) {
+                        showAppToast("حدث خطأ", true);
+                    } finally {
+                        document.getElementById('loader-overlay').style.display = 'none';
+                    }
+                } else {
+                    showAppToast("لا توجد ديون لتصفيرها", true);
+                }
+            }
+        };
+
+        window.resetGlobalPenalty = async function() {
+            if(confirm("هل تريد تصفير عداد الإجمالي التاريخي للغرامات المحصلة والبدء من جديد؟")) {
+                const myMaster = currentUser.Client_User || currentUser.user;
+                document.getElementById('loader-overlay').style.display = 'flex';
+                try {
+                    await update(ref(db), {
+                        [`settings/${myMaster}/global_collected_penalties`]: 0
+                    });
+                    showAppToast("تم تصفير العداد 🔄");
+                } catch(e) {
+                    showAppToast("حدث خطأ", true);
+                } finally {
+                    document.getElementById('loader-overlay').style.display = 'none';
+                }
+            }
+        };
 
         // 🛑 دوال التحكم بريموت الإلغاء وتوجيه الخصم
         window.searchShopForCancelPolicy = function() {
@@ -757,14 +922,12 @@
                     const policy = snap.val();
                     document.getElementById('policy_allow_cancel').checked = policy.allow_cancel !== false;
                     document.getElementById('policy_grace_period').value = policy.grace_period || 0;
-                    document.getElementById('policy_fee_1').value = policy.fee_stage_1 || 0;
-                    document.getElementById('policy_fee_2').value = policy.fee_stage_2 || 0;
-                    document.getElementById('policy_deduct_main').checked = policy.deduct_from_main !== false; // المفتاح الجديد
+                    document.getElementById('policy_fee_1').value = policy.fee_stage_1 || policy.cancel_fee || 0;
+                    document.getElementById('policy_deduct_main').checked = policy.deduct_from_main !== false;
                 } else {
                     document.getElementById('policy_allow_cancel').checked = true;
                     document.getElementById('policy_grace_period').value = 0;
                     document.getElementById('policy_fee_1').value = 0;
-                    document.getElementById('policy_fee_2').value = 0;
                     document.getElementById('policy_deduct_main').checked = true;
                 }
             } catch(e) {
@@ -780,14 +943,12 @@
             const allowCancel = document.getElementById('policy_allow_cancel').checked;
             const grace = parseInt(document.getElementById('policy_grace_period').value) || 0;
             const fee1 = parseFloat(document.getElementById('policy_fee_1').value) || 0;
-            const fee2 = parseFloat(document.getElementById('policy_fee_2').value) || 0;
             const deductMain = document.getElementById('policy_deduct_main').checked;
 
             const policyData = {
                 allow_cancel: allowCancel,
                 grace_period: grace,
-                fee_stage_1: fee1,
-                fee_stage_2: fee2,
+                fee_stage_1: fee1, // Using fee_stage_1 for backward compatibility
                 deduct_from_main: deductMain,
                 updated_at: Date.now()
             };
