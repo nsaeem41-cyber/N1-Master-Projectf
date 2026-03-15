@@ -199,7 +199,6 @@
         .btn-status-arrived { background: linear-gradient(135deg, #06b6d4, #0891b2); } 
         .btn-status-completed { background: linear-gradient(135deg, var(--gold), #b48608); color: var(--primary); } 
         
-        /* 🛑 زر الإلغاء بعد الموافقة */
         .btn-cancel-after { background: transparent; color: var(--text-light); border: 1px solid #cbd5e1; padding: 8px; border-radius: 10px; font-size: 12px; margin-top: 10px; width: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s;}
         .btn-cancel-after:hover { background: #f1f5f9; color: var(--danger); border-color: #fca5a5; }
 
@@ -298,7 +297,7 @@
             <div style="font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 15px;">يرجى اختيار سبب الإلغاء بدقة:</div>
             
             <div class="quick-tags" id="cap-cancel-tags">
-                </div>
+            </div>
 
             <div id="cap-cancel-fee-warning" style="display:none; font-size:12px; font-weight:bold; color:var(--danger); background:#fef2f2; padding:10px; border-radius:8px; border:1px solid #fca5a5; margin-bottom:15px;">
                 ⚠️ تنبيه: هذا السبب يترتب عليه خصم غرامة بقيمة <span id="cap-cancel-fee-val">0</span> د.أ من محفظتك.
@@ -573,7 +572,6 @@
         let currentCaptain = null;
         let capNodeKey = null;
         
-        // 🛑 أضفنا خصائص الإلغاء للريموت وهي فارغة بدون تسعيرة ثابتة بالكود
         let systemSettings = { 
             order_timer: 10, 
             show_phone_numbers: false, 
@@ -583,7 +581,7 @@
             hotspot_interval: 5,
             allow_reject: true, 
             allow_cancel_after_accept: true, 
-            cancel_reasons: {} // رح تتعبى من الفايربيز
+            cancel_reasons: {} 
         };
         let orderTimers = {};
         
@@ -591,8 +589,8 @@
         window.hasActiveOrderInProgress = false;
         window.lastOrdersSnap = null;
         window.isHotspotUIVisible = true; 
-        window.previousOrders = {}; // 🛑 عشان الرصد الشبحي للإلغاء
-        window.isRejectingOrder = {}; // 🛑 عشان نميز الإلغاء الذاتي
+        window.previousOrders = {}; 
+        window.isRejectingOrder = {}; 
         window.isFinishingOrder = {}; 
         
         let hotspotSyncInterval = null;
@@ -718,7 +716,6 @@
             }
         });
 
-        // ================== نظام الإلغاء للمحفظة والكابتن ==================
         window.openCapCancelModal = function(ordId, radarId) {
             document.getElementById('cap_cancel_ord_id').value = ordId;
             document.getElementById('cap_cancel_radar_id').value = radarId;
@@ -726,7 +723,6 @@
             document.getElementById('cap_cancel_fee_amount').value = 0;
             document.getElementById('cap-cancel-fee-warning').style.display = 'none';
 
-            // 🛑 تعبئة الأسباب من نظام الإدارة بدون تسعيرة ثابتة بالكود
             const tagsCont = document.getElementById('cap-cancel-tags');
             tagsCont.innerHTML = '';
             
@@ -736,7 +732,12 @@
                     tagsCont.innerHTML += `<span class="tag" onclick="selectCapCancelReason(this, ${fee}, '${reason}')">${reason}</span>`;
                 });
             } else {
-                tagsCont.innerHTML = `<span class="tag" onclick="selectCapCancelReason(this, 0, 'أسباب أخرى')">أسباب أخرى</span>`;
+                tagsCont.innerHTML = `
+                    <span class="tag" onclick="selectCapCancelReason(this, 0, 'عطل بالمركبة')">عطل بالمركبة</span>
+                    <span class="tag" onclick="selectCapCancelReason(this, 0, 'ازدحام مروري شديد')">ازدحام مروري شديد</span>
+                    <span class="tag" onclick="selectCapCancelReason(this, 0, 'العميل لا يرد')">العميل لا يرد</span>
+                    <span class="tag" onclick="selectCapCancelReason(this, 0, 'المطعم مغلق')">المطعم مغلق</span>
+                `;
             }
 
             document.getElementById('cap-cancel-modal').style.display = 'flex';
@@ -774,21 +775,20 @@
             document.getElementById('cap-cancel-modal').style.display = 'none';
             window.showToast("⏳ جاري إلغاء الطلب...", false);
             
-            window.isRejectingOrder[ordId] = true; // 🛑 عشان ما يضرب الإشعار الشبحي
+            window.isRejectingOrder[ordId] = true;
 
             const up = {};
-            up[`assigned_orders/${capNodeKey}/${ordId}`] = null; // نشيله من عنده
+            up[`assigned_orders/${capNodeKey}/${ordId}`] = null; 
             
             if(rId && rId !== 'undefined') {
-                up[`orders/${rId}/OrderStatus`] = 'new'; // بنرجعه للرادار
+                up[`orders/${rId}/OrderStatus`] = 'new'; 
                 up[`orders/${rId}/Cap_Name`] = null;
                 up[`orders/${rId}/Cap_Phone`] = null;
                 up[`orders/${rId}/Cap_CarType`] = null;
                 up[`orders/${rId}/Cap_CarCode`] = null;
-                up[`radar_memory/${rId}/skipped/${capNodeKey}`] = true; // بنمنعه يرجعله
+                up[`radar_memory/${rId}/skipped/${capNodeKey}`] = true; 
             }
 
-            // 🛑 صعقة الخصم المباشر (رح تروح للمحفظة التراكمية تبعت الشركة المرجعية)
             if (fee > 0) {
                 const nb = (currentBal - fee).toFixed(2);
                 up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb); 
@@ -816,7 +816,6 @@
             }
         };
 
-        // 🛑 دالة إغلاق إشعار المطعم وتفريغ الشاشة
         window.closeShopCancelNotice = function() {
             document.getElementById('shop-cancelled-notice').style.display = 'none';
             window.hasActiveOrderInProgress = false;
@@ -824,7 +823,6 @@
             startHotspotSync();
         };
 
-        // ================== نظام التقييم الألماسي ==================
         window.openRatingModal = function(shopId) {
             document.getElementById('rating_shop_id').value = shopId || 'unknown';
             document.getElementById('current_rating_val').value = "0";
@@ -1064,7 +1062,6 @@
             } else { document.getElementById('hotspots-section').style.display = 'none'; }
         }
 
-        // 🛑 تفريغ الشاشة
         function clearScreenFromCancelledOrder(orderId) {
             const card = document.getElementById('card_' + orderId);
             if(card) {
@@ -1158,7 +1155,6 @@
                             </div>
                         `;
                         
-                        // 🛑 زر الرفض بناءً على الريموت
                         let rejectBtnHtml = systemSettings.allow_reject !== false ? `<button class="btn-action btn-reject" style="flex:1;" onclick="rejectOrd('${id}','${ord.linkedRadarId}')">❌ رفض</button>` : '';
 
                         btnAction = `
@@ -1167,7 +1163,6 @@
                                 ${rejectBtnHtml}
                             </div>`;
                     } else {
-                        // 🛑 الأزرار بعد الموافقة
                         if(ord.status === 'accepted') { btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}')">🏪 وصلت المنشأة</button>`; }
                         else if(ord.status === 'arrived_at_shop') { btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}')">🥡 استلمت الطلب</button>`; }
                         else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}')">🚗 في الطريق</button>`; }
@@ -1178,7 +1173,6 @@
                             btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}', ${commSafe}, ${valSafe}, ${feeSafe}, '${cleanNameForBtn}')">💎 تم التسليم بنجاح</button>`;
                         }
 
-                        // 🛑 إضافة زر (إلغاء الطلب بعد الموافقة) إذا مسموح من الريموت
                         if (systemSettings.allow_cancel_after_accept !== false && ord.status !== 'arrived_at_customer') {
                             btnAction += `<button class="btn-cancel-after" onclick="openCapCancelModal('${id}', '${ord.linkedRadarId}')">إلغاء الطلب 🛑</button>`;
                         }
@@ -1216,25 +1210,22 @@
                 });
             }
 
-            // 🛑 الرصد الشبحي: إذا طلب كان موجود واختفى فجأة (وما انرفض أو خلصناه إحنا)
             for (let oldId in window.previousOrders) {
                 if (!newOrdersObj[oldId]) {
                     const oldOrd = window.previousOrders[oldId];
                     if (!window.isFinishingOrder[oldId] && !window.isRejectingOrder[oldId] && oldOrd.status !== 'assigned' && oldOrd.status !== 'ringing') {
                         
-                        // 🛑 المنشأة أو الرادار ألغوه.. طلع الإشعار واسحب التعويض اللحظي
-                        document.getElementById('shop-cancel-reason-txt').innerText = `عذراً كابتن، تم إلغاء الطلب: ${oldOrd.restaurant ? oldOrd.restaurant.split('-')[0] : 'المنشأة'}`;
-                        
-                        let compAmount = 0;
-                        const logsRef = query(ref(db, `financial_logs/${capNodeKey}`), orderByChild('timestamp'), limitToLast(5));
-                        get(logsRef).then(lSnap => {
-                            if(lSnap.exists()) {
-                                Object.values(lSnap.val()).forEach(l => {
-                                    if(l.type === 'cancel_compensation' && (Date.now() - l.timestamp < 60000)) {
-                                        compAmount = parseFloat(l.amount || 0);
-                                    }
-                                });
+                        get(ref(db, `company_archives/${currentCaptain.company || currentCaptain.Client_Master || 'default'}/orders/${oldOrd.linkedRadarId || oldId}`)).then(archSnap => {
+                            let reasonText = 'غير محدد';
+                            let compAmount = 0;
+                            if(archSnap.exists()) {
+                                const archData = archSnap.val();
+                                reasonText = archData.cancel_reason || reasonText;
+                                compAmount = parseFloat(archData.fee || 0);
                             }
+                            
+                            document.getElementById('shop-cancel-reason-txt').innerText = `السبب: ${reasonText}`;
+                            
                             const compBox = document.getElementById('shop-cancel-compensation-txt');
                             if(compAmount > 0) {
                                 compBox.querySelector('span').innerText = compAmount.toFixed(2);
@@ -1308,7 +1299,6 @@
                         systemSettings.hotspot_count = parseInt(s.hotspot_count) || 5;
                         systemSettings.hotspot_interval = parseInt(s.hotspot_interval) || 5;
                         
-                        // 🛑 قراءة إعدادات الإلغاء والرفض من الريموت
                         if(s.allow_reject !== undefined) systemSettings.allow_reject = s.allow_reject;
                         if(s.allow_cancel_after_accept !== undefined) systemSettings.allow_cancel_after_accept = s.allow_cancel_after_accept;
                         if(s.cancel_reasons) systemSettings.cancel_reasons = s.cancel_reasons;
@@ -1527,7 +1517,9 @@
 
                         let isCancelledByCap = o.live_status === 'cancelled_by_shop' && o.cap && o.cap.includes('(ملغي)');
                         let cancelBadge = isCancelledByCap ? `<span style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:8px; border:1px dashed #fca5a5;">ألغيته - غرامة ${parseFloat(o.fee||0).toFixed(2)} د.أ</span>` : '';
+                        let cancelReasonHtml = o.live_status === 'cancelled_by_shop' ? `<div style="width:100%; color:var(--danger); font-size:11px; margin-top:5px;">سبب الإلغاء: ${o.cancel_reason || 'غير محدد'}</div>` : '';
                         let compensationHtml = (o.live_status === 'cancelled_by_shop' && !isCancelledByCap && parseFloat(o.fee||0) > 0) ? `<span style="color:var(--success); background:#f0fdf4; padding:4px 8px; border-radius:8px; border:1px dashed #bbf7d0;">+ تعويض ${parseFloat(o.fee||0).toFixed(2)} د.أ 💎</span>` : '';
+
                         let netHtml = isCancelledByCap ? `<span style="color:var(--danger); font-weight:900; font-size:18px;">-${parseFloat(o.fee||0).toFixed(2)} د.أ</span>` : `<span style="color:var(--success); font-weight:900; font-size:18px;">${parseFloat(o.net||0).toFixed(2)} د.أ</span>`;
 
                         return `
@@ -1545,6 +1537,7 @@
                             </div>
                             <div class="h-row" style="margin-top:8px; font-size:11px; gap:8px; justify-content: flex-start; flex-wrap: wrap;">
                                 ${pCodeHtml} ${discHtml} ${cancelBadge} ${compensationHtml}
+                                ${cancelReasonHtml}
                                 ${!isCancelledByCap && o.live_status !== 'cancelled_by_shop' ? `<span style="color:var(--danger); background:#fef2f2; padding:4px 8px; border-radius:8px; border:1px dashed #fecaca; margin-right: auto;">عمولة: ${parseFloat(o.comm||0).toFixed(2)} د.أ</span>` : ''}
                             </div>
                             <div class="h-row" style="margin-top:12px; border-top:1px dashed #cbd5e1; padding-top:12px;">
