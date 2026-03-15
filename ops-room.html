@@ -278,7 +278,7 @@
                     </div>
                 </div>
 
-                <div class="glass-panel rounded-3xl p-1">
+                <div class="glass-panel rounded-3xl p-1 mb-6">
                     <div class="p-4 md:p-5 border-b border-slate-800 bg-slate-900/40 rounded-t-3xl flex justify-between items-center">
                         <span class="font-bold text-white flex items-center gap-2"><i class="fas fa-users-cog text-blue-400"></i> السجل المركزي للكباتن</span>
                         <div class="flex gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
@@ -305,6 +305,91 @@
                                 <tr><td colspan="9" class="text-center p-8 text-slate-500 text-sm">جاري تحميل البيانات <i class="fas fa-spinner fa-spin ml-1"></i></td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-3xl p-6 border-t-4 border-t-purple-500 relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-5 border-b border-purple-500/20 pb-3">
+                        <div>
+                            <h2 class="text-lg font-black text-purple-400 mb-1 tracking-wide">رادار السيطرة الشاملة (حراس الجبل) 🦸‍♂️</h2>
+                            <div class="flex items-center gap-2 text-[9px] text-slate-500 font-mono tracking-widest"><span class="w-1.5 h-1.5 bg-purple-500 shadow-[0_0_5px_#a855f7] rounded-full inline-block"></span> CAPTAINS CONTROL</div>
+                        </div>
+                        <i class="fas fa-user-shield text-2xl text-purple-500/30"></i>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-purple-500/20">
+                            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                                <div class="flex-1">
+                                    <label class="block text-[11px] font-bold text-slate-300 mb-2">البحث برقم هاتف الكابتن 🔍</label>
+                                    <input type="tel" id="captain_search_phone" oninput="searchCaptainForPolicy()" class="w-full vault-input p-2.5 rounded-lg text-sm font-mono text-left" dir="ltr" placeholder="بحث فردي لتطبيق العقوبة...">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-[11px] font-bold text-slate-300 mb-2">الجهة المستهدفة بالقرارات 🎯</label>
+                                    <select id="captain_policy_target" onchange="loadCaptainPolicyForTarget()" class="w-full vault-input p-2.5 rounded-lg text-sm border-purple-500/30 bg-slate-800">
+                                        <option value="global">🌐 تطبيق على جميع الكباتن (تعميم عام)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-purple-500/10">
+                                <div>
+                                    <div class="text-sm font-bold text-white">زر الرفض ❌</div>
+                                    <div class="text-[9px] text-slate-400 mt-1">السماح للكابتن برفض الطلبات</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="policy_allow_reject" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-purple-500/10">
+                                <div>
+                                    <div class="text-sm font-bold text-white">الإلغاء بعد الموافقة 🛑</div>
+                                    <div class="text-[9px] text-slate-400 mt-1">السماح للكابتن بالتراجع بعد القبول</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="policy_allow_cancel_after_accept" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-yellow-500/20">
+                                <label class="block text-[11px] font-bold text-yellow-400 mb-1">الحد اليومي للتعويضات 📈</label>
+                                <div class="text-[8px] text-slate-500 mb-2">أقصى عدد للتعويضات المسموحة باليوم</div>
+                                <input type="number" id="policy_max_daily_comp" class="w-full vault-input p-2 rounded-lg text-xs bg-slate-800 text-center font-bold" placeholder="مثال: 3" min="0">
+                            </div>
+
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-indigo-500/20">
+                                <label class="block text-[11px] font-bold text-indigo-400 mb-1">فلتر الوقت الميت (دقائق) ⏱️</label>
+                                <div class="text-[8px] text-slate-500 mb-2">إلغاء أسرع من هذا الوقت لا يستحق التعويض</div>
+                                <input type="number" id="policy_dead_time" class="w-full vault-input p-2 rounded-lg text-xs bg-slate-800 text-center font-bold" placeholder="مثال: 2" min="0">
+                            </div>
+
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-orange-500/20 md:col-span-2">
+                                <label class="block text-[11px] font-bold text-orange-400 mb-1">عقوبة الإلغاء التتابعي 📉</label>
+                                <div class="text-[8px] text-slate-500 mb-2">إذا تكرر الإلغاء الذاتي (س) من المرات، يتم خصم غرامة بقيمة (ص)</div>
+                                <div class="flex gap-2">
+                                    <input type="number" id="policy_consecutive_cancels" class="w-1/2 vault-input p-2 rounded-lg text-xs bg-slate-800 text-center font-bold" placeholder="عدد المرات (مثال: 3)" min="1">
+                                    <input type="number" id="policy_strike_penalty" class="w-1/2 vault-input p-2 rounded-lg text-xs bg-slate-800 text-center font-bold text-red-400" placeholder="الغرامة د.أ" step="0.05" min="0">
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-red-500/20 md:col-span-2">
+                                <label class="block text-[11px] font-bold text-red-400 mb-1">عقوبة الإعدام البرمجي (الاحتيال) ⚡</label>
+                                <div class="text-[8px] text-slate-500 mb-2">إذا وصل الكابتن للحد الأقصى (الضربة الخماسية) أو تم اكتشاف تطابق هويته مع المنشأة</div>
+                                <div class="flex gap-2">
+                                    <input type="number" id="policy_max_strikes" class="flex-1 vault-input p-2 rounded-lg text-xs bg-slate-800 text-center font-bold" placeholder="حد الإيقاف (مثال: 5)" min="1">
+                                    <input type="number" id="policy_identity_penalty" class="flex-1 vault-input p-2 rounded-lg text-xs bg-slate-800 text-center font-bold text-red-500" placeholder="غرامة الاحتيال الذاتي د.أ" step="0.50" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="saveCaptainPolicy()" class="w-full bg-purple-600/90 hover:bg-purple-500 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-[0_4px_15px_rgba(168,85,247,0.3)] mt-4">
+                            حفظ وتفعيل سيطرة الكباتن 🚀
+                        </button>
                     </div>
                 </div>
             </div>
@@ -662,6 +747,7 @@
                     
                     renderRadar();
                     renderCaptainsList();
+                    populateCaptainPolicyDropdown(); // 🛑 تعبئة قائمة الريموت عند تحميل البيانات
                 }
             });
         }
@@ -711,6 +797,9 @@
             onValue(ref(db, `settings/${myMaster}/show_phone_numbers`), (snapshot) => {
                 document.getElementById('global_phone_toggle').checked = snapshot.exists() ? snapshot.val() : false;
             });
+            
+            // 🛑 تحميل إعدادات الريموت الجديد
+            loadCaptainPolicyForTarget();
         }
 
         window.toggleGlobalPhones = async function() {
@@ -770,13 +859,17 @@
                     }
 
                     if (ord.dispatch_method === 'Auto') {
-                        // 🛑 المداورة الذكية (الهروب التكتيكي): تخطي الطلب إذا خلص الوقت (6 ثواني) وتسجيله بالبلاك ليست فورا
+                        // 🛑 المداورة الذكية (الهروب التكتيكي المحدث): تخطي الطلب وتسجيله بالبلاك ليست فورا
                         if (ord.status === 'assigned' || ord.status === 'ringing') {
                             if (elapsed > remoteOrderTimer || isAppClosed) { 
-                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null;
+                                updates[`assigned_orders/${capKey}/${appOrdId}`] = null; // نسحبه من الكابتن
                                 if(ord.linkedRadarId) {
-                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true;
-                                    // التحديث اللحظي للذاكرة المرفقة لمنع اللوب اللانهائي
+                                    updates[`orders/${ord.linkedRadarId}/OrderStatus`] = 'new'; // نرجعه للرادار عشان يروح للي بعده
+                                    updates[`orders/${ord.linkedRadarId}/Cap_Name`] = null;
+                                    updates[`orders/${ord.linkedRadarId}/Cap_Phone`] = null;
+                                    
+                                    updates[`radar_memory/${ord.linkedRadarId}/skipped/${capKey}`] = true; // بلاك ليست للكابتن المفصول
+                                    
                                     if (!radarMemory[ord.linkedRadarId]) radarMemory[ord.linkedRadarId] = { skipped: {} };
                                     radarMemory[ord.linkedRadarId].skipped[capKey] = true;
                                 }
@@ -1655,6 +1748,113 @@
             if(confirm("حذف السجل نهائيا من الفايربيز؟")) {
                 let nodeFound = null; globalUsers.forEach(u => { if ((u.Cap_User === user || u.user === user) && u._node) { nodeFound = u._node; } });
                 if (nodeFound) { await remove(ref(db, `${nodeFound}/${user}`)); showAppNotification("تم الحذف الجذري"); }
+            }
+        };
+
+        // 🛑 تعبئة قائمة الريموت الجديد بالكباتن
+        window.populateCaptainPolicyDropdown = function() {
+            const select = document.getElementById('captain_policy_target');
+            if(!select || !currentUser) return;
+            const currentUserRef = currentUser.Client_User || currentUser.user;
+            
+            let optionsHtml = '<option value="global">🌐 تطبيق على جميع الكباتن (تعميم عام)</option>';
+            globalUsers.filter(u => (u.role === 'captain' || u.type === 'captain' || u.Cap_Role === 'captain') && checkCompanyMatch(u, activeCompanyName)).forEach(c => {
+                optionsHtml += `<option value="${c.Cap_User || c.user}">🦸‍♂️ ${c.Cap_Name || c.name}</option>`;
+            });
+            
+            const currentVal = select.value;
+            select.innerHTML = optionsHtml;
+            if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+                select.value = currentVal;
+            }
+        };
+
+        // 🛑 بحث كابتن للريموت الجديد
+        window.searchCaptainForPolicy = function() {
+            const phoneSearch = document.getElementById('captain_search_phone').value.trim();
+            const select = document.getElementById('captain_policy_target');
+            
+            if (phoneSearch.length >= 8) {
+                const foundCap = globalUsers.find(c => (c.Cap_Phone || c.phone || '').includes(phoneSearch) && (c.role === 'captain' || c.type === 'captain' || c.Cap_Role === 'captain'));
+                if (foundCap) {
+                    select.value = foundCap.Cap_User || foundCap.user;
+                    loadCaptainPolicyForTarget();
+                }
+            } else if (phoneSearch === "") {
+                select.value = 'global';
+                loadCaptainPolicyForTarget();
+            }
+        };
+
+        // 🛑 تحميل سياسة الكابتن للريموت الجديد
+        window.loadCaptainPolicyForTarget = async function() {
+            const target = document.getElementById('captain_policy_target').value;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            let path = target === 'global' ? `settings/${myMaster}` : `settings/captains/${target}`;
+
+            try {
+                const snap = await get(ref(db, path));
+                if (snap.exists()) {
+                    const s = snap.val();
+                    document.getElementById('policy_allow_reject').checked = s.allow_reject !== false;
+                    document.getElementById('policy_allow_cancel_after_accept').checked = s.allow_cancel_after_accept !== false;
+                    document.getElementById('policy_max_daily_comp').value = s.fraud_max_daily_compensations !== undefined ? s.fraud_max_daily_compensations : 3;
+                    document.getElementById('policy_dead_time').value = s.dead_time_minutes !== undefined ? s.dead_time_minutes : 2;
+                    document.getElementById('policy_consecutive_cancels').value = s.fraud_consecutive_cancels !== undefined ? s.fraud_consecutive_cancels : 3;
+                    document.getElementById('policy_strike_penalty').value = s.fraud_strike_penalty !== undefined ? s.fraud_strike_penalty : 5;
+                    document.getElementById('policy_max_strikes').value = s.fraud_max_strikes !== undefined ? s.fraud_max_strikes : 5;
+                    document.getElementById('policy_identity_penalty').value = s.fraud_identity_penalty !== undefined ? s.fraud_identity_penalty : 10;
+                } else {
+                    // القيم الافتراضية
+                    document.getElementById('policy_allow_reject').checked = true;
+                    document.getElementById('policy_allow_cancel_after_accept').checked = true;
+                    document.getElementById('policy_max_daily_comp').value = 3;
+                    document.getElementById('policy_dead_time').value = 2;
+                    document.getElementById('policy_consecutive_cancels').value = 3;
+                    document.getElementById('policy_strike_penalty').value = 5;
+                    document.getElementById('policy_max_strikes').value = 5;
+                    document.getElementById('policy_identity_penalty').value = 10;
+                }
+            } catch(e) {
+                showAppNotification("فشل استرجاع سياسة الكباتن", "error");
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
+        };
+
+        // 🛑 حفظ سياسة الكابتن من الريموت الجديد
+        window.saveCaptainPolicy = async function() {
+            const target = document.getElementById('captain_policy_target').value;
+            const myMaster = currentUser.Client_User || currentUser.user;
+            
+            const policyData = {
+                allow_reject: document.getElementById('policy_allow_reject').checked,
+                allow_cancel_after_accept: document.getElementById('policy_allow_cancel_after_accept').checked,
+                fraud_max_daily_compensations: parseInt(document.getElementById('policy_max_daily_comp').value) || 3,
+                dead_time_minutes: parseInt(document.getElementById('policy_dead_time').value) || 2,
+                fraud_consecutive_cancels: parseInt(document.getElementById('policy_consecutive_cancels').value) || 3,
+                fraud_strike_penalty: parseFloat(document.getElementById('policy_strike_penalty').value) || 5,
+                fraud_max_strikes: parseInt(document.getElementById('policy_max_strikes').value) || 5,
+                fraud_identity_penalty: parseFloat(document.getElementById('policy_identity_penalty').value) || 10,
+                updated_at: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                if (target === 'global') {
+                    await update(ref(db, `settings/${myMaster}`), policyData);
+                    showAppNotification("تم تعميم نظام السيطرة على جميع الكباتن 🚀", "success");
+                } else {
+                    await update(ref(db, `settings/captains/${target}`), policyData);
+                    showAppNotification("تم تخصيص السيطرة للكابتن المحدد 🚀", "success");
+                }
+            } catch (e) {
+                showAppNotification("تعطل نظام الإرسال", "error");
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
             }
         };
 
