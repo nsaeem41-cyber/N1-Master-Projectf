@@ -267,6 +267,12 @@
         .swal2-input:focus { border-color: var(--gold) !important; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1) !important; }
         .swal2-confirm { background: linear-gradient(135deg, var(--gold), #b48608) !important; color: black !important; font-weight: 900 !important; border-radius: 8px !important; }
         .swal2-cancel { background: #ef4444 !important; color: white !important; font-weight: 900 !important; border-radius: 8px !important; }
+        
+        /* كلاسات خاصة لريموت الكباتن في الإدارة العليا */
+        .vault-input-remote { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(212, 175, 55, 0.2); color: #F9E27D; font-family: monospace; transition: 0.3s; padding: 10px 15px; border-radius: 8px; width: 100%; outline: none;}
+        .vault-input-remote:focus { border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);}
+        .captain-remote-card { border-top-color: #a855f7 !important; background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(15,10,30,0.95)) !important; }
+        .captain-remote-header { color: #a855f7 !important; border-bottom-color: rgba(168, 85, 247, 0.2) !important; }
     </style>
 </head>
 <body>
@@ -340,7 +346,7 @@
 
         <div class="card" style="border-top-color: var(--success); padding: 15px 25px;">
             <div class="card-header" style="margin-bottom: 10px; border-bottom: none; padding-bottom: 0;">
-                <span style="color: var(--success); font-size: 14px;">🎛️ لوحة التحكم السريعة (Master Remote)</span>
+                <span style="color: var(--success); font-size: 14px;">🎛️ لوحة التحكم السريعة (المنشآت)</span>
             </div>
             
             <div class="slim-remote-bar">
@@ -386,6 +392,137 @@
                 </div>
 
                 <button class="btn-save-remote" onclick="saveMasterRemote()">بث 🚀</button>
+            </div>
+        </div>
+
+        <div class="card captain-remote-card p-6 border-t-4 relative overflow-hidden mt-6" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="card-header captain-remote-header mb-5 pb-3 flex justify-between items-start">
+                <div>
+                    <h2 class="text-lg font-black mb-1 tracking-wide" style="color: #a855f7;">رادار السيطرة الشاملة للكباتن (حراس الجبل) 🦸‍♂️</h2>
+                    <div class="flex items-center gap-2 text-[9px] text-slate-400 font-mono tracking-widest"><span class="w-1.5 h-1.5 bg-purple-500 shadow-[0_0_5px_#a855f7] rounded-full inline-block"></span> ADVANCED CAPTAINS CONTROL</div>
+                </div>
+                <i class="fas fa-user-shield text-2xl text-purple-500/30"></i>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-purple-500/20">
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-bold text-slate-300 mb-2">البحث برقم هاتف الكابتن 🔍</label>
+                            <input type="tel" id="captain_search_phone_policy" oninput="searchCaptainForPolicy()" class="vault-input-remote text-left" dir="ltr" placeholder="بحث فردي لتطبيق العقوبة أو عرض السجل...">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-bold text-slate-300 mb-2">الجهة المستهدفة بالقرارات 🎯</label>
+                            <select id="captain_policy_target" onchange="loadCaptainPolicyForTarget()" class="vault-input-remote border-purple-500/30 bg-slate-800">
+                                <option value="global">🌐 تطبيق على جميع الكباتن (تعميم عام)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="target_captain_stats" class="grid grid-cols-3 gap-2 bg-black/40 p-3 rounded-xl border border-purple-500/30 hidden mb-4">
+                        <div class="text-center border-l border-purple-500/30">
+                            <div class="text-[9px] text-slate-400 mb-1">الطلبات المرفوضة</div>
+                            <div class="text-sm font-black text-orange-400" id="stat_cap_rejected">0</div>
+                        </div>
+                        <div class="text-center border-l border-purple-500/30">
+                            <div class="text-[9px] text-slate-400 mb-1">الطلبات الملغاة</div>
+                            <div class="text-sm font-black text-red-400" id="stat_cap_cancelled">0</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-[9px] text-slate-400 mb-1">الغرامات المسحوبة</div>
+                            <div class="text-sm font-black text-rose-500" id="stat_cap_penalties">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-purple-500/10">
+                        <div>
+                            <div class="text-sm font-bold text-white">زر الرفض ❌</div>
+                            <div class="text-[9px] text-slate-400 mt-1">السماح للكابتن برفض الطلبات</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="policy_allow_reject" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-slate-900/50 p-4 rounded-xl border border-purple-500/10">
+                        <div>
+                            <div class="text-sm font-bold text-white">الإلغاء بعد الموافقة 🛑</div>
+                            <div class="text-[9px] text-slate-400 mt-1">السماح للكابتن بالتراجع بعد القبول</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="policy_allow_cancel_after_accept" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-indigo-500/20 md:col-span-2">
+                        <label class="block text-[11px] font-bold text-indigo-400 mb-2">وقت السماح وغرامة الإلغاء الذاتي ⏱️</label>
+                        <div class="text-[9px] text-slate-400 mb-3">إلغاء الطلب خلال فترة السماح مجاني، وبعدها يتم فرض الغرامة المحددة</div>
+                        <div class="flex gap-3 items-center">
+                            <input type="number" id="policy_cap_grace_period" class="w-1/2 vault-input-remote text-center" placeholder="وقت السماح (دقائق)" min="0">
+                            <input type="number" id="policy_cap_cancel_fee" class="w-1/2 vault-input-remote text-center text-red-400" placeholder="الغرامة د.أ" step="0.05" min="0">
+                        </div>
+                        <div class="flex items-center justify-between mt-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[11px] text-slate-300 font-bold">إيقاف الحساب تلقائياً عند الإلغاء وتجاوز وقت السماح؟</span>
+                            <label class="switch" style="transform: scale(0.85); margin:0;">
+                                <input type="checkbox" id="policy_suspend_on_cancel">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-yellow-500/20 md:col-span-2">
+                        <label class="block text-[11px] font-bold text-yellow-400 mb-2">الحد اليومي للتعويضات (من المطاعم) 📈</label>
+                        <div class="text-[9px] text-slate-400 mb-3">أقصى عدد للتعويضات المسموحة باليوم الواحد</div>
+                        <input type="number" id="policy_max_daily_comp" class="vault-input-remote text-center" placeholder="مثال: 3" min="0">
+                        <div class="flex items-center justify-between mt-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[11px] text-slate-300 font-bold">إيقاف الحساب تلقائياً عند تجاوز الحد؟</span>
+                            <label class="switch" style="transform: scale(0.85); margin:0;">
+                                <input type="checkbox" id="policy_suspend_on_comp">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-orange-500/20 md:col-span-2">
+                        <label class="block text-[11px] font-bold text-orange-400 mb-2">عقوبة الإلغاء التتابعي 📉</label>
+                        <div class="text-[9px] text-slate-400 mb-3">إذا تكرر الإلغاء الذاتي (س) من المرات ورا بعض، يتم خصم غرامة بقيمة (ص)</div>
+                        <div class="flex gap-3">
+                            <input type="number" id="policy_consecutive_cancels" class="w-1/2 vault-input-remote text-center" placeholder="عدد المرات (مثال: 3)" min="1">
+                            <input type="number" id="policy_strike_penalty" class="w-1/2 vault-input-remote text-center text-red-400" placeholder="الغرامة د.أ" step="0.05" min="0">
+                        </div>
+                        <div class="flex items-center justify-between mt-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[11px] text-slate-300 font-bold">إيقاف الحساب تلقائياً عند تطبيق هذه العقوبة؟</span>
+                            <label class="switch" style="transform: scale(0.85); margin:0;">
+                                <input type="checkbox" id="policy_suspend_on_consecutive">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-red-500/20 md:col-span-2">
+                        <label class="block text-[11px] font-bold text-red-400 mb-2">عقوبة الاحتيال وتطابق الهوية ⚡</label>
+                        <div class="text-[9px] text-slate-400 mb-3">تطبق إذا تم اكتشاف تطابق رقم الكابتن مع رقم المنشأة</div>
+                        <div class="flex gap-3">
+                            <input type="number" id="policy_max_strikes" class="flex-1 vault-input-remote text-center" placeholder="الحد الأقصى للإيقاف (مثال: 5)" min="1">
+                            <input type="number" id="policy_identity_penalty" class="flex-1 vault-input-remote text-center text-red-500" placeholder="غرامة الاحتيال الذاتي د.أ" step="0.50" min="0">
+                        </div>
+                        <div class="flex items-center justify-between mt-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-[11px] text-slate-300 font-bold">إيقاف الحساب تلقائياً عند اكتشاف الاحتيال وتطابق الأرقام؟</span>
+                            <label class="switch" style="transform: scale(0.85); margin:0;">
+                                <input type="checkbox" id="policy_suspend_on_fraud" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="confirmSaveCaptainPolicy()" style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 15px; width: 100%; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 20px rgba(168, 85, 247, 0.4); margin-top: 15px;">
+                    حفظ وتفعيل سيطرة الكباتن 🚀
+                </button>
             </div>
         </div>
 
@@ -501,6 +638,8 @@
         let allCaptainsData = [];
         let allFinancialLogsData = {};
         
+        let currentUserData = null; // To store admin details
+
         let revenueChartInst = null;
         let captainsChartInst = null;
         let penaltiesChartInst = null;
@@ -524,14 +663,17 @@
         window.onload = async function() {
             const sessionData = localStorage.getItem('currentUser');
             if (sessionData) {
-                const currentUser = JSON.parse(sessionData);
-                if (currentUser.role !== 'admin') {
+                currentUserData = JSON.parse(sessionData);
+                if (currentUserData.role !== 'admin') {
                     window.location.replace('index.html');
                     return;
                 }
+            } else {
+                window.location.replace('index.html');
+                return;
             }
             
-            initCharts(); // تهيئة الرسوم البيانية عند التحميل
+            initCharts(); 
             fetchData();
             loadMasterRemote();
         };
@@ -592,7 +734,6 @@
         function updateChartsData() {
             let revTotal = 0;
             allData.forEach(c => revTotal += Number(c.price || c.Client_Price || 0));
-            // محاكاة لحركة إيرادات (تقسيم وهمي لجمالية العرض حتى نربطه مستقبلاً بتواريخ)
             revenueChartInst.data.datasets[0].data = [revTotal*0.3, revTotal*0.5, revTotal*0.7, revTotal*0.8, revTotal*0.9, revTotal];
             revenueChartInst.update();
 
@@ -609,7 +750,7 @@
             let totalCompensationsPaid = 0;
             Object.values(allFinancialLogsData).forEach(logs => {
                 Object.values(logs).forEach(log => {
-                    if (log.type === 'cancel_penalty' || log.type === 'fraud_penalty') {
+                    if (log.type === 'cancel_penalty' || log.type === 'fraud_penalty' || log.type === 'captain_cancel_penalty') {
                         totalPenaltiesCollected += parseFloat(log.amount || 0);
                     } else if (log.type === 'compensation_payout') {
                         totalCompensationsPaid += parseFloat(log.amount || 0);
@@ -685,6 +826,7 @@
                     allCaptainsData = [];
                 }
                 updateChartsData();
+                populateCaptainPolicyDropdown(); // تعبئة الريموت الملكي
             });
 
             // جلب السجلات المالية للغرامات
@@ -696,15 +838,186 @@
                 }
                 updateChartsData();
             });
+            
+            // تحميل سياسة الكابتن المبدئية
+            loadCaptainPolicyForTarget();
         }
-        
+
+        // ================= دوال ريموت الكباتن المريخي (حراس الجبل) =================
+        window.populateCaptainPolicyDropdown = function() {
+            const select = document.getElementById('captain_policy_target');
+            if(!select || !currentUserData) return;
+            const currentUserRef = currentUserData.user || currentUserData.Client_User || 'admin';
+            
+            let optionsHtml = '<option value="global">🌐 تطبيق على جميع الكباتن (تعميم عام)</option>';
+            allCaptainsData.forEach(c => {
+                optionsHtml += `<option value="${c.Cap_User || c.user}">🦸‍♂️ ${c.Cap_Name || c.name}</option>`;
+            });
+            
+            const currentVal = select.value;
+            select.innerHTML = optionsHtml;
+            if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+                select.value = currentVal;
+            }
+        };
+
+        window.searchCaptainForPolicy = function() {
+            const phoneSearch = document.getElementById('captain_search_phone_policy').value.trim();
+            const select = document.getElementById('captain_policy_target');
+            
+            if (phoneSearch.length >= 8) {
+                const foundCap = allCaptainsData.find(c => (c.Cap_Phone || c.phone || '').includes(phoneSearch));
+                if (foundCap) {
+                    select.value = foundCap.Cap_User || foundCap.user;
+                    loadCaptainPolicyForTarget();
+                }
+            } else if (phoneSearch === "") {
+                select.value = 'global';
+                loadCaptainPolicyForTarget();
+            }
+        };
+
+        window.loadCaptainPolicyForTarget = async function() {
+            const target = document.getElementById('captain_policy_target').value;
+            const myMaster = currentUserData.user || currentUserData.Client_User || 'admin';
+            const statsBox = document.getElementById('target_captain_stats');
+            
+            // تحديث الإحصائيات الفردية للكابتن
+            if (target === 'global') {
+                statsBox.classList.add('hidden');
+            } else {
+                const cap = allCaptainsData.find(c => (c.Cap_User === target || c.user === target));
+                if(cap) {
+                    document.getElementById('stat_cap_rejected').innerText = cap.rejected_count || 0;
+                    document.getElementById('stat_cap_cancelled').innerText = cap.cancelled_count || cap.consecutive_cancels || 0;
+                    
+                    let penaltySum = 0;
+                    Object.values(allFinancialLogsData).forEach(logs => {
+                        Object.values(logs).forEach(l => {
+                            if(l.captainId === target && (l.type === 'captain_cancel_penalty' || l.type === 'fraud_penalty')) {
+                                penaltySum += parseFloat(l.amount || 0);
+                            }
+                        });
+                    });
+                    document.getElementById('stat_cap_penalties').innerText = penaltySum.toFixed(2);
+                    statsBox.classList.remove('hidden');
+                }
+            }
+            
+            document.getElementById('loader-overlay').style.display = 'flex';
+            let path = target === 'global' ? `settings/default` : `settings/captains/${target}`;
+
+            try {
+                const snap = await get(ref(db, path));
+                if (snap.exists()) {
+                    const s = snap.val();
+                    document.getElementById('policy_allow_reject').checked = s.allow_reject !== false;
+                    document.getElementById('policy_allow_cancel_after_accept').checked = s.allow_cancel_after_accept !== false;
+                    document.getElementById('policy_cap_grace_period').value = s.dead_time_minutes !== undefined ? s.dead_time_minutes : 2;
+                    document.getElementById('policy_cap_cancel_fee').value = s.fraud_strike_penalty !== undefined ? s.fraud_strike_penalty : 5;
+                    document.getElementById('policy_suspend_on_cancel').checked = s.suspend_on_cancel === true;
+                    
+                    document.getElementById('policy_max_daily_comp').value = s.fraud_max_daily_compensations !== undefined ? s.fraud_max_daily_compensations : 3;
+                    document.getElementById('policy_suspend_on_comp').checked = s.suspend_on_comp === true;
+                    
+                    document.getElementById('policy_consecutive_cancels').value = s.fraud_consecutive_cancels !== undefined ? s.fraud_consecutive_cancels : 3;
+                    document.getElementById('policy_strike_penalty').value = s.fraud_consecutive_penalty !== undefined ? s.fraud_consecutive_penalty : 5;
+                    document.getElementById('policy_suspend_on_consecutive').checked = s.suspend_on_consecutive === true;
+                    
+                    document.getElementById('policy_max_strikes').value = s.fraud_max_strikes !== undefined ? s.fraud_max_strikes : 5;
+                    document.getElementById('policy_identity_penalty').value = s.fraud_identity_penalty !== undefined ? s.fraud_identity_penalty : 10;
+                    document.getElementById('policy_suspend_on_fraud').checked = s.suspend_on_fraud !== false;
+                } else {
+                    // القيم الافتراضية
+                    document.getElementById('policy_allow_reject').checked = true;
+                    document.getElementById('policy_allow_cancel_after_accept').checked = true;
+                    document.getElementById('policy_cap_grace_period').value = 2;
+                    document.getElementById('policy_cap_cancel_fee').value = 5;
+                    document.getElementById('policy_suspend_on_cancel').checked = false;
+                    
+                    document.getElementById('policy_max_daily_comp').value = 3;
+                    document.getElementById('policy_suspend_on_comp').checked = false;
+                    
+                    document.getElementById('policy_consecutive_cancels').value = 3;
+                    document.getElementById('policy_strike_penalty').value = 5;
+                    document.getElementById('policy_suspend_on_consecutive').checked = false;
+                    
+                    document.getElementById('policy_max_strikes').value = 5;
+                    document.getElementById('policy_identity_penalty').value = 10;
+                    document.getElementById('policy_suspend_on_fraud').checked = true;
+                }
+            } catch(e) {
+                showNotification("فشل استرجاع سياسة الكباتن", "error");
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
+        };
+
+        window.confirmSaveCaptainPolicy = async function() {
+            const confirmResult = await Swal.fire({
+                title: 'حفظ وتفعيل سيطرة الكباتن',
+                text: "هل أنت متأكد من المضي قدماً في تطبيق هذه الإعدادات المريخية؟",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#a855f7',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'نعم، قم بالحفظ 🚀',
+                cancelButtonText: 'إلغاء الأمر'
+            });
+            if (confirmResult.isConfirmed) {
+                saveCaptainPolicy();
+            }
+        };
+
+        window.saveCaptainPolicy = async function() {
+            const target = document.getElementById('captain_policy_target').value;
+            const myMaster = currentUserData.user || currentUserData.Client_User || 'admin';
+            
+            const policyData = {
+                allow_reject: document.getElementById('policy_allow_reject').checked,
+                allow_cancel_after_accept: document.getElementById('policy_allow_cancel_after_accept').checked,
+                
+                dead_time_minutes: parseInt(document.getElementById('policy_cap_grace_period').value) || 2,
+                fraud_strike_penalty: parseFloat(document.getElementById('policy_cap_cancel_fee').value) || 5,
+                suspend_on_cancel: document.getElementById('policy_suspend_on_cancel').checked,
+                
+                fraud_max_daily_compensations: parseInt(document.getElementById('policy_max_daily_comp').value) || 3,
+                suspend_on_comp: document.getElementById('policy_suspend_on_comp').checked,
+                
+                fraud_consecutive_cancels: parseInt(document.getElementById('policy_consecutive_cancels').value) || 3,
+                fraud_consecutive_penalty: parseFloat(document.getElementById('policy_strike_penalty').value) || 5,
+                suspend_on_consecutive: document.getElementById('policy_suspend_on_consecutive').checked,
+                
+                fraud_max_strikes: parseInt(document.getElementById('policy_max_strikes').value) || 5,
+                fraud_identity_penalty: parseFloat(document.getElementById('policy_identity_penalty').value) || 10,
+                suspend_on_fraud: document.getElementById('policy_suspend_on_fraud').checked,
+                
+                updated_at: Date.now()
+            };
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            try {
+                if (target === 'global') {
+                    await update(ref(db, `settings/default`), policyData);
+                    showNotification("تم تعميم نظام السيطرة على جميع الكباتن 🚀", "success");
+                } else {
+                    await update(ref(db, `settings/captains/${target}`), policyData);
+                    showNotification("تم تخصيص السيطرة للكابتن المحدد 🚀", "success");
+                }
+            } catch (e) {
+                showNotification("تعطل نظام الإرسال", "error");
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+            }
+        };
+
+        // ================= دوال الإعلانات والشركات =================
         window.populateAdTargets = function() {
             const targetSelect = document.getElementById('ad_target');
-            
             targetSelect.innerHTML = '<option value="all">التعميم على كافة المشتركين (الكل)</option>';
             targetSelect.innerHTML += '<option value="clients_only">مخصص لشركات النقل فقط</option>';
             targetSelect.innerHTML += '<option value="shops_only">مخصص للمنشآت التجارية فقط</option>';
-            
             allData.forEach(c => {
                 const username = c.Client_User || c.user;
                 const name = c.Client_Name || c.name;
@@ -715,32 +1028,20 @@
         window.sendAnnouncement = async function() {
             const text = document.getElementById('ad_text').value.trim();
             if(!text) { showNotification("يرجى إدراج نص الإعلان قبل البث", "error"); return; }
-            
             const target = document.getElementById('ad_target').value;
             const type = document.getElementById('ad_type').value;
             const expireHours = document.getElementById('ad_expire').value;
-            
             let expireTimestamp = null;
-            if(expireHours !== 'permanent') {
-                expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
-            }
+            if(expireHours !== 'permanent') expireTimestamp = Date.now() + (parseInt(expireHours) * 60 * 60 * 1000);
             
-            const adData = {
-                text: text,
-                type: type,
-                expireAt: expireTimestamp,
-                timestamp: Date.now()
-            };
+            const adData = { text: text, type: type, expireAt: expireTimestamp, timestamp: Date.now() };
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            
             try {
-                if(target === 'all') {
-                    await update(ref(db, 'announcements/global'), adData);
-                } else if(target === 'clients_only' || target === 'shops_only') {
+                if(target === 'all') { await update(ref(db, 'announcements/global'), adData); } 
+                else if(target === 'clients_only' || target === 'shops_only') {
                     const roleTarget = target === 'clients_only' ? 'client' : 'shop';
-                    const usersRef = ref(db, 'users');
-                    const snap = await get(usersRef); 
+                    const snap = await get(ref(db, 'users')); 
                     if(snap.exists()) {
                         const updates = {};
                         Object.values(snap.val()).forEach(u => {
@@ -751,50 +1052,30 @@
                         });
                         if(Object.keys(updates).length > 0) await update(ref(db), updates);
                     }
-                } else {
-                    await update(ref(db, `announcements/users/${target}`), adData);
-                }
+                } else { await update(ref(db, `announcements/users/${target}`), adData); }
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
                 showNotification("تم تفعيل البث بنجاح واعتماده في النظام");
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                showNotification("فشل الاتصال بالخادم أثناء معالجة الأمر", "error");
-            }
+            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; showNotification("فشل الاتصال بالخادم", "error"); }
         }
 
         window.sendPopupAlert = async function() {
             const text = document.getElementById('ad_text').value.trim();
             if(!text) { showNotification("يرجى إدراج نص التنبيه قبل البث", "error"); return; }
             
-            const confirmResult = await Swal.fire({
-                title: 'تأكيد أمر طارئ',
-                text: "هذا الإجراء سيفرض النفاذ لشاشات المستخدمين المستهدفين فوراً هل أنت متأكد من المضي قدماً",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#475569',
-                confirmButtonText: 'نعم فرض التنبيه',
-                cancelButtonText: 'إلغاء الأمر'
-            });
+            const confirmResult = await Swal.fire({ title: 'تأكيد أمر طارئ', text: "هذا الإجراء سيفرض النفاذ لشاشات المستخدمين المستهدفين فوراً", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#475569', confirmButtonText: 'نعم فرض التنبيه', cancelButtonText: 'إلغاء' });
             if (!confirmResult.isConfirmed) return;
 
             const target = document.getElementById('ad_target').value;
-            const alertData = {
-                message: text,
-                timestamp: Date.now()
-            };
+            const alertData = { message: text, timestamp: Date.now() };
 
             document.getElementById('loader-overlay').style.display = 'flex';
-            
             try {
-                if(target === 'all') {
-                    await update(ref(db, 'alerts/global'), alertData);
-                } else if(target === 'clients_only' || target === 'shops_only') {
+                if(target === 'all') { await update(ref(db, 'alerts/global'), alertData); } 
+                else if(target === 'clients_only' || target === 'shops_only') {
                     const roleTarget = target === 'clients_only' ? 'client' : 'shop';
-                    const usersRef = ref(db, 'users');
-                    const snap = await get(usersRef); 
+                    const snap = await get(ref(db, 'users')); 
                     if(snap.exists()) {
                         const updates = {};
                         Object.values(snap.val()).forEach(u => {
@@ -805,30 +1086,16 @@
                         });
                         if(Object.keys(updates).length > 0) await update(ref(db), updates);
                     }
-                } else {
-                    await update(ref(db, `alerts/users/${target}`), alertData);
-                }
+                } else { await update(ref(db, `alerts/users/${target}`), alertData); }
                 
                 document.getElementById('loader-overlay').style.display = 'none';
                 document.getElementById('ad_text').value = '';
                 showNotification("تم إصدار التنبيه الطارئ لكافة الأهداف المحددة");
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                showNotification("تعذر إرسال التنبيه بسبب عطل فني", "error");
-            }
+            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; showNotification("تعذر إرسال التنبيه", "error"); }
         }
 
         window.clearAnnouncement = async function() {
-            const confirmResult = await Swal.fire({
-                title: 'إخلاء السجلات',
-                text: "سيتم مسح وإلغاء تنشيط كافة الإعلانات والتنبيهات الحالية هل نتابع",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d4af37',
-                cancelButtonColor: '#475569',
-                confirmButtonText: 'تنفيذ الإخلاء',
-                cancelButtonText: 'تراجع'
-            });
+            const confirmResult = await Swal.fire({ title: 'إخلاء السجلات', text: "سيتم مسح كافة الإعلانات والتنبيهات الحالية", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d4af37', cancelButtonColor: '#475569', confirmButtonText: 'تنفيذ الإخلاء', cancelButtonText: 'تراجع' });
             if (!confirmResult.isConfirmed) return;
 
             document.getElementById('loader-overlay').style.display = 'flex';
@@ -839,57 +1106,32 @@
 
         window.renderTables = function() {
             const clientTbody = document.getElementById('clients-table');
-            
             document.getElementById('count-clients').innerText = allData.length;
             document.getElementById('count-active').innerText = allData.filter(c => (c.status === 'active' || c.Client_Status === 'active')).length;
-            
-            let totalRev = 0;
-            allData.forEach(c => totalRev += Number(c.price || c.Client_Price || 0));
+            let totalRev = 0; allData.forEach(c => totalRev += Number(c.price || c.Client_Price || 0));
             document.getElementById('revenue-count').innerText = totalRev.toFixed(0);
-
             renderRows(clientTbody, allData.reverse());
         }
 
         window.renderRows = function(tbody, data) {
             if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">سجل قاعدة البيانات فارغ في الوقت الحالي</td></tr>'; return; }
             tbody.innerHTML = '';
-            
             data.forEach(item => {
-                const expiryDate = new Date(item.Client_Expiry || item.expiry);
-                expiryDate.setHours(23, 59, 59, 999);
-                const now = new Date();
-                const diffTime = expiryDate.getTime() - now.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const expiryDate = new Date(item.Client_Expiry || item.expiry); expiryDate.setHours(23, 59, 59, 999);
+                const diffDays = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                let statusBadge = '', daysText = '', currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
 
-                let statusBadge = '';
-                let daysText = '';
-
-                let currentStatus = String(item.Client_Status || item.status || 'active').trim().toLowerCase();
-
-                if (currentStatus === 'paused') {
-                    statusBadge = `<span class="status-badge status-paused">حظر مؤقت ❄️</span>`;
-                    daysText = `<span style="color:#fbbf24;">قيد الإيقاف</span>`;
-                } else if (diffDays <= 0) {
-                    statusBadge = `<span class="status-badge status-expired">نفاد الصلاحية ⛔</span>`;
-                    daysText = `<span style="color:#f87171; font-weight:bold;">مغلق</span>`;
-                    if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused');
-                } else {
-                    statusBadge = `<span class="status-badge status-active">مفعل ✅</span>`;
-                    daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم متبقي ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم متبقي</span>`;
-                }
+                if (currentStatus === 'paused') { statusBadge = `<span class="status-badge status-paused">حظر مؤقت ❄️</span>`; daysText = `<span style="color:#fbbf24;">قيد الإيقاف</span>`; } 
+                else if (diffDays <= 0) { statusBadge = `<span class="status-badge status-expired">نفاد الصلاحية ⛔</span>`; daysText = `<span style="color:#f87171; font-weight:bold;">مغلق</span>`; if(currentStatus === 'active') setStatusSilent(item.Client_User || item.user, 'paused'); } 
+                else { statusBadge = `<span class="status-badge status-active">مفعل ✅</span>`; daysText = diffDays <= 3 ? `<span style="color:#f87171;">${diffDays} يوم متبقي ⚠️</span>` : `<span style="color:#34d399;">${diffDays} يوم متبقي</span>`; }
                 
                 const adStatusText = item.can_send_ads ? `<br><span style="font-size:10px; color:#38bdf8; font-weight:bold;">📢 إعلان: متاح</span>` : `<br><span style="font-size:10px; color:#94a3b8; font-weight:bold;">🚫 إعلان: محجوب</span>`;
                 const remoteStatusText = item.can_use_remote ? `<br><span style="font-size:10px; color:#d4af37; font-weight:bold;">🪄 ريموت: متاح</span>` : `<br><span style="font-size:10px; color:#94a3b8; font-weight:bold;">🚫 ريموت: محجوب</span>`;
-
-                const toggleBtn = currentStatus === 'active'
-                    ? `<button class="action-btn act-freeze" title="تعليق النظام" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>`
-                    : `<button class="action-btn act-active" title="رفع التعليق" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
-
+                const toggleBtn = currentStatus === 'active' ? `<button class="action-btn act-freeze" title="تعليق النظام" onclick="setStatus('${item.Client_User || item.user}', 'active')">❄️</button>` : `<button class="action-btn act-active" title="رفع التعليق" onclick="setStatus('${item.Client_User || item.user}', 'paused')">▶️</button>`;
                 const adToggleBtn = `<button class="action-btn" style="background: ${item.can_send_ads ? '#475569' : '#0ea5e9'}" title="إدارة صلاحية الإعلانات" onclick="toggleAdPermission('${item.Client_User || item.user}', ${item.can_send_ads || false})">📢</button>`;
-                
                 const remoteToggleBtn = `<button class="action-btn" style="background: ${item.can_use_remote ? '#475569' : '#d4af37'}; color: ${item.can_use_remote ? '#fff' : '#000'};" title="إدارة باقة الرفاهية (الريموت)" onclick="toggleRemotePermission('${item.Client_User || item.user}', ${item.can_use_remote || false})">🪄</button>`;
 
-                const row = `
+                tbody.innerHTML += `
                     <tr>
                         <td style="color: var(--gold-light); font-size: 14px;"><b>${item.Client_Name || item.name}</b></td>
                         <td style="font-size:13px; color:#94a3b8; direction:ltr; text-align:right; font-weight: bold; font-family: monospace;">ID: ${item.Client_User || item.user}<br>KEY: ${item.Client_Pass || item.pass}</td>
@@ -908,251 +1150,98 @@
                         </td>
                     </tr>
                 `;
-                tbody.innerHTML += row;
             });
         }
 
         window.addUser = async function() {
-            const role = 'client';
-            const name = document.getElementById('new_name').value;
-            const user = document.getElementById('new_user').value.trim();
-            const pass = document.getElementById('new_pass').value;
-            const days = document.getElementById('sub_duration').value;
-            const price = document.getElementById('sub_price').value;
-            const canSendAds = document.getElementById('can_send_ads').checked;
-            const canUseRemote = document.getElementById('can_use_remote').checked;
+            const role = 'client', name = document.getElementById('new_name').value, user = document.getElementById('new_user').value.trim(), pass = document.getElementById('new_pass').value, days = document.getElementById('sub_duration').value, price = document.getElementById('sub_price').value, canSendAds = document.getElementById('can_send_ads').checked, canUseRemote = document.getElementById('can_use_remote').checked;
+            if (!name || !user || !pass || !price) { showNotification("جميع الحقول إلزامية", "error"); return; }
+            if (allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase())) { showNotification("معرف المستخدم محجوز مسبقاً", "error"); return; }
 
-            if (!name || !user || !pass || !price) { showNotification("جميع الحقول إلزامية لاستكمال التسجيل", "error"); return; }
-
-            const exists = allData.some(u => String(u.Client_User || u.user).toLowerCase() === user.toLowerCase());
-            if (exists) {
-                showNotification("معرف المستخدم محجوز مسبقاً يرجى توفير معرف بديل لضمان استقلالية البيانات", "error");
-                return;
-            }
-
-            const expDate = new Date();
-            expDate.setDate(expDate.getDate() + parseInt(days));
-            
+            const expDate = new Date(); expDate.setDate(expDate.getDate() + parseInt(days));
             document.getElementById('loader-overlay').style.display = 'flex';
             
-            const newItem = {
-                Client_ID: "CL_" + Date.now(),
-                Client_User: user,
-                Client_Pass: pass,
-                Client_Name: name,
-                Client_Role: role,
-                Client_Type: role,
-                Client_Status: "active",
-                Client_Expiry: expDate.toISOString().split('T')[0],
-                Client_Price: price,
-                Client_PlanDays: days,
-                can_send_ads: canSendAds,
-                can_use_remote: canUseRemote,
-                id: "CL_" + Date.now(), 
-                user: user, 
-                pass: pass, 
-                name: name, 
-                role: role, 
-                type: role, 
-                status: "active", 
-                expiry: expDate.toISOString().split('T')[0], 
-                price: price, 
-                plan_days: days
-            };
+            const newItem = { Client_ID: "CL_" + Date.now(), Client_User: user, Client_Pass: pass, Client_Name: name, Client_Role: role, Client_Type: role, Client_Status: "active", Client_Expiry: expDate.toISOString().split('T')[0], Client_Price: price, Client_PlanDays: days, can_send_ads: canSendAds, can_use_remote: canUseRemote, id: "CL_" + Date.now(), user: user, pass: pass, name: name, role: role, type: role, status: "active", expiry: expDate.toISOString().split('T')[0], price: price, plan_days: days };
 
             try {
                 await set(ref(db, 'users/' + user), newItem);
                 document.getElementById('loader-overlay').style.display = 'none';
-                showNotification("تم بنجاح تأمين وإنشاء بيئة العمل المستقلة للعميل الجديد");
-                
-                document.getElementById('new_name').value = '';
-                document.getElementById('new_user').value = '';
-                document.getElementById('new_pass').value = '';
-                document.getElementById('sub_price').value = '';
-                document.getElementById('can_send_ads').checked = true;
-                document.getElementById('can_use_remote').checked = false;
-            } catch(e) {
-                document.getElementById('loader-overlay').style.display = 'none';
-                showNotification("انقطاع في المسار المباشر نحو قاعدة البيانات", "error");
-            }
+                showNotification("تم بناء الكيان الجديد بنجاح");
+                document.getElementById('new_name').value = ''; document.getElementById('new_user').value = ''; document.getElementById('new_pass').value = ''; document.getElementById('sub_price').value = ''; document.getElementById('can_send_ads').checked = true; document.getElementById('can_use_remote').checked = false;
+            } catch(e) { document.getElementById('loader-overlay').style.display = 'none'; showNotification("خطأ بالاتصال", "error"); }
         }
 
         window.toggleAdPermission = async function(username, currentStatus) {
             const nextStatus = !currentStatus;
-            
-            const confirmResult = await Swal.fire({
-                title: 'تعديل الصلاحيات الإدارية',
-                text: nextStatus ? "هل نعتمد منح هذا الكيان حق استهداف الشبكة بالإعلانات" : "هل نعتمد حجب صلاحية الإعلانات عن هذا الكيان",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d4af37',
-                cancelButtonColor: '#475569',
-                confirmButtonText: 'تنفيذ وتأكيد',
-                cancelButtonText: 'إلغاء'
-            });
+            const confirmResult = await Swal.fire({ title: 'تعديل الصلاحيات الإدارية', text: nextStatus ? "منح حق استهداف الشبكة بالإعلانات؟" : "حجب صلاحية الإعلانات؟", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d4af37', cancelButtonColor: '#475569', confirmButtonText: 'تأكيد', cancelButtonText: 'إلغاء' });
             if (!confirmResult.isConfirmed) return;
-            
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { can_send_ads: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
-            showNotification("تم تحديث مستوى الصلاحيات بنجاح");
+            showNotification("تم تحديث مستوى الصلاحيات");
         }
 
         window.toggleRemotePermission = async function(username, currentStatus) {
             const nextStatus = !currentStatus;
-            
-            const confirmResult = await Swal.fire({
-                title: 'تعديل باقة الرفاهية',
-                text: nextStatus ? "هل توافق على منح هذا الكيان العصا السحرية (الريموت)؟" : "هل تريد سحب صلاحية استخدام الريموت من هذا الكيان؟",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d4af37',
-                cancelButtonColor: '#475569',
-                confirmButtonText: 'تأكيد العملية',
-                cancelButtonText: 'إلغاء'
-            });
+            const confirmResult = await Swal.fire({ title: 'تعديل باقة الرفاهية', text: nextStatus ? "منح الكيان حق استخدام الريموت؟" : "سحب صلاحية استخدام الريموت؟", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d4af37', cancelButtonColor: '#475569', confirmButtonText: 'تأكيد العملية', cancelButtonText: 'إلغاء' });
             if (!confirmResult.isConfirmed) return;
-            
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { can_use_remote: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
-            showNotification("تم تحديث باقة الرفاهية للشركة بنجاح 🪄");
+            showNotification("تم تحديث باقة الرفاهية 🪄");
         }
 
         window.editUser = async function(username, oldName, oldPass) {
-            const { value: formValues } = await Swal.fire({
-                title: 'تحرير هوية الكيان التجاري',
-                html:
-                  `<input id="swal-input1" class="swal2-input" style="width: 80%; margin-bottom: 10px;" value="${oldName}" placeholder="الاسم التجاري المعتمد">` +
-                  `<input id="swal-input2" class="swal2-input" style="width: 80%;" value="${oldPass}" placeholder="مفتاح التشفير (المرور)">`,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'اعتماد البيانات الجديدة',
-                cancelButtonText: 'تجاهل',
-                preConfirm: () => {
-                  return [
-                    document.getElementById('swal-input1').value,
-                    document.getElementById('swal-input2').value
-                  ]
-                }
-            });
-
-            if (!formValues) return;
-            const newName = formValues[0];
-            const newPass = formValues[1];
-
+            const { value: formValues } = await Swal.fire({ title: 'تحرير هوية الكيان', html: `<input id="swal-input1" class="swal2-input" style="width: 80%; margin-bottom: 10px;" value="${oldName}"><input id="swal-input2" class="swal2-input" style="width: 80%;" value="${oldPass}">`, focusConfirm: false, showCancelButton: true, confirmButtonText: 'اعتماد', cancelButtonText: 'إلغاء', preConfirm: () => { return [document.getElementById('swal-input1').value, document.getElementById('swal-input2').value] } });
+            if (!formValues) return; const newName = formValues[0]; const newPass = formValues[1];
             if (newName === oldName && newPass === oldPass) return;
-
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { name: newName, Client_Name: newName, pass: newPass, Client_Pass: newPass });
             document.getElementById('loader-overlay').style.display = 'none';
-            showNotification("تم توثيق التعديلات في السجل الرئيسي");
+            showNotification("تم توثيق التعديلات");
         }
 
         window.setStatus = async function(username, currentStatus) {
             const nextStatus = (currentStatus === 'active') ? 'paused' : 'active';
-            
-            const confirmResult = await Swal.fire({
-                title: 'إدارة مسارات الوصول',
-                text: nextStatus === 'paused' ? "سيؤدي هذا إلى طرد المستخدم فورا وتعليق كافة عملياته هل نعتمده" : "سيتم إعادة دمج هذا الكيان في دورة العمل النشطة نتابع",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: nextStatus === 'paused' ? '#ef4444' : '#10b981',
-                cancelButtonColor: '#475569',
-                confirmButtonText: 'موافقة وتنفيذ',
-                cancelButtonText: 'تراجع'
-            });
+            const confirmResult = await Swal.fire({ title: 'إدارة مسارات الوصول', text: nextStatus === 'paused' ? "سيتم تعليق عمليات المستخدم" : "سيتم إعادة تفعيل الكيان", icon: 'warning', showCancelButton: true, confirmButtonColor: nextStatus === 'paused' ? '#ef4444' : '#10b981', cancelButtonColor: '#475569', confirmButtonText: 'تنفيذ', cancelButtonText: 'تراجع' });
             if (!confirmResult.isConfirmed) return;
-            
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { status: nextStatus, Client_Status: nextStatus });
             document.getElementById('loader-overlay').style.display = 'none';
             showNotification("تم تطبيق بروتوكول مسارات الوصول");
         }
 
-        window.setStatusSilent = async function(username, newStatus) {
-            await update(ref(db, 'users/' + username), { status: newStatus, Client_Status: newStatus });
-        }
+        window.setStatusSilent = async function(username, newStatus) { await update(ref(db, 'users/' + username), { status: newStatus, Client_Status: newStatus }); }
 
         window.renewUser = async function(username) {
-            const { value: formValues } = await Swal.fire({
-                title: 'تجديد العقد وتمديد الصلاحية',
-                html:
-                  `<div style="text-align: right; margin-bottom: 5px; font-weight: bold; color: var(--gold); font-size: 14px;">عدد الأيام الإضافية</div>` +
-                  `<input id="swal-input1" type="number" class="swal2-input" style="width: 80%; margin-bottom: 15px;" value="30">` +
-                  `<div style="text-align: right; margin-bottom: 5px; font-weight: bold; color: var(--gold); font-size: 14px;">قيمة العقد للجرد المالي (ضع صفر إن كان إهداء)</div>` +
-                  `<input id="swal-input2" type="number" class="swal2-input" style="width: 80%;" value="0">`,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'تنفيذ التمديد',
-                cancelButtonText: 'إلغاء الأمر',
-                preConfirm: () => {
-                  return [
-                    document.getElementById('swal-input1').value,
-                    document.getElementById('swal-input2').value
-                  ]
-                }
-            });
-
-            if (!formValues) return;
-            const days = formValues[0];
-            const newPrice = formValues[1];
-
+            const { value: formValues } = await Swal.fire({ title: 'تجديد العقد', html: `<div style="color: var(--gold);">عدد الأيام</div><input id="swal-input1" type="number" class="swal2-input" style="width: 80%;" value="30"><div style="color: var(--gold);">قيمة العقد</div><input id="swal-input2" type="number" class="swal2-input" style="width: 80%;" value="0">`, focusConfirm: false, showCancelButton: true, confirmButtonText: 'تمديد', cancelButtonText: 'إلغاء', preConfirm: () => { return [document.getElementById('swal-input1').value, document.getElementById('swal-input2').value] } });
+            if (!formValues) return; const days = formValues[0]; const newPrice = formValues[1];
             if (!days || isNaN(days)) return;
-
-            const newDate = new Date();
-            newDate.setDate(newDate.getDate() + parseInt(days));
-            const formattedDate = newDate.toISOString().split('T')[0];
-
+            const newDate = new Date(); newDate.setDate(newDate.getDate() + parseInt(days)); const formattedDate = newDate.toISOString().split('T')[0];
             document.getElementById('loader-overlay').style.display = 'flex';
             await update(ref(db, 'users/' + username), { expiry: formattedDate, Client_Expiry: formattedDate, status: 'active', Client_Status: 'active', price: newPrice, Client_Price: newPrice });
             document.getElementById('loader-overlay').style.display = 'none';
-            showNotification("تم تحديث الدورة الزمنية وضبط القيود المالية");
+            showNotification("تم تحديث الدورة الزمنية");
         }
 
         window.deleteUser = async function(username) {
-            const confirmResult = await Swal.fire({
-                title: 'إنذار شطب نهائي',
-                text: "هذا الإجراء سيقوم باجتثاث كافة جذور الكيان وبياناته بلا رجعة هل تفوضني بهذا الأمر",
-                icon: 'error',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#475569',
-                confirmButtonText: 'تفويض الشطب النهائي',
-                cancelButtonText: 'إغلاق الإنذار'
-            });
+            const confirmResult = await Swal.fire({ title: 'إنذار شطب نهائي', text: "سيقوم باجتثاث كافة الجذور هل تفوضني", icon: 'error', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#475569', confirmButtonText: 'شطب', cancelButtonText: 'إغلاق' });
             if (!confirmResult.isConfirmed) return;
-
             document.getElementById('loader-overlay').style.display = 'flex';
             await remove(ref(db, 'users/' + username));
             document.getElementById('loader-overlay').style.display = 'none';
-            showNotification("تم إنهاء وتدمير القيود المرتبطة بهذا الكيان");
+            showNotification("تم التدمير");
         }
 
-        window.logout = function() { 
-            localStorage.removeItem('currentUser');
-            window.location.replace('index.html');
-        }
+        window.logout = function() { localStorage.removeItem('currentUser'); window.location.replace('index.html'); }
 
-        // ================= بروتوكول عرض ذكرى التأسيس (مموه وآمن) ================= //
-        window.closeBirthday = function() {
-            document.getElementById('birthday-overlay').style.display = 'none';
-        };
-
+        window.closeBirthday = function() { document.getElementById('birthday-overlay').style.display = 'none'; };
         window.checkRoyalBirthday = function() {
-            const today = new Date();
-            const month = today.getMonth(); 
-            const day = today.getDate();
-            
+            const today = new Date(), month = today.getMonth(), day = today.getDate();
             if (month === 2 && (day === 20 || day === 21)) {
-                const shown = localStorage.getItem('bday_shown_' + day);
-                if (!shown) {
-                    document.getElementById('birthday-overlay').style.display = 'flex';
-                    localStorage.setItem('bday_shown_' + day, 'true');
-                }
+                if (!localStorage.getItem('bday_shown_' + day)) { document.getElementById('birthday-overlay').style.display = 'flex'; localStorage.setItem('bday_shown_' + day, 'true'); }
             }
         };
-
         setTimeout(checkRoyalBirthday, 1000);
     </script>
 
