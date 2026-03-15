@@ -319,7 +319,7 @@
             <div style="font-size: 50px; margin-bottom: 10px;">🚫</div>
             <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">تم إلغاء الطلب من المنشأة</div>
             <div style="font-size: 14px; color: #64748b; font-weight: bold; margin-bottom: 15px;" id="shop-cancel-reason-txt">
-                عذراً كابتن، المنشأة قامت بإلغاء الطلب.
+                عذراً كابتن، تم إلغاء الطلب.
             </div>
             <div id="shop-cancel-compensation-txt" style="display:none; font-size: 16px; font-weight: 900; color: var(--success); background: #ecfdf5; padding: 10px; border-radius: 10px; border: 1px dashed #a7f3d0; margin-bottom: 20px;">
                 تم تعويض محفظتك بمبلغ <span>0</span> د.أ 💎
@@ -573,7 +573,7 @@
         let currentCaptain = null;
         let capNodeKey = null;
         
-        // 🛑 أضفنا خصائص الإلغاء للريموت
+        // 🛑 أضفنا خصائص الإلغاء للريموت وهي فارغة بدون تسعيرة ثابتة بالكود
         let systemSettings = { 
             order_timer: 10, 
             show_phone_numbers: false, 
@@ -581,14 +581,9 @@
             anti_vpn: false, 
             hotspot_count: 5, 
             hotspot_interval: 5,
-            allow_reject: true, // 🛑 زر الرفض
-            allow_cancel_after_accept: true, // 🛑 زر الإلغاء بعد الموافقة
-            cancel_reasons: {
-                "عطل بالمركبة": 0,
-                "المطعم مغلق": 0,
-                "الزبون ألغى الطلب": 0,
-                "تأخير غير مبرر": 0.50 // مثال: غرامة نص دينار
-            }
+            allow_reject: true, 
+            allow_cancel_after_accept: true, 
+            cancel_reasons: {} // رح تتعبى من الفايربيز
         };
         let orderTimers = {};
         
@@ -596,6 +591,9 @@
         window.hasActiveOrderInProgress = false;
         window.lastOrdersSnap = null;
         window.isHotspotUIVisible = true; 
+        window.previousOrders = {}; // 🛑 عشان الرصد الشبحي للإلغاء
+        window.isRejectingOrder = {}; // 🛑 عشان نميز الإلغاء الذاتي
+        window.isFinishingOrder = {}; 
         
         let hotspotSyncInterval = null;
         let lastKnownIntervalValue = 5; 
@@ -728,14 +726,14 @@
             document.getElementById('cap_cancel_fee_amount').value = 0;
             document.getElementById('cap-cancel-fee-warning').style.display = 'none';
 
-            // 🛑 تعبئة الأسباب من نظام الإدارة
+            // 🛑 تعبئة الأسباب من نظام الإدارة بدون تسعيرة ثابتة بالكود
             const tagsCont = document.getElementById('cap-cancel-tags');
             tagsCont.innerHTML = '';
             
-            if (systemSettings.cancel_reasons) {
+            if (systemSettings.cancel_reasons && Object.keys(systemSettings.cancel_reasons).length > 0) {
                 Object.keys(systemSettings.cancel_reasons).forEach(reason => {
                     const fee = parseFloat(systemSettings.cancel_reasons[reason] || 0);
-                    tagsCont.innerHTML += `<span class="tag" onclick="selectCapCancelReason(this, ${fee}, '${reason}')">${reason} ${fee>0 ? '💰' : ''}</span>`;
+                    tagsCont.innerHTML += `<span class="tag" onclick="selectCapCancelReason(this, ${fee}, '${reason}')">${reason}</span>`;
                 });
             } else {
                 tagsCont.innerHTML = `<span class="tag" onclick="selectCapCancelReason(this, 0, 'أسباب أخرى')">أسباب أخرى</span>`;
@@ -775,6 +773,8 @@
 
             document.getElementById('cap-cancel-modal').style.display = 'none';
             window.showToast("⏳ جاري إلغاء الطلب...", false);
+            
+            window.isRejectingOrder[ordId] = true; // 🛑 عشان ما يضرب الإشعار الشبحي
 
             const up = {};
             up[`assigned_orders/${capNodeKey}/${ordId}`] = null; // نشيله من عنده
@@ -783,10 +783,12 @@
                 up[`orders/${rId}/OrderStatus`] = 'new'; // بنرجعه للرادار
                 up[`orders/${rId}/Cap_Name`] = null;
                 up[`orders/${rId}/Cap_Phone`] = null;
+                up[`orders/${rId}/Cap_CarType`] = null;
+                up[`orders/${rId}/Cap_CarCode`] = null;
                 up[`radar_memory/${rId}/skipped/${capNodeKey}`] = true; // بنمنعه يرجعله
             }
 
-            // 🛑 صعقة الخصم المباشر
+            // 🛑 صعقة الخصم المباشر (رح تروح للمحفظة التراكمية تبعت الشركة المرجعية)
             if (fee > 0) {
                 const nb = (currentBal - fee).toFixed(2);
                 up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb); 
@@ -814,9 +816,9 @@
             }
         };
 
+        // 🛑 دالة إغلاق إشعار المطعم وتفريغ الشاشة
         window.closeShopCancelNotice = function() {
             document.getElementById('shop-cancelled-notice').style.display = 'none';
-            // نأمر الشاشة تتنظف
             window.hasActiveOrderInProgress = false;
             document.getElementById('status-toggle-section').style.display = 'flex';
             startHotspotSync();
@@ -1001,6 +1003,7 @@
         }
         window.rejectOrderAuto = async function(orderId) {
             if(orderTimers[orderId]) clearInterval(orderTimers[orderId]);
+            window.isRejectingOrder[orderId] = true;
             await update(ref(db), {[`assigned_orders/${capNodeKey}/${orderId}/status`]: 'timeout'});
             window.showToast("انتهى الوقت تم سحب الطلب ⏳", true);
         };
@@ -1008,6 +1011,7 @@
             if(orderTimers[id]) { clearInterval(orderTimers[id]); delete orderTimers[id]; }
             if(orderTimers[`seen_${id}`]) delete orderTimers[`seen_${id}`];
             const card = document.getElementById('card_' + id); if(card) card.style.display = 'none'; 
+            window.isRejectingOrder[id] = true;
             await update(ref(db), {[`assigned_orders/${capNodeKey}/${id}/status`]: 'rejected'});
             const aud = document.getElementById('order-ringtone'); if(aud) { aud.pause(); aud.currentTime = 0; }
             window.showToast("تم رفض الطلب ❌");
@@ -1060,7 +1064,7 @@
             } else { document.getElementById('hotspots-section').style.display = 'none'; }
         }
 
-        // 🛑 دالة تفريغ الشاشة في حال الإلغاء
+        // 🛑 تفريغ الشاشة
         function clearScreenFromCancelledOrder(orderId) {
             const card = document.getElementById('card_' + orderId);
             if(card) {
@@ -1078,6 +1082,7 @@
             const hsSec = document.getElementById('hotspots-section');
 
             let html = '', hasActive = false, ring = false;
+            let newOrdersObj = {};
 
             if(!currentCaptain || currentCaptain.app_status !== 'online') {
                 if(cont) cont.innerHTML = `
@@ -1098,27 +1103,12 @@
             }
 
             if(snap && snap.exists()) {
-                Object.entries(snap.val()).forEach(([id, ord]) => {
-                    if(ord.status === 'completed' || ord.status === 'timeout' || ord.status === 'rejected') return;
-                    
-                    // 🛑 إذا الطلب ملغي من المنشأة، نعرض التنبيه وننظف الشاشة
-                    if(ord.status === 'cancelled_by_shop') {
-                        document.getElementById('shop-cancel-reason-txt').innerText = `عذراً كابتن، المنشأة قامت بإلغاء الطلب: ${ord.restaurant}`;
-                        const compBox = document.getElementById('shop-cancel-compensation-txt');
-                        if (ord.compensation_fee > 0) {
-                            compBox.querySelector('span').innerText = ord.compensation_fee.toFixed(2);
-                            compBox.style.display = 'block';
-                        } else {
-                            compBox.style.display = 'none';
-                        }
-                        document.getElementById('shop-cancelled-notice').style.display = 'flex';
-                        
-                        // حذف الطلب من عند الكابتن عشان ما يضل يرن أو معلق
-                        update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null});
-                        clearScreenFromCancelledOrder(id);
-                        return;
-                    }
+                snap.forEach(child => {
+                    newOrdersObj[child.key] = child.val();
+                });
 
+                Object.entries(newOrdersObj).forEach(([id, ord]) => {
+                    if(ord.status === 'completed' || ord.status === 'timeout' || ord.status === 'rejected') return;
                     hasActive = true;
                     
                     let timeLeft = 0;
@@ -1225,6 +1215,41 @@
                     if(isIncoming) { setTimeout(() => startVisualTimer(id, timeLeft, systemSettings.order_timer), 50); }
                 });
             }
+
+            // 🛑 الرصد الشبحي: إذا طلب كان موجود واختفى فجأة (وما انرفض أو خلصناه إحنا)
+            for (let oldId in window.previousOrders) {
+                if (!newOrdersObj[oldId]) {
+                    const oldOrd = window.previousOrders[oldId];
+                    if (!window.isFinishingOrder[oldId] && !window.isRejectingOrder[oldId] && oldOrd.status !== 'assigned' && oldOrd.status !== 'ringing') {
+                        
+                        // 🛑 المنشأة أو الرادار ألغوه.. طلع الإشعار واسحب التعويض اللحظي
+                        document.getElementById('shop-cancel-reason-txt').innerText = `عذراً كابتن، تم إلغاء الطلب: ${oldOrd.restaurant ? oldOrd.restaurant.split('-')[0] : 'المنشأة'}`;
+                        
+                        let compAmount = 0;
+                        const logsRef = query(ref(db, `financial_logs/${capNodeKey}`), orderByChild('timestamp'), limitToLast(5));
+                        get(logsRef).then(lSnap => {
+                            if(lSnap.exists()) {
+                                Object.values(lSnap.val()).forEach(l => {
+                                    if(l.type === 'cancel_compensation' && (Date.now() - l.timestamp < 60000)) {
+                                        compAmount = parseFloat(l.amount || 0);
+                                    }
+                                });
+                            }
+                            const compBox = document.getElementById('shop-cancel-compensation-txt');
+                            if(compAmount > 0) {
+                                compBox.querySelector('span').innerText = compAmount.toFixed(2);
+                                compBox.style.display = 'block';
+                            } else {
+                                compBox.style.display = 'none';
+                            }
+                            if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
+                            document.getElementById('shop-cancelled-notice').style.display = 'flex';
+                            clearScreenFromCancelledOrder(oldId);
+                        });
+                    }
+                }
+            }
+            window.previousOrders = newOrdersObj;
             
             window.hasActiveOrdersLoaded = true; 
             window.hasActiveOrderInProgress = hasActive;
@@ -1440,8 +1465,6 @@
 
             let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
             let discountAmount = 0; let promoCode = "---"; let fullRestName = rName || '';
-
-            // 🛑 حفظ رقم المنشأة في أرشيف الكابتن (مخفي، بس للتوثيق الإداري إذا لزم)
             let shopPhoneToSave = '---';
 
             if(rId && rId!=='undefined') {
@@ -1469,7 +1492,7 @@
                 promo: promoCode, 
                 net: (parseFloat(fee||0) - parseFloat(comm||0)), 
                 rest: fullRestName, 
-                shop_phone: shopPhoneToSave, // 🛑 الرقم بينحفظ للتوثيق
+                shop_phone: shopPhoneToSave, 
                 appOrdId: id,
                 orderId: rId && rId!=='undefined' ? rId : id,
                 live_status: 'delivered',
@@ -1502,13 +1525,9 @@
                         const pCodeHtml = o.promo && o.promo !== "---" ? `<span style="background:#e0e7ff; color:#4338ca; padding:4px 8px; border-radius:8px;">كوبون ${o.promo}</span>` : '';
                         const discHtml = parseFloat(o.discount) > 0 ? `<span style="color:var(--danger); background:#fef2f2; padding:4px 8px; border-radius:8px;">خصم ${parseFloat(o.discount).toFixed(2)} د.أ</span>` : '';
 
-                        // 🛑 إظهار الطلبات اللي لغاها الكابتن ودفع غرامتها
                         let isCancelledByCap = o.live_status === 'cancelled_by_shop' && o.cap && o.cap.includes('(ملغي)');
                         let cancelBadge = isCancelledByCap ? `<span style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:8px; border:1px dashed #fca5a5;">ألغيته - غرامة ${parseFloat(o.fee||0).toFixed(2)} د.أ</span>` : '';
-
-                        // 🛑 إظهار التعويض إذا المطعم ألغى الطلب
                         let compensationHtml = (o.live_status === 'cancelled_by_shop' && !isCancelledByCap && parseFloat(o.fee||0) > 0) ? `<span style="color:var(--success); background:#f0fdf4; padding:4px 8px; border-radius:8px; border:1px dashed #bbf7d0;">+ تعويض ${parseFloat(o.fee||0).toFixed(2)} د.أ 💎</span>` : '';
-
                         let netHtml = isCancelledByCap ? `<span style="color:var(--danger); font-weight:900; font-size:18px;">-${parseFloat(o.fee||0).toFixed(2)} د.أ</span>` : `<span style="color:var(--success); font-weight:900; font-size:18px;">${parseFloat(o.net||0).toFixed(2)} د.أ</span>`;
 
                         return `
