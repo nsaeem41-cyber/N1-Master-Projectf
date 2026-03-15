@@ -313,6 +313,17 @@
         </div>
     </div>
 
+    <div id="fraud-logout-modal" class="custom-dialog-overlay" style="z-index: 9999999;">
+        <div class="alert-modal-box" style="border-top-color: var(--danger); padding: 30px;">
+            <div style="font-size: 50px; margin-bottom: 10px;">⚠️</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--danger); margin-bottom: 10px;">تم إيقاف حسابك مؤقتاً</div>
+            <div style="font-size: 14px; color: #64748b; font-weight: bold; margin-bottom: 20px;">
+                اكتشف النظام نشاطاً غير طبيعي ومحاولات تلاعب مالي. يرجى مراجعة إدارة N One فوراً.
+            </div>
+            <button class="btn-action" style="background: var(--danger); color: white; width: 100%;" onclick="logout()">خروج 🔒</button>
+        </div>
+    </div>
+
     <div id="shop-cancelled-notice" class="custom-dialog-overlay" style="z-index: 999999;">
         <div class="alert-modal-box" style="border-top-color: var(--gold); padding: 30px;">
             <div style="font-size: 50px; margin-bottom: 10px;">🚫</div>
@@ -579,10 +590,19 @@
             anti_vpn: false, 
             hotspot_count: 5, 
             hotspot_interval: 5,
+            
+            // 🛑 مفاتيح "حراس الجبل" من الريموت
             allow_reject: true, 
             allow_cancel_after_accept: true, 
-            cancel_reasons: {} 
+            cancel_reasons: {}, 
+            fraud_max_daily_compensations: 3,
+            fraud_consecutive_cancels: 3,
+            fraud_max_strikes: 5,
+            fraud_strike_penalty: 5.00,
+            fraud_identity_penalty: 10.00,
+            dead_time_minutes: 2
         };
+        
         let orderTimers = {};
         
         window.hasActiveOrdersLoaded = false;
@@ -716,6 +736,55 @@
             }
         });
 
+        // 🛑 دالة الفحص الذكي لتطابق الهوية (شطب الصفر)
+        function checkIdentityFraud(shopPhone) {
+            if (!shopPhone || shopPhone === '---' || !currentCaptain) return false;
+            let capPhone = currentCaptain.Cap_Phone || currentCaptain.phone || '';
+            // نحذف أول صفر من رقم الكابتن
+            if (capPhone.startsWith('0')) capPhone = capPhone.substring(1);
+            // ونشيل أي فواصل أو رموز
+            capPhone = capPhone.replace(/\D/g, '');
+            let sPhone = shopPhone.replace(/\D/g, '');
+            return capPhone === sPhone;
+        }
+
+        // 🛑 دالة تسجيل المخالفات التراكمية والتتابعية
+        async function logFraudStrike(reason, penaltyAmount) {
+            let strikes = parseInt(currentCaptain.fraud_strikes || 0) + 1;
+            const up = {};
+            up[`captains/${capNodeKey}/fraud_strikes`] = strikes;
+            
+            const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+            if (penaltyAmount > 0) {
+                const nb = (currentBal - penaltyAmount).toFixed(2);
+                up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb); 
+                up[`captains/${capNodeKey}/balance`] = parseFloat(nb);
+                
+                let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                const txId = "F_" + Date.now();
+                up[`financial_logs/${master}/${txId}`] = {
+                    type: 'fraud_penalty',
+                    amount: penaltyAmount,
+                    captainId: capNodeKey,
+                    reason: reason,
+                    timestamp: Date.now()
+                };
+            }
+
+            // 🛑 الصعقة الخماسية (الإعدام البرمجي)
+            if (strikes >= (systemSettings.fraud_max_strikes || 5)) {
+                up[`captains/${capNodeKey}/Cap_Status`] = 'paused';
+                up[`captains/${capNodeKey}/status`] = 'paused';
+                up[`captains/${capNodeKey}/app_status`] = 'offline';
+                await update(ref(db), up);
+                document.getElementById('fraud-logout-modal').style.display = 'flex';
+                return true; // يعني تم إيقافه
+            } else {
+                await update(ref(db), up);
+                return false;
+            }
+        }
+
         window.openCapCancelModal = function(ordId, radarId) {
             document.getElementById('cap_cancel_ord_id').value = ordId;
             document.getElementById('cap_cancel_radar_id').value = radarId;
@@ -787,6 +856,19 @@
                 up[`orders/${rId}/Cap_CarType`] = null;
                 up[`orders/${rId}/Cap_CarCode`] = null;
                 up[`radar_memory/${rId}/skipped/${capNodeKey}`] = true; 
+            }
+
+            // 🛑 حارس التتابع اليومي للإلغاء الذاتي
+            let consecutiveCancels = parseInt(currentCaptain.consecutive_cancels || 0) + 1;
+            let cancelDate = currentCaptain.last_cancel_date || new Date().toDateString();
+            if(cancelDate !== new Date().toDateString()) { consecutiveCancels = 1; }
+            
+            up[`captains/${capNodeKey}/consecutive_cancels`] = consecutiveCancels;
+            up[`captains/${capNodeKey}/last_cancel_date`] = new Date().toDateString();
+
+            if (consecutiveCancels >= (systemSettings.fraud_consecutive_cancels || 3)) {
+                up[`captains/${capNodeKey}/consecutive_cancels`] = 0; // تصفير بعد العقوبة
+                await logFraudStrike("تكرار الإلغاء الذاتي المريب", systemSettings.fraud_strike_penalty || 5);
             }
 
             if (fee > 0) {
@@ -1224,15 +1306,59 @@
                                 compAmount = parseFloat(archData.fee || 0);
                             }
                             
-                            document.getElementById('shop-cancel-reason-txt').innerText = `السبب: ${reasonText}`;
-                            
-                            const compBox = document.getElementById('shop-cancel-compensation-txt');
+                            // 🛑 الحارس الألماسي (تطابق الهوية لفحص الاحتيال)
+                            if (checkIdentityFraud(oldOrd.shop_phone)) {
+                                logFraudStrike("احتيال وتطابق أرقام", systemSettings.fraud_identity_penalty || 10).then(isBanned => {
+                                    if(!isBanned) {
+                                        window.showToast("تم إلغاء التعويض بسبب تطابق رقمك مع المنشأة 🚨", true);
+                                    }
+                                });
+                                clearScreenFromCancelledOrder(oldId);
+                                return; // بنوقف هون وما بنعطيه تعويض
+                            }
+
+                            // 🛑 الحارس الزمني (الوقت الميت)
+                            let timeDiffMinutes = (Date.now() - oldOrd.timestamp) / 60000;
+                            let allowedDeadTime = systemSettings.dead_time_minutes || 2;
+
+                            if (timeDiffMinutes < allowedDeadTime) {
+                                document.getElementById('shop-cancel-reason-txt').innerText = `السبب: ${reasonText} (إلغاء سريع جداً - لا يوجد تعويض)`;
+                                document.getElementById('shop-cancel-compensation-txt').style.display = 'none';
+                                document.getElementById('shop-cancelled-notice').style.display = 'flex';
+                                clearScreenFromCancelledOrder(oldId);
+                                return;
+                            }
+
+                            // 🛑 الحارس التراكمي (الحد اليومي للتعويضات)
+                            let dailyComps = parseInt(currentCaptain.daily_compensations || 0);
+                            let compDate = currentCaptain.last_comp_date || new Date().toDateString();
+                            if(compDate !== new Date().toDateString()) { dailyComps = 0; }
+
+                            if (dailyComps >= (systemSettings.fraud_max_daily_compensations || 3)) {
+                                document.getElementById('shop-cancel-reason-txt').innerText = `السبب: ${reasonText} (تجاوزت الحد اليومي المسموح للتعويضات)`;
+                                document.getElementById('shop-cancel-compensation-txt').style.display = 'none';
+                                document.getElementById('shop-cancelled-notice').style.display = 'flex';
+                                clearScreenFromCancelledOrder(oldId);
+                                return;
+                            }
+
+                            // 🛑 إذا عدى من كل الفلاتر بنعطيه التعويض وبنسجله
                             if(compAmount > 0) {
+                                const newBal = (parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0) + compAmount).toFixed(2);
+                                const up = {};
+                                up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(newBal);
+                                up[`captains/${capNodeKey}/balance`] = parseFloat(newBal);
+                                up[`captains/${capNodeKey}/daily_compensations`] = dailyComps + 1;
+                                up[`captains/${capNodeKey}/last_comp_date`] = new Date().toDateString();
+                                update(ref(db), up);
+
+                                const compBox = document.getElementById('shop-cancel-compensation-txt');
                                 compBox.querySelector('span').innerText = compAmount.toFixed(2);
                                 compBox.style.display = 'block';
-                            } else {
-                                compBox.style.display = 'none';
                             }
+
+                            document.getElementById('shop-cancel-reason-txt').innerText = `السبب: ${reasonText}`;
+                            
                             if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
                             document.getElementById('shop-cancelled-notice').style.display = 'flex';
                             clearScreenFromCancelledOrder(oldId);
@@ -1302,6 +1428,13 @@
                         if(s.allow_reject !== undefined) systemSettings.allow_reject = s.allow_reject;
                         if(s.allow_cancel_after_accept !== undefined) systemSettings.allow_cancel_after_accept = s.allow_cancel_after_accept;
                         if(s.cancel_reasons) systemSettings.cancel_reasons = s.cancel_reasons;
+                        
+                        if(s.fraud_max_daily_compensations !== undefined) systemSettings.fraud_max_daily_compensations = parseInt(s.fraud_max_daily_compensations);
+                        if(s.fraud_consecutive_cancels !== undefined) systemSettings.fraud_consecutive_cancels = parseInt(s.fraud_consecutive_cancels);
+                        if(s.fraud_max_strikes !== undefined) systemSettings.fraud_max_strikes = parseInt(s.fraud_max_strikes);
+                        if(s.fraud_strike_penalty !== undefined) systemSettings.fraud_strike_penalty = parseFloat(s.fraud_strike_penalty);
+                        if(s.fraud_identity_penalty !== undefined) systemSettings.fraud_identity_penalty = parseFloat(s.fraud_identity_penalty);
+                        if(s.dead_time_minutes !== undefined) systemSettings.dead_time_minutes = parseInt(s.dead_time_minutes);
 
                         if(lastKnownIntervalValue !== systemSettings.hotspot_interval) { lastKnownIntervalValue = systemSettings.hotspot_interval; startHotspotSync(); }
                         if(!systemSettings.hotspots_active) {
