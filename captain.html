@@ -124,7 +124,7 @@
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider { background: var(--success); }
         input:checked + .slider:before { transform: translateX(26px); }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
@@ -187,8 +187,8 @@
         .order-timer-bar-container { background: #f1f5f9; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 18px; }
         .order-timer-bar { height: 100%; background: linear-gradient(90deg, var(--danger), #f87171); width: 100%; transition: width 1s linear; }
 
-        .action-buttons { display: flex; gap: 12px; }
-        .btn-action { flex: 1; padding: 15px; border-radius: 14px; font-weight: 900; font-size: 15px; cursor: pointer; border: none; color: white; transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .action-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-action { flex: 1; min-width: 120px; padding: 15px; border-radius: 14px; font-weight: 900; font-size: 15px; cursor: pointer; border: none; color: white; transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-action:active { transform: scale(0.97); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         .btn-accept { background: linear-gradient(135deg, var(--success), #059669); }
@@ -198,6 +198,10 @@
         .btn-status-onway { background: linear-gradient(135deg, #8b5cf6, #7c3aed); } 
         .btn-status-arrived { background: linear-gradient(135deg, #06b6d4, #0891b2); } 
         .btn-status-completed { background: linear-gradient(135deg, var(--gold), #b48608); color: var(--primary); } 
+        
+        /* 🛑 زر الإلغاء بعد الموافقة */
+        .btn-cancel-after { background: transparent; color: var(--text-light); border: 1px solid #cbd5e1; padding: 8px; border-radius: 10px; font-size: 12px; margin-top: 10px; width: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s;}
+        .btn-cancel-after:hover { background: #f1f5f9; color: var(--danger); border-color: #fca5a5; }
 
         @keyframes pulseAlert { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
         .ringing { border-right-color: var(--gold); box-shadow: 0 0 25px rgba(212, 175, 55, 0.4); animation: pulseBorder 1.5s infinite; }
@@ -226,7 +230,6 @@
         
         #toast-container { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
 
-        /* --- Rating System Fixes --- */
         .gems-container { display: flex; justify-content: center; gap: 12px; margin: 20px 0; direction: ltr; }
         .gem { font-size: 40px; cursor: pointer; transition: all 0.3s ease; opacity: 0.25; padding: 5px; user-select: none; -webkit-tap-highlight-color: transparent; display: inline-block; }
         .gem.active { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.7)); }
@@ -286,6 +289,42 @@
                 عزيزي الكابتن لقد استنفدت الحد المسموح به للرصيد يرجى التوجه لأقرب نقطة شحن أو التواصل مع الوكيل المعتمد لتبقى في القمة 💎
             </div>
             <button class="btn-action" style="background: linear-gradient(135deg, var(--gold), #b48608); color: var(--primary); width: 100%;" onclick="document.getElementById('balance-guard').style.display='none'">حسناً فهمت</button>
+        </div>
+    </div>
+
+    <div id="cap-cancel-modal" class="custom-dialog-overlay" style="z-index: 999995;">
+        <div class="alert-modal-box" style="border-top-color: var(--danger); padding: 25px;">
+            <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 5px;">إلغاء الطلب 🛑</div>
+            <div style="font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 15px;">يرجى اختيار سبب الإلغاء بدقة:</div>
+            
+            <div class="quick-tags" id="cap-cancel-tags">
+                </div>
+
+            <div id="cap-cancel-fee-warning" style="display:none; font-size:12px; font-weight:bold; color:var(--danger); background:#fef2f2; padding:10px; border-radius:8px; border:1px solid #fca5a5; margin-bottom:15px;">
+                ⚠️ تنبيه: هذا السبب يترتب عليه خصم غرامة بقيمة <span id="cap-cancel-fee-val">0</span> د.أ من محفظتك.
+            </div>
+
+            <input type="hidden" id="cap_cancel_ord_id" value="">
+            <input type="hidden" id="cap_cancel_radar_id" value="">
+            <input type="hidden" id="cap_selected_cancel_reason" value="">
+            <input type="hidden" id="cap_cancel_fee_amount" value="0">
+            
+            <button class="btn-action" style="background: var(--danger); width: 100%; margin-top: 10px;" onclick="executeCapCancel()">تأكيد الإلغاء ❌</button>
+            <button style="color: #94a3b8; border: none; background: transparent; width: 100%; margin-top: 15px; cursor: pointer; font-weight:bold; font-size: 14px;" onclick="document.getElementById('cap-cancel-modal').style.display='none'">تراجع</button>
+        </div>
+    </div>
+
+    <div id="shop-cancelled-notice" class="custom-dialog-overlay" style="z-index: 999999;">
+        <div class="alert-modal-box" style="border-top-color: var(--gold); padding: 30px;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🚫</div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 10px;">تم إلغاء الطلب من المنشأة</div>
+            <div style="font-size: 14px; color: #64748b; font-weight: bold; margin-bottom: 15px;" id="shop-cancel-reason-txt">
+                عذراً كابتن، المنشأة قامت بإلغاء الطلب.
+            </div>
+            <div id="shop-cancel-compensation-txt" style="display:none; font-size: 16px; font-weight: 900; color: var(--success); background: #ecfdf5; padding: 10px; border-radius: 10px; border: 1px dashed #a7f3d0; margin-bottom: 20px;">
+                تم تعويض محفظتك بمبلغ <span>0</span> د.أ 💎
+            </div>
+            <button class="btn-action" style="background: linear-gradient(135deg, var(--gold), #b48608); color: var(--primary); width: 100%;" onclick="closeShopCancelNotice()">حسناً</button>
         </div>
     </div>
 
@@ -534,7 +573,23 @@
         let currentCaptain = null;
         let capNodeKey = null;
         
-        let systemSettings = { order_timer: 10, show_phone_numbers: false, hotspots_active: true, anti_vpn: false, hotspot_count: 5, hotspot_interval: 5 };
+        // 🛑 أضفنا خصائص الإلغاء للريموت
+        let systemSettings = { 
+            order_timer: 10, 
+            show_phone_numbers: false, 
+            hotspots_active: true, 
+            anti_vpn: false, 
+            hotspot_count: 5, 
+            hotspot_interval: 5,
+            allow_reject: true, // 🛑 زر الرفض
+            allow_cancel_after_accept: true, // 🛑 زر الإلغاء بعد الموافقة
+            cancel_reasons: {
+                "عطل بالمركبة": 0,
+                "المطعم مغلق": 0,
+                "الزبون ألغى الطلب": 0,
+                "تأخير غير مبرر": 0.50 // مثال: غرامة نص دينار
+            }
+        };
         let orderTimers = {};
         
         window.hasActiveOrdersLoaded = false;
@@ -664,6 +719,108 @@
                 deferredPrompt = null;
             }
         });
+
+        // ================== نظام الإلغاء للمحفظة والكابتن ==================
+        window.openCapCancelModal = function(ordId, radarId) {
+            document.getElementById('cap_cancel_ord_id').value = ordId;
+            document.getElementById('cap_cancel_radar_id').value = radarId;
+            document.getElementById('cap_selected_cancel_reason').value = "";
+            document.getElementById('cap_cancel_fee_amount').value = 0;
+            document.getElementById('cap-cancel-fee-warning').style.display = 'none';
+
+            // 🛑 تعبئة الأسباب من نظام الإدارة
+            const tagsCont = document.getElementById('cap-cancel-tags');
+            tagsCont.innerHTML = '';
+            
+            if (systemSettings.cancel_reasons) {
+                Object.keys(systemSettings.cancel_reasons).forEach(reason => {
+                    const fee = parseFloat(systemSettings.cancel_reasons[reason] || 0);
+                    tagsCont.innerHTML += `<span class="tag" onclick="selectCapCancelReason(this, ${fee}, '${reason}')">${reason} ${fee>0 ? '💰' : ''}</span>`;
+                });
+            } else {
+                tagsCont.innerHTML = `<span class="tag" onclick="selectCapCancelReason(this, 0, 'أسباب أخرى')">أسباب أخرى</span>`;
+            }
+
+            document.getElementById('cap-cancel-modal').style.display = 'flex';
+        };
+
+        window.selectCapCancelReason = function(el, fee, reason) {
+            document.querySelectorAll('#cap-cancel-tags .tag').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('cap_selected_cancel_reason').value = reason;
+            document.getElementById('cap_cancel_fee_amount').value = fee;
+
+            const warnDiv = document.getElementById('cap-cancel-fee-warning');
+            if(fee > 0) {
+                document.getElementById('cap-cancel-fee-val').innerText = fee.toFixed(2);
+                warnDiv.style.display = 'block';
+            } else {
+                warnDiv.style.display = 'none';
+            }
+        };
+
+        window.executeCapCancel = async function() {
+            const ordId = document.getElementById('cap_cancel_ord_id').value;
+            const rId = document.getElementById('cap_cancel_radar_id').value;
+            const reason = document.getElementById('cap_selected_cancel_reason').value;
+            const fee = parseFloat(document.getElementById('cap_cancel_fee_amount').value) || 0;
+
+            if(!reason) { window.showToast("الرجاء اختيار سبب الإلغاء ⚠️", true); return; }
+
+            const currentBal = parseFloat(currentCaptain.Cap_Balance || currentCaptain.balance || 0);
+            if (fee > 0 && currentBal < fee) {
+                window.showToast("رصيدك غير كافٍ لدفع غرامة هذا السبب 🔴", true);
+                return;
+            }
+
+            document.getElementById('cap-cancel-modal').style.display = 'none';
+            window.showToast("⏳ جاري إلغاء الطلب...", false);
+
+            const up = {};
+            up[`assigned_orders/${capNodeKey}/${ordId}`] = null; // نشيله من عنده
+            
+            if(rId && rId !== 'undefined') {
+                up[`orders/${rId}/OrderStatus`] = 'new'; // بنرجعه للرادار
+                up[`orders/${rId}/Cap_Name`] = null;
+                up[`orders/${rId}/Cap_Phone`] = null;
+                up[`radar_memory/${rId}/skipped/${capNodeKey}`] = true; // بنمنعه يرجعله
+            }
+
+            // 🛑 صعقة الخصم المباشر
+            if (fee > 0) {
+                const nb = (currentBal - fee).toFixed(2);
+                up[`captains/${capNodeKey}/Cap_Balance`] = parseFloat(nb); 
+                up[`captains/${capNodeKey}/balance`] = parseFloat(nb);
+                
+                let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
+                const txId = "P_" + Date.now();
+                up[`financial_logs/${master}/${txId}`] = {
+                    type: 'captain_cancel_penalty',
+                    amount: fee,
+                    captainId: capNodeKey,
+                    reason: reason,
+                    timestamp: Date.now()
+                };
+            }
+
+            try {
+                await update(ref(db), up);
+                window.showToast("تم الإلغاء بنجاح 🚫");
+                window.hasActiveOrderInProgress = false;
+                document.getElementById('status-toggle-section').style.display = 'flex';
+                startHotspotSync();
+            } catch(e) {
+                window.showToast("حدث خطأ أثناء الإلغاء", true);
+            }
+        };
+
+        window.closeShopCancelNotice = function() {
+            document.getElementById('shop-cancelled-notice').style.display = 'none';
+            // نأمر الشاشة تتنظف
+            window.hasActiveOrderInProgress = false;
+            document.getElementById('status-toggle-section').style.display = 'flex';
+            startHotspotSync();
+        };
 
         // ================== نظام التقييم الألماسي ==================
         window.openRatingModal = function(shopId) {
@@ -903,6 +1060,17 @@
             } else { document.getElementById('hotspots-section').style.display = 'none'; }
         }
 
+        // 🛑 دالة تفريغ الشاشة في حال الإلغاء
+        function clearScreenFromCancelledOrder(orderId) {
+            const card = document.getElementById('card_' + orderId);
+            if(card) {
+                card.style.display = 'none';
+            }
+            window.hasActiveOrderInProgress = false;
+            document.getElementById('status-toggle-section').style.display = 'flex';
+            startHotspotSync();
+        }
+
         window.refreshOrdersUI = function() {
             const snap = window.lastOrdersSnap;
             const cont = document.getElementById('active-orders-container');
@@ -932,6 +1100,25 @@
             if(snap && snap.exists()) {
                 Object.entries(snap.val()).forEach(([id, ord]) => {
                     if(ord.status === 'completed' || ord.status === 'timeout' || ord.status === 'rejected') return;
+                    
+                    // 🛑 إذا الطلب ملغي من المنشأة، نعرض التنبيه وننظف الشاشة
+                    if(ord.status === 'cancelled_by_shop') {
+                        document.getElementById('shop-cancel-reason-txt').innerText = `عذراً كابتن، المنشأة قامت بإلغاء الطلب: ${ord.restaurant}`;
+                        const compBox = document.getElementById('shop-cancel-compensation-txt');
+                        if (ord.compensation_fee > 0) {
+                            compBox.querySelector('span').innerText = ord.compensation_fee.toFixed(2);
+                            compBox.style.display = 'block';
+                        } else {
+                            compBox.style.display = 'none';
+                        }
+                        document.getElementById('shop-cancelled-notice').style.display = 'flex';
+                        
+                        // حذف الطلب من عند الكابتن عشان ما يضل يرن أو معلق
+                        update(ref(db), {[`assigned_orders/${capNodeKey}/${id}`]: null});
+                        clearScreenFromCancelledOrder(id);
+                        return;
+                    }
+
                     hasActive = true;
                     
                     let timeLeft = 0;
@@ -980,19 +1167,31 @@
                                 <div class="order-timer-bar" id="bar_timer_${id}"></div>
                             </div>
                         `;
+                        
+                        // 🛑 زر الرفض بناءً على الريموت
+                        let rejectBtnHtml = systemSettings.allow_reject !== false ? `<button class="btn-action btn-reject" style="flex:1;" onclick="rejectOrd('${id}','${ord.linkedRadarId}')">❌ رفض</button>` : '';
+
                         btnAction = `
                             <div class="action-buttons">
                                 <button class="btn-action btn-accept" style="flex:2;" onclick="acceptOrd('${id}','${ord.linkedRadarId}')">✅ قبول الطلب</button>
-                                <button class="btn-action btn-reject" style="flex:1;" onclick="rejectOrd('${id}','${ord.linkedRadarId}')">❌ رفض</button>
+                                ${rejectBtnHtml}
                             </div>`;
-                    } else if(ord.status === 'accepted') { btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}')">🏪 وصلت المنشأة</button>`; }
-                    else if(ord.status === 'arrived_at_shop') { btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}')">🥡 استلمت الطلب</button>`; }
-                    else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}')">🚗 في الطريق</button>`; }
-                    else if(ord.status === 'on_way') { btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}')">📍 وصلت العميل</button>`; }
-                    else if(ord.status === 'arrived_at_customer') {
-                        let ratingShopId = ord.rating_shop_id || ord.Shop_User || ord.shop_id || '';
-                        let cleanNameForBtn = rName.replace(/'/g, "\\'");
-                        btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}', ${commSafe}, ${valSafe}, ${feeSafe}, '${cleanNameForBtn}')">💎 تم التسليم بنجاح</button>`;
+                    } else {
+                        // 🛑 الأزرار بعد الموافقة
+                        if(ord.status === 'accepted') { btnAction = `<button class="btn-action btn-status-arrived-shop" style="width:100%;" onclick="updOrd('${id}','arrived_at_shop','${ord.linkedRadarId}')">🏪 وصلت المنشأة</button>`; }
+                        else if(ord.status === 'arrived_at_shop') { btnAction = `<button class="btn-action btn-status-picked" style="width:100%;" onclick="updOrd('${id}','picked_up','${ord.linkedRadarId}')">🥡 استلمت الطلب</button>`; }
+                        else if(ord.status === 'picked_up') { btnAction = `<button class="btn-action btn-status-onway" style="width:100%;" onclick="updOrd('${id}','on_way','${ord.linkedRadarId}')">🚗 في الطريق</button>`; }
+                        else if(ord.status === 'on_way') { btnAction = `<button class="btn-action btn-status-arrived" style="width:100%;" onclick="updOrd('${id}','arrived_at_customer','${ord.linkedRadarId}')">📍 وصلت العميل</button>`; }
+                        else if(ord.status === 'arrived_at_customer') {
+                            let ratingShopId = ord.rating_shop_id || ord.Shop_User || ord.shop_id || '';
+                            let cleanNameForBtn = rName.replace(/'/g, "\\'");
+                            btnAction = `<button id="btn_finish_${id}" class="btn-action btn-status-completed" style="width:100%;" onclick="this.disabled=true; this.innerText='⏳ جاري التوثيق'; finishOrd('${id}','${ord.linkedRadarId}', '${ratingShopId}', ${commSafe}, ${valSafe}, ${feeSafe}, '${cleanNameForBtn}')">💎 تم التسليم بنجاح</button>`;
+                        }
+
+                        // 🛑 إضافة زر (إلغاء الطلب بعد الموافقة) إذا مسموح من الريموت
+                        if (systemSettings.allow_cancel_after_accept !== false && ord.status !== 'arrived_at_customer') {
+                            btnAction += `<button class="btn-cancel-after" onclick="openCapCancelModal('${id}', '${ord.linkedRadarId}')">إلغاء الطلب 🛑</button>`;
+                        }
                     }
 
                     html += `
@@ -1083,6 +1282,11 @@
                         systemSettings.anti_vpn = s.anti_vpn || false;
                         systemSettings.hotspot_count = parseInt(s.hotspot_count) || 5;
                         systemSettings.hotspot_interval = parseInt(s.hotspot_interval) || 5;
+                        
+                        // 🛑 قراءة إعدادات الإلغاء والرفض من الريموت
+                        if(s.allow_reject !== undefined) systemSettings.allow_reject = s.allow_reject;
+                        if(s.allow_cancel_after_accept !== undefined) systemSettings.allow_cancel_after_accept = s.allow_cancel_after_accept;
+                        if(s.cancel_reasons) systemSettings.cancel_reasons = s.cancel_reasons;
 
                         if(lastKnownIntervalValue !== systemSettings.hotspot_interval) { lastKnownIntervalValue = systemSettings.hotspot_interval; startHotspotSync(); }
                         if(!systemSettings.hotspots_active) {
@@ -1237,6 +1441,9 @@
             let master = currentCaptain.company || currentCaptain.Client_Master || 'default';
             let discountAmount = 0; let promoCode = "---"; let fullRestName = rName || '';
 
+            // 🛑 حفظ رقم المنشأة في أرشيف الكابتن (مخفي، بس للتوثيق الإداري إذا لزم)
+            let shopPhoneToSave = '---';
+
             if(rId && rId!=='undefined') {
                 try {
                     const ordSnap = await get(ref(db, `orders/${rId}`));
@@ -1245,6 +1452,7 @@
                         discountAmount = parseFloat(oData.Shop_Discount || oData.discount || 0); 
                         promoCode = oData.Shop_Promo || oData.promo || "---";
                         fullRestName = oData.Shop_Name || oData.restaurant || fullRestName; 
+                        shopPhoneToSave = oData.shop_phone || oData.Client_Phone || '---';
                     }
                 } catch(e) {}
             }
@@ -1261,6 +1469,7 @@
                 promo: promoCode, 
                 net: (parseFloat(fee||0) - parseFloat(comm||0)), 
                 rest: fullRestName, 
+                shop_phone: shopPhoneToSave, // 🛑 الرقم بينحفظ للتوثيق
                 appOrdId: id,
                 orderId: rId && rId!=='undefined' ? rId : id,
                 live_status: 'delivered',
@@ -1293,6 +1502,15 @@
                         const pCodeHtml = o.promo && o.promo !== "---" ? `<span style="background:#e0e7ff; color:#4338ca; padding:4px 8px; border-radius:8px;">كوبون ${o.promo}</span>` : '';
                         const discHtml = parseFloat(o.discount) > 0 ? `<span style="color:var(--danger); background:#fef2f2; padding:4px 8px; border-radius:8px;">خصم ${parseFloat(o.discount).toFixed(2)} د.أ</span>` : '';
 
+                        // 🛑 إظهار الطلبات اللي لغاها الكابتن ودفع غرامتها
+                        let isCancelledByCap = o.live_status === 'cancelled_by_shop' && o.cap && o.cap.includes('(ملغي)');
+                        let cancelBadge = isCancelledByCap ? `<span style="background:#fef2f2; color:var(--danger); padding:4px 8px; border-radius:8px; border:1px dashed #fca5a5;">ألغيته - غرامة ${parseFloat(o.fee||0).toFixed(2)} د.أ</span>` : '';
+
+                        // 🛑 إظهار التعويض إذا المطعم ألغى الطلب
+                        let compensationHtml = (o.live_status === 'cancelled_by_shop' && !isCancelledByCap && parseFloat(o.fee||0) > 0) ? `<span style="color:var(--success); background:#f0fdf4; padding:4px 8px; border-radius:8px; border:1px dashed #bbf7d0;">+ تعويض ${parseFloat(o.fee||0).toFixed(2)} د.أ 💎</span>` : '';
+
+                        let netHtml = isCancelledByCap ? `<span style="color:var(--danger); font-weight:900; font-size:18px;">-${parseFloat(o.fee||0).toFixed(2)} د.أ</span>` : `<span style="color:var(--success); font-weight:900; font-size:18px;">${parseFloat(o.net||0).toFixed(2)} د.أ</span>`;
+
                         return `
                         <div class="history-item">
                             <div class="h-row">
@@ -1306,13 +1524,13 @@
                                 <span style="color:var(--primary);">الطلب: <b>${parseFloat(o.value||0).toFixed(2)}</b> د.أ</span>
                                 <span style="color:var(--info);">الأجرة: <b>${parseFloat(o.fee||0).toFixed(2)}</b> د.أ</span>
                             </div>
-                            <div class="h-row" style="margin-top:8px; font-size:11px; gap:8px; justify-content: flex-start;">
-                                ${pCodeHtml} ${discHtml}
-                                <span style="color:var(--danger); background:#fef2f2; padding:4px 8px; border-radius:8px; border:1px dashed #fecaca; margin-right: auto;">عمولة: ${parseFloat(o.comm||0).toFixed(2)} د.أ</span>
+                            <div class="h-row" style="margin-top:8px; font-size:11px; gap:8px; justify-content: flex-start; flex-wrap: wrap;">
+                                ${pCodeHtml} ${discHtml} ${cancelBadge} ${compensationHtml}
+                                ${!isCancelledByCap && o.live_status !== 'cancelled_by_shop' ? `<span style="color:var(--danger); background:#fef2f2; padding:4px 8px; border-radius:8px; border:1px dashed #fecaca; margin-right: auto;">عمولة: ${parseFloat(o.comm||0).toFixed(2)} د.أ</span>` : ''}
                             </div>
                             <div class="h-row" style="margin-top:12px; border-top:1px dashed #cbd5e1; padding-top:12px;">
-                                <span style="font-size:14px; color:#64748b;">الصافي لك</span>
-                                <span style="color:var(--success); font-weight:900; font-size:18px;">${parseFloat(o.net||0).toFixed(2)} د.أ</span>
+                                <span style="font-size:14px; color:#64748b;">${isCancelledByCap ? 'تم خصم' : 'الصافي لك'}</span>
+                                ${netHtml}
                             </div>
                         </div>
                     `}).join('');
